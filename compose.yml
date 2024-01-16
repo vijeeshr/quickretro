@@ -1,0 +1,25 @@
+services:
+  redis:
+    image: "redis:7.2.3-alpine"
+    restart: always
+    networks:
+      - redisnet
+    ports:
+      - "6379:6379"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis:6379
+    networks:
+      - redisnet
+    ports:
+      - "8080:8080"
+
+networks:
+  redisnet:
+    name: redisnet
