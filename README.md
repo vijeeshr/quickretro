@@ -1,12 +1,12 @@
 # quickretro
 A websocket based example app for conducting a quick sprint retro.
 
-# Runnning the app
+## Runnning the app
 ```sh
 docker compose up
 ```
 
-# Features
+## Features
 No logins.  
 After running the app, visit http://localhost:8080 to start creating a board.  
 Share the board url with people to participate in the retro meeting.  
@@ -18,5 +18,5 @@ Board creator can opt to blur/unblur messages during the retro meeting.
 ![quickretro2](https://github.com/vijeeshr/quickretro/assets/16733867/6802b697-362b-4f99-b6da-8b9bc0c3c4ab)
 
 
-# Note
+## Note
 Do not use this in production. This example was created with the intent of learning Go.
