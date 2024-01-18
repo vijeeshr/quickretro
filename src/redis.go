@@ -59,7 +59,14 @@ func NewRedisConnector(ctx context.Context) *RedisConnector {
 // Todo: What about the context. Check.
 func (c *RedisConnector) Subscribe(redisChannel ...string) {
 	if err := c.subscriber.Subscribe(c.ctx, redisChannel...); err != nil {
-		log.Fatal(err) // Todo: This will bring down app. Just so a log but don't exit.
+		log.Fatal(err) // Todo: This will bring down app. Just do a log but don't exit. Check.
+	}
+}
+
+// Todo: What about the context. Check.
+func (c *RedisConnector) Unsubscribe(redisChannel ...string) {
+	if err := c.subscriber.Unsubscribe(c.ctx, redisChannel...); err != nil {
+		log.Printf("Error unsubscribing: %v", err)
 	}
 }
 
@@ -214,6 +221,16 @@ func (c *RedisConnector) GetUsersPresence(boardId string) ([]*User, bool) {
 	}
 
 	return users, true
+}
+
+func (c *RedisConnector) GetPresentUserIds(boardId string) ([]string, bool) {
+	key := fmt.Sprintf("board:users:%s", boardId)
+	ids, err := c.client.SMembers(c.ctx, key).Result()
+	if err != nil {
+		log.Println(err)
+		return ids, false
+	}
+	return ids, true
 }
 
 func (c *RedisConnector) GetMessage(msgId string) (*Message, bool) {

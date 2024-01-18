@@ -53,6 +53,12 @@ func (c *Client) read() {
 	defer func() {
 		c.hub.unregister <- c
 		c.conn.Close()
+		// Cleanup subscription if there are no users left in the board
+		presentUsers, ok := c.hub.redis.GetPresentUserIds(c.group)
+		if ok && len(presentUsers) == 0 {
+			log.Println("No users left in board..unsubscribing")
+			c.hub.redis.Unsubscribe(c.group)
+		}
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -64,13 +70,12 @@ func (c *Client) read() {
 		err := c.conn.ReadJSON(&event)
 		if err != nil {
 			log.Println(err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("error: %v", err)
+			}
 			if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				removePresence := &RemoveUserPresenceEvent{By: c.id, Group: c.group}
 				removePresence.Handle(c.hub)
-				break
-			}
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
 			}
 			break
 		}
