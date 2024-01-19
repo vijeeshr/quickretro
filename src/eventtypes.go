@@ -8,84 +8,61 @@ import (
 )
 
 type RegisterEvent struct {
-	By    string `json:"by"`
-	Group string `json:"grp"`
-}
-
-func (e *RegisterEvent) Handle(c *Client) {
-	// Note: This is not called from Hub. Avoid accessing data structures here that may run into concurrency issues.
-	// Set the client id
-	if c.id == "" && e.By != "" {
-		c.id = e.By
-	}
-	b, ok := c.hub.redis.GetBoard(e.Group)
-	if !ok {
-		return
-	}
-	// No broadcast involved here. The response is just sent back to the client websocket which dispatched the RegisterEvent.
-	if c.id == e.By {
-		// Prepare response
-		response := RegisterResponse{
-			Type:         "reg",
-			BoardName:    b.Name,
-			BoardTeam:    b.Team,
-			BoardStatus:  b.Status.String(),
-			BoardMasking: b.Mask,
-			IsBoardOwner: b.Owner == e.By,
-		}
-		select {
-		case c.send <- response:
-		default:
-			c.hub.unregister <- c
-		}
-	}
-}
-
-type PresentEvent struct {
 	By         string `json:"by"`
 	ByNickname string `json:"nickname"`
 	Xid        string `json:"xid"`
 	Group      string `json:"grp"`
-	Present    bool   `json:"present"`
 }
 
-func (p *PresentEvent) Handle(i *Event, h *Hub) {
-	// Update Redis
-
-	// validate
-	if p.By == "" {
+func (p *RegisterEvent) Handle(i *Event, h *Hub) {
+	// Validate
+	// We can be sure that the board exists. That check is done during handshake.
+	if p.By == "" || p.Xid == "" || p.Group == "" {
 		return
 	}
-
-	ok := h.redis.CommitUserPresence(p.Group, &User{Id: p.By, Xid: p.Xid, Nickname: p.ByNickname}, p.Present)
-	if !ok {
+	// Update Redis
+	if ok := h.redis.CommitUserPresence(p.Group, &User{Id: p.By, Xid: p.Xid, Nickname: p.ByNickname}, true); !ok {
 		return
 	}
 
 	// Publish to Redis (for broadcasting)
-	// *Message is nil as this is not a message related update. Find a better way.
+	// *Message is nil as this is not a message related update. Find a better way. Generics?
 	h.redis.Publish(p.Group, &BroadcastArgs{Message: nil, Event: i})
 }
-func (i *PresentEvent) Broadcast(h *Hub) {
+func (i *RegisterEvent) Broadcast(h *Hub) {
 	// Transform to Outgoing format
 	// Don't want to add another field in BroadcastArgs{}.
-
-	users, ok := h.redis.GetUsersPresence(i.Group)
-	if !ok {
+	board, boardOk := h.redis.GetBoard(i.Group)
+	if !boardOk {
+		return
+	}
+	users, usersOk := h.redis.GetUsersPresence(i.Group)
+	if !usersOk {
 		return
 	}
 
-	res := make([]*PresentDetails, 0)
+	userDetails := make([]*UserDetails, 0)
 	for _, user := range users {
 		if user.Nickname == "" {
 			user.Nickname = "Anonymous" // This may not happen.
 		}
-		res = append(res, &PresentDetails{Nickname: user.Nickname, Xid: user.Xid})
+		userDetails = append(userDetails, &UserDetails{Nickname: user.Nickname, Xid: user.Xid})
 	}
-	response := &PresentResponse{Type: "present", Users: res}
+
+	// Prepare response
+	response := RegisterResponse{
+		Type:         "reg",
+		BoardName:    board.Name,
+		BoardTeam:    board.Team,
+		BoardStatus:  board.Status.String(),
+		BoardMasking: board.Mask,
+		Users:        userDetails,
+	}
 
 	clients := h.clients[i.Group]
 	for client := range clients {
+		response.Mine = client.id == i.By // This is to identify if RegisterResponse is a result of a RegisterEvent initiated by same user. RegisterResponses are broadcasted to all.
+		response.IsBoardOwner = client.id == board.Owner
 		select {
 		case client.send <- response:
 		default:
@@ -94,21 +71,20 @@ func (i *PresentEvent) Broadcast(h *Hub) {
 	}
 }
 
-// Todo: RemoveUserPresenceEvent is not a clean implementation. Refactor.
+// Todo: UserClosingEvent is not a clean implementation. Refactor.
 // Not directly initiated from UI. This is used during connection close. Usually when the user closes the tab or browser window.
-// This is used to return a PresentResponse.
-type RemoveUserPresenceEvent struct {
+type UserClosingEvent struct {
 	By    string `json:"by"`
 	Group string `json:"grp"`
 }
 
-// RemoveUserPresenceEvent is initiated from the clients Read() goroutine when its closing. Not from UI
-func (p *RemoveUserPresenceEvent) Handle(h *Hub) {
-	// Update Redis
+// UserClosingEvent is initiated from the clients Read() goroutine when its closing. Not from UI
+func (p *UserClosingEvent) Handle(h *Hub) {
 	// Validate
-	if p.By == "" {
+	if p.By == "" || p.Group == "" {
 		return
 	}
+	// Update Redis
 	if ok := h.redis.RemoveUserPresence(p.Group, p.By); !ok {
 		return
 	}
@@ -121,27 +97,26 @@ func (p *RemoveUserPresenceEvent) Handle(h *Hub) {
 		fmt.Println("Error marshaling JSON:", err)
 		return
 	}
-	var ev = &Event{Type: "present", Payload: json.RawMessage(jsonifiedEvent)}
+	var ev = &Event{Type: "closing", Payload: json.RawMessage(jsonifiedEvent)}
 	// Bad hack end
 
 	h.redis.Publish(p.Group, &BroadcastArgs{Message: nil, Event: ev})
 }
-func (i *RemoveUserPresenceEvent) Broadcast(h *Hub) {
-	// Returning a PresentResponse. There won't be a "RemoveUserPresenceResponse".
-	// Duplicate of PresentEvent Broadcast.
+func (i *UserClosingEvent) Broadcast(h *Hub) {
+	// Duplication with UserClosingEvent Broadcast.
 	users, ok := h.redis.GetUsersPresence(i.Group)
 	if !ok {
 		return
 	}
 
-	res := make([]*PresentDetails, 0)
+	res := make([]*UserDetails, 0)
 	for _, user := range users {
 		if user.Nickname == "" {
 			user.Nickname = "Anonymous" // This may not happen.
 		}
-		res = append(res, &PresentDetails{Nickname: user.Nickname, Xid: user.Xid})
+		res = append(res, &UserDetails{Nickname: user.Nickname, Xid: user.Xid})
 	}
-	response := &PresentResponse{Type: "present", Users: res}
+	response := &UserClosingResponse{Type: "closing", Users: res}
 
 	clients := h.clients[i.Group]
 	for client := range clients {

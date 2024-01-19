@@ -32,7 +32,7 @@ func main() {
 		HandleRefresh(red, w, r)
 	}).Methods("GET") // Todo: Check origin in handler
 
-	router.HandleFunc("/board/{id}/meet", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/board/{board}/user/{user}/meet", func(w http.ResponseWriter, r *http.Request) {
 		handleWebSocket(hub, w, r)
 	})
 

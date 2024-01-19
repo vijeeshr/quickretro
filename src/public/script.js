@@ -15,11 +15,11 @@ const ensureUser = () => {
   if (!localStorage.getItem("user")) {
     localStorage.setItem("user", crypto.randomUUID())
   }
-  if (!localStorage.getItem("nickname")) {
-    window.location.replace(`/board/${getBoardName()}/join`)
-  }
   if (!localStorage.getItem("xid")) {
     localStorage.setItem("xid", crypto.randomUUID())
+  }  
+  if (!localStorage.getItem("nickname")) {
+    window.location.replace(`/board/${getBoardName()}/join`)
   }    
   return { user: localStorage.getItem("user"), nickname: localStorage.getItem("nickname"), xid: localStorage.getItem("xid") }
 }
@@ -41,18 +41,11 @@ class Event {
   }
 }
 class RegisterEvent {
-  constructor(by, group) {
-    this.by = by
-    this.grp = group
-  }
-}
-class PresentEvent {
-  constructor(by, nickname, xid, group, present) {
+  constructor(by, nickname, xid, group) {
     this.by = by
     this.nickname = nickname
     this.xid = xid
     this.grp = group
-    this.present = present
   }
 }
 class MaskEvent {
@@ -88,13 +81,20 @@ class DeleteMessageEvent {
 }
 // Response models
 class RegisterResponse {
-  constructor(typ, boardName, boardTeam, boardStatus, boardMasking, isBoardOwner) {
+  constructor(typ, boardName, boardTeam, boardStatus, boardMasking, isBoardOwner, users) {
     this.typ = typ
     this.boardName = boardName
     this.boardTeam = boardTeam
     this.boardStatus = boardStatus
     this.boardMasking = boardMasking
     this.isBoardOwner = isBoardOwner
+    this.users = users // fields- nickname, xid.
+  }
+}
+class UserClosingResponse {
+  constructor(typ, users) {
+    this.typ = typ
+    this.users = users // fields- nickname, xid.
   }
 }
 class MessageResponse {
@@ -129,12 +129,6 @@ class MaskResponse {
       this.mask = mask
   }
 }
-class PresentResponse {
-  constructor(typ, users) {
-      this.typ = typ
-      this.users = users // fields- nickname, xid.
-  }
-}
 
 const dispatchEvent = (eventType, eventPayload) => {
   let event = new Event(eventType, eventPayload)
@@ -153,15 +147,15 @@ const connect = () => {
     return
   }
 
-  // const url = `ws://${document.location.host}/board/${group}/meet`
-  const url = `ws://localhost:8080/board/${group}/meet`
+  const url = `ws://${document.location.host}/board/${group}/user/${user}/meet`
+  // const url = `ws://localhost:8080/board/${group}/user/${user}/meet`
   socket = new WebSocket(url)
 
   // Socket event handlers
   socket.onopen = (event) => {
     console.log("[open] Connection established", event);
     // Dispatching user's RegisterEvent immediately to server.
-    dispatchEvent("reg", new RegisterEvent(user, group))
+    dispatchEvent("reg", new RegisterEvent(user, nickname, externalId, group))
   }
 
   socket.onmessage = (event) => {
@@ -171,10 +165,7 @@ const connect = () => {
     switch (message.typ) {
       case "reg":
         receivedMessage = Object.assign(new RegisterResponse, message)
-        break
-      case "present":
-        receivedMessage = Object.assign(new PresentResponse, message)
-        break;          
+        break         
       case "mask":
         receivedMessage = Object.assign(new MaskResponse, message)
         break;         
@@ -186,7 +177,10 @@ const connect = () => {
         break
       case "like":
         receivedMessage = Object.assign(new LikeResponse, message)
-        break;       
+        break;
+      case "closing":
+        receivedMessage = Object.assign(new UserClosingResponse, message)
+        break;                
       default:
         console.log("Unknown response type")
         break;
@@ -198,38 +192,21 @@ const connect = () => {
       applyMasking = receivedMessage.boardMasking
       isOwner = receivedMessage.isBoardOwner
       setMaskIcon()
-      dispatchEvent("present", new PresentEvent(user, nickname, externalId, group, true))
-      // Try reloading messages. Useful if user reloads the page, which triggers new socket connection.
-      reload() // TODO: Maybe this can be conditional i.e. if the RegisterResponse has some prop that says reload isn't required (e.g. board has no msgs or board hasn't started etc). RegisterResponse.skipReload.
+      renderOnlinePresenceSidebar(receivedMessage.users)
+      if (receivedMessage.mine) {
+        // Try reloading messages. Useful if user reloads the page, which triggers new socket connection.
+        reload() // TODO: Maybe this can be conditional i.e. if the RegisterResponse has some prop that says reload isn't required (e.g. board has no msgs or board hasn't started etc). RegisterResponse.skipReload.
+      }
+    }
+
+    if (receivedMessage instanceof UserClosingResponse) {
+      renderOnlinePresenceSidebar(receivedMessage.users)
     }
 
     if (receivedMessage instanceof MaskResponse) {
       applyMasking = receivedMessage.mask
       setMaskIcon()
       EnforceMaskingForExistingCards()
-    }
-
-    if (receivedMessage instanceof PresentResponse) {
-      let rightSb = document.querySelector(`[data-right-sidebar]`)
-
-      // clear all presence avatars and re-render.
-      while (rightSb.hasChildNodes()) {
-        rightSb.removeChild(rightSb.firstChild)
-      }
-      // rerender all
-      if (receivedMessage.users && receivedMessage.users.length > 0) {
-        for (let u of receivedMessage.users) {
-          const avatarText = createAvatarText(u.nickname)
-          const avatarColor = createAvatarColor(u.nickname)
-          let newPresenceAvatar = 
-          `
-          <div class="inline-flex items-center justify-center w-8 h-8 overflow-hidden rounded-full ml-auto mx-auto mb-4" title="${u.nickname}" style="background-color:${avatarColor};" data-presence-for="${u.xid}">
-            <span class="font-medium text-xs cursor-default text-white" data-presence-for-text>${avatarText}</span>
-          </div>
-          `
-          rightSb.insertAdjacentHTML("beforeend", newPresenceAvatar)
-        }
-      }
     }
 
     if (receivedMessage instanceof MessageResponse) {
@@ -395,7 +372,8 @@ const save = (e) => {
 
 const reload = () => {
   // Specify the API endpoint for user data
-  const apiUrl = `http://localhost:8080/api/board/${group}/user/${user}/refresh`
+  // const apiUrl = `http://localhost:8080/api/board/${group}/user/${user}/refresh`
+  const apiUrl = `http://${document.location.host}/api/board/${group}/user/${user}/refresh`
 
   // Make a GET request using the Fetch API
   fetch(apiUrl)
@@ -478,6 +456,28 @@ const setMaskIcon = () => {
     maskIcon.classList.remove('hidden')
     unmaskIcon.classList.add('hidden')
   }
+}
+
+function renderOnlinePresenceSidebar(users) {
+  let rightSb = document.querySelector(`[data-right-sidebar]`)
+  // clear all existing avatars and re-render.
+  while (rightSb.hasChildNodes()) {
+    rightSb.removeChild(rightSb.firstChild)
+  }
+  // rerender all
+  if (users && users.length > 0) {
+    for (let u of users) {
+      const avatarText = createAvatarText(u.nickname)
+      const avatarColor = createAvatarColor(u.nickname)
+      let newPresenceAvatar = 
+      `
+      <div class="inline-flex items-center justify-center w-8 h-8 overflow-hidden rounded-full ml-auto mx-auto mb-4" title="${u.nickname}" style="background-color:${avatarColor};" data-presence-for="${u.xid}">
+        <span class="font-medium text-xs cursor-default text-white" data-presence-for-text>${avatarText}</span>
+      </div>
+      `
+      rightSb.insertAdjacentHTML("beforeend", newPresenceAvatar)
+    }
+  } 
 }
 
 // Note: This can be moved to setAvatar() and call on RegisterResponse, like setMaskIcon. Just for consistency. But it will be executed late. ?

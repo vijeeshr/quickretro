@@ -1,26 +1,29 @@
 package main
 
+type UserDetails struct {
+	Nickname string `json:"nickname"`
+	Xid      string `json:"xid"`
+}
+
 type RegisterResponse struct {
-	Type         string `json:"typ"`
-	BoardName    string `json:"boardName"`
-	BoardTeam    string `json:"boardTeam"`
-	BoardStatus  string `json:"boardStatus"`
-	BoardMasking bool   `json:"boardMasking"`
-	IsBoardOwner bool   `json:"isBoardOwner"`
+	Type         string         `json:"typ"`
+	Mine         bool           `json:"mine"`
+	BoardName    string         `json:"boardName"`
+	BoardTeam    string         `json:"boardTeam"`
+	BoardStatus  string         `json:"boardStatus"`
+	BoardMasking bool           `json:"boardMasking"`
+	IsBoardOwner bool           `json:"isBoardOwner"`
+	Users        []*UserDetails `json:"users"`
+}
+
+type UserClosingResponse struct {
+	Type  string         `json:"typ"`
+	Users []*UserDetails `json:"users"`
 }
 
 type MaskResponse struct {
 	Type string `json:"typ"`
 	Mask bool   `json:"mask"`
-}
-
-type PresentResponse struct {
-	Type  string            `json:"typ"`
-	Users []*PresentDetails `json:"users"`
-}
-type PresentDetails struct {
-	Nickname string `json:"nickname"`
-	Xid      string `json:"xid"`
 }
 
 type MessageResponse struct {

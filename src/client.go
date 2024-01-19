@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -70,27 +69,14 @@ func (c *Client) read() {
 		err := c.conn.ReadJSON(&event)
 		if err != nil {
 			log.Println(err)
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
 				log.Printf("error: %v", err)
 			}
-			if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				removePresence := &RemoveUserPresenceEvent{By: c.id, Group: c.group}
-				removePresence.Handle(c.hub)
+			if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
+				userClosingEvent := &UserClosingEvent{By: c.id, Group: c.group}
+				userClosingEvent.Handle(c.hub)
 			}
 			break
-		}
-
-		// RegisterEvent should happen just once per connection. Ideally, the first call using the connection.
-		// Attach the userid to the client. The Client immediately sends the id after establishing connection.
-		if event.Type == "reg" {
-			var regEvent RegisterEvent
-			if err = json.Unmarshal(event.Payload, &regEvent); err != nil {
-				log.Printf("error parsing RegisterEvent: %v", err)
-				break
-			}
-			// regEvent.Register(c)
-			regEvent.Handle(c)
-			continue
 		}
 
 		event.Handle(c.hub)
@@ -129,14 +115,19 @@ func (c *Client) write() {
 
 func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	// Grab values from request. Validate etc
-	id, ok := mux.Vars(r)["id"]
-	if !ok || id == "" {
-		// If board is not passed, return as Bad request.
+	board, ok := mux.Vars(r)["board"]
+	if !ok || board == "" {
 		fmt.Println("board not passed")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if !hub.redis.BoardExists(id) {
+	user, ok := mux.Vars(r)["user"]
+	if !ok || user == "" {
+		fmt.Println("user not passed")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if !hub.redis.BoardExists(board) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -149,12 +140,12 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Represent the websocket connection as a "Client". "id" is set later when the browser sends a "reg" event.
-	client := &Client{id: "", group: id, conn: conn, send: make(chan interface{}, 256), hub: hub}
+	// Represent the websocket connection as a "Client".
+	client := &Client{id: user, group: board, conn: conn, send: make(chan interface{}, 256), hub: hub}
 
 	// Register the connection/client with the Hub
 	client.hub.register <- client
-	client.hub.redis.Subscribe(id) // ToDo: This subscribes to the same redis channels everytime a request comes for the same board/group. Check the impact.
+	client.hub.redis.Subscribe(board)
 
 	go client.read()
 	go client.write()
