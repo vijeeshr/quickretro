@@ -2,11 +2,10 @@ package main
 
 // Store structure - Redis
 /*
-(KEY)board:{boardId} 				(VALUE)board					Board - Redis Hash. The board details. Owned by single user.
+(KEY)board:{boardId}				(VALUE)board					Board - Redis Hash. The board details. Owned by single user.
 (KEY)msg:{messageId}				(VALUE)message					Message - Redis Hash. Useful for fetch/add/update for an individual message.
-(KEY)board:msg:{boardId} 			(VALUE)[messageIds] 			Board-wise Messages - Redis Set. Useful for fetching list of messages.
-(KEY)msg:likes:{messageId} 			(VALUE)[userIds]				Likes - Redis Set. For recording likes/votes for a message
-
+(KEY)board:msg:{boardId}			(VALUE)[messageIds] 			Board-wise Messages - Redis Set. Useful for fetching list of messages.
+(KEY)msg:likes:{messageId}			(VALUE)[userIds]				Likes - Redis Set. For recording likes/votes for a message
 (KEY)board:user:{boardId}:{userId}	(VALUE)User						Users - Redis Hash. User master. Keeping as board specific.
 (KEY)board:users:{boardId}			(VALUE)[userIds]				Board-wise Users - Redis Set. Useful for fetching members of a board.
 */

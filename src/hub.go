@@ -51,26 +51,3 @@ func (hub *Hub) run() {
 		}
 	}
 }
-
-// func (hub *Hub) executeMasking(i Incoming) {
-// 	// Validate if command came from board owner
-// 	if board, ok := hub.redis.GetBoard(i.Group); ok && board.Owner == i.By {
-// 		// Save and broadcast
-// 		if ok := hub.redis.SaveBoard(board, i.Type); ok {
-// 			res := MaskResponse{Type: i.Type}
-// 			// broadcast
-// 			clients := hub.clients[i.Group]
-// 			for client := range clients {
-// 				select {
-// 				case client.send <- res:
-// 				default:
-// 					delete(hub.clients[client.group], client)
-// 					close(client.send)
-// 					// Todo: Should the group be deleted from here if there are no more clients remaining? This is a place to broadcast though.
-// 					// delete(hub.clients, client)
-// 					// close(client.send)
-// 				}
-// 			}
-// 		}
-// 	}
-// }
