@@ -3,17 +3,32 @@ import { ref } from 'vue';
 import Avatar from './Avatar.vue';
 import Card from './Card.vue';
 import Category from './Category.vue';
+import { CardModelMeta } from './CardModel';
 
 const mask = ref(true)
 
-const cards = ref([
-    { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82ba", nickname: "Vijeesh Ravindran", msg: "was", cat: "good", likes: "1", liked: true, mine: true },
-    { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bb", nickname: "John Doe", msg: "From John", cat: "Bad", likes: "0", liked: false, mine: false },
-    { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bc", nickname: "John Doe", msg: "This is some random text", cat: "good", likes: "0", liked: false, mine: false }
+// const cards = ref<CardModel[]>([
+//     { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82ba", nickname: "Vijeesh Ravindran", msg: "was", cat: "good", likes: "1", liked: true, mine: true },
+//     { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bb", nickname: "John Doe", msg: "From John", cat: "bad", likes: "0", liked: false, mine: false },
+//     { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bc", nickname: "John Doe", msg: "This is some random text", cat: "good", likes: "0", liked: false, mine: false }
+// ])
+
+const cardsMeta = ref<CardModelMeta[]>([
+    { card: { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82ba", nickname: "Vijeesh Ravindran", msg: "was", cat: "good", likes: "1", liked: true, mine: true }, isNew: false },
+    { card: { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bb", nickname: "John Doe", msg: "From John", cat: "bad", likes: "0", liked: false, mine: false }, isNew: false },
+    { card: { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bc", nickname: "John Doe", msg: "This is some random text", cat: "good", likes: "0", liked: false, mine: false }, isNew: false }
 ])
 
-function filterCards(category: string) {
-    return cards.value.filter(card => card.cat.toLowerCase() === category.toLowerCase());
+const filterCards = (category: string) => {
+    return cardsMeta.value.filter(c => c.card.cat.toLowerCase() === category.toLowerCase());
+}
+
+const addCard = (category: string) => {
+    const id = crypto.randomUUID()
+    const nickname = localStorage.getItem('nickname') || ''
+    const card = { card: { typ: "msg", id: id, nickname: nickname, msg: "", cat: category, likes: "0", liked: false, mine: true }, isNew: true }
+    // console.log('New card:', card)
+    cardsMeta.value.push(card)
 }
 
 </script>
@@ -24,10 +39,14 @@ function filterCards(category: string) {
     <!-- Left Sidebar -->
     <div class="w-16 p-4">
         <Avatar class="ml-auto mx-auto mb-4" />
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" data-icon-mask>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" 
+            :class="{ 'hidden': mask }"
+            @click="mask = !mask">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
         </svg>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" data-icon-unmask>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" 
+            :class="{ 'hidden': !mask }"
+            @click="mask = !mask">
             <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
         </svg>      
@@ -44,14 +63,14 @@ function filterCards(category: string) {
 
     <!-- Dashboard Content -->
     <div class="flex-1 flex bg-gray-100 overflow-hidden">
-        <Category button-text="Add Sails" color="green" name="good">
-            <Card v-for="card in filterCards('good')" :card="card" :mask="mask" :key="card.id" />
+        <Category button-text="Add Sails" color="green" @add-card="addCard('good')">
+            <Card v-for="cardmeta in filterCards('good')" :card="cardmeta.card" :mask="mask" :new="cardmeta.isNew" :key="cardmeta.card.id" />
         </Category>
-        <Category button-text="Add Anchors" color="red" name="bad">
-            <Card v-for="card in filterCards('bad')" :card="card" :mask="mask" :key="card.id" />
+        <Category button-text="Add Anchors" color="red" @add-card="addCard('bad')">
+            <Card v-for="cardmeta in filterCards('bad')" :card="cardmeta.card" :mask="mask" :new="cardmeta.isNew" :key="cardmeta.card.id" />
         </Category>
-        <Category button-text="Add Next Steps" color="yellow" name="next">
-            <Card v-for="card in filterCards('next')" :card="card" :mask="mask" :key="card.id" />
+        <Category button-text="Add Next Steps" color="yellow" @add-card="addCard('next')">
+            <Card v-for="cardmeta in filterCards('next')" :card="cardmeta.card" :mask="mask" :new="cardmeta.isNew" :key="cardmeta.card.id" />
         </Category>
     </div>
     <!-- Dashboard Content -->
