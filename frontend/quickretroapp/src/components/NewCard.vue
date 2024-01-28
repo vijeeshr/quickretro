@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { CardModel } from './CardModel';
+import { CardModel } from '../models/CardModel';
 
 const props = defineProps<{ category: string }>()
 const emit = defineEmits(['added'])

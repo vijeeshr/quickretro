@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import Avatar from './Avatar.vue';
 import Card from './Card.vue';
 import Category from './Category.vue';
-import { CardModel } from './CardModel';
+import { CardModel } from '../models/CardModel';
 import NewCard from './NewCard.vue';
 
 const mask = ref(true)
@@ -27,7 +27,6 @@ const onAdded = (card: CardModel) => {
     console.log('newcontent received:', card)
     //unmount newCard
     newCardCategory.value = ''
-
     cards.value.push(card)
 }
 
