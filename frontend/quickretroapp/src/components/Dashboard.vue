@@ -7,7 +7,7 @@ import { CardModel } from './CardModel';
 import NewCard from './NewCard.vue';
 
 const mask = ref(true)
-const selectedCategory = ref('')
+const newCardCategory = ref('')
 
 const cards = ref<CardModel[]>([
     { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82ba", nickname: "Vijeesh Ravindran", msg: "was", cat: "good", likes: "1", liked: true, mine: true },
@@ -20,13 +20,13 @@ const filterCards = (category: string) => {
 }
 
 const add = (category: string) => {
-    selectedCategory.value = category
+    newCardCategory.value = category
 }
 
 const onAdded = (card: CardModel) => {
     console.log('newcontent received:', card)
     //unmount newCard
-    selectedCategory.value = ''
+    newCardCategory.value = ''
 
     cards.value.push(card)
 }
@@ -64,15 +64,15 @@ const onAdded = (card: CardModel) => {
     <!-- Dashboard Content -->
     <div class="flex-1 flex bg-gray-100 overflow-hidden">
         <Category button-text="Add Sails" color="green" @add-card="add('good')">
-            <NewCard v-if="selectedCategory=='good'" category="good" @added="onAdded" />
+            <NewCard v-if="newCardCategory=='good'" category="good" @added="onAdded" />
             <Card v-for="card in filterCards('good')" :card="card" :mask="mask" :key="card.id" />
         </Category>
         <Category button-text="Add Anchors" color="red" @add-card="add('bad')">
-            <NewCard v-if="selectedCategory=='bad'" category="bad" @added="onAdded" />
+            <NewCard v-if="newCardCategory=='bad'" category="bad" @added="onAdded" />
             <Card v-for="card in filterCards('bad')" :card="card" :mask="mask" :key="card.id" />
         </Category>
         <Category button-text="Add Next Steps" color="yellow" @add-card="add('next')">
-            <NewCard v-if="selectedCategory=='next'" category="next" @added="onAdded" />
+            <NewCard v-if="newCardCategory=='next'" category="next" @added="onAdded" />
             <Card v-for="card in filterCards('next')" :card="card" :mask="mask" :key="card.id" />
         </Category>
     </div>
