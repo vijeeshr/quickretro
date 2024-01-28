@@ -3,32 +3,35 @@ import { ref } from 'vue';
 import Avatar from './Avatar.vue';
 import Card from './Card.vue';
 import Category from './Category.vue';
-import { CardModelMeta } from './CardModel';
+import { CardModel } from './CardModel';
+import NewCard from './NewCard.vue';
 
 const mask = ref(true)
+const newCard = ref({ create: false, category: '' })
 
-// const cards = ref<CardModel[]>([
-//     { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82ba", nickname: "Vijeesh Ravindran", msg: "was", cat: "good", likes: "1", liked: true, mine: true },
-//     { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bb", nickname: "John Doe", msg: "From John", cat: "bad", likes: "0", liked: false, mine: false },
-//     { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bc", nickname: "John Doe", msg: "This is some random text", cat: "good", likes: "0", liked: false, mine: false }
-// ])
-
-const cardsMeta = ref<CardModelMeta[]>([
-    { card: { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82ba", nickname: "Vijeesh Ravindran", msg: "was", cat: "good", likes: "1", liked: true, mine: true }, isNew: false },
-    { card: { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bb", nickname: "John Doe", msg: "From John", cat: "bad", likes: "0", liked: false, mine: false }, isNew: false },
-    { card: { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bc", nickname: "John Doe", msg: "This is some random text", cat: "good", likes: "0", liked: false, mine: false }, isNew: false }
+const cards = ref<CardModel[]>([
+    { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82ba", nickname: "Vijeesh Ravindran", msg: "was", cat: "good", likes: "1", liked: true, mine: true },
+    { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bb", nickname: "John Doe", msg: "From John", cat: "bad", likes: "0", liked: false, mine: false },
+    { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bc", nickname: "John Doe", msg: "This is some random text", cat: "good", likes: "0", liked: false, mine: false }
 ])
 
 const filterCards = (category: string) => {
-    return cardsMeta.value.filter(c => c.card.cat.toLowerCase() === category.toLowerCase());
+    return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase());
 }
 
 const addCard = (category: string) => {
-    const id = crypto.randomUUID()
-    const nickname = localStorage.getItem('nickname') || ''
-    const card = { card: { typ: "msg", id: id, nickname: nickname, msg: "", cat: category, likes: "0", liked: false, mine: true }, isNew: true }
-    // console.log('New card:', card)
-    cardsMeta.value.push(card)
+    console.log('addCard for ', category)
+    newCard.value.create = true
+    newCard.value.category = category
+}
+
+const added = (card: CardModel) => {
+    console.log('newcontent received:', card)
+    //unmount newCard
+    newCard.value.create = false
+    newCard.value.category = ''
+
+    cards.value.push(card)
 }
 
 </script>
@@ -64,13 +67,16 @@ const addCard = (category: string) => {
     <!-- Dashboard Content -->
     <div class="flex-1 flex bg-gray-100 overflow-hidden">
         <Category button-text="Add Sails" color="green" @add-card="addCard('good')">
-            <Card v-for="cardmeta in filterCards('good')" :card="cardmeta.card" :mask="mask" :new="cardmeta.isNew" :key="cardmeta.card.id" />
+            <NewCard v-if="newCard.create && newCard.category=='good'" category="good" @added="added" />
+            <Card v-for="card in filterCards('good')" :card="card" :mask="mask" :key="card.id" />
         </Category>
         <Category button-text="Add Anchors" color="red" @add-card="addCard('bad')">
-            <Card v-for="cardmeta in filterCards('bad')" :card="cardmeta.card" :mask="mask" :new="cardmeta.isNew" :key="cardmeta.card.id" />
+            <NewCard v-if="newCard.create && newCard.category=='bad'" category="bad" @added="added" />
+            <Card v-for="card in filterCards('bad')" :card="card" :mask="mask" :key="card.id" />
         </Category>
         <Category button-text="Add Next Steps" color="yellow" @add-card="addCard('next')">
-            <Card v-for="cardmeta in filterCards('next')" :card="cardmeta.card" :mask="mask" :new="cardmeta.isNew" :key="cardmeta.card.id" />
+            <NewCard v-if="newCard.create && newCard.category=='next'" category="next" @added="added" />
+            <Card v-for="card in filterCards('next')" :card="card" :mask="mask" :key="card.id" />
         </Category>
     </div>
     <!-- Dashboard Content -->

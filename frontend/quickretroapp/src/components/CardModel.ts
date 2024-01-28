@@ -8,8 +8,3 @@ export interface CardModel {
     liked: boolean
     mine: boolean
 }
-
-export interface CardModelMeta {
-    card: CardModel
-    isNew: boolean
-}

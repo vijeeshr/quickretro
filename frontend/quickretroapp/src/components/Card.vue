@@ -6,32 +6,10 @@ import { CardModel } from './CardModel';
 interface Props {
     card: CardModel
     mask: boolean
-    new: boolean
 }
 const props = defineProps<Props>()
-// const props = withDefaults(defineProps<Props>(), {
-//     new: false
-// })
 
-const editing = ref(props.new)
-
-// enables v-focus in templates
-const vFocus = {
-  mounted: (el: HTMLElement, binding: any) => {
-    console.log('binding', binding)
-    if (binding.value) {
-        el.focus()
-    }
-  }
-}
-
-// onMounted(() => {
-//   console.log('Card mounted', props.card)
-// })
-
-// onUpdated(() => {
-//   console.log('Card Updated', props.card)
-// })
+const editing = ref(false)
 
 const content = computed(() => {
     if (props.mask && !props.card.mine && props.card.msg) {
@@ -89,7 +67,6 @@ const remove = () => {
 
     <div class="text-gray-500 pb-2" :class="{ 'blur-sm':mask && !card.mine }">
         <article class="min-h-4 text-center break-words focus:outline-none"
-            v-focus="editing"
             :class="[ editing && card.mine ? 'cursor-auto' : 'cursor-default' ]"
             :contenteditable="editing && card.mine"
             @click="edit"
