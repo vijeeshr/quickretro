@@ -7,7 +7,7 @@ import { CardModel } from './CardModel';
 import NewCard from './NewCard.vue';
 
 const mask = ref(true)
-const newCard = ref({ create: false, category: '' })
+const selectedCategory = ref('')
 
 const cards = ref<CardModel[]>([
     { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82ba", nickname: "Vijeesh Ravindran", msg: "was", cat: "good", likes: "1", liked: true, mine: true },
@@ -19,17 +19,14 @@ const filterCards = (category: string) => {
     return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase());
 }
 
-const addCard = (category: string) => {
-    console.log('addCard for ', category)
-    newCard.value.create = true
-    newCard.value.category = category
+const add = (category: string) => {
+    selectedCategory.value = category
 }
 
-const added = (card: CardModel) => {
+const onAdded = (card: CardModel) => {
     console.log('newcontent received:', card)
     //unmount newCard
-    newCard.value.create = false
-    newCard.value.category = ''
+    selectedCategory.value = ''
 
     cards.value.push(card)
 }
@@ -66,16 +63,16 @@ const added = (card: CardModel) => {
 
     <!-- Dashboard Content -->
     <div class="flex-1 flex bg-gray-100 overflow-hidden">
-        <Category button-text="Add Sails" color="green" @add-card="addCard('good')">
-            <NewCard v-if="newCard.create && newCard.category=='good'" category="good" @added="added" />
+        <Category button-text="Add Sails" color="green" @add-card="add('good')">
+            <NewCard v-if="selectedCategory=='good'" category="good" @added="onAdded" />
             <Card v-for="card in filterCards('good')" :card="card" :mask="mask" :key="card.id" />
         </Category>
-        <Category button-text="Add Anchors" color="red" @add-card="addCard('bad')">
-            <NewCard v-if="newCard.create && newCard.category=='bad'" category="bad" @added="added" />
+        <Category button-text="Add Anchors" color="red" @add-card="add('bad')">
+            <NewCard v-if="selectedCategory=='bad'" category="bad" @added="onAdded" />
             <Card v-for="card in filterCards('bad')" :card="card" :mask="mask" :key="card.id" />
         </Category>
-        <Category button-text="Add Next Steps" color="yellow" @add-card="addCard('next')">
-            <NewCard v-if="newCard.create && newCard.category=='next'" category="next" @added="added" />
+        <Category button-text="Add Next Steps" color="yellow" @add-card="add('next')">
+            <NewCard v-if="selectedCategory=='next'" category="next" @added="onAdded" />
             <Card v-for="card in filterCards('next')" :card="card" :mask="mask" :key="card.id" />
         </Category>
     </div>
