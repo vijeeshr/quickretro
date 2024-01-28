@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue';
 import Avatar from './Avatar.vue';
-import { CardModel } from './CardModel';
+import { CardModel } from '../models/CardModel';
 
 interface Props {
     card: CardModel
