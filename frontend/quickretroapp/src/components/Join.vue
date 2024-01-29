@@ -20,7 +20,7 @@ const join = () => {
         if (board && board.trim() != '') {
             router.push(`/board/${board}`)
         } else {
-            router.push(`/create`)
+            router.push(`/create`) // Todo: How about router.replace() ?
         }
     }
 }

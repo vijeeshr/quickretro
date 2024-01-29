@@ -147,8 +147,8 @@ const connect = () => {
     return
   }
 
-  const url = `ws://${document.location.host}/board/${group}/user/${user}/meet`
-  // const url = `ws://localhost:8080/board/${group}/user/${user}/meet`
+  const url = `ws://${document.location.host}/ws/board/${group}/user/${user}/meet`
+  // const url = `ws://localhost:8080/ws/board/${group}/user/${user}/meet`
   socket = new WebSocket(url)
 
   // Socket event handlers

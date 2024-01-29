@@ -6,14 +6,14 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     proxy: {
+      '^/(ws)': {
+        target: 'http://localhost:8080/',
+        changeOrigin: true,
+        ws: true,
+      },      
       '^/(api)': {
         target: 'http://localhost:8080/',
         changeOrigin: true,
-      },
-      '/meet': {
-        target: 'ws://localhost:8080',
-        changeOrigin: true,
-        ws: true,
       },
     }
   }
