@@ -4,6 +4,9 @@ import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute()
 const router = useRouter()
+const board = Array.isArray(route.params.board)
+                  ? route.params.board[0]
+                  : route.params.board
 const guestname = ref(localStorage.getItem('nickname') || '')
 
 const isGuestNameValid = computed(() => {
@@ -14,7 +17,11 @@ const isGuestNameValid = computed(() => {
 const join = () => {
     if (isGuestNameValid.value) {
         localStorage.setItem("nickname", guestname.value)
-        router.push(`/board/${route.params.board}`)
+        if (board && board.trim() != '') {
+            router.push(`/board/${board}`)
+        } else {
+            router.push(`/create`)
+        }
     }
 }
 
