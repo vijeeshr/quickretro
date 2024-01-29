@@ -14,6 +14,7 @@ const boardnameEntered = computed(() => {
 })
 
 const create = async () => {
+    // Todo: Throttle this.
     try {
         const createdBoard = await createBoard(boardname.value, team.value, localStorage.getItem('user') || '')
         router.push(`/board/${createdBoard.id}`)
