@@ -8,25 +8,33 @@ export default createRouter({
   routes: [
     {
       path: '/',
+      name: "start",
       component: Join,
     },
     {
       path: '/create',
+      name: 'create',
       component: CreateBoard,
+      beforeEnter: () => {
+        if (!localStorage.getItem("user") || !localStorage.getItem("xid") || !localStorage.getItem("nickname")) {
+          return `/`
+        }
+      },
     },
     {
       path: '/board/:board',
+      name: 'dashboard',
       component: Dashboard,
+      beforeEnter: (to) => {
+        if (!localStorage.getItem("user") || !localStorage.getItem("xid") || !localStorage.getItem("nickname")) {
+          return `/board/${to.params.board}/join`
+        }
+      },      
     },
     {
       path: '/board/:board/join',
+      name: 'join',
       component: Join,
     },
-    /*
-    {
-      path: '/contact',
-    //   component: () => import('@/views/Contact.vue'),
-    },
-    */
   ],
 })

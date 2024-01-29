@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { createBoard } from '../api'
 
 const router = useRouter()
-
 const boardname = ref('')
 const team = ref('')
 
@@ -22,14 +21,6 @@ const create = async () => {
         console.error('Error creating board:', error);
     }
 }
-
-onMounted(() => {
-    if (!localStorage.getItem("user") || 
-        !localStorage.getItem("xid") || 
-        !localStorage.getItem("nickname")) {
-            router.push(`/`)
-    }
-})
 
 </script>
 

@@ -1,20 +1,26 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import Avatar from './Avatar.vue';
 import Card from './Card.vue';
 import Category from './Category.vue';
 import { CardModel } from '../models/CardModel';
 import NewCard from './NewCard.vue';
-import { useRoute, useRouter } from 'vue-router';
+// import { useRoute } from 'vue-router';
+// import { useWebSocket } from '@vueuse/core'
 
 const mask = ref(true)
 const newCardCategory = ref('')
 
-const route = useRoute()
-const router = useRouter()
-const board = Array.isArray(route.params.board)
-                  ? route.params.board[0]
-                  : route.params.board
+// const route = useRoute()
+// // const router = useRouter()
+// const board = Array.isArray(route.params.board)
+//                   ? route.params.board[0]
+//                   : route.params.board
+
+// console.log('Attempt WS call..')
+// const user = localStorage.getItem("user")
+// const { status, data, send, open, close } = useWebSocket(`ws://${document.location.host}/board/${board}/user/${user}/meet`)
+// console.log(status, data, send, open, close)               
 
 const cards = ref<CardModel[]>([
     { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82ba", nickname: "Vijeesh Ravindran", msg: "was", cat: "good", likes: "1", liked: true, mine: true },
@@ -36,14 +42,6 @@ const onAdded = (card: CardModel) => {
     newCardCategory.value = ''
     cards.value.push(card)
 }
-
-onMounted(() => {
-    if (!localStorage.getItem("user") || 
-        !localStorage.getItem("xid") || 
-        !localStorage.getItem("nickname")) {
-            router.push(`/board/${board}/join`)
-    }
-})
 
 </script>
 
