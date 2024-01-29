@@ -10,7 +10,6 @@ export const createBoard = async (name: string, team: string, user: string): Pro
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*", // TEMPORARY
             },
             body: JSON.stringify({ name, team, owner: user }),            
         })
