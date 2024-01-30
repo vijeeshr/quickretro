@@ -81,13 +81,14 @@ class DeleteMessageEvent {
 }
 // Response models
 class RegisterResponse {
-  constructor(typ, boardName, boardTeam, boardStatus, boardMasking, isBoardOwner, users) {
+  constructor(typ, boardName, boardTeam, boardStatus, boardMasking, isBoardOwner, mine, users) {
     this.typ = typ
     this.boardName = boardName
     this.boardTeam = boardTeam
     this.boardStatus = boardStatus
     this.boardMasking = boardMasking
     this.isBoardOwner = isBoardOwner
+    this.mine = mine
     this.users = users // fields- nickname, xid.
   }
 }

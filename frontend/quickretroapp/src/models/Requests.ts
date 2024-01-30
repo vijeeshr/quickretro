@@ -1,0 +1,126 @@
+export interface EventRequest<T> {
+    typ: string
+    pyl: T
+}
+
+export interface RegisterEvent {
+    by: string
+    nickname: string
+    xid: string
+    grp: string
+}
+
+export interface MaskEvent {
+    by: string
+    grp: string
+    mask: boolean
+}
+
+export interface SaveMessageEvent {
+    id: string
+    by: string
+    nickname: string
+    grp: string
+    msg: string
+    cat: string
+}
+
+export interface LikeMessageEvent {
+    msgId: string
+    by: string
+    like: boolean
+}
+
+export interface DeleteMessageEvent {
+    msgId: string
+    by: string
+    grp: string
+}
+
+export interface RegisterResponse {
+    typ: 'reg'
+    boardName: string
+    boardTeam: string
+    boardStatus: string
+    boardMasking: boolean
+    isBoardOwner: boolean
+    mine: boolean
+    user: UserDetails
+}
+
+export interface MaskResponse {
+    typ: 'mask'
+    mask: boolean
+}
+
+export interface SaveMessageResponse {
+    typ: 'msg'
+    id: string
+    nickname: string
+    msg: string
+    cat: string
+    likes: string
+    liked: boolean
+    mine: boolean
+}
+
+export interface LikeMessageResponse {
+    typ: 'like'
+    id: string
+    likes: string
+    liked: boolean
+}
+
+export interface DeleteMessageResponse {
+    typ: 'del'
+    id: string
+}
+
+export interface UserClosingResponse {
+    typ: 'closing'
+    user: UserDetails
+}
+
+export interface UserDetails {
+    nickname: string
+    xid: string
+}
+
+export type SocketResponse = RegisterResponse | MaskResponse | SaveMessageResponse | 
+                             LikeMessageResponse | DeleteMessageResponse | UserClosingResponse
+
+export function toSocketResponse(json: any): SocketResponse | null {
+
+    if (json && json.typ) {
+        switch (json.typ) {
+            case 'reg':
+                return json as RegisterResponse
+            case 'mask':
+                return json as MaskResponse
+            case 'msg':
+                return json as SaveMessageResponse
+            case 'like':
+                return json as LikeMessageResponse
+            case 'del':
+                return json as DeleteMessageResponse 
+            case 'closing':
+                return json as UserClosingResponse       
+                // const data: MaskResponse = json
+                // return data
+
+                // return {
+                //     typ: 'reg',
+                //     boardName: json.boardName,
+                //     boardTeam: json.boardTeam,
+                //     boardStatus: json.boardStatus,
+                //     boardMasking: json.boardMasking,
+                //     isBoardOwner: json.isBoardOwner,
+                //     user: json.user as UserDetails,
+                // } as RegisterResponse
+            default:
+                return null // Handle unknown "typ" values as needed
+        }
+    }
+
+    return null
+}

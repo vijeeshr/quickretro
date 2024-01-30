@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import Avatar from './Avatar.vue';
 import Card from './Card.vue';
 import Category from './Category.vue';
 import { CardModel } from '../models/CardModel';
 import NewCard from './NewCard.vue';
-// import { useRoute } from 'vue-router';
-// import { useWebSocket } from '@vueuse/core'
+import { useRoute } from 'vue-router';
+import { EventRequest, RegisterEvent, toSocketResponse } from '../models/Requests';
 
 const mask = ref(true)
 const newCardCategory = ref('')
+const route = useRoute()
+const board = Array.isArray(route.params.board)
+                  ? route.params.board[0]
+                  : route.params.board
+// Todo: Find a way of passing this from route..meta?
+const user = localStorage.getItem("user") || ''
+const externalId = localStorage.getItem("xid") || ''
+const nickname = localStorage.getItem("nickname") || ''
+const isConnected = ref(false)
+let socket: WebSocket
 
-// const route = useRoute()
-// // const router = useRouter()
-// const board = Array.isArray(route.params.board)
-//                   ? route.params.board[0]
-//                   : route.params.board
-
-// console.log('Attempt WS call..')
-// const user = localStorage.getItem("user")
-// const { status, data, send, open, close } = useWebSocket(`ws://${document.location.host}/board/${board}/user/${user}/meet`)
-// console.log(status, data, send, open, close)               
 
 const cards = ref<CardModel[]>([
     { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82ba", nickname: "Vijeesh Ravindran", msg: "was", cat: "good", likes: "1", liked: true, mine: true },
@@ -42,6 +42,50 @@ const onAdded = (card: CardModel) => {
     newCardCategory.value = ''
     cards.value.push(card)
 }
+
+const dispatchEvent = <T>(eventType: string, payload: T) => {
+    const event: EventRequest<T> = {
+        typ: eventType,
+        pyl: payload
+    }
+    console.log("Dispatching", event)
+    if (socket.readyState == 1) {
+        socket.send(JSON.stringify(event)); // Can throw error if socket object is "connecting". Check the docs.
+    } else {
+        console.log('Socket not ready for send operation')
+    }    
+}
+
+const socketOnOpen = (event: Event) => {
+    console.log("[open] Connection established", event)
+    isConnected.value = true
+    dispatchEvent<RegisterEvent>("reg", { by: user, nickname: nickname, xid: externalId, grp: board})
+}
+const socketOnClose = (event: CloseEvent) => {
+    isConnected.value = false
+    console.log("Close received", event)
+}
+const socketOnError = (event: Event) => {
+    console.error(event)
+}
+const socketOnMessage = (event: MessageEvent<any>) => {
+    const response = toSocketResponse(JSON.parse(event.data))
+    console.log('Response', response)
+}
+
+onMounted(() => {
+    socket = new WebSocket(`ws://${document.location.host}/ws/board/${board}/user/${user}/meet`) 
+    socket.onopen = socketOnOpen
+    socket.onclose = socketOnClose
+    socket.onerror = socketOnError
+    socket.onmessage = socketOnMessage
+})
+
+// onUnmounted(() => {
+//     if (socket && (!socket.CLOSED || !socket.CLOSING)) {
+//         socket.close(1001)
+//     }
+// })
 
 </script>
 
