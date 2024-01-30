@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { CardModel } from '../models/CardModel';
+import { DraftMessage } from '../models/DraftMessage';
 
 const props = defineProps<{ category: string }>()
 const emit = defineEmits(['added'])
@@ -10,15 +10,10 @@ const editing = ref(true)
 const add = (event: Event) => {
   if (editing.value) {
     editing.value = false 
-    const payload: CardModel = {
-      typ: 'msg',
+    const payload: DraftMessage = {
       id: crypto.randomUUID(),
-      nickname: localStorage.getItem('nickname') || '',
       msg: (event.target as HTMLElement).innerText.trim(),
-      cat: props.category,
-      likes: '0',
-      liked: false,
-      mine: true
+      cat: props.category
     }
     emit('added', payload)
   }

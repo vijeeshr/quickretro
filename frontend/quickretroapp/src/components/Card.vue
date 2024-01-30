@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue';
 import Avatar from './Avatar.vue';
-import { CardModel } from '../models/CardModel';
+import { MessageResponse } from '../models/Requests';
+import { DraftMessage } from '../models/DraftMessage';
 
 interface Props {
-    card: CardModel
+    card: MessageResponse // Todo: Change name of model. Or use a different model.
     mask: boolean
 }
 const props = defineProps<Props>()
+const emit = defineEmits(['updated', 'deleted'])
 
 const editing = ref(false)
 
@@ -19,7 +21,7 @@ const content = computed(() => {
 })
 
 const edit = async (event: Event) => {
-    if (!editing.value) {
+    if (!editing.value && props.card.mine) {
         editing.value = true;
         await nextTick();
         (event.target as HTMLElement).focus();
@@ -30,7 +32,12 @@ const save = (event: Event) => {
     if (editing.value && props.card.mine) {
         editing.value = false
         if (props.card.msg !== (event.target as HTMLElement).innerText.trim()) {
-            console.log('Dispatch save for:', (event.target as HTMLElement).innerText.trim())
+            const payload: DraftMessage = {
+                id: props.card.id,
+                msg: (event.target as HTMLElement).innerText.trim(),
+                cat: props.card.cat
+            }
+            emit('updated', payload)
         } else {
             console.log('No content change. Not dispatching!!')
             // console.log('[old value]', props.card.msg, '[new value]', (event.target as HTMLElement).innerText.trim())
@@ -55,7 +62,7 @@ const toggleLike = () => {
 
 const remove = () => {
     if (props.card.mine) {
-        console.log('Dispatch Delete')
+        emit('deleted', props.card.id)
     }
 }
 

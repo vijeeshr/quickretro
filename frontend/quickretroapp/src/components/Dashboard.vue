@@ -3,12 +3,14 @@ import { onMounted, ref } from 'vue';
 import Avatar from './Avatar.vue';
 import Card from './Card.vue';
 import Category from './Category.vue';
-import { CardModel } from '../models/CardModel';
 import NewCard from './NewCard.vue';
 import { useRoute } from 'vue-router';
-import { EventRequest, RegisterEvent, toSocketResponse } from '../models/Requests';
+import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse } from '../models/Requests';
+import { OnlineUser } from '../models/OnlineUser';
+import { DraftMessage } from '../models/DraftMessage';
 
-const mask = ref(true)
+const isMasked = ref(true)
+const isOwner = ref(false)
 const newCardCategory = ref('')
 const route = useRoute()
 const board = Array.isArray(route.params.board)
@@ -21,12 +23,9 @@ const nickname = localStorage.getItem("nickname") || ''
 const isConnected = ref(false)
 let socket: WebSocket
 
+const cards = ref<MessageResponse[]>([])
 
-const cards = ref<CardModel[]>([
-    { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82ba", nickname: "Vijeesh Ravindran", msg: "was", cat: "good", likes: "1", liked: true, mine: true },
-    { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bb", nickname: "John Doe", msg: "From John", cat: "bad", likes: "0", liked: false, mine: false },
-    { typ: "msg", id: "f19ffc16-fee7-4d52-9cd0-f4d46d2a82bc", nickname: "John Doe", msg: "This is some random text", cat: "good", likes: "0", liked: false, mine: false }
-])
+const onlineUsers = ref<OnlineUser[]>([])
 
 const filterCards = (category: string) => {
     return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase());
@@ -36,11 +35,56 @@ const add = (category: string) => {
     newCardCategory.value = category
 }
 
-const onAdded = (card: CardModel) => {
+const onAdded = (card: DraftMessage) => {
     console.log('newcontent received:', card)
-    //unmount newCard
-    newCardCategory.value = ''
-    cards.value.push(card)
+    newCardCategory.value = '' //unmount newCard
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat })
+}
+
+const onUpdated = (card: DraftMessage) => {
+    console.log('Updated content received:', card)
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat })
+}
+
+const onDeleted = (cardId: string) => {
+    dispatchEvent<DeleteMessageEvent>("del", { msgId: cardId, by: user, grp: board})
+}
+
+const mask = () => {
+    dispatchEvent<MaskEvent>("mask", { by: user, grp: board, mask: !isMasked.value})
+}
+
+const onRegisterResponse = (response: RegisterResponse) => {
+    isOwner.value = response.isBoardOwner
+    isMasked.value = response.boardMasking
+    onlineUsers.value = []
+    onlineUsers.value.push(...response.users) // Todo: find a better way
+    // Todo: Reload.
+}
+
+const onUserClosingResponse = (response: UserClosingResponse) => {
+    onlineUsers.value = []
+    onlineUsers.value.push(...response.users) // Todo: find a better way
+}
+
+const onMaskResponse = (response: MaskResponse) => {
+    isMasked.value = response.mask
+}
+
+const onSaveMessageResponse = (response: MessageResponse) => {
+    let index = cards.value.findIndex(x => x.id === response.id)
+    if (index === -1) {
+        cards.value.push(response)
+    } else {
+        cards.value[index] = response // Is this reactive?
+    }
+}
+
+const onDeleteMessageResponse = (response: DeleteMessageResponse) => {
+    let index = cards.value.findIndex(x => x.id === response.id)
+    if (index !== -1) {
+        cards.value.splice(index, 1)
+    }
 }
 
 const dispatchEvent = <T>(eventType: string, payload: T) => {
@@ -71,6 +115,26 @@ const socketOnError = (event: Event) => {
 const socketOnMessage = (event: MessageEvent<any>) => {
     const response = toSocketResponse(JSON.parse(event.data))
     console.log('Response', response)
+
+    if (response && response.typ) {
+        switch (response.typ) {
+            case "reg":
+                onRegisterResponse(response)
+                break
+            case "closing":
+                onUserClosingResponse(response)
+                break
+            case "mask":
+                onMaskResponse(response)
+                break
+            case "msg":
+                onSaveMessageResponse(response)
+                break
+            case "del":
+                onDeleteMessageResponse(response)
+                break
+        }
+    }
 }
 
 onMounted(() => {
@@ -95,14 +159,17 @@ onMounted(() => {
     <!-- Left Sidebar -->
     <div class="w-16 p-4">
         <Avatar class="ml-auto mx-auto mb-4" />
+        <!-- Mask controls -->
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" 
-            :class="{ 'hidden': mask }"
-            @click="mask = !mask">
+            v-if="isOwner"
+            :class="{ 'hidden': isMasked }"
+            @click="mask">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
         </svg>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" 
-            :class="{ 'hidden': !mask }"
-            @click="mask = !mask">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            v-if="isOwner"
+            :class="{ 'hidden': !isMasked }"
+            @click="mask">
             <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
         </svg>      
@@ -121,24 +188,25 @@ onMounted(() => {
     <div class="flex-1 flex bg-gray-100 overflow-hidden">
         <Category button-text="Add Sails" color="green" @add-card="add('good')">
             <NewCard v-if="newCardCategory=='good'" category="good" @added="onAdded" />
-            <Card v-for="card in filterCards('good')" :card="card" :mask="mask" :key="card.id" />
+            <Card v-for="card in filterCards('good')" :card="card" :mask="isMasked" :key="card.id" 
+                @updated="onUpdated" @deleted="onDeleted" />
         </Category>
         <Category button-text="Add Anchors" color="red" @add-card="add('bad')">
             <NewCard v-if="newCardCategory=='bad'" category="bad" @added="onAdded" />
-            <Card v-for="card in filterCards('bad')" :card="card" :mask="mask" :key="card.id" />
+            <Card v-for="card in filterCards('bad')" :card="card" :mask="isMasked" :key="card.id" 
+                @updated="onUpdated" @deleted="onDeleted" />
         </Category>
         <Category button-text="Add Next Steps" color="yellow" @add-card="add('next')">
             <NewCard v-if="newCardCategory=='next'" category="next" @added="onAdded" />
-            <Card v-for="card in filterCards('next')" :card="card" :mask="mask" :key="card.id" />
+            <Card v-for="card in filterCards('next')" :card="card" :mask="isMasked" :key="card.id" 
+                @updated="onUpdated" @deleted="onDeleted" />
         </Category>
     </div>
     <!-- Dashboard Content -->
 
     <!-- Right Sidebar -->
     <div class="w-16 p-4">
-        <Avatar name="Vijeesh Ravindran" class="ml-auto mx-auto mb-4" />
-        <Avatar name="Tony Stark" class="ml-auto mx-auto mb-4" />
-        <Avatar name="John Doe" class="ml-auto mx-auto mb-4" />
+        <Avatar v-for="user in onlineUsers" :name="user.nickname" class="ml-auto mx-auto mb-4" />
     </div>
     <!-- Right Sidebar -->        
 

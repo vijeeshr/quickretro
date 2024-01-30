@@ -1,3 +1,5 @@
+import { OnlineUser } from "./OnlineUser"
+
 export interface EventRequest<T> {
     typ: string
     pyl: T
@@ -45,7 +47,12 @@ export interface RegisterResponse {
     boardMasking: boolean
     isBoardOwner: boolean
     mine: boolean
-    user: UserDetails
+    users: OnlineUser[]
+}
+
+export interface UserClosingResponse {
+    typ: 'closing'
+    users: OnlineUser[]
 }
 
 export interface MaskResponse {
@@ -53,7 +60,7 @@ export interface MaskResponse {
     mask: boolean
 }
 
-export interface SaveMessageResponse {
+export interface MessageResponse {
     typ: 'msg'
     id: string
     nickname: string
@@ -76,17 +83,7 @@ export interface DeleteMessageResponse {
     id: string
 }
 
-export interface UserClosingResponse {
-    typ: 'closing'
-    user: UserDetails
-}
-
-export interface UserDetails {
-    nickname: string
-    xid: string
-}
-
-export type SocketResponse = RegisterResponse | MaskResponse | SaveMessageResponse | 
+export type SocketResponse = RegisterResponse | MaskResponse | MessageResponse | 
                              LikeMessageResponse | DeleteMessageResponse | UserClosingResponse
 
 export function toSocketResponse(json: any): SocketResponse | null {
@@ -98,7 +95,7 @@ export function toSocketResponse(json: any): SocketResponse | null {
             case 'mask':
                 return json as MaskResponse
             case 'msg':
-                return json as SaveMessageResponse
+                return json as MessageResponse
             case 'like':
                 return json as LikeMessageResponse
             case 'del':
