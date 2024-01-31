@@ -38,7 +38,7 @@ const vFocus = {
 
     <div class="text-gray-500 pb-2">
         <article v-focus 
-          class="min-h-4 text-center break-words focus:outline-none cursor-auto" contenteditable="true" 
+          class="min-h-[3.5rem] text-center break-words focus:outline-none cursor-auto" contenteditable="true" 
           @blur="add"
           @keydown.enter="addOnEnter"></article>
     </div>
