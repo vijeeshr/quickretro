@@ -6,14 +6,15 @@ type UserDetails struct {
 }
 
 type RegisterResponse struct {
-	Type         string         `json:"typ"`
-	Mine         bool           `json:"mine"`
-	BoardName    string         `json:"boardName"`
-	BoardTeam    string         `json:"boardTeam"`
-	BoardStatus  string         `json:"boardStatus"`
-	BoardMasking bool           `json:"boardMasking"`
-	IsBoardOwner bool           `json:"isBoardOwner"`
-	Users        []*UserDetails `json:"users"`
+	Type         string            `json:"typ"`
+	Mine         bool              `json:"mine"`
+	BoardName    string            `json:"boardName"`
+	BoardTeam    string            `json:"boardTeam"`
+	BoardStatus  string            `json:"boardStatus"`
+	BoardMasking bool              `json:"boardMasking"`
+	IsBoardOwner bool              `json:"isBoardOwner"`
+	Users        []*UserDetails    `json:"users"`
+	Messages     []MessageResponse `json:"messages"` //Todo: Change to *MessageResponse
 }
 
 type UserClosingResponse struct {

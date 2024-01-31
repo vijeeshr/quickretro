@@ -48,6 +48,7 @@ export interface RegisterResponse {
     isBoardOwner: boolean
     mine: boolean
     users: OnlineUser[]
+    messages: MessageResponse[]
 }
 
 export interface UserClosingResponse {
