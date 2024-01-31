@@ -40,13 +40,36 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 	if !usersOk {
 		return
 	}
+	messages, messagesOk := h.redis.GetMessages(i.Group)
+	if !messagesOk {
+		return
+	}
 
+	// Prepare user details
 	userDetails := make([]*UserDetails, 0)
 	for _, user := range users {
 		if user.Nickname == "" {
 			user.Nickname = "Anonymous" // This may not happen.
 		}
 		userDetails = append(userDetails, &UserDetails{Nickname: user.Nickname, Xid: user.Xid})
+	}
+
+	// Prepare message details
+	messagesDetails := make([]MessageResponse, 0)
+	// Collect "like" count for all messages in one call via a Redis pipeline
+	ids := make([]string, 0)
+	for _, m := range messages {
+		ids = append(ids, m.Id)
+	}
+	likes := h.redis.GetLikesCountMultiple(ids...)
+	for _, m := range messages {
+		msgRes := m.NewResponse("msg").(MessageResponse) // Todo: Type to return *MessageResponse
+		if count, ok := likes[m.Id]; ok {
+			msgRes.Likes = strconv.FormatInt(count, 10)
+		}
+		msgRes.Mine = m.By == i.By
+		msgRes.Liked = h.redis.HasLiked(m.Id, i.By) // Todo: This calls Redis SISMEMBER [O(1) as per doc] in a loop. Check for impact.
+		messagesDetails = append(messagesDetails, msgRes)
 	}
 
 	// Prepare response
@@ -57,6 +80,7 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 		BoardStatus:  board.Status.String(),
 		BoardMasking: board.Mask,
 		Users:        userDetails,
+		Messages:     messagesDetails,
 	}
 
 	clients := h.clients[i.Group]
