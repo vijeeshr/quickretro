@@ -3,13 +3,14 @@ import { computed, nextTick, ref } from 'vue';
 import Avatar from './Avatar.vue';
 import { MessageResponse } from '../models/Requests';
 import { DraftMessage } from '../models/DraftMessage';
+import { LikeMessage } from '../models/LikeMessage';
 
 interface Props {
     card: MessageResponse // Todo: Change name of model. Or use a different model.
     mask: boolean
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['updated', 'deleted'])
+const emit = defineEmits(['updated', 'deleted', 'liked'])
 
 const editing = ref(false)
 
@@ -53,11 +54,11 @@ const saveOnEnter = (event: KeyboardEvent) => {
 }
 
 const toggleLike = () => {
-    if (!props.card.liked) {
-        console.log('Dispatch Like')
-    } else {
-        console.log('Dispatch Unlike')
-    }
+    const payload: LikeMessage = {
+                msgId: props.card.id,
+                like: !props.card.liked
+            }
+    emit('liked', payload)
 }
 
 const remove = () => {

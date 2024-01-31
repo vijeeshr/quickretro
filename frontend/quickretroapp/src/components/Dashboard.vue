@@ -5,9 +5,10 @@ import Card from './Card.vue';
 import Category from './Category.vue';
 import NewCard from './NewCard.vue';
 import { useRoute } from 'vue-router';
-import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse } from '../models/Requests';
+import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse } from '../models/Requests';
 import { OnlineUser } from '../models/OnlineUser';
 import { DraftMessage } from '../models/DraftMessage';
+import { LikeMessage } from '../models/LikeMessage';
 
 const isMasked = ref(true)
 const isOwner = ref(false)
@@ -23,7 +24,7 @@ const nickname = localStorage.getItem("nickname") || ''
 const isConnected = ref(false)
 let socket: WebSocket
 
-const cards = ref<MessageResponse[]>([])
+const cards = ref<MessageResponse[]>([]) // Todo: Rework models
 
 const onlineUsers = ref<OnlineUser[]>([])
 
@@ -48,6 +49,10 @@ const onUpdated = (card: DraftMessage) => {
 
 const onDeleted = (cardId: string) => {
     dispatchEvent<DeleteMessageEvent>("del", { msgId: cardId, by: user, grp: board})
+}
+
+const onLiked = (likeMessage: LikeMessage) => {
+    dispatchEvent<LikeMessageEvent>("like", { msgId: likeMessage.msgId, by: user, like: likeMessage.like })
 }
 
 const mask = () => {
@@ -76,7 +81,7 @@ const onSaveMessageResponse = (response: MessageResponse) => {
     if (index === -1) {
         cards.value.push(response)
     } else {
-        cards.value[index] = response // Is this reactive?
+        cards.value[index] = response
     }
 }
 
@@ -84,6 +89,15 @@ const onDeleteMessageResponse = (response: DeleteMessageResponse) => {
     let index = cards.value.findIndex(x => x.id === response.id)
     if (index !== -1) {
         cards.value.splice(index, 1)
+    }
+}
+
+const onLikeMessageResponse = (response: LikeMessageResponse) => {
+    let index = cards.value.findIndex(x => x.id === response.id)
+    if (index !== -1) {
+        // Todo: Should whole card be updated? cards.value[index] = response. Or just the properties.
+        cards.value[index].liked = response.liked
+        cards.value[index].likes = response.likes
     }
 }
 
@@ -133,6 +147,9 @@ const socketOnMessage = (event: MessageEvent<any>) => {
             case "del":
                 onDeleteMessageResponse(response)
                 break
+            case "like":
+                onLikeMessageResponse(response)
+                break
         }
     }
 }
@@ -158,7 +175,7 @@ onMounted(() => {
 
     <!-- Left Sidebar -->
     <div class="w-16 p-4">
-        <Avatar class="ml-auto mx-auto mb-4" />
+        <Avatar :name="nickname" class="ml-auto mx-auto mb-4" />
         <!-- Mask controls -->
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" 
             v-if="isOwner"
@@ -189,17 +206,17 @@ onMounted(() => {
         <Category button-text="Add Sails" color="green" @add-card="add('good')">
             <NewCard v-if="newCardCategory=='good'" category="good" @added="onAdded" />
             <Card v-for="card in filterCards('good')" :card="card" :mask="isMasked" :key="card.id" 
-                @updated="onUpdated" @deleted="onDeleted" />
+                @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" />
         </Category>
         <Category button-text="Add Anchors" color="red" @add-card="add('bad')">
             <NewCard v-if="newCardCategory=='bad'" category="bad" @added="onAdded" />
             <Card v-for="card in filterCards('bad')" :card="card" :mask="isMasked" :key="card.id" 
-                @updated="onUpdated" @deleted="onDeleted" />
+                @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" />
         </Category>
         <Category button-text="Add Next Steps" color="yellow" @add-card="add('next')">
             <NewCard v-if="newCardCategory=='next'" category="next" @added="onAdded" />
             <Card v-for="card in filterCards('next')" :card="card" :mask="isMasked" :key="card.id" 
-                @updated="onUpdated" @deleted="onDeleted" />
+                @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" />
         </Category>
     </div>
     <!-- Dashboard Content -->
