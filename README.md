@@ -11,10 +11,11 @@ docker compose up
 ```sh
 cd .\frontend\quickretroapp\
 ```
-npm install to be done just once initially.
+Install packages and dependencies.  
 ```sh
 npm install
 ```
+Run the app.  
 ```sh
 npm run dev
 ```
