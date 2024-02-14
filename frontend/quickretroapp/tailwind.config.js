@@ -1,6 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
+  content: [
+    './index.html', 
+    './src/**/*.{vue,js,ts,jsx,tsx}',
+    './node_modules/preline/preline.js',
+  ],
   theme: {
     extend: {
       minHeight: (theme) => ({
@@ -8,7 +12,9 @@ export default {
       }),
     }
   },
-  plugins: [],
+  plugins: [
+    require('preline/plugin'),
+  ],
   safelist: [
     {
       pattern: /bg-(red|green|yellow)-(100|400)/,

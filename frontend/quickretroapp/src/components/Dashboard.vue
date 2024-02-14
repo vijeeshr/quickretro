@@ -12,6 +12,8 @@ import { LikeMessage } from '../models/LikeMessage';
 
 const isMasked = ref(true)
 const isOwner = ref(false)
+const boardName = ref('')
+const teamName = ref('')
 const newCardCategory = ref('')
 const route = useRoute()
 const board = Array.isArray(route.params.board)
@@ -62,6 +64,8 @@ const mask = () => {
 const onRegisterResponse = (response: RegisterResponse) => {
     isOwner.value = response.isBoardOwner
     isMasked.value = response.boardMasking
+    boardName.value = response.boardName
+    teamName.value = response.boardTeam
     onlineUsers.value = []
     onlineUsers.value.push(...response.users) // Todo: find a better way
     // Load messages.
@@ -182,6 +186,7 @@ onMounted(() => {
     <!-- Left Sidebar -->
     <div class="w-16 p-4">
         <Avatar :name="nickname" class="ml-auto mx-auto mb-4" />
+        
         <!-- Mask controls -->
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" 
             v-if="isOwner"
@@ -195,7 +200,36 @@ onMounted(() => {
             @click="mask">
             <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-        </svg>   
+        </svg>  
+        
+        <!-- Info -->
+        <!-- Popover -->
+        <div class="hs-tooltip inline-block [--trigger:hover] [--placement:right]">
+            <div class="hs-tooltip-toggle ">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                </svg>
+                <!-- <span class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-3 px-4 bg-white border text-sm text-gray-600 rounded-lg shadow-md dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400" role="tooltip">
+                    Hover me
+                </span> -->
+
+                <!-- Popover Content -->
+                <div class="hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible hidden opacity-0 transition-opacity absolute invisible z-10 bg-white text-start rounded-xl shadow-md after:absolute after:top-0 after:-start-4 after:w-4 after:h-full" role="tooltip">
+                    <div class="py-3 px-4">
+                        <div class="flex items-center gap-x-3">
+                            <div class="grow">
+                                <h4 class="font-semibold text-gray-800 dark:text-white">Board: {{ boardName }}</h4>
+                                <p class="text-sm text-gray-500">Team: {{ teamName }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Popover Content -->
+
+            </div>
+        </div>
+        <!-- End Popover -->         
+
         <a href="https://github.com/vijeeshr/quickretro" target="_blank">
             <svg viewBox="0 0 24 24" aria-hidden="true" class="h-8 w-8 fill-slate-100">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.463 2 11.97c0 4.404 2.865 8.14 6.839 9.458.5.092.682-.216.682-.48 0-.236-.008-.864-.013-1.695-2.782.602-3.369-1.337-3.369-1.337-.454-1.151-1.11-1.458-1.11-1.458-.908-.618.069-.606.069-.606 1.003.07 1.531 1.027 1.531 1.027.892 1.524 2.341 1.084 2.91.828.092-.643.35-1.083.636-1.332-2.22-.251-4.555-1.107-4.555-4.927 0-1.088.39-1.979 1.029-2.675-.103-.252-.446-1.266.098-2.638 0 0 .84-.268 2.75 1.022A9.607 9.607 0 0 1 12 6.82c.85.004 1.705.114 2.504.336 1.909-1.29 2.747-1.022 2.747-1.022.546 1.372.202 2.386.1 2.638.64.696 1.028 1.587 1.028 2.675 0 3.83-2.339 4.673-4.566 4.92.359.307.678.915.678 1.846 0 1.332-.012 2.407-.012 2.734 0 .267.18.577.688.48 3.97-1.32 6.833-5.054 6.833-9.458C22 6.463 17.522 2 12 2Z"></path>
