@@ -2,13 +2,22 @@
 A websocket based example app for conducting a quick sprint retro.
 
 ## Runnning the app
+### To start the Golang backend server
 ```sh
 docker compose up
 ```
+### To start the Vue frontend
+```sh
+cd .\frontend\quickretroapp\
+```
+```sh
+npm run dev
+```
+Visit http://localhost:5173/ to open the Vue app and start creating a board.  
+Can also visit http://localhost:8080, to view the Html JS only UI. That won't be updated going forward and may be removed.  
 
 ## Features
 No logins.  
-After running the app, visit http://localhost:8080 to start creating a board.  
 Share the board url with people to participate in the retro meeting.  
 Online presence display.  
 Board creator can opt to blur/unblur messages during the retro meeting.  
