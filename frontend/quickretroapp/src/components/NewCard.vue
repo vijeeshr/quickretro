@@ -9,7 +9,7 @@ const editing = ref(true)
 
 const add = (event: Event) => {
   if (editing.value) {
-    editing.value = false 
+    editing.value = false
     const payload: DraftMessage = {
       id: crypto.randomUUID(),
       msg: (event.target as HTMLElement).innerText.trim(),
@@ -23,7 +23,7 @@ const addOnEnter = (event: KeyboardEvent) => {
   if (!event.shiftKey) {
     add(event)
     event.preventDefault()
-  } 
+  }
 }
 
 const vFocus = {
@@ -34,14 +34,12 @@ const vFocus = {
 </script>
 
 <template>
-<div class="bg-white rounded-lg p-3 mb-2 shadow-xl border border-sky-400">
+  <div class="bg-white rounded-lg p-3 mb-2 shadow-xl border border-sky-400">
 
     <div class="text-gray-500 pb-2">
-        <article v-focus 
-          class="min-h-[3.5rem] text-center break-words focus:outline-none cursor-auto" contenteditable="true" 
-          @blur="add"
-          @keydown.enter="addOnEnter"></article>
+      <article v-focus class="min-h-[3.5rem] text-center break-words focus:outline-none cursor-auto"
+        contenteditable="true" @blur="add" @keydown.enter="addOnEnter"></article>
     </div>
 
-</div>
+  </div>
 </template>

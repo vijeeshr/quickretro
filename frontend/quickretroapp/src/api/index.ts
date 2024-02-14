@@ -3,7 +3,7 @@ const createBoardUrl = `http://localhost:5173/api/board/create`
 export interface CreateBoardResponse {
     id: string
 }
-  
+
 export const createBoard = async (name: string, team: string, user: string): Promise<CreateBoardResponse> => {
     try {
         const response = await fetch(createBoardUrl, {
@@ -11,7 +11,7 @@ export const createBoard = async (name: string, team: string, user: string): Pro
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ name, team, owner: user }),            
+            body: JSON.stringify({ name, team, owner: user }),
         })
 
         if (!response.ok) {

@@ -26,5 +26,5 @@ export default {
     {
       pattern: /h-(6|8)/,
     }
-  ],  
+  ],
 }

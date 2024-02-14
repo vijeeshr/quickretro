@@ -84,8 +84,8 @@ export interface DeleteMessageResponse {
     id: string
 }
 
-export type SocketResponse = RegisterResponse | MaskResponse | MessageResponse | 
-                             LikeMessageResponse | DeleteMessageResponse | UserClosingResponse
+export type SocketResponse = RegisterResponse | MaskResponse | MessageResponse |
+    LikeMessageResponse | DeleteMessageResponse | UserClosingResponse
 
 export function toSocketResponse(json: any): SocketResponse | null {
 
@@ -100,21 +100,21 @@ export function toSocketResponse(json: any): SocketResponse | null {
             case 'like':
                 return json as LikeMessageResponse
             case 'del':
-                return json as DeleteMessageResponse 
+                return json as DeleteMessageResponse
             case 'closing':
-                return json as UserClosingResponse       
-                // const data: MaskResponse = json
-                // return data
+                return json as UserClosingResponse
+            // const data: MaskResponse = json
+            // return data
 
-                // return {
-                //     typ: 'reg',
-                //     boardName: json.boardName,
-                //     boardTeam: json.boardTeam,
-                //     boardStatus: json.boardStatus,
-                //     boardMasking: json.boardMasking,
-                //     isBoardOwner: json.isBoardOwner,
-                //     user: json.user as UserDetails,
-                // } as RegisterResponse
+            // return {
+            //     typ: 'reg',
+            //     boardName: json.boardName,
+            //     boardTeam: json.boardTeam,
+            //     boardStatus: json.boardStatus,
+            //     boardMasking: json.boardMasking,
+            //     isBoardOwner: json.isBoardOwner,
+            //     user: json.user as UserDetails,
+            // } as RegisterResponse
             default:
                 return null // Handle unknown "typ" values as needed
         }

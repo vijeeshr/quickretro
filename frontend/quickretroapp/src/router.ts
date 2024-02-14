@@ -29,7 +29,7 @@ export default createRouter({
         if (!localStorage.getItem("user") || !localStorage.getItem("xid") || !localStorage.getItem("nickname")) {
           return `/board/${to.params.board}/join`
         }
-      },      
+      },
     },
     {
       path: '/board/:board/join',
