@@ -2,6 +2,7 @@
 A websocket based example app for conducting a quick sprint retro.
 
 ## Runnning the app
+Ensure Go and Nodejs are installed.  
 ### To start the Golang backend server
 ```sh
 docker compose up
@@ -9,6 +10,10 @@ docker compose up
 ### To start the Vue frontend
 ```sh
 cd .\frontend\quickretroapp\
+```
+npm install to be done just once initially.
+```sh
+npm install
 ```
 ```sh
 npm run dev
