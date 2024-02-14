@@ -2,7 +2,7 @@
 A websocket based example app for conducting a quick sprint retro.
 
 ## Runnning the app
-Ensure Go and Nodejs are installed.  
+Ensure Go, Nodejs and Docker are installed.  
 ### To start the Golang backend server
 ```sh
 docker compose up
