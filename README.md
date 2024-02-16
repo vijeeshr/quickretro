@@ -9,7 +9,7 @@ docker compose up
 ```
 ### To start the Vue frontend
 ```sh
-cd .\frontend\quickretroapp\
+cd .\src\frontend\
 ```
 Install packages and dependencies.  
 ```sh
