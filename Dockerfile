@@ -13,6 +13,6 @@ ENV REDIS_HOST redis:6379
 WORKDIR /app
 COPY --from=certificates /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /app/retroapp .
-COPY src/public ./public
+# COPY src/public ./public
 EXPOSE 8080
 CMD ["./retroapp"]

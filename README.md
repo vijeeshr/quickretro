@@ -3,11 +3,8 @@ A websocket based example app for conducting a quick sprint retro.
 
 ## Runnning the app
 Ensure Go, Nodejs and Docker are installed.  
-### To start the Golang backend server
-```sh
-docker compose up
-```
-### To start the Vue frontend
+
+### Build the Vue frontend
 ```sh
 cd .\src\frontend\
 ```
@@ -15,12 +12,26 @@ Install packages and dependencies.
 ```sh
 npm install
 ```
+Build the frontend.  
+This creates assets in "frontend/dist" directory. This dist directory is embedded in the backend Golang binary.  
+```sh
+npm run build
+```
+
+### To start the Golang backend server
+Navigate back to root directory.
+```sh
+docker compose up
+```
+Visit http://localhost:8080 to open the Vue app and start creating a board.  
+
+## For Development
+### Runing Vue app in development mode
 Run the app.  
 ```sh
 npm run dev
 ```
-Visit http://localhost:5173/ to open the Vue app and start creating a board.  
-Can also visit http://localhost:8080, to view the Html JS only UI. That won't be updated going forward and may be removed.  
+Visit http://localhost:5173/ to open.  
 
 ## Features
 No logins.  

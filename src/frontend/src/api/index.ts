@@ -1,4 +1,4 @@
-const createBoardUrl = `http://localhost:5173/api/board/create`
+const createBoardUrl = `/api/board/create`
 
 export interface CreateBoardResponse {
     id: string
