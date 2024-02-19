@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -84,7 +85,6 @@ func (c *RedisConnector) CreateBoard(b *Board) bool {
 	key := fmt.Sprintf("board:%s", b.Id)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-		// Todo: SET TTL?
 		pipe.HSet(c.ctx, key, "id", b.Id)
 		pipe.HSet(c.ctx, key, "name", b.Name)
 		pipe.HSet(c.ctx, key, "team", b.Team)
@@ -92,6 +92,8 @@ func (c *RedisConnector) CreateBoard(b *Board) bool {
 		pipe.HSet(c.ctx, key, "status", int(b.Status))
 		pipe.HSet(c.ctx, key, "mask", b.Mask)
 		pipe.HSet(c.ctx, key, "createdAtUtc", b.CreatedAtUtc)
+		pipe.Expire(c.ctx, key, 2*time.Hour) // Todo: Remove TTL hardcode
+		// pipe.ExpireAt(c.ctx, key, b.CreatedAtUtc.Add(2*time.Hour))
 		return nil
 	})
 
@@ -149,12 +151,13 @@ func (c *RedisConnector) CommitUserPresence(boardId string, user *User, isPresen
 	boardUsersKey := fmt.Sprintf("board:users:%s", boardId)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-		// Todo: SET TTL?
 		if isPresent {
 			pipe.HSet(c.ctx, userKey, "id", user.Id)
 			pipe.HSet(c.ctx, userKey, "xid", user.Xid)
 			pipe.HSet(c.ctx, userKey, "nickname", user.Nickname)
 			pipe.SAdd(c.ctx, boardUsersKey, user.Id)
+			pipe.Expire(c.ctx, userKey, 2*time.Hour)       // Todo: Remove TTL hardcode
+			pipe.Expire(c.ctx, boardUsersKey, 2*time.Hour) // Todo: Remove TTL hardcode
 			return nil
 		} else {
 			pipe.Del(c.ctx, userKey)
@@ -354,7 +357,6 @@ func (c *RedisConnector) Save(msg *Message) bool {
 	boardKey := fmt.Sprintf("board:msg:%s", msg.Group)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-		// Todo: SET TTL?
 		pipe.HSet(c.ctx, msgKey, "id", msg.Id)
 		pipe.HSet(c.ctx, msgKey, "by", msg.By)
 		pipe.HSet(c.ctx, msgKey, "nickname", msg.ByNickname)
@@ -362,6 +364,8 @@ func (c *RedisConnector) Save(msg *Message) bool {
 		pipe.HSet(c.ctx, msgKey, "content", msg.Content)
 		pipe.HSet(c.ctx, msgKey, "category", msg.Category)
 		pipe.SAdd(c.ctx, boardKey, msg.Id)
+		pipe.Expire(c.ctx, msgKey, 2*time.Hour)   // Todo: Remove TTL hardcode
+		pipe.Expire(c.ctx, boardKey, 2*time.Hour) // Todo: Remove TTL hardcode
 		return nil
 	})
 
@@ -379,7 +383,8 @@ func (c *RedisConnector) Like(msgId string, by string, like bool) bool {
 	key := fmt.Sprintf("msg:likes:%s", msgId)
 
 	if like {
-		affected, err = c.client.SAdd(c.ctx, key, by).Result()
+		affected, err = c.client.SAdd(c.ctx, key, by).Result() // Todo: Pipeline ?
+		c.client.Expire(c.ctx, key, 2*time.Hour)               // Todo: Remove TTL hardcode
 	} else {
 		affected, err = c.client.SRem(c.ctx, key, by).Result()
 	}
