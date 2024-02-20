@@ -161,7 +161,7 @@ const socketOnMessage = (event: MessageEvent<any>) => {
 }
 
 onMounted(() => {
-    socket = new WebSocket(`ws://${document.location.host}/ws/board/${board}/user/${user}/meet`)
+    socket = new WebSocket(`wss://${document.location.host}/ws/board/${board}/user/${user}/meet`)
     socket.onopen = socketOnOpen
     socket.onclose = socketOnClose
     socket.onerror = socketOnError
