@@ -2,7 +2,6 @@ services:
   redis:
     image: "redis:7.2.3-alpine"
     restart: always
-    container_name: redis
     networks:
       - redisnet
     # ports:
@@ -12,11 +11,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    deploy:
+      mode: replicated
+      replicas: 2      
     depends_on:
       - redis
     environment:
       - REDIS_HOST=redis:6379
-    container_name: app
     networks:
       - redisnet
       - proxynet
@@ -30,7 +31,6 @@ services:
       - "80:80"
       - "443:443"
       - "443:443/udp"
-    container_name: caddy  
     depends_on:
       - app
     networks:
