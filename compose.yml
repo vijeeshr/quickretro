@@ -2,10 +2,11 @@ services:
   redis:
     image: "redis:7.2.3-alpine"
     restart: always
+    container_name: redis
     networks:
       - redisnet
-    ports:
-      - "6379:6379"
+    # ports:
+    #   - "6379:6379"
 
   app:
     build:
@@ -15,10 +16,12 @@ services:
       - redis
     environment:
       - REDIS_HOST=redis:6379
+    container_name: app
     networks:
       - redisnet
-    ports:
-      - "8080:8080"
+      - proxynet
+    # ports:
+    #   - "8080:8080"
 
   caddy:
     image: caddy:2.7.6-alpine
@@ -27,10 +30,11 @@ services:
       - "80:80"
       - "443:443"
       - "443:443/udp"
+    container_name: caddy  
     depends_on:
       - app
     networks:
-      - redisnet          
+      - proxynet          
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./site:/srv
@@ -44,3 +48,6 @@ volumes:
 networks:
   redisnet:
     name: redisnet
+  proxynet:
+    name: proxynet
+    # external: true
