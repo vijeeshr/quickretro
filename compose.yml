@@ -1,4 +1,4 @@
-# Default compose for local with reverse-proxy.
+# For local development only. Ports are exposed to host machine. No reverse-proxy.
 
 # Run docker compose.
 #   docker compose up
@@ -11,10 +11,8 @@ services:
     restart: always
     networks:
       - redisnet
-    # ports:
-    #   - "6379:6379"
-    expose:
-      - 6379
+    ports:
+      - "6379:6379"
 
   app:
     build:
@@ -26,36 +24,9 @@ services:
       - REDIS_HOST=redis:6379
     networks:
       - redisnet
-      - proxynet
-    # ports:
-    #   - "8080:8080"
-    expose:
-      - 8080
-
-  caddy:
-    image: caddy:2.7.6-alpine
-    restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    depends_on:
-      - app
-    networks:
-      - proxynet          
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./site:/srv
-      - caddy_data:/data
-      - caddy_config:/config
-
-volumes:
-  caddy_data:
-  caddy_config:      
+      - "8080:8080"   
 
 networks:
   redisnet:
     name: redisnet
-  proxynet:
-    name: proxynet
-    # external: true
