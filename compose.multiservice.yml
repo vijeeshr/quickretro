@@ -1,9 +1,11 @@
-# Default compose for local with reverse-proxy.
+# Example with running multiple services of same image, load balanced using Caddy reverse-proxy. Check Caddyfile.
 
+# Run following command to build the image before running docker compose.
+#   docker build -t quickretro-app .
 # Run docker compose.
-#   docker compose up
+#   docker compose -f .\compose.multiservice.yml up
 # To stop and remove compose created items
-#   docker compose down --rmi "all" --volumes
+#   docker compose -f .\compose.multiservice.yml down --rmi "all" --volumes
 
 services:
   redis:
@@ -11,15 +13,11 @@ services:
     restart: always
     networks:
       - redisnet
-    # ports:
-    #   - "6379:6379"
     expose:
       - 6379
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: quickretro-app
     depends_on:
       - redis
     environment:
@@ -27,10 +25,20 @@ services:
     networks:
       - redisnet
       - proxynet
-    # ports:
-    #   - "8080:8080"
     expose:
       - 8080
+
+  app01:
+    image: quickretro-app
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis:6379
+    networks:
+      - redisnet
+      - proxynet
+    expose:
+      - 8080      
 
   caddy:
     image: caddy:2.7.6-alpine
@@ -58,4 +66,3 @@ networks:
     name: redisnet
   proxynet:
     name: proxynet
-    # external: true
