@@ -1,4 +1,6 @@
-# Example with running multiple services of same image, load balanced using Caddy reverse-proxy. Check Caddyfile.
+# Example with running multiple services of same image, load balanced using Caddy reverse-proxy.
+
+# Update Caddyfile with instructions given in it.
 
 # Run following command to build the image before running docker compose.
 #   docker build -t quickretro-app .
