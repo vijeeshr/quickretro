@@ -1,0 +1,15 @@
+localhost {
+    encode gzip
+    reverse_proxy app:8080
+}
+
+# Uncomment below block and comment above block when used with comnpose.multiservice.yml
+# localhost {
+#    encode gzip
+#    reverse_proxy  {
+#        to app:8080 app01:8080
+
+#        lb_policy round_robin
+#        lb_retries 2
+#    }
+# }

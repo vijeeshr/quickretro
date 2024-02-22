@@ -1,3 +1,10 @@
+# For local development only. Ports are exposed to host machine. No reverse-proxy.
+
+# Run docker compose.
+#   docker compose up
+# To stop and remove compose created items
+#   docker compose down --rmi "all" --volumes
+
 services:
   redis:
     image: "redis:7.2.3-alpine"
@@ -10,7 +17,9 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      # dockerfile: Dockerfile
+      dockerfile: onlybackend.Dockerfile
+    restart: unless-stopped  
     depends_on:
       - redis
     environment:
@@ -18,7 +27,7 @@ services:
     networks:
       - redisnet
     ports:
-      - "8080:8080"
+      - "8080:8080"   
 
 networks:
   redisnet:

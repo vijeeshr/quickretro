@@ -1,0 +1,65 @@
+# Example with running multiple services of same image, load balanced using Caddy reverse-proxy.
+
+# Update Caddyfile with instructions given in it.
+
+# Run following command to build the image before running docker compose.
+#   docker build -f build.Dockerfile -t quickretro-app .
+# Run docker compose.
+#   docker compose -f .\compose.multiservice.yml up
+# To stop and remove compose created items
+#   docker compose -f .\compose.multiservice.yml down --rmi "all" --volumes
+
+x-app-defaults: &app-defaults
+    image: quickretro-app
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis:6379
+    networks:
+      - redisnet
+      - proxynet
+    expose:
+      - 8080
+
+services:
+  redis:
+    image: "redis:7.2.3-alpine"
+    restart: always
+    networks:
+      - redisnet
+    expose:
+      - 6379
+
+  app:
+    <<: *app-defaults
+
+  app01:
+    <<: *app-defaults     
+
+  caddy:
+    image: caddy:2.7.6-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    depends_on:
+      - app
+    networks:
+      - proxynet          
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./site:/srv
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:      
+
+networks:
+  redisnet:
+    name: redisnet
+  proxynet:
+    name: proxynet
