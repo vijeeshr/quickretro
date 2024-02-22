@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import Avatar from './Avatar.vue';
 import Card from './Card.vue';
 import Category from './Category.vue';
@@ -10,6 +10,13 @@ import { OnlineUser } from '../models/OnlineUser';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
 
+const categories = ref([
+    { name: "cat01", buttonText: "Sails", color: "green" },
+    { name: "cat02", buttonText: "Anchors", color: "red" },
+    { name: "cat03", buttonText: "Next Steps", color: "yellow" },
+    { name: "cat04", buttonText: "Shoutouts!", color: "fuchsia" },
+    { name: "cat05", buttonText: "New Ideas!", color: "orange" }
+])
 const isMasked = ref(true)
 const isOwner = ref(false)
 const newCardCategory = ref('')
@@ -35,6 +42,17 @@ const filterCards = (category: string) => {
 const add = (category: string) => {
     newCardCategory.value = category
 }
+
+const categoryWidthClass = computed(() => {
+    switch (categories.value.length) {
+        case 4:
+            return "w-1/4"
+        case 5:
+            return "w-1/5"
+        default:
+            return "w-1/3"
+    }
+})
 
 const onAdded = (card: DraftMessage) => {
     console.log('newcontent received:', card)
@@ -207,7 +225,13 @@ onMounted(() => {
 
         <!-- Dashboard Content -->
         <div class="flex-1 flex bg-gray-100 overflow-hidden">
-            <Category button-text="Add Sails" color="green" @add-card="add('good')">
+            <Category v-for="category in categories" :button-text="category.buttonText" :color="category.color"
+                :width="categoryWidthClass" @add-card="add(category.name)">
+                <NewCard v-if="newCardCategory == category.name" :category="category.name" @added="onAdded" />
+                <Card v-for="card in filterCards(category.name)" :card="card" :mask="isMasked" :key="card.id"
+                    @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" />
+            </Category>
+            <!-- <Category button-text="Add Sails" color="green" @add-card="add('good')">
                 <NewCard v-if="newCardCategory == 'good'" category="good" @added="onAdded" />
                 <Card v-for="card in filterCards('good')" :card="card" :mask="isMasked" :key="card.id" @updated="onUpdated"
                     @deleted="onDeleted" @liked="onLiked" />
@@ -221,7 +245,7 @@ onMounted(() => {
                 <NewCard v-if="newCardCategory == 'next'" category="next" @added="onAdded" />
                 <Card v-for="card in filterCards('next')" :card="card" :mask="isMasked" :key="card.id" @updated="onUpdated"
                     @deleted="onDeleted" @liked="onLiked" />
-            </Category>
+            </Category> -->
         </div>
         <!-- Dashboard Content -->
 

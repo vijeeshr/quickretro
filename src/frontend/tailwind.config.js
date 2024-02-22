@@ -11,14 +11,14 @@ export default {
   plugins: [],
   safelist: [
     {
-      pattern: /bg-(red|green|yellow)-(100|400)/,
+      pattern: /bg-(red|green|yellow|fuchsia|orange)-(100|400)/,
       variants: ['hover'],
     },
     {
-      pattern: /border-(red|green|yellow)-(300)/
+      pattern: /border-(red|green|yellow|fuchsia|orange)-(300)/
     },
     {
-      pattern: /text-(red|green|yellow)-(600)/
+      pattern: /text-(red|green|yellow|fuchsia|orange)-(600)/
     },
     {
       pattern: /w-(6|8)/,
