@@ -1,7 +1,7 @@
 # quickretro
 A websocket based example app for conducting a quick sprint retro.
 
-## Runnning the app
+## Runnning the app locally
 Ensure Go, Nodejs and Docker are installed.  
 
 ### Build the Vue frontend
@@ -15,7 +15,7 @@ npm install
 Build the frontend.  
 This creates assets in "frontend/dist" directory. This dist directory is embedded in the backend Golang binary.  
 ```sh
-npm run build
+npm run build-dev
 ```
 
 ### To start the Golang backend server
@@ -25,7 +25,7 @@ docker compose up
 ```
 Visit http://localhost:8080 to open the Vue app and start creating a board.  
 
-## For Development
+## For Frontend Development
 ### Runing Vue app in development mode
 Run the app.  
 ```sh
