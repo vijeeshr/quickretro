@@ -19,7 +19,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: build.Dockerfile
     restart: unless-stopped  
     deploy:
       mode: replicated

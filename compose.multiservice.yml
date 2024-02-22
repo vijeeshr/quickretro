@@ -3,7 +3,7 @@
 # Update Caddyfile with instructions given in it.
 
 # Run following command to build the image before running docker compose.
-#   docker build -t quickretro-app .
+#   docker build -f build.Dockerfile -t quickretro-app .
 # Run docker compose.
 #   docker compose -f .\compose.multiservice.yml up
 # To stop and remove compose created items

@@ -3,7 +3,7 @@ WORKDIR /app
 # node_modules directory is excluded with .dockerignore
 COPY src/frontend/ .
 RUN npm install
-RUN npm run build-dev
+RUN npm run build
 
 FROM golang:1.22.0-alpine AS backend-builder
 WORKDIR /app
