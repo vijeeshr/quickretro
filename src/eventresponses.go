@@ -10,6 +10,7 @@ type RegisterResponse struct {
 	Mine         bool              `json:"mine"`
 	BoardName    string            `json:"boardName"`
 	BoardTeam    string            `json:"boardTeam"`
+	BoardColumns []*BoardColumn    `json:"columns"` // Using same BoardColumn struct that is used for request and redis store. Todo - refactor later.
 	BoardStatus  string            `json:"boardStatus"`
 	BoardMasking bool              `json:"boardMasking"`
 	IsBoardOwner bool              `json:"isBoardOwner"`

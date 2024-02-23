@@ -36,6 +36,10 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 	if !boardOk {
 		return
 	}
+	cols, colsOk := h.redis.GetBoardColumns(i.Group)
+	if !colsOk {
+		return
+	}
 	users, usersOk := h.redis.GetUsersPresence(i.Group)
 	if !usersOk {
 		return
@@ -77,6 +81,7 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 		Type:         "reg",
 		BoardName:    board.Name,
 		BoardTeam:    board.Team,
+		BoardColumns: cols,
 		BoardStatus:  board.Status.String(),
 		BoardMasking: board.Mask,
 		Users:        userDetails,

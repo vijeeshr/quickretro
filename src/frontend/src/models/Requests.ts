@@ -1,3 +1,4 @@
+import { BoardColumn } from "../api"
 import { OnlineUser } from "./OnlineUser"
 
 export interface EventRequest<T> {
@@ -43,6 +44,7 @@ export interface RegisterResponse {
     typ: 'reg'
     boardName: string
     boardTeam: string
+    columns: BoardColumn[]
     boardStatus: string
     boardMasking: boolean
     isBoardOwner: boolean

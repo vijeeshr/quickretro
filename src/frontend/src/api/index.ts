@@ -1,17 +1,30 @@
 const createBoardUrl = `/api/board/create`
 
+export interface BoardColumn {
+    id: string
+    text: string
+    color: string
+}
+
+export interface CreateBoardRequest {
+    name: string
+    team: string
+    owner: string
+    columns: BoardColumn[]
+}
+
 export interface CreateBoardResponse {
     id: string
 }
 
-export const createBoard = async (name: string, team: string, user: string): Promise<CreateBoardResponse> => {
+export const createBoard = async (payload: CreateBoardRequest): Promise<CreateBoardResponse> => {
     try {
         const response = await fetch(createBoardUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ name, team, owner: user }),
+            body: JSON.stringify(payload),
         })
 
         if (!response.ok) {

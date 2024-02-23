@@ -9,14 +9,8 @@ import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse,
 import { OnlineUser } from '../models/OnlineUser';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
+import { BoardColumn } from '../api';
 
-const categories = ref([
-    { name: "cat01", buttonText: "Sails", color: "green" },
-    { name: "cat02", buttonText: "Anchors", color: "red" },
-    { name: "cat03", buttonText: "Next Steps", color: "yellow" },
-    { name: "cat04", buttonText: "Shoutouts!", color: "fuchsia" },
-    { name: "cat05", buttonText: "New Ideas!", color: "orange" }
-])
 const isMasked = ref(true)
 const isOwner = ref(false)
 const newCardCategory = ref('')
@@ -32,7 +26,7 @@ const isConnected = ref(false)
 let socket: WebSocket
 
 const cards = ref<MessageResponse[]>([]) // Todo: Rework models
-
+const columns = ref<BoardColumn[]>([])
 const onlineUsers = ref<OnlineUser[]>([])
 
 const filterCards = (category: string) => {
@@ -43,8 +37,8 @@ const add = (category: string) => {
     newCardCategory.value = category
 }
 
-const categoryWidthClass = computed(() => {
-    switch (categories.value.length) {
+const columnWidthClass = computed(() => {
+    switch (columns.value.length) {
         case 4:
             return "w-1/4"
         case 5:
@@ -82,6 +76,8 @@ const onRegisterResponse = (response: RegisterResponse) => {
     isMasked.value = response.boardMasking
     onlineUsers.value = []
     onlineUsers.value.push(...response.users) // Todo: find a better way
+    columns.value = []
+    columns.value.push(...response.columns) // Todo: find a better way
     // Load messages.
     // Only loading messages when the RegisterResponse is for the current User's RegisterEvent request. 
     // This prevents unnecessarily pushing messages in the ref for other users RegisterEvents. RegisterEvent happens just once in the beginning.
@@ -225,27 +221,12 @@ onMounted(() => {
 
         <!-- Dashboard Content -->
         <div class="flex-1 flex bg-gray-100 overflow-hidden">
-            <Category v-for="category in categories" :button-text="category.buttonText" :color="category.color"
-                :width="categoryWidthClass" @add-card="add(category.name)">
-                <NewCard v-if="newCardCategory == category.name" :category="category.name" @added="onAdded" />
-                <Card v-for="card in filterCards(category.name)" :card="card" :mask="isMasked" :key="card.id"
+            <Category v-for="column in columns" :button-text="column.text" :color="column.color"
+                :width="columnWidthClass" @add-card="add(column.id)">
+                <NewCard v-if="newCardCategory == column.id" :category="column.id" @added="onAdded" />
+                <Card v-for="card in filterCards(column.id)" :card="card" :mask="isMasked" :key="card.id"
                     @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" />
             </Category>
-            <!-- <Category button-text="Add Sails" color="green" @add-card="add('good')">
-                <NewCard v-if="newCardCategory == 'good'" category="good" @added="onAdded" />
-                <Card v-for="card in filterCards('good')" :card="card" :mask="isMasked" :key="card.id" @updated="onUpdated"
-                    @deleted="onDeleted" @liked="onLiked" />
-            </Category>
-            <Category button-text="Add Anchors" color="red" @add-card="add('bad')">
-                <NewCard v-if="newCardCategory == 'bad'" category="bad" @added="onAdded" />
-                <Card v-for="card in filterCards('bad')" :card="card" :mask="isMasked" :key="card.id" @updated="onUpdated"
-                    @deleted="onDeleted" @liked="onLiked" />
-            </Category>
-            <Category button-text="Add Next Steps" color="yellow" @add-card="add('next')">
-                <NewCard v-if="newCardCategory == 'next'" category="next" @added="onAdded" />
-                <Card v-for="card in filterCards('next')" :card="card" :mask="isMasked" :key="card.id" @updated="onUpdated"
-                    @deleted="onDeleted" @liked="onLiked" />
-            </Category> -->
         </div>
         <!-- Dashboard Content -->
 

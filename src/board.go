@@ -34,10 +34,17 @@ type Board struct {
 	CreatedAtUtc time.Time   `redis:"createdAtUtc"`
 }
 
+type BoardColumn struct {
+	Id    string `redis:"id" json:"id"`
+	Text  string `redis:"text" json:"text"`
+	Color string `redis:"color" json:"color"`
+}
+
 type CreateBoardReq struct {
-	Name  string `json:"name"`
-	Team  string `json:"team"`
-	Owner string `json:"owner"`
+	Name    string         `json:"name"`
+	Team    string         `json:"team"`
+	Owner   string         `json:"owner"`
+	Columns []*BoardColumn `json:"columns"`
 }
 
 type CreateBoardRes struct {
@@ -82,13 +89,18 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 	// 	w.WriteHeader(http.StatusBadRequest)
 	// 	return
 	// }
+	if len(createReq.Columns) == 0 {
+		log.Println("Columns missing")
+		http.Error(w, "Columns missing", http.StatusBadRequest)
+		return
+	}
 
 	// Start creation
 	id := shortuuid.New()
 	board := &Board{Id: id, Name: createReq.Name, Team: createReq.Team, Owner: createReq.Owner, Status: InProgress, Mask: true, CreatedAtUtc: time.Now().UTC()}
 
 	// Save to Redis
-	if ok := c.CreateBoard(board); !ok {
+	if ok := c.CreateBoard(board, createReq.Columns); !ok {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}

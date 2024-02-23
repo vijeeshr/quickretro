@@ -8,6 +8,8 @@ package main
 (KEY)msg:likes:{messageId}			(VALUE)[userIds]				Likes - Redis Set. For recording likes/votes for a message
 (KEY)board:user:{boardId}:{userId}	(VALUE)User						Users - Redis Hash. User master. Keeping as board specific.
 (KEY)board:users:{boardId}			(VALUE)[userIds]				Board-wise Users - Redis Set. Useful for fetching members of a board.
+(KEY)board:col:{boardId}:{colId}	(VALUE)column					Column - Redis Hash. Column definition for a Board.
+(KEY)board:col:{boardId}			(Value)colIds					Board-wise columns - Redis Set. Just a list of colIds for a board.
 */
 
 import (
@@ -81,8 +83,9 @@ func (c *RedisConnector) Publish(redisChannel string, payload interface{}) {
 	}
 }
 
-func (c *RedisConnector) CreateBoard(b *Board) bool {
+func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 	key := fmt.Sprintf("board:%s", b.Id)
+	boardColsKey := fmt.Sprintf("board:col:%s", b.Id) // Boardwise-ColIds
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		pipe.HSet(c.ctx, key, "id", b.Id)
@@ -92,6 +95,16 @@ func (c *RedisConnector) CreateBoard(b *Board) bool {
 		pipe.HSet(c.ctx, key, "status", int(b.Status))
 		pipe.HSet(c.ctx, key, "mask", b.Mask)
 		pipe.HSet(c.ctx, key, "createdAtUtc", b.CreatedAtUtc)
+		// Columns
+		for _, col := range cols {
+			colKey := fmt.Sprintf("board:col:%s:%s", b.Id, col.Id)
+			pipe.HSet(c.ctx, colKey, "id", col.Id)
+			pipe.HSet(c.ctx, colKey, "text", col.Text)
+			pipe.HSet(c.ctx, colKey, "color", col.Color)
+			pipe.Expire(c.ctx, colKey, 2*time.Hour)
+			pipe.SAdd(c.ctx, boardColsKey, col.Id)
+		}
+		pipe.Expire(c.ctx, boardColsKey, 2*time.Hour)
 		pipe.Expire(c.ctx, key, 2*time.Hour) // Todo: Remove TTL hardcode
 		// pipe.ExpireAt(c.ctx, key, b.CreatedAtUtc.Add(2*time.Hour))
 		return nil
@@ -144,6 +157,39 @@ func (c *RedisConnector) GetBoard(boardId string) (*Board, bool) {
 	}
 
 	return &b, true
+}
+
+func (c *RedisConnector) GetBoardColumns(boardId string) ([]*BoardColumn, bool) {
+	cols := make([]*BoardColumn, 0)
+
+	key := fmt.Sprintf("board:col:%s", boardId)
+	colIds, err := c.client.SMembers(c.ctx, key).Result()
+	if err != nil {
+		log.Println(err)
+		return cols, false
+	}
+
+	cmds, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+		for _, id := range colIds {
+			key := fmt.Sprintf("board:col:%s:%s", boardId, id)
+			pipe.HGetAll(c.ctx, key)
+		}
+		return nil
+	})
+	if err != nil {
+		return cols, false
+	}
+
+	for _, cmd := range cmds {
+		var c BoardColumn
+		if err := cmd.(*redis.MapStringStringCmd).Scan(&c); err != nil {
+			log.Println(err)
+			continue
+		}
+		cols = append(cols, &c)
+	}
+
+	return cols, true
 }
 
 func (c *RedisConnector) CommitUserPresence(boardId string, user *User, isPresent bool) bool {
