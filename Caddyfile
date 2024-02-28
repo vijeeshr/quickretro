@@ -1,4 +1,4 @@
-64.23.140.109 {
+quickretro.app {
    encode gzip
    reverse_proxy app:8080
 }
