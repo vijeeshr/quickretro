@@ -1,0 +1,60 @@
+# With reverse-proxy. Access only with https://localhost.
+
+# Run docker compose.
+#   docker compose -f compose.02.yml up
+# To stop and remove compose created items
+#   docker compose -f compose.02.yml down --rmi "all" --volumes
+
+services:
+  redis:
+    image: "redis:7.2.3-alpine"
+    restart: always
+    networks:
+      - redisnet
+    # ports:
+    #   - "6379:6379"
+    expose:
+      - 6379
+
+  app:
+    image: "vijeesh82/quickretro-app"
+    restart: unless-stopped  
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis:6379
+    networks:
+      - redisnet
+      - proxynet
+    # ports:
+    #   - "8080:8080"
+    expose:
+      - 8080
+
+  caddy:
+    image: caddy:2.7.6-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    depends_on:
+      - app
+    networks:
+      - proxynet          
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./site:/srv
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:      
+
+networks:
+  redisnet:
+    name: redisnet
+  proxynet:
+    name: proxynet
+    # external: true
