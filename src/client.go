@@ -27,16 +27,16 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
-		slog.Info("Origin information", "Origin", r.Header.Get("Origin"))
-		return true
-		// Todo: Uncomment below code
-		// origin := r.Header.Get("Origin")
-		// switch origin {
-		// case "http://localhost:8080":
-		// 	return true
-		// default:
-		// 	return false
-		// }
+		origin := r.Header.Get("Origin")
+		// slog.Info("Origin information", "Origin", origin)
+		// Todo: Do not hardcode
+		switch origin {
+		case "http://localhost:8080", "https://localhost:8080", "http://localhost:5173",
+			"https://localhost", "https://quickretro.app":
+			return true
+		default:
+			return false
+		}
 	},
 }
 
