@@ -2,8 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
+	"log/slog"
 	"strconv"
 )
 
@@ -34,18 +33,22 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 	// Don't want to add another field in BroadcastArgs{}.
 	board, boardOk := h.redis.GetBoard(i.Group)
 	if !boardOk {
+		slog.Error("No board found in RegisterEvent broadcast", "board", i.Group)
 		return
 	}
 	cols, colsOk := h.redis.GetBoardColumns(i.Group)
 	if !colsOk {
+		slog.Error("No board columns found in RegisterEvent broadcast", "board", i.Group)
 		return
 	}
 	users, usersOk := h.redis.GetUsersPresence(i.Group)
 	if !usersOk {
+		slog.Error("Error when getting user presence in RegisterEvent broadcast", "board", i.Group)
 		return
 	}
 	messages, messagesOk := h.redis.GetMessages(i.Group)
 	if !messagesOk {
+		slog.Error("Error getting messages in RegisterEvent broadcast", "board", i.Group)
 		return
 	}
 
@@ -123,7 +126,7 @@ func (p *UserClosingEvent) Handle(h *Hub) {
 	// Bad hack start -
 	jsonifiedEvent, err := json.Marshal(p)
 	if err != nil {
-		fmt.Println("Error marshaling JSON:", err)
+		slog.Error("Error marshalling UserClosingEvent", "details", err.Error(), "payload", p)
 		return
 	}
 	var ev = &Event{Type: "closing", Payload: json.RawMessage(jsonifiedEvent)}
@@ -170,21 +173,21 @@ func (p *MaskEvent) Handle(i *Event, h *Hub) {
 	// Update Redis
 	b, ok := h.redis.GetBoard(p.Group)
 	if !ok {
-		log.Println("cannot find board")
+		slog.Warn("Cannot find board when handling MaskEvent", "board", p.Group)
 		return
 	}
 	// validate
 	if b.Owner != p.By {
-		log.Println("only owner can update board")
+		slog.Warn("Non-owner trying to update board when handling MaskEvent", "board", p.Group, "user", p.By)
 		return
 	}
 	if b.Mask == p.Mask {
-		log.Println("already masked/unmasked. skipping.")
+		slog.Warn("Skipping. Board is already masked/unmasked")
 		return
 	}
 	// Update
 	if updated := h.redis.UpdateMasking(b, p.Mask); !updated {
-		log.Println("unable to update masking information in Redis. skipping")
+		slog.Warn("Skipping. Unable to update masking information.")
 		return
 	}
 	// Publish to Redis (for broadcasting)
@@ -232,11 +235,11 @@ func (p *MessageEvent) Handle(i *Event, h *Hub) {
 			msg.Category = p.Category
 			saved = h.redis.Save(msg)
 		} else {
-			log.Println("cannot update someone else's message")
+			slog.Warn("Cannot update someone else's message in MessageEvent handle", "msgId", p.Id, "user", p.By)
 		}
 	}
 	if !saved {
-		log.Printf("couldn't save message with id %v", msg.Id)
+		slog.Warn("Failed to save message in MessageEvent handle", "msgId", msg.Id)
 		return
 	}
 
@@ -273,7 +276,7 @@ func (p *LikeMessageEvent) Handle(i *Event, h *Hub) {
 	// Save to Redis
 	msg, exists := h.redis.GetMessage(p.MessageId) // Todo: Check if fetching a message is needed for a like. Can avoid extra calls. Also BroadcastArgs.Message may not be needed here if removed.
 	if !exists {
-		log.Println("message to like doesn't exist")
+		slog.Warn("Message doesn't exist in LikeMessageEvent handle", "msgId", p.MessageId)
 		return
 	}
 	liked := h.redis.Like(p.MessageId, p.By, p.Like)
@@ -313,7 +316,7 @@ func (p *DeleteMessageEvent) Handle(i *Event, h *Hub) {
 	deleted := false
 	msg, exists := h.redis.GetMessage(p.MessageId)
 	if !exists {
-		log.Println("message to delete doesn't exist")
+		slog.Warn("Message doesn't exist in DeleteMessageEvent handle", "msgId", p.MessageId)
 		return
 	}
 	// Validate before deleting; especially if the message being deleted is of the user who created/owns it.
@@ -322,7 +325,7 @@ func (p *DeleteMessageEvent) Handle(i *Event, h *Hub) {
 			return
 		}
 	} else {
-		log.Println("Cannot delete someone else's message")
+		slog.Warn("Cannot delete someone else's message", "msgId", p.MessageId, "user", p.By)
 		return
 	}
 	// Publish to Redis (for broadcasting)

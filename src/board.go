@@ -3,7 +3,8 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -38,6 +39,10 @@ type BoardColumn struct {
 	Id    string `redis:"id" json:"id"`
 	Text  string `redis:"text" json:"text"`
 	Color string `redis:"color" json:"color"`
+}
+
+func (b BoardColumn) String() string {
+	return fmt.Sprintf("Id:%s Text:%s Color:%s", b.Id, b.Text, b.Color)
 }
 
 type CreateBoardReq struct {
@@ -75,7 +80,7 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 		if errors.As(err, &mr) {
 			http.Error(w, mr.msg, mr.status)
 		} else {
-			log.Print(err.Error())
+			slog.Error("Error parsing CreateBoardRequest", "details", err.Error())
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 		return
@@ -90,7 +95,7 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 	// 	return
 	// }
 	if len(createReq.Columns) == 0 {
-		log.Println("Columns missing")
+		slog.Error("Columns missing in create board request payload")
 		http.Error(w, "Columns missing", http.StatusBadRequest)
 		return
 	}
@@ -107,7 +112,7 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 
 	data, err := json.Marshal(CreateBoardRes{Id: board.Id})
 	if err != nil {
-		log.Println(err)
+		slog.Error("Error marshalling CreateBoardRes", "details", err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -120,11 +125,7 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 // Returns board by id
 func HandleGetBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request) {
 
-	// Validate request.
-	// if r.Method != "GET" {
-	// 	w.WriteHeader(http.StatusMethodNotAllowed)
-	// 	return
-	// }
+	// Validate request
 	id, ok := mux.Vars(r)["id"]
 	if !ok || id == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -145,7 +146,7 @@ func HandleGetBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request) {
 	// Prepare response
 	data, err := json.Marshal(GetBoardRes{Id: board.Id, Name: board.Name, IsOwner: user == board.Owner})
 	if err != nil {
-		log.Println(err)
+		slog.Error("Error marshalling GetBoardRes", "details", err.Error(), "board", board)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -156,10 +157,6 @@ func HandleGetBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request) {
 func HandleRefresh(red *RedisConnector, w http.ResponseWriter, r *http.Request) {
 	// Todo: Validate properly
 	// Validate request.
-	if r.Method != "GET" {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
 	id, ok := mux.Vars(r)["id"]
 	if !ok || id == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -201,7 +198,7 @@ func HandleRefresh(red *RedisConnector, w http.ResponseWriter, r *http.Request) 
 	// Prepare response
 	data, err := json.Marshal(res)
 	if err != nil {
-		log.Println(err)
+		slog.Error("Error marshalling response for messages", "details", err.Error(), "response", res)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

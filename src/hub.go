@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 )
 
 type Hub struct {
@@ -45,7 +45,7 @@ func (hub *Hub) run() {
 		case broadcast := <-hub.redis.subscriber.Channel():
 			var args BroadcastArgs
 			if err := json.Unmarshal([]byte(broadcast.Payload), &args); err != nil {
-				log.Printf("error unmarshalling to BroadcastArgs from redis channel: %v", err)
+				slog.Error("Error unmarshalling to BroadcastArgs from redis channel in hub", "details", err.Error(), "payload", broadcast.Payload)
 			}
 			args.Event.Broadcast(args.Message, hub)
 		}

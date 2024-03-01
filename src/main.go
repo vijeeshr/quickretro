@@ -4,8 +4,9 @@ import (
 	"context"
 	"embed"
 	"io/fs"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 )
@@ -14,6 +15,9 @@ import (
 var frontendFiles embed.FS
 
 func main() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	// Connect to Redis
 	ctx := context.Background()
 	red := NewRedisConnector(ctx)
@@ -54,9 +58,10 @@ func main() {
 	router.HandleFunc("/", frontendIndexHandler).Methods("GET")
 
 	//err := http.ListenAndServe(":8080", nil)
-	log.Println("Server listening on port 8080")
-	if err := http.ListenAndServe(":8080", router); err != nil { // Todo: use https/wss
-		log.Fatal(err)
+	logger.Info("Server listening on port 8080")
+	if err := http.ListenAndServe(":8080", router); err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
 }
 
@@ -64,7 +69,7 @@ func frontendIndexHandler(w http.ResponseWriter, r *http.Request) {
 	// http.ServeFileFS ?
 	indexFile, err := frontendFiles.ReadFile("frontend/dist/index.html")
 	if err != nil {
-		log.Print(err)
+		slog.Error(err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
