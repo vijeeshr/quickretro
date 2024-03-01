@@ -5,9 +5,9 @@
 # Run following command to build the image before running docker compose.
 #   docker build -f build.Dockerfile -t quickretro-app .
 # Run docker compose.
-#   docker compose -f .\compose.multiservice.yml up
+#   docker compose -f compose.multiservice.yml up
 # To stop and remove compose created items
-#   docker compose -f .\compose.multiservice.yml down --rmi "all" --volumes
+#   docker compose -f compose.multiservice.yml down --rmi "all" --volumes
 
 x-app-defaults: &app-defaults
     image: quickretro-app

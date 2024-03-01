@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"flag"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -15,7 +16,18 @@ import (
 var frontendFiles embed.FS
 
 func main() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	debug := flag.Bool("debug", false, "set to true to run in debug mode")
+	flag.Parse()
+
+	// Prepare Logger
+	var logger *slog.Logger
+	if *debug {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}))
+	} else {
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	}
 	slog.SetDefault(logger)
 
 	// Connect to Redis

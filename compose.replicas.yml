@@ -1,9 +1,9 @@
 # Example with running multiple services of same image with replicas, load balanced by Docker internally.
 
 # Run docker compose.
-#   docker compose -f .\compose.replicas.yml up
+#   docker compose -f compose.replicas.yml up
 # To stop and remove compose created items
-#   docker compose -f .\compose.replicas.yml down --rmi "all" --volumes
+#   docker compose -f compose.replicas.yml down --rmi "all" --volumes
 
 services:
   redis:
