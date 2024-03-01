@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 )
 
 type Event struct {
@@ -66,13 +66,13 @@ func (e *Event) ParsePayload() interface{} {
 	}
 	payload, ok := payloadMap[e.Type]
 	if !ok {
-		log.Println("unsupported command type")
+		slog.Error("Unsupported command type", "commandType", e.Type)
 		return nil
 	}
 	if err := json.Unmarshal(e.Payload, payload); err != nil {
-		log.Printf("error unmarshalling event payload: %v", err)
+		slog.Error("Error unmarchalling event payload", "details", err.Error())
 		return nil
 	}
-	log.Printf("event payload after full Unmarshalling: %v", payload)
+	slog.Debug("Unmarshalled event payload", "payload", payload)
 	return payload
 }
