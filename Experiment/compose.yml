@@ -157,18 +157,18 @@ services:
   #   environment:
   #     - DOCKER_HOST=tcp://localhost:2375
 
-  # redis:
-  #   image: "redis:7.2.3-alpine"
-  #   restart: always
-  #   ports:
-  #     - "6379:6379"
+  redis:
+    image: "redis:7.2.3-alpine"
+    restart: always
+    ports:
+      - "6379:6379"
 
-  # app:
-  #   image: "vijeesh82/quickretro-app:latest"
-  #   restart: unless-stopped  
-  #   depends_on:
-  #     - redis
-  #   environment:
-  #     - REDIS_HOST=redis:6379
-  #   ports:
-  #     - "8080:8080"      
+  app:
+    image: "vijeesh82/quickretro-app:latest"
+    restart: unless-stopped  
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis:6379
+    ports:
+      - "8080:8080"      
