@@ -1,0 +1,23 @@
+[sources.app_logs]
+type = "docker_logs"
+# include_labels = ["com.docker.compose.service"]
+include_containers = [ "app", "redis" ]
+
+# [sources.docker.containers]
+# include = ["*"]
+
+# [sources.docker.containers.include]
+# name="*"
+
+[sinks.elasticsearch]
+type = "elasticsearch"
+api_version = "v8"
+endpoints = [ "https://localhost:9200" ]
+inputs = [ "app_logs" ]
+# mode = "bulk"
+# indices.enabled = true
+# indices.index = "logs-%Y.%m.%d"
+
+[sinks.elasticsearch.buffer]
+type = "memory"
+max_events = 500
