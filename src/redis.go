@@ -157,6 +157,22 @@ func (c *RedisConnector) GetBoard(boardId string) (*Board, bool) {
 	return &b, true
 }
 
+func (c *RedisConnector) IsBoardOwner(boardId string, userId string) bool {
+	key := fmt.Sprintf("board:%s", boardId)
+
+	if userId == "" || boardId == "" {
+		return false
+	}
+
+	owner, err := c.client.HGet(c.ctx, key, "owner").Result()
+	if err != nil {
+		slog.Error("Cannot find board in Redis", "details", err.Error(), "boardId", boardId)
+		return false
+	}
+
+	return userId == owner
+}
+
 func (c *RedisConnector) GetBoardColumns(boardId string) ([]*BoardColumn, bool) {
 	cols := make([]*BoardColumn, 0)
 

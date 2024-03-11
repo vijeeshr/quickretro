@@ -230,7 +230,9 @@ func (p *MessageEvent) Handle(i *Event, h *Hub) {
 	if exists {
 		// Only Content and Category can be updated. The remaining fields must not be modified.
 		// Validation: User can only update own message.
-		if msg.Id == p.Id && msg.By == p.By && msg.Group == p.Group {
+		// Validation: Board owner can update any message.
+		isBoardOwner := h.redis.IsBoardOwner(p.Group, p.By) // Todo: No need to run this evey time. Check.
+		if msg.Id == p.Id && msg.Group == p.Group && (msg.By == p.By || isBoardOwner) {
 			msg.Content = p.Content
 			msg.Category = p.Category
 			saved = h.redis.Save(msg)
@@ -256,7 +258,7 @@ func (i *MessageEvent) Broadcast(m *Message, h *Hub) {
 
 	clients := h.clients[m.Group]
 	for client := range clients {
-		response.Mine = client.id == i.By
+		response.Mine = client.id == m.By                  //client.id == i.By. Since board owner can also update message. "mine" should reflect owner of the message.
 		response.Liked = h.redis.HasLiked(m.Id, client.id) // Todo: This calls Redis SISMEMBER [O(1) as per doc] in a loop. Check for impact.
 		select {
 		case client.send <- response:
@@ -320,7 +322,9 @@ func (p *DeleteMessageEvent) Handle(i *Event, h *Hub) {
 		return
 	}
 	// Validate before deleting; especially if the message being deleted is of the user who created/owns it.
-	if msg.Id == p.MessageId && msg.By == p.By && msg.Group == p.Group {
+	// Board owner can delete any message.
+	isBoardOwner := h.redis.IsBoardOwner(p.Group, p.By)
+	if msg.Id == p.MessageId && msg.Group == p.Group && (msg.By == p.By || isBoardOwner) {
 		if deleted = h.redis.DeleteMessage(msg); !deleted {
 			return
 		}
