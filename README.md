@@ -1,6 +1,9 @@
 # quickretro
 A websocket based example app for conducting a quick sprint retro.
 
+## Live app demo
+https://quickretro.app  
+
 ## Runnning the app locally
 Ensure Go, Nodejs and Docker are installed.  
 
@@ -33,11 +36,14 @@ npm run dev
 ```
 Visit http://localhost:5173/ to open.  
 
-## Features
+## Features/Capabilities/Limitations
 No logins.  
 Share the board url with people to participate in the retro meeting.  
-Online presence display.  
 Board creator can opt to blur/unblur messages during the retro meeting.  
+Board creator can update/delete any message (including messages of other participants).   
+Board creator can download details as Pdf.  
+Online presence display.   
+All data auto-deleted within 2 hours of most recent update.  
 
 ![quickretro1](https://github.com/vijeeshr/quickretro/assets/16733867/020b40d8-5b11-4daf-a2f3-95a0ee17f918)
 
@@ -45,4 +51,4 @@ Board creator can opt to blur/unblur messages during the retro meeting.
 
 
 ## Note
-Do not use this in production. This example was created with the intent of learning Go.
+Use in production after vetting it. This example was created with the intent of learning Go.
