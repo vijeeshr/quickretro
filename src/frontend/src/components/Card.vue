@@ -23,6 +23,12 @@ const content = computed(() => {
 })
 
 const edit = async (event: Event) => {
+    // Todo: figure out what's going on here. Simplify the condition to remove dups.
+    if (!editing.value && props.card.mine) {
+        editing.value = true;
+        await nextTick();
+        (event.target as HTMLElement).focus();
+    }
     if (!editing.value && props.updateable && !props.mask) {
         editing.value = true;
         await nextTick();
