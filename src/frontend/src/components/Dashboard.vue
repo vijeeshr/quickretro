@@ -10,6 +10,8 @@ import { OnlineUser } from '../models/OnlineUser';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
 import { BoardColumn } from '../api';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const isMasked = ref(true)
 const isOwner = ref(false)
@@ -23,6 +25,7 @@ const user = localStorage.getItem("user") || ''
 const externalId = localStorage.getItem("xid") || ''
 const nickname = localStorage.getItem("nickname") || ''
 const isConnected = ref(false)
+const boardName = ref('')
 let socket: WebSocket
 
 const cards = ref<MessageResponse[]>([]) // Todo: Rework models
@@ -71,6 +74,73 @@ const mask = () => {
     dispatchEvent<MaskEvent>("mask", { by: user, grp: board, mask: !isMasked.value })
 }
 
+const getRGBizedColor = (color: string): any => {
+    switch (color) {
+        case "green":
+            return [74, 222, 128]
+        case "red":
+            return [248, 113, 113]
+        case "yellow":
+            return [250, 204, 21]
+        case "fuchsia":
+            return [232, 121, 249]
+        case "orange":
+            return [251, 146, 60]
+        default:
+            return [128, 128, 128]
+    }
+}
+
+const download = () => {
+    const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "in",
+        format: "letter"
+    });
+
+    // text is placed using x, y coordinates
+    doc.setFontSize(16).text(`Board - ${boardName.value}`, 0.5, 1.0)
+    // create a line under heading 
+    doc.setLineWidth(0.01).line(0.5, 1.1, 8.0, 1.1);
+
+    for (const col of columns.value) {
+        const columnForExport = [
+            { title: col.text, dataKey: "text" }
+        ]
+        const itemsForExport = cards.value.filter(c => c.cat.toLowerCase() === col.id.toLowerCase())
+            .map(c => ({
+                text: c.msg
+            }))
+
+        // Using autoTable plugin
+        autoTable(doc, {
+            columns: columnForExport,
+            headStyles: { fillColor: getRGBizedColor(col.color) },
+            body: itemsForExport,
+            margin: { left: 0.5, top: 1.25 }
+        })
+    }
+
+    // Footer
+    doc
+        .setFont("times")
+        .setFontSize(11)
+        .setTextColor("gray")
+        .text(
+            "Created with QuickRetro https://quickretro.app",
+            0.5,
+            doc.internal.pageSize.height - 0.5
+        )
+
+    doc.save(`quickretro.pdf`)
+
+    // Using array of sentences
+    // doc
+    //     .setFont("helvetica")
+    //     .setFontSize(12)
+    //     .text(moreText, 0.5, 3.5, { align: "left", maxWidth: 7.5 });
+}
+
 const onRegisterResponse = (response: RegisterResponse) => {
     isOwner.value = response.isBoardOwner
     isMasked.value = response.boardMasking
@@ -78,6 +148,7 @@ const onRegisterResponse = (response: RegisterResponse) => {
     onlineUsers.value.push(...response.users) // Todo: find a better way
     columns.value = []
     columns.value.push(...response.columns) // Todo: find a better way
+    boardName.value = response.boardName
     // Load messages.
     // Only loading messages when the RegisterResponse is for the current User's RegisterEvent request. 
     // This prevents unnecessarily pushing messages in the ref for other users RegisterEvents. RegisterEvent happens just once in the beginning.
@@ -210,6 +281,11 @@ onMounted(() => {
                 <path stroke-linecap="round" stroke-linejoin="round"
                     d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" @click="download">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
             </svg>
             <a href="https://github.com/vijeeshr/quickretro" target="_blank">
                 <svg viewBox="0 0 24 24" aria-hidden="true" class="h-8 w-8 fill-slate-100">
