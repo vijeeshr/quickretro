@@ -12,6 +12,7 @@ import { LikeMessage } from '../models/LikeMessage';
 import { BoardColumn } from '../api';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 
 const isMasked = ref(true)
 const isOwner = ref(false)
@@ -26,11 +27,17 @@ const externalId = localStorage.getItem("xid") || ''
 const nickname = localStorage.getItem("nickname") || ''
 const isConnected = ref(false)
 const boardName = ref('')
+const shareLink = `${window.location.href}`
 let socket: WebSocket
 
 const cards = ref<MessageResponse[]>([]) // Todo: Rework models
 const columns = ref<BoardColumn[]>([])
 const onlineUsers = ref<OnlineUser[]>([])
+
+const isShareDialogOpen = ref(false)
+const setIsShareDialogOpen = (value: boolean) => {
+    isShareDialogOpen.value = value
+}
 
 const filterCards = (category: string) => {
     return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase());
@@ -139,6 +146,10 @@ const download = () => {
     //     .setFont("helvetica")
     //     .setFontSize(12)
     //     .text(moreText, 0.5, 3.5, { align: "left", maxWidth: 7.5 });
+}
+
+const share = () => {
+    isShareDialogOpen.value = true
 }
 
 const onRegisterResponse = (response: RegisterResponse) => {
@@ -265,9 +276,36 @@ onMounted(() => {
 <template>
     <div class="flex h-full min-h-screen bg-gray-800 text-white">
 
+        <Dialog :open="isShareDialogOpen" @close="setIsShareDialogOpen" class="relative z-50">
+
+            <!-- The backdrop, rendered as a fixed sibling to the panel container -->
+            <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
+            <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
+                <DialogPanel class="rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
+                    <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">Copy and share below url to
+                        participants
+                    </DialogTitle>
+                    <article class="select-all bg-slate-100 my-6 rounded-sm">{{ shareLink }}</article>
+                    <div class="mt-4">
+                        <button type="button"
+                            class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none"
+                            @click="setIsShareDialogOpen(false)">
+                            Close
+                        </button>
+                    </div>
+                </DialogPanel>
+            </div>
+        </Dialog>
+
         <!-- Left Sidebar -->
         <div class="w-16 p-4">
             <Avatar :name="nickname" class="ml-auto mx-auto mb-4" />
+            <!-- Share -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" @click="share">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+            </svg>
             <!-- Mask controls -->
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                 stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" v-if="isOwner"
@@ -282,6 +320,7 @@ onMounted(() => {
                     d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
             </svg>
+            <!-- Download -->
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                 stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" v-if="isOwner" @click="download">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -314,6 +353,5 @@ onMounted(() => {
             <Avatar v-for="user in onlineUsers" :name="user.nickname" class="ml-auto mx-auto mb-4" />
         </div>
         <!-- Right Sidebar -->
-
     </div>
 </template>
