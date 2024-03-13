@@ -9,6 +9,7 @@ interface Props {
     card: MessageResponse // Todo: Change name of model. Or use a different model.
     mask: boolean
     updateable: boolean
+    locked: boolean
 }
 const props = defineProps<Props>()
 const emit = defineEmits(['updated', 'deleted', 'liked'])
@@ -23,6 +24,10 @@ const content = computed(() => {
 })
 
 const edit = async (event: Event) => {
+    if (props.locked) {
+        console.log("Locked! Cannot edit.")
+        return
+    }
     // Todo: figure out what's going on here. Simplify the condition to remove dups.
     if (!editing.value && props.card.mine) {
         editing.value = true;
@@ -37,6 +42,10 @@ const edit = async (event: Event) => {
 }
 
 const save = (event: Event) => {
+    if (props.locked) {
+        console.log("Locked! Cannot save.")
+        return
+    }
     if (editing.value && props.updateable) {
         editing.value = false
         if (props.card.msg !== (event.target as HTMLElement).innerText.trim()) {
@@ -54,6 +63,11 @@ const save = (event: Event) => {
 }
 
 const saveOnEnter = (event: KeyboardEvent) => {
+    if (props.locked) {
+        console.log("Locked! Cannot edit.")
+        event.preventDefault()
+        return
+    }
     if (!event.shiftKey) {
         save(event)
         event.preventDefault()
@@ -61,6 +75,10 @@ const saveOnEnter = (event: KeyboardEvent) => {
 }
 
 const toggleLike = () => {
+    if (props.locked) {
+        console.log("Locked! Cannot like/unlike.")
+        return
+    }
     const payload: LikeMessage = {
         msgId: props.card.id,
         like: !props.card.liked
@@ -69,6 +87,10 @@ const toggleLike = () => {
 }
 
 const remove = () => {
+    if (props.locked) {
+        console.log("Locked! Cannot delete.")
+        return
+    }
     if (props.updateable) {
         emit('deleted', props.card.id)
     }

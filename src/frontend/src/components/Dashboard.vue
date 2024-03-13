@@ -5,7 +5,7 @@ import Card from './Card.vue';
 import Category from './Category.vue';
 import NewCard from './NewCard.vue';
 import { useRoute } from 'vue-router';
-import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse } from '../models/Requests';
+import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse } from '../models/Requests';
 import { OnlineUser } from '../models/OnlineUser';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
@@ -16,6 +16,7 @@ import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 
 const isMasked = ref(true)
 const isOwner = ref(false)
+const isLocked = ref(false)
 const newCardCategory = ref('')
 const route = useRoute()
 const board = Array.isArray(route.params.board)
@@ -44,6 +45,10 @@ const filterCards = (category: string) => {
 }
 
 const add = (category: string) => {
+    if (isLocked.value) {
+        console.log('Locked! Cannot add.')
+        return
+    }
     newCardCategory.value = category
 }
 
@@ -79,6 +84,10 @@ const onLiked = (likeMessage: LikeMessage) => {
 
 const mask = () => {
     dispatchEvent<MaskEvent>("mask", { by: user, grp: board, mask: !isMasked.value })
+}
+
+const lock = () => {
+    dispatchEvent<LockEvent>("lock", { by: user, grp: board, lock: !isLocked.value })
 }
 
 const getRGBizedColor = (color: string): any => {
@@ -155,6 +164,7 @@ const share = () => {
 const onRegisterResponse = (response: RegisterResponse) => {
     isOwner.value = response.isBoardOwner
     isMasked.value = response.boardMasking
+    isLocked.value = response.boardLock
     onlineUsers.value = []
     onlineUsers.value.push(...response.users) // Todo: find a better way
     columns.value = []
@@ -176,6 +186,10 @@ const onUserClosingResponse = (response: UserClosingResponse) => {
 
 const onMaskResponse = (response: MaskResponse) => {
     isMasked.value = response.mask
+}
+
+const onLockResponse = (response: LockResponse) => {
+    isLocked.value = response.lock
 }
 
 const onSaveMessageResponse = (response: MessageResponse) => {
@@ -242,6 +256,9 @@ const socketOnMessage = (event: MessageEvent<any>) => {
                 break
             case "mask":
                 onMaskResponse(response)
+                break
+            case "lock":
+                onLockResponse(response)
                 break
             case "msg":
                 onSaveMessageResponse(response)
@@ -320,6 +337,19 @@ onMounted(() => {
                     d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
             </svg>
+            <!-- Lock controls -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" v-if="isOwner"
+                :class="{ 'hidden': isLocked }" @click="lock">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" v-if="isOwner"
+                :class="{ 'hidden': !isLocked }" @click="lock">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+            </svg>
             <!-- Download -->
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                 stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" v-if="isOwner" @click="download">
@@ -343,7 +373,7 @@ onMounted(() => {
                 <NewCard v-if="newCardCategory == column.id" :category="column.id" @added="onAdded" />
                 <Card v-for="card in filterCards(column.id)" :card="card" :mask="isMasked"
                     :updateable="card.mine || isOwner" :key="card.id" @updated="onUpdated" @deleted="onDeleted"
-                    @liked="onLiked" />
+                    @liked="onLiked" :locked="isLocked" />
             </Category>
         </div>
         <!-- Dashboard Content -->
