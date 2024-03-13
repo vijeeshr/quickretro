@@ -41,6 +41,7 @@ No logins.
 Share the board url with people to participate in the retro meeting.  
 Board creator can opt to blur/unblur messages during the retro meeting.  
 Board creator can update/delete any message (including messages of other participants).   
+Board creator can lock/unlock board (Lock to make it read-only).  
 Board creator can download details as Pdf.  
 Online presence display.   
 All data auto-deleted within 2 hours of most recent update.  
