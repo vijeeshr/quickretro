@@ -20,6 +20,8 @@ func (e *Event) Handle(h *Hub) {
 	switch e.Type {
 	case "mask":
 		payload.(*MaskEvent).Handle(e, h)
+	case "lock":
+		payload.(*LockEvent).Handle(e, h)
 	case "reg":
 		payload.(*RegisterEvent).Handle(e, h)
 	case "msg":
@@ -41,6 +43,8 @@ func (e *Event) Broadcast(m *Message, h *Hub) {
 	switch e.Type {
 	case "mask":
 		payload.(*MaskEvent).Broadcast(h)
+	case "lock":
+		payload.(*LockEvent).Broadcast(h)
 	case "reg":
 		payload.(*RegisterEvent).Broadcast(h)
 	case "msg":
@@ -58,6 +62,7 @@ func (e *Event) ParsePayload() interface{} {
 	// Todo: Check allocations.
 	payloadMap := map[string]interface{}{
 		"mask":    &MaskEvent{},
+		"lock":    &LockEvent{},
 		"reg":     &RegisterEvent{},
 		"msg":     &MessageEvent{},
 		"like":    &LikeMessageEvent{},

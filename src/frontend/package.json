@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@headlessui/vue": "^1.7.19",
+    "jspdf": "^2.5.1",
+    "jspdf-autotable": "^3.8.2",
     "vue": "^3.3.11",
     "vue-router": "^4.2.5"
   },

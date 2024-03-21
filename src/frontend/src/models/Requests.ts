@@ -19,6 +19,12 @@ export interface MaskEvent {
     mask: boolean
 }
 
+export interface LockEvent {
+    by: string
+    grp: string
+    lock: boolean
+}
+
 export interface SaveMessageEvent {
     id: string
     by: string
@@ -47,6 +53,7 @@ export interface RegisterResponse {
     columns: BoardColumn[]
     boardStatus: string
     boardMasking: boolean
+    boardLock: boolean
     isBoardOwner: boolean
     mine: boolean
     users: OnlineUser[]
@@ -61,6 +68,11 @@ export interface UserClosingResponse {
 export interface MaskResponse {
     typ: 'mask'
     mask: boolean
+}
+
+export interface LockResponse {
+    typ: 'lock'
+    lock: boolean
 }
 
 export interface MessageResponse {
@@ -86,7 +98,7 @@ export interface DeleteMessageResponse {
     id: string
 }
 
-export type SocketResponse = RegisterResponse | MaskResponse | MessageResponse |
+export type SocketResponse = RegisterResponse | MaskResponse | LockResponse | MessageResponse |
     LikeMessageResponse | DeleteMessageResponse | UserClosingResponse
 
 export function toSocketResponse(json: any): SocketResponse | null {
@@ -97,6 +109,8 @@ export function toSocketResponse(json: any): SocketResponse | null {
                 return json as RegisterResponse
             case 'mask':
                 return json as MaskResponse
+            case 'lock':
+                return json as LockResponse    
             case 'msg':
                 return json as MessageResponse
             case 'like':

@@ -92,6 +92,7 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 		pipe.HSet(c.ctx, key, "owner", b.Owner)
 		pipe.HSet(c.ctx, key, "status", int(b.Status))
 		pipe.HSet(c.ctx, key, "mask", b.Mask)
+		pipe.HSet(c.ctx, key, "lock", b.Lock)
 		pipe.HSet(c.ctx, key, "createdAtUtc", b.CreatedAtUtc)
 		// Columns
 		for _, col := range cols {
@@ -117,9 +118,20 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 }
 
 func (c *RedisConnector) UpdateMasking(b *Board, mask bool) bool {
+	// Todo: Deduplicate with UpdateBoardLock()
 	key := fmt.Sprintf("board:%s", b.Id)
 	if _, err := c.client.HSet(c.ctx, key, "mask", mask).Result(); err != nil {
 		slog.Error("Failed to mask/unmask", "details", err.Error(), "board", b)
+		return false
+	}
+	return true
+}
+
+func (c *RedisConnector) UpdateBoardLock(b *Board, lock bool) bool {
+	// Todo: Deduplicate with UpdateMasking()
+	key := fmt.Sprintf("board:%s", b.Id)
+	if _, err := c.client.HSet(c.ctx, key, "lock", lock).Result(); err != nil {
+		slog.Error("Failed to lock/unlock", "details", err.Error(), "board", b)
 		return false
 	}
 	return true
@@ -155,6 +167,37 @@ func (c *RedisConnector) GetBoard(boardId string) (*Board, bool) {
 	}
 
 	return &b, true
+}
+
+func (c *RedisConnector) IsBoardOwner(boardId string, userId string) bool {
+	key := fmt.Sprintf("board:%s", boardId)
+
+	if userId == "" || boardId == "" {
+		return false
+	}
+
+	owner, err := c.client.HGet(c.ctx, key, "owner").Result()
+	if err != nil {
+		slog.Error("Cannot find board in Redis", "details", err.Error(), "boardId", boardId)
+		return false
+	}
+
+	return userId == owner
+}
+
+func (c *RedisConnector) IsBoardLocked(boardId string) bool {
+	if boardId == "" {
+		return true
+	}
+
+	key := fmt.Sprintf("board:%s", boardId)
+	isLocked, err := c.client.HGet(c.ctx, key, "lock").Result()
+	if err != nil {
+		slog.Error("Cannot find board in Redis", "details", err.Error(), "boardId", boardId)
+		return true
+	}
+
+	return isLocked == "1"
 }
 
 func (c *RedisConnector) GetBoardColumns(boardId string) ([]*BoardColumn, bool) {

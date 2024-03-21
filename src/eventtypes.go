@@ -87,6 +87,7 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 		BoardColumns: cols,
 		BoardStatus:  board.Status.String(),
 		BoardMasking: board.Mask,
+		BoardLock:    board.Lock,
 		Users:        userDetails,
 		Messages:     messagesDetails,
 	}
@@ -209,6 +210,52 @@ func (i *MaskEvent) Broadcast(h *Hub) {
 	}
 }
 
+type LockEvent struct {
+	By    string `json:"by"`
+	Group string `json:"grp"`
+	Lock  bool   `json:"lock"`
+}
+
+func (p *LockEvent) Handle(i *Event, h *Hub) {
+	// Update Redis
+	b, ok := h.redis.GetBoard(p.Group)
+	if !ok {
+		slog.Warn("Cannot find board when handling LockEvent", "board", p.Group)
+		return
+	}
+	// validate
+	if b.Owner != p.By {
+		slog.Warn("Non-owner trying to update board when handling LockEvent", "board", p.Group, "user", p.By)
+		return
+	}
+	if b.Lock == p.Lock {
+		slog.Warn("Skipping. Board is already locked/unlocked")
+		return
+	}
+	// Update
+	if updated := h.redis.UpdateBoardLock(b, p.Lock); !updated {
+		slog.Warn("Skipping. Unable to update lock information.")
+		return
+	}
+	// Publish to Redis (for broadcasting)
+	// *Message is nil as this is not a message related update. Locking is a UI gimmick. Find a better way.
+	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
+}
+func (i *LockEvent) Broadcast(h *Hub) {
+	// Transform to Outgoing format
+	// We can trust the LockEvent.Lock payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
+	response := &LockResponse{Type: "lock", Lock: i.Lock}
+
+	clients := h.clients[i.Group]
+	for client := range clients {
+		select {
+		case client.send <- response:
+		default:
+			client.hub.unregister <- client
+		}
+	}
+}
+
 type MessageEvent struct {
 	Id         string `json:"id"`
 	By         string `json:"by"`
@@ -219,6 +266,11 @@ type MessageEvent struct {
 }
 
 func (p *MessageEvent) Handle(i *Event, h *Hub) {
+	// Validation: Do not allow updates in read-only board
+	if isLocked := h.redis.IsBoardLocked(p.Group); isLocked {
+		slog.Warn("Cannot save message in read-only board", "board", p.Group)
+		return
+	}
 	// Save to Redis
 	saved := false
 	msg, exists := h.redis.GetMessage(p.Id)
@@ -230,7 +282,9 @@ func (p *MessageEvent) Handle(i *Event, h *Hub) {
 	if exists {
 		// Only Content and Category can be updated. The remaining fields must not be modified.
 		// Validation: User can only update own message.
-		if msg.Id == p.Id && msg.By == p.By && msg.Group == p.Group {
+		// Validation: Board owner can update any message.
+		isBoardOwner := h.redis.IsBoardOwner(p.Group, p.By) // Todo: No need to run this evey time. Check.
+		if msg.Id == p.Id && msg.Group == p.Group && (msg.By == p.By || isBoardOwner) {
 			msg.Content = p.Content
 			msg.Category = p.Category
 			saved = h.redis.Save(msg)
@@ -256,7 +310,7 @@ func (i *MessageEvent) Broadcast(m *Message, h *Hub) {
 
 	clients := h.clients[m.Group]
 	for client := range clients {
-		response.Mine = client.id == i.By
+		response.Mine = client.id == m.By                  //client.id == i.By. Since board owner can also update message. "mine" should reflect owner of the message.
 		response.Liked = h.redis.HasLiked(m.Id, client.id) // Todo: This calls Redis SISMEMBER [O(1) as per doc] in a loop. Check for impact.
 		select {
 		case client.send <- response:
@@ -312,6 +366,11 @@ type DeleteMessageEvent struct {
 }
 
 func (p *DeleteMessageEvent) Handle(i *Event, h *Hub) {
+	// Validation: Do not allow updates in read-only board
+	if isLocked := h.redis.IsBoardLocked(p.Group); isLocked {
+		slog.Warn("Cannot delete message in read-only board", "board", p.Group)
+		return
+	}
 	// Update Redis
 	deleted := false
 	msg, exists := h.redis.GetMessage(p.MessageId)
@@ -320,7 +379,9 @@ func (p *DeleteMessageEvent) Handle(i *Event, h *Hub) {
 		return
 	}
 	// Validate before deleting; especially if the message being deleted is of the user who created/owns it.
-	if msg.Id == p.MessageId && msg.By == p.By && msg.Group == p.Group {
+	// Board owner can delete any message.
+	isBoardOwner := h.redis.IsBoardOwner(p.Group, p.By)
+	if msg.Id == p.MessageId && msg.Group == p.Group && (msg.By == p.By || isBoardOwner) {
 		if deleted = h.redis.DeleteMessage(msg); !deleted {
 			return
 		}
