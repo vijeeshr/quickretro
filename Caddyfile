@@ -1,10 +1,18 @@
-quickretro.app {
+demo.quickretro.app {
    encode gzip
    reverse_proxy app:8080
+}
 
-   route /homepage/* {
-      uri strip_prefix /homepage
-      file_server /homepage/*
+quickretro.app {
+   encode gzip
+
+   root * /homepage
+   file_server
+
+   route /images/* {
+      uri strip_prefix /images
+      root * /homepage/images
+      file_server
    }
 }
 
