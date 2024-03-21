@@ -44,6 +44,7 @@ services:
       - proxynet          
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./homepage:/var/www/homepage
       - ./site:/srv
       - caddy_data:/data
       - caddy_config:/config

@@ -1,31 +1,18 @@
 quickretro.app {
    encode gzip
-   file_server {
-      root homepage
+   root * /var/www/homepage
+   file_server
+   route /images/* {
+      uri strip_prefix /images
+      root * /var/www/homepage/images
+      file_server
    }
 }
 
 demo.quickretro.app {
+   encode gzip
    reverse_proxy app:8080
 }
-
-# demo.quickretro.app {
-#    encode gzip
-#    reverse_proxy app:8080
-# }
-
-# quickretro.app {
-#    encode gzip
-
-#    root * /homepage
-#    file_server
-
-#    route /images/* {
-#       uri strip_prefix /images
-#       root * /homepage/images
-#       file_server
-#    }
-# }
 
 # quickretro.app {
 #    encode gzip
