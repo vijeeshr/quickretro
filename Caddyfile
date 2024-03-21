@@ -1,7 +1,17 @@
 quickretro.app {
    encode gzip
    reverse_proxy app:8080
+
+   route /homepage/* {
+      uri strip_prefix /homepage
+      file_server /homepage/*
+   }
 }
+
+# quickretro.app {
+#    encode gzip
+#    reverse_proxy app:8080
+# }
 
 # localhost {
 #    encode gzip
