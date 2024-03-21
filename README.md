@@ -2,7 +2,8 @@
 A websocket based example app for conducting a quick sprint retro.
 
 ## Live app demo
-https://quickretro.app
+https://demo.quickretro.app  
+Website- https://quickretro.app  
 
 ## Runnning the app locally
 Ensure Go, Nodejs and Docker are installed.  
