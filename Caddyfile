@@ -6,12 +6,12 @@ demo.quickretro.app {
 quickretro.app {
    encode gzip
 
-   root * /homepage
+   root * ./homepage
    file_server
 
    route /images/* {
       uri strip_prefix /images
-      root * /homepage/images
+      root * ./homepage/images
       file_server
    }
 }
