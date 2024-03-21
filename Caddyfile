@@ -1,12 +1,12 @@
 quickretro.app {
-    encode gzip
-    file_server {
-        root homepage
-    }
+   encode gzip
+   file_server {
+      root homepage
+   }
 }
 
 demo.quickretro.app {
-    reverse_proxy app:8080
+   reverse_proxy app:8080
 }
 
 # demo.quickretro.app {
