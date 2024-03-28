@@ -14,6 +14,11 @@ demo.quickretro.app {
    reverse_proxy app:8080
 }
 
+secretmsg.us {
+   encode gzip
+   reverse_proxy secretnoteapp:8085
+}
+
 # quickretro.app {
 #    encode gzip
 #    reverse_proxy app:8080

@@ -31,6 +31,21 @@ services:
     expose:
       - 8080
 
+  secretnoteapp:
+    image: "vijeesh82/secretnote-app"
+    restart: unless-stopped  
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis:6379
+    networks:
+      - redisnet
+      - proxynet
+    # ports:
+    #   - "8085:8085"
+    expose:
+      - 8085     
+
   caddy:
     image: caddy:2.7.6-alpine
     restart: unless-stopped
