@@ -32,7 +32,7 @@ var upgrader = websocket.Upgrader{
 		// Todo: Do not hardcode
 		switch origin {
 		case "http://localhost:8080", "https://localhost:8080", "http://localhost:5173",
-			"https://localhost", "https://quickretro.app":
+			"https://localhost", "https://quickretro.app", "https://demo.quickretro.app":
 			return true
 		default:
 			return false

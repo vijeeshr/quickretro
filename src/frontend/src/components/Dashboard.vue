@@ -273,6 +273,13 @@ const socketOnMessage = (event: MessageEvent<any>) => {
     }
 }
 
+const handleVisibilityChange = () => {
+    // Attempt reinitializing the app (with browser reload) when websocket is closed because of inactivity
+    if (document.visibilityState === "visible" && socket.readyState !== WebSocket.OPEN) {
+        window.location.reload()
+    }
+}
+
 onMounted(() => {
     const websocketProtocol = import.meta.env.VITE_WS_PROTOCOL || 'wss'
     socket = new WebSocket(`${websocketProtocol}://${document.location.host}/ws/board/${board}/user/${user}/meet`)
@@ -280,9 +287,12 @@ onMounted(() => {
     socket.onclose = socketOnClose
     socket.onerror = socketOnError
     socket.onmessage = socketOnMessage
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 })
 
 // onUnmounted(() => {
+//     document.removeEventListener('visibilitychange', handleVisibilityChange)
 //     if (socket && (!socket.CLOSED || !socket.CLOSING)) {
 //         socket.close(1001)
 //     }
