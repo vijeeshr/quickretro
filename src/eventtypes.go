@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"strconv"
+	"time"
 )
 
 type RegisterEvent struct {
@@ -79,17 +80,24 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 		messagesDetails = append(messagesDetails, msgRes)
 	}
 
+	// Prepare timer details
+	remainingTimeInSeconds := board.TimerExpiresAtUtc - time.Now().UTC().Unix()
+	if remainingTimeInSeconds <= 0 {
+		remainingTimeInSeconds = 0
+	}
+
 	// Prepare response
 	response := RegisterResponse{
-		Type:         "reg",
-		BoardName:    board.Name,
-		BoardTeam:    board.Team,
-		BoardColumns: cols,
-		BoardStatus:  board.Status.String(),
-		BoardMasking: board.Mask,
-		BoardLock:    board.Lock,
-		Users:        userDetails,
-		Messages:     messagesDetails,
+		Type:                  "reg",
+		BoardName:             board.Name,
+		BoardTeam:             board.Team,
+		BoardColumns:          cols,
+		BoardStatus:           board.Status.String(),
+		BoardMasking:          board.Mask,
+		BoardLock:             board.Lock,
+		Users:                 userDetails,
+		Messages:              messagesDetails,
+		TimerExpiresInSeconds: uint16(remainingTimeInSeconds), // This shouldn't error out since we will restrict expiry to max 1 hour (3600 seconds) future time, when saving "board.TimerExpiresAtUtc".
 	}
 
 	clients := h.clients[i.Group]
@@ -399,6 +407,96 @@ func (i *DeleteMessageEvent) Broadcast(m *Message, h *Hub) {
 	response := m.NewResponse("del").(DeleteMessageResponse)
 
 	clients := h.clients[m.Group]
+	for client := range clients {
+		select {
+		case client.send <- response:
+		default:
+			client.hub.unregister <- client
+		}
+	}
+}
+
+type TimerEvent struct {
+	By                      string `json:"by"`
+	Group                   string `json:"grp"`
+	ExpiryDurationInSeconds uint16 `json:"expiryDurationInSeconds"`
+	Stop                    bool   `json:"stop"`
+}
+
+func (p *TimerEvent) Handle(i *Event, h *Hub) {
+	// The TimerEventHandle handles 2 things separately
+	// 	"Stop" - Is used to Stop the timer. When this is true, "ExpiryDurationInSeconds" passed in payload is ignored.
+	// 	"ExpiryDurationInSeconds" - Is used to convey the "Start" of a timer.
+	// Both are mutually exclusive mostly
+
+	// Update Redis
+	b, ok := h.redis.GetBoard(p.Group)
+	if !ok {
+		slog.Warn("Cannot find board when handling TimerEvent", "board", p.Group)
+		return
+	}
+	// Validate for both
+	if b.Owner != p.By {
+		slog.Warn("Non-owner trying to update board when handling TimerEvent", "board", p.Group, "user", p.By)
+		return
+	}
+
+	// Validate and Execute for "Stop"
+	// Avoid executing "Stop" unnecessarily.
+	// Since a "Stop" updates the board's "timerExpiresAtUtc" downsteam, its better to avoid running it when "timerExpiresAtUtc" is 0.
+	// "timerExpiresAtUtc" has its initial value of 0. A higher value means we can deduce that a timer has been set atleast once...
+	// ...This validation prevents us from loosing that capability to deduce.
+	if p.Stop && b.TimerExpiresAtUtc == 0 {
+		slog.Warn("Cannot stop a Timer that hasn't yet started", "board", p.Group)
+		return
+	}
+
+	// Execute Stop timer
+	if p.Stop {
+		if updated := h.redis.StopTimer(b); !updated {
+			slog.Warn("Skipping. Unable to update timer during 'Stop' operation.")
+			return
+		}
+	}
+
+	// Validate and Execute for updating timer a.k.a "START"
+	// Duration check validation is only when the board owner is trying to set the timer. "Stop" is ignored here.
+	if !p.Stop && (p.ExpiryDurationInSeconds < 1 && p.ExpiryDurationInSeconds > 3600) {
+		slog.Warn("Invalid timer duration. Valid duration range is between 1 and 3600 seconds.")
+		return
+	}
+
+	// Execute Update timer
+	if !p.Stop {
+		if updated := h.redis.UpdateTimer(b, p.ExpiryDurationInSeconds); !updated {
+			slog.Warn("Skipping. Unable to update timer information.")
+			return
+		}
+	}
+
+	// Publish to Redis (for broadcasting)
+	// *Message is nil as this is not a message related update. Timer is a UI gimmick. Find a better way.
+	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
+}
+func (i *TimerEvent) Broadcast(h *Hub) {
+	// Transform to Outgoing format
+	// redis.Getboard() is called twice in Handle and Broadcast. Let it be that way for now. Don't want to add another field in BroadcastArgs{}.
+	board, boardOk := h.redis.GetBoard(i.Group)
+	if !boardOk {
+		slog.Warn("Cannot find board when broadcasting TimerEvent", "board", i.Group)
+		return
+	}
+
+	// Prepare timer details
+	remainingTimeInSeconds := board.TimerExpiresAtUtc - time.Now().UTC().Unix()
+	if remainingTimeInSeconds <= 0 {
+		remainingTimeInSeconds = 0
+	}
+
+	// uint16: This shouldn't error out since we will restrict expiry to max 1 hour (3600 seconds) future time, when saving "board.TimerExpiresAtUtc".
+	response := &TimerResponse{Type: "timer", ExpiresInSeconds: uint16(remainingTimeInSeconds)}
+
+	clients := h.clients[i.Group]
 	for client := range clients {
 		select {
 		case client.send <- response:

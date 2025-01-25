@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import Avatar from './Avatar.vue';
 import Card from './Card.vue';
 import Category from './Category.vue';
 import NewCard from './NewCard.vue';
 import { useRoute } from 'vue-router';
-import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse } from '../models/Requests';
+import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent } from '../models/Requests';
 import { OnlineUser } from '../models/OnlineUser';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
@@ -13,10 +13,13 @@ import { BoardColumn } from '../api';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
+import CountdownTimer from './CountdownTimer.vue';
+import TimerPanel from './TimerPanel.vue';
 
 const isMasked = ref(true)
 const isOwner = ref(false)
 const isLocked = ref(false)
+const timerExpiresInSeconds = ref(0)
 const newCardCategory = ref('')
 const route = useRoute()
 const board = Array.isArray(route.params.board)
@@ -38,6 +41,16 @@ const onlineUsers = ref<OnlineUser[]>([])
 const isShareDialogOpen = ref(false)
 const setIsShareDialogOpen = (value: boolean) => {
     isShareDialogOpen.value = value
+}
+
+const isTimerDialogOpen = ref(false)
+const setIsTimerDialogOpen = (value: boolean) => {
+    isTimerDialogOpen.value = value
+}
+
+const isTimerCountdownInProgress = ref(false)
+const onCountdownProgressUpdate = (value: boolean) => {
+    isTimerCountdownInProgress.value = value
 }
 
 const filterCards = (category: string) => {
@@ -88,6 +101,16 @@ const mask = () => {
 
 const lock = () => {
     dispatchEvent<LockEvent>("lock", { by: user, grp: board, lock: !isLocked.value })
+}
+
+const onTimerStart = (expiryDurationInSeconds: number) => {
+    dispatchEvent<TimerEvent>("timer", { by: user, grp: board, expiryDurationInSeconds: expiryDurationInSeconds, stop: false }) // "stop" is ignored
+    setIsTimerDialogOpen(false)
+}
+
+const onTimerStop = () => {
+    dispatchEvent<TimerEvent>("timer", { by: user, grp: board, expiryDurationInSeconds: 0, stop: true }) // "expiryDurationInSeconds" is ignored
+    setIsTimerDialogOpen(false)
 }
 
 const getRGBizedColor = (color: string): any => {
@@ -161,10 +184,17 @@ const share = () => {
     isShareDialogOpen.value = true
 }
 
+const timerSettings = () => {
+    if (isOwner.value) {
+        isTimerDialogOpen.value = true
+    }
+}
+
 const onRegisterResponse = (response: RegisterResponse) => {
     isOwner.value = response.isBoardOwner
     isMasked.value = response.boardMasking
     isLocked.value = response.boardLock
+    timerExpiresInSeconds.value = response.timerExpiresInSeconds
     onlineUsers.value = []
     onlineUsers.value.push(...response.users) // Todo: find a better way
     columns.value = []
@@ -214,6 +244,21 @@ const onLikeMessageResponse = (response: LikeMessageResponse) => {
         // Todo: Should whole card be updated? cards.value[index] = response. Or just the properties.
         cards.value[index].liked = response.liked
         cards.value[index].likes = response.likes
+    }
+}
+
+const onTimerResponse = (response: TimerResponse) => {
+    // Hack: If both previous (timerExpiresInSeconds.value) and new (response.expiresInSeconds) value is the same..
+    // .. the watcher downstream in CountdownTimer doesn't trigger and this causes a weird UI issue when board owner ..
+    // .. again tries to start the timer with an interval duration that is exactly same as was used in the immediate previous run.
+    if (timerExpiresInSeconds.value === response.expiresInSeconds) {
+        // Reset to dummy value..0 is safe here.
+        timerExpiresInSeconds.value = 0
+        nextTick(() => {
+            timerExpiresInSeconds.value = response.expiresInSeconds
+        })
+    } else {
+        timerExpiresInSeconds.value = response.expiresInSeconds
     }
 }
 
@@ -269,6 +314,9 @@ const socketOnMessage = (event: MessageEvent<any>) => {
             case "like":
                 onLikeMessageResponse(response)
                 break
+            case "timer":
+                onTimerResponse(response)
+                break
         }
     }
 }
@@ -303,8 +351,22 @@ onMounted(() => {
 <template>
     <div class="flex h-full min-h-screen bg-gray-800 text-white">
 
-        <Dialog :open="isShareDialogOpen" @close="setIsShareDialogOpen" class="relative z-50">
+        <!-- Dialog for Timer settings -->
+        <Dialog :open="isTimerDialogOpen" @close="setIsTimerDialogOpen" class="relative z-50">
+            <!-- The backdrop, rendered as a fixed sibling to the panel container -->
+            <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
+            <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
+                <DialogPanel class="rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
+                    <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">Start/Stop Timer
+                    </DialogTitle>
+                    <TimerPanel :is-countdown-in-progress="isTimerCountdownInProgress" @start="onTimerStart"
+                        @stop="onTimerStop"></TimerPanel>
+                </DialogPanel>
+            </div>
+        </Dialog>
 
+        <!-- Dialog to share url -->
+        <Dialog :open="isShareDialogOpen" @close="setIsShareDialogOpen" class="relative z-50">
             <!-- The backdrop, rendered as a fixed sibling to the panel container -->
             <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
             <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -326,7 +388,10 @@ onMounted(() => {
 
         <!-- Left Sidebar -->
         <div class="w-16 p-4">
-            <Avatar :name="nickname" class="ml-auto mx-auto mb-4" />
+            <!-- Timer -->
+            <CountdownTimer :timeLeftInSeconds="timerExpiresInSeconds" @click="timerSettings"
+                @on-countdown-progress-update="onCountdownProgressUpdate" />
+            <!-- <Avatar :name="nickname" class="ml-auto mx-auto mb-4" /> -->
             <!-- Share -->
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                 stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" @click="share">

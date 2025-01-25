@@ -46,6 +46,13 @@ export interface DeleteMessageEvent {
     grp: string
 }
 
+export interface TimerEvent {
+    by: string
+    grp: string
+    expiryDurationInSeconds: number
+    stop: boolean
+}
+
 export interface RegisterResponse {
     typ: 'reg'
     boardName: string
@@ -58,6 +65,7 @@ export interface RegisterResponse {
     mine: boolean
     users: OnlineUser[]
     messages: MessageResponse[]
+    timerExpiresInSeconds: number
 }
 
 export interface UserClosingResponse {
@@ -98,8 +106,13 @@ export interface DeleteMessageResponse {
     id: string
 }
 
+export interface TimerResponse {
+    typ: 'timer'
+    expiresInSeconds: number
+}
+
 export type SocketResponse = RegisterResponse | MaskResponse | LockResponse | MessageResponse |
-    LikeMessageResponse | DeleteMessageResponse | UserClosingResponse
+    LikeMessageResponse | DeleteMessageResponse | UserClosingResponse | TimerResponse
 
 export function toSocketResponse(json: any): SocketResponse | null {
 
@@ -119,6 +132,8 @@ export function toSocketResponse(json: any): SocketResponse | null {
                 return json as DeleteMessageResponse
             case 'closing':
                 return json as UserClosingResponse
+            case 'timer':
+                return json as TimerResponse    
             // const data: MaskResponse = json
             // return data
 
