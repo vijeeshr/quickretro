@@ -7,8 +7,8 @@ interface Props {
 defineProps<Props>()
 const emit = defineEmits(['start', 'stop'])
 
-const minutes = ref(0)
-const seconds = ref(15)
+const minutes = ref(10)
+const seconds = ref(0)
 
 const isTimeValid = computed(() => {
     if (typeof minutes.value != 'number' || typeof seconds.value != 'number') return false

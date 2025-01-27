@@ -389,7 +389,8 @@ onMounted(() => {
         <!-- Left Sidebar -->
         <div class="w-16 p-4">
             <!-- Timer -->
-            <CountdownTimer :timeLeftInSeconds="timerExpiresInSeconds" @click="timerSettings"
+            <CountdownTimer :timeLeftInSeconds="timerExpiresInSeconds"
+                :class="isOwner ? 'cursor-pointer' : 'cursor-default'" @click="timerSettings"
                 @on-countdown-progress-update="onCountdownProgressUpdate" />
             <!-- <Avatar :name="nickname" class="ml-auto mx-auto mb-4" /> -->
             <!-- Share -->
