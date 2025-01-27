@@ -22,7 +22,6 @@ const formattedRemainingTime = computed(() => {
 })
 
 const startCountdown = () => {
-    console.log('startCountdown called with', 'interval', interval)
     if (interval) return // Prevent multiple intervals
 
     emit('onCountdownProgressUpdate', true)

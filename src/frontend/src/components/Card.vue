@@ -4,6 +4,7 @@ import Avatar from './Avatar.vue';
 import { MessageResponse } from '../models/Requests';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
+import { logMessage } from '../util/Logger';
 
 interface Props {
     card: MessageResponse // Todo: Change name of model. Or use a different model.
@@ -25,7 +26,7 @@ const content = computed(() => {
 
 const edit = async (event: Event) => {
     if (props.locked) {
-        console.log("Locked! Cannot edit.")
+        logMessage("Locked! Cannot edit.")
         return
     }
     // Todo: figure out what's going on here. Simplify the condition to remove dups.
@@ -43,7 +44,7 @@ const edit = async (event: Event) => {
 
 const save = (event: Event) => {
     if (props.locked) {
-        console.log("Locked! Cannot save.")
+        logMessage("Locked! Cannot save.")
         return
     }
     if (editing.value && props.updateable) {
@@ -56,15 +57,15 @@ const save = (event: Event) => {
             }
             emit('updated', payload)
         } else {
-            console.log('No content change. Not dispatching!!')
-            // console.log('[old value]', props.card.msg, '[new value]', (event.target as HTMLElement).innerText.trim())
+            logMessage('No content change. Not dispatching!!')
+            // logMessage('[old value]', props.card.msg, '[new value]', (event.target as HTMLElement).innerText.trim())
         }
     }
 }
 
 const saveOnEnter = (event: KeyboardEvent) => {
     if (props.locked) {
-        console.log("Locked! Cannot edit.")
+        logMessage("Locked! Cannot edit.")
         event.preventDefault()
         return
     }
@@ -76,7 +77,7 @@ const saveOnEnter = (event: KeyboardEvent) => {
 
 const toggleLike = () => {
     if (props.locked) {
-        console.log("Locked! Cannot like/unlike.")
+        logMessage("Locked! Cannot like/unlike.")
         return
     }
     const payload: LikeMessage = {
@@ -88,7 +89,7 @@ const toggleLike = () => {
 
 const remove = () => {
     if (props.locked) {
-        console.log("Locked! Cannot delete.")
+        logMessage("Locked! Cannot delete.")
         return
     }
     if (props.updateable) {

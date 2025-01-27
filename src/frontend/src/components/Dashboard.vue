@@ -15,6 +15,7 @@ import autoTable from 'jspdf-autotable';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import CountdownTimer from './CountdownTimer.vue';
 import TimerPanel from './TimerPanel.vue';
+import { logMessage } from '../util/Logger';
 
 const isMasked = ref(true)
 const isOwner = ref(false)
@@ -59,7 +60,7 @@ const filterCards = (category: string) => {
 
 const add = (category: string) => {
     if (isLocked.value) {
-        console.log('Locked! Cannot add.')
+        logMessage('Locked! Cannot add.')
         return
     }
     newCardCategory.value = category
@@ -77,13 +78,13 @@ const columnWidthClass = computed(() => {
 })
 
 const onAdded = (card: DraftMessage) => {
-    console.log('newcontent received:', card)
+    logMessage('newcontent received:', card)
     newCardCategory.value = '' //unmount newCard
     dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat })
 }
 
 const onUpdated = (card: DraftMessage) => {
-    console.log('Updated content received:', card)
+    logMessage('Updated content received:', card)
     dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat })
 }
 
@@ -267,29 +268,29 @@ const dispatchEvent = <T>(eventType: string, payload: T) => {
         typ: eventType,
         pyl: payload
     }
-    console.log("Dispatching", event)
+    logMessage("Dispatching", event)
     if (socket.readyState == 1) {
         socket.send(JSON.stringify(event)); // Can throw error if socket object is "connecting". Check the docs.
     } else {
-        console.log('Socket not ready for send operation')
+        logMessage('Socket not ready for send operation')
     }
 }
 
 const socketOnOpen = (event: Event) => {
-    console.log("[open] Connection established", event)
+    logMessage("[open] Connection established", event)
     isConnected.value = true
     dispatchEvent<RegisterEvent>("reg", { by: user, nickname: nickname, xid: externalId, grp: board })
 }
 const socketOnClose = (event: CloseEvent) => {
     isConnected.value = false
-    console.log("Close received", event)
+    logMessage("Close received", event)
 }
 const socketOnError = (event: Event) => {
     console.error(event)
 }
 const socketOnMessage = (event: MessageEvent<any>) => {
     const response = toSocketResponse(JSON.parse(event.data))
-    console.log('Response', response)
+    logMessage('Response', response)
 
     if (response && response.typ) {
         switch (response.typ) {
