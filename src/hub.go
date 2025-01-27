@@ -29,7 +29,7 @@ func (hub *Hub) run() {
 			if _, ok := hub.clients[client.group]; !ok {
 				hub.clients[client.group] = make(map[*Client]bool)
 			}
-			hub.clients[client.group][client] = true // Insert of Update
+			hub.clients[client.group][client] = true // Insert or Update
 			// hub.clients[client] = true
 		case client := <-hub.unregister:
 			// Delete the client and close the client's sending channel
@@ -37,7 +37,7 @@ func (hub *Hub) run() {
 			if _, ok := hub.clients[client.group]; ok {
 				delete(hub.clients[client.group], client)
 				close(client.send)
-				// Delete group/board/room if not clients exist
+				// Delete group/board/room if no clients exist
 				if len(hub.clients[client.group]) == 0 {
 					delete(hub.clients, client.group)
 				}

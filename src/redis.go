@@ -105,7 +105,7 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 		}
 		pipe.Expire(c.ctx, boardColsKey, 2*time.Hour)
 		pipe.Expire(c.ctx, key, 2*time.Hour) // Todo: Remove TTL hardcode
-		// pipe.ExpireAt(c.ctx, key, b.CreatedAtUtc.Add(2*time.Hour))
+		// pipe.ExpireAt(c.ctx, key, b.CreatedAtUtc.Add(2*time.Hour)) // Note: .Add() only works for "time.Time". We have changed the type of "Board.CreatedAtUtc" from "time.Time" to int64 with the .Unix() usage.
 		return nil
 	})
 
@@ -118,7 +118,7 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 }
 
 func (c *RedisConnector) UpdateMasking(b *Board, mask bool) bool {
-	// Todo: Deduplicate with UpdateBoardLock()
+	// Todo: Deduplicate with UpdateBoardLock() & UpdateTimer()
 	key := fmt.Sprintf("board:%s", b.Id)
 	if _, err := c.client.HSet(c.ctx, key, "mask", mask).Result(); err != nil {
 		slog.Error("Failed to mask/unmask", "details", err.Error(), "board", b)
@@ -128,10 +128,37 @@ func (c *RedisConnector) UpdateMasking(b *Board, mask bool) bool {
 }
 
 func (c *RedisConnector) UpdateBoardLock(b *Board, lock bool) bool {
-	// Todo: Deduplicate with UpdateMasking()
+	// Todo: Deduplicate with UpdateMasking() & UpdateTimer()
 	key := fmt.Sprintf("board:%s", b.Id)
 	if _, err := c.client.HSet(c.ctx, key, "lock", lock).Result(); err != nil {
 		slog.Error("Failed to lock/unlock", "details", err.Error(), "board", b)
+		return false
+	}
+	return true
+}
+
+func (c *RedisConnector) UpdateTimer(b *Board, expiryDurationInSeconds uint16) bool {
+	// Todo: Deduplicate with UpdateMasking() & UpdateBoardLock()
+	key := fmt.Sprintf("board:%s", b.Id)
+	duration := time.Duration(expiryDurationInSeconds) * time.Second
+	expiryTime := time.Now().UTC().Add(duration).Unix()
+
+	if _, err := c.client.HSet(c.ctx, key, "timerExpiresAtUtc", expiryTime).Result(); err != nil {
+		slog.Error("Failed to update board timer", "details", err.Error(), "board", b)
+		return false
+	}
+	return true
+}
+
+func (c *RedisConnector) StopTimer(b *Board) bool {
+	key := fmt.Sprintf("board:%s", b.Id)
+	// To stop the timer, just reset the timerExpiresAtUtc to one second before current time.
+	// This will cause the expiryTimeInSeconds to be sent as 0 (if expiryTime - curentTime is negative, its also sent as zero)
+	// ...e.g check TimerEvent.broadcast, RegEvent.broadcast
+	expiryTime := time.Now().UTC().Unix() - 1
+
+	if _, err := c.client.HSet(c.ctx, key, "timerExpiresAtUtc", expiryTime).Result(); err != nil {
+		slog.Error("Failed to update board timer during a 'Stop'", "details", err.Error(), "board", b)
 		return false
 	}
 	return true

@@ -6,17 +6,18 @@ type UserDetails struct {
 }
 
 type RegisterResponse struct {
-	Type         string            `json:"typ"`
-	Mine         bool              `json:"mine"`
-	BoardName    string            `json:"boardName"`
-	BoardTeam    string            `json:"boardTeam"`
-	BoardColumns []*BoardColumn    `json:"columns"` // Using same BoardColumn struct that is used for request and redis store. Todo - refactor later.
-	BoardStatus  string            `json:"boardStatus"`
-	BoardMasking bool              `json:"boardMasking"`
-	BoardLock    bool              `json:"boardLock"`
-	IsBoardOwner bool              `json:"isBoardOwner"`
-	Users        []*UserDetails    `json:"users"`
-	Messages     []MessageResponse `json:"messages"` //Todo: Change to *MessageResponse
+	Type                  string            `json:"typ"`
+	Mine                  bool              `json:"mine"`
+	BoardName             string            `json:"boardName"`
+	BoardTeam             string            `json:"boardTeam"`
+	BoardColumns          []*BoardColumn    `json:"columns"` // Using same BoardColumn struct that is used for request and redis store. Todo - refactor later.
+	BoardStatus           string            `json:"boardStatus"`
+	BoardMasking          bool              `json:"boardMasking"`
+	BoardLock             bool              `json:"boardLock"`
+	IsBoardOwner          bool              `json:"isBoardOwner"`
+	Users                 []*UserDetails    `json:"users"`
+	Messages              []MessageResponse `json:"messages"`              //Todo: Change to *MessageResponse
+	TimerExpiresInSeconds uint16            `json:"timerExpiresInSeconds"` // uint16 since we are restricting timer to max 1 hour (3600 seconds)
 }
 
 type UserClosingResponse struct {
@@ -55,4 +56,9 @@ type LikeMessageResponse struct {
 type DeleteMessageResponse struct {
 	Type string `json:"typ"`
 	Id   string `json:"id"`
+}
+
+type TimerResponse struct {
+	Type             string `json:"typ"`
+	ExpiresInSeconds uint16 `json:"expiresInSeconds"`
 }

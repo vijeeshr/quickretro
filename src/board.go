@@ -26,14 +26,15 @@ func (b BoardStatus) String() string {
 }
 
 type Board struct {
-	Id           string      `redis:"id"`
-	Name         string      `redis:"name"`
-	Team         string      `redis:"team"`
-	Owner        string      `redis:"owner"`
-	Status       BoardStatus `redis:"status"`
-	Mask         bool        `redis:"mask"`
-	Lock         bool        `redis:"lock"`
-	CreatedAtUtc time.Time   `redis:"createdAtUtc"`
+	Id                string      `redis:"id"`
+	Name              string      `redis:"name"`
+	Team              string      `redis:"team"`
+	Owner             string      `redis:"owner"`
+	Status            BoardStatus `redis:"status"`
+	Mask              bool        `redis:"mask"`
+	Lock              bool        `redis:"lock"`
+	TimerExpiresAtUtc int64       `redis:"timerExpiresAtUtc"`
+	CreatedAtUtc      int64       `redis:"createdAtUtc"`
 }
 
 type BoardColumn struct {
@@ -103,7 +104,7 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 
 	// Start creation
 	id := shortuuid.New()
-	board := &Board{Id: id, Name: createReq.Name, Team: createReq.Team, Owner: createReq.Owner, Status: InProgress, Lock: false, Mask: true, CreatedAtUtc: time.Now().UTC()}
+	board := &Board{Id: id, Name: createReq.Name, Team: createReq.Team, Owner: createReq.Owner, Status: InProgress, Lock: false, Mask: true, CreatedAtUtc: time.Now().UTC().Unix()}
 
 	// Save to Redis
 	if ok := c.CreateBoard(board, createReq.Columns); !ok {
