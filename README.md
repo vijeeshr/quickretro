@@ -53,6 +53,3 @@ All data auto-deleted within 2 hours of most recent update.
 
 ![quickretro2](https://github.com/vijeeshr/quickretro/assets/16733867/6802b697-362b-4f99-b6da-8b9bc0c3c4ab)
 
-
-## Note
-Use in production after vetting it. This example was created with the intent of learning Go.
