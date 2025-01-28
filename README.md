@@ -1,5 +1,5 @@
 # quickretro
-A websocket based example app for conducting a quick sprint retro.
+A websocket based app for conducting a quick sprint retro.
 
 ## Live app demo
 https://demo.quickretro.app  
@@ -7,7 +7,7 @@ https://demo.quickretro.app
 ## Site
 https://quickretro.app 
 
-## Runnning the app locally
+## Running the app locally
 Ensure Go, Nodejs and Docker are installed.  
 
 ### Build the Vue frontend
@@ -32,7 +32,7 @@ docker compose up
 Visit http://localhost:8080 to open the Vue app and start creating a board.  
 
 ## For Frontend Development
-### Runing Vue app in development mode
+### Running Vue app in development mode
 Run the app.  
 ```sh
 npm run dev
