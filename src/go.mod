@@ -3,6 +3,7 @@ module github.com/vijeeshr/quickretro
 go 1.22.0
 
 require (
+	github.com/BurntSushi/toml v1.4.0
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.1
 	github.com/lithammer/shortuuid/v4 v4.0.0

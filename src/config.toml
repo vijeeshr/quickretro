@@ -1,0 +1,24 @@
+[server]
+# When self-hosting, add your domain to allowed_origins list. 
+# For e.g. if you are hosting your site at https://abc.com, allowed_origins will look like -
+# allowed_origins = [
+#     "https://abc.com"
+# ]
+allowed_origins = [
+    "http://localhost:8080",
+    "https://localhost:8080",
+    "http://localhost:5173",
+    "https://localhost",
+    "https://quickretro.app",
+    "https://demo.quickretro.app"
+]
+
+[websocket]
+# Maximum message size (in bytes) allowed from peer for the websocket connection
+max_message_size_bytes = 1024
+
+[data]
+# Format: <number><unit>
+# Units: s=seconds, m=minutes, h=hours, d=days
+# Examples: "50s" for 50 seconds, "5m" for 5 minutes, "2h" for 2 hours, "7d" for 7 days
+auto_delete_duration = "2h"

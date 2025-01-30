@@ -20,7 +20,7 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 
 	// Maximum message size allowed from peer.
-	maxMessageSize = 1024 //512
+	// maxMessageSize = 1024 //512
 )
 
 var upgrader = websocket.Upgrader{
@@ -29,14 +29,20 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
 		// slog.Info("Origin information", "Origin", origin)
-		// Todo: Do not hardcode
-		switch origin {
-		case "http://localhost:8080", "https://localhost:8080", "http://localhost:5173",
-			"https://localhost", "https://quickretro.app", "https://demo.quickretro.app":
-			return true
-		default:
-			return false
+
+		// switch origin {
+		// case "http://localhost:8080", "https://localhost:8080", "http://localhost:5173",
+		// 	"https://localhost", "https://quickretro.app", "https://demo.quickretro.app":
+		// 	return true
+		// default:
+		// 	return false
+		// }
+		for _, allowedOrigin := range config.Server.AllowedOrigins {
+			if origin == allowedOrigin {
+				return true
+			}
 		}
+		return false
 	},
 }
 
@@ -59,7 +65,7 @@ func (c *Client) read() {
 			c.hub.redis.Unsubscribe(c.group)
 		}
 	}()
-	c.conn.SetReadLimit(maxMessageSize)
+	c.conn.SetReadLimit(config.Websocket.MaxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error {
 		// slog.Debug("Pong", "from", c.id)

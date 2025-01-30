@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/lithammer/shortuuid/v4"
@@ -35,6 +34,7 @@ type Board struct {
 	Lock              bool        `redis:"lock"`
 	TimerExpiresAtUtc int64       `redis:"timerExpiresAtUtc"`
 	CreatedAtUtc      int64       `redis:"createdAtUtc"`
+	AutoDeleteAtUtc   int64       `redis:"autoDeleteAtUtc"`
 }
 
 type BoardColumn struct {
@@ -104,7 +104,7 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 
 	// Start creation
 	id := shortuuid.New()
-	board := &Board{Id: id, Name: createReq.Name, Team: createReq.Team, Owner: createReq.Owner, Status: InProgress, Lock: false, Mask: true, CreatedAtUtc: time.Now().UTC().Unix()}
+	board := &Board{Id: id, Name: createReq.Name, Team: createReq.Team, Owner: createReq.Owner, Status: InProgress, Lock: false, Mask: true}
 
 	// Save to Redis
 	if ok := c.CreateBoard(board, createReq.Columns); !ok {
