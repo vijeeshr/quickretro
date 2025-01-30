@@ -4,16 +4,35 @@ import (
 	"context"
 	"embed"
 	"flag"
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/gorilla/mux"
 )
 
 //go:embed all:frontend/dist/*
 var frontendFiles embed.FS
+
+type Config struct {
+	Server struct {
+		AllowedOrigins []string `toml:"allowed_origins"`
+	} `toml:"server"`
+	Websocket struct {
+		MaxMessageSize int64 `toml:"max_message_size_bytes"`
+	} `toml:"websocket"`
+	Data struct {
+		AutoDeleteDuration string `toml:"auto_delete_duration"`
+	} `toml:"data"`
+}
+
+var config Config
 
 func main() {
 	debug := flag.Bool("debug", false, "set to true to run in debug mode")
@@ -30,9 +49,22 @@ func main() {
 	}
 	slog.SetDefault(logger)
 
+	// Load configuration
+	if _, err := toml.DecodeFile("config.toml", &config); err != nil {
+		slog.Error("Failed to load configuration from config.toml", "error", err)
+		os.Exit(1)
+	}
+
+	// Parse Auto-Delete time duration
+	autoDeleteDuration, err := parseDuration(config.Data.AutoDeleteDuration)
+	if err != nil {
+		slog.Error("Invalid auto-delete duration format", "error", err)
+		os.Exit(1)
+	}
+
 	// Connect to Redis
 	ctx := context.Background()
-	red := NewRedisConnector(ctx)
+	red := NewRedisConnector(ctx, autoDeleteDuration)
 	defer red.Close()
 
 	// Prepare Hub
@@ -86,4 +118,31 @@ func frontendIndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(indexFile)
+}
+
+func parseDuration(s string) (time.Duration, error) {
+	var multiplier time.Duration = 1
+	switch {
+	case strings.HasSuffix(s, "s"):
+		multiplier = time.Second
+		s = strings.TrimSuffix(s, "s")
+	case strings.HasSuffix(s, "m"):
+		multiplier = time.Minute
+		s = strings.TrimSuffix(s, "m")
+	case strings.HasSuffix(s, "h"):
+		multiplier = time.Hour
+		s = strings.TrimSuffix(s, "h")
+	case strings.HasSuffix(s, "d"):
+		multiplier = 24 * time.Hour
+		s = strings.TrimSuffix(s, "d")
+	default:
+		return 0, fmt.Errorf("invalid duration format: missing unit (use s/m/h/d)")
+	}
+
+	value, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, fmt.Errorf("invalid duration value: %w", err)
+	}
+
+	return time.Duration(value) * multiplier, nil
 }

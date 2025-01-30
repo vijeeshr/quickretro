@@ -12,6 +12,7 @@ RUN go mod download
 # COPY src/ .
 COPY src/*.go .
 # COPY src/frontend/dist frontend/dist
+COPY src/config.toml .
 COPY --from=frontend-builder /app/dist frontend/dist
 RUN CGO_ENABLED=0 GOOS=linux go build -o retroapp .
 
@@ -23,6 +24,7 @@ ENV REDIS_HOST redis:6379
 WORKDIR /app
 COPY --from=certificates /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=backend-builder /app/retroapp .
+COPY --from=backend-builder /app/config.toml .
 # COPY src/public ./public
 EXPOSE 8080
 CMD ["./retroapp"]

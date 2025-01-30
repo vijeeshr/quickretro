@@ -26,10 +26,11 @@ import (
 type RedisConnector struct {
 	client     *redis.Client
 	subscriber *redis.PubSub
+	timeToLive time.Duration
 	ctx        context.Context
 }
 
-func NewRedisConnector(ctx context.Context) *RedisConnector {
+func NewRedisConnector(ctx context.Context, timeToLive time.Duration) *RedisConnector {
 
 	// rdb := redis.NewClient(&redis.Options{
 	// 	Addr:     "localhost:6379",
@@ -56,7 +57,7 @@ func NewRedisConnector(ctx context.Context) *RedisConnector {
 	}
 
 	// return rdb.(*redis.Client), rdb.(*redis.Client).Subscribe(ctx)
-	return &RedisConnector{client: rdb.(*redis.Client), subscriber: rdb.(*redis.Client).Subscribe(ctx), ctx: ctx}
+	return &RedisConnector{client: rdb.(*redis.Client), subscriber: rdb.(*redis.Client).Subscribe(ctx), timeToLive: timeToLive, ctx: ctx}
 }
 
 func (c *RedisConnector) Subscribe(redisChannel ...string) {
@@ -85,6 +86,11 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 	key := fmt.Sprintf("board:%s", b.Id)
 	boardColsKey := fmt.Sprintf("board:col:%s", b.Id) // Boardwise-ColIds
 
+	currentTime := time.Now().UTC()
+	currentTimeUtcSeconds := currentTime.Unix()
+	autoDeleteTime := currentTime.Add(c.timeToLive)
+	autoDeleteTimeUtcSeconds := autoDeleteTime.Unix()
+
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		pipe.HSet(c.ctx, key, "id", b.Id)
 		pipe.HSet(c.ctx, key, "name", b.Name)
@@ -93,19 +99,20 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 		pipe.HSet(c.ctx, key, "status", int(b.Status))
 		pipe.HSet(c.ctx, key, "mask", b.Mask)
 		pipe.HSet(c.ctx, key, "lock", b.Lock)
-		pipe.HSet(c.ctx, key, "createdAtUtc", b.CreatedAtUtc)
+		pipe.HSet(c.ctx, key, "createdAtUtc", currentTimeUtcSeconds)
+		pipe.HSet(c.ctx, key, "autoDeleteAtUtc", autoDeleteTimeUtcSeconds)
 		// Columns
 		for _, col := range cols {
 			colKey := fmt.Sprintf("board:col:%s:%s", b.Id, col.Id)
 			pipe.HSet(c.ctx, colKey, "id", col.Id)
 			pipe.HSet(c.ctx, colKey, "text", col.Text)
 			pipe.HSet(c.ctx, colKey, "color", col.Color)
-			pipe.Expire(c.ctx, colKey, 2*time.Hour)
+			// pipe.Expire(c.ctx, colKey, 2*time.Hour)
+			pipe.ExpireAt(c.ctx, colKey, autoDeleteTime)
 			pipe.SAdd(c.ctx, boardColsKey, col.Id)
 		}
-		pipe.Expire(c.ctx, boardColsKey, 2*time.Hour)
-		pipe.Expire(c.ctx, key, 2*time.Hour) // Todo: Remove TTL hardcode
-		// pipe.ExpireAt(c.ctx, key, b.CreatedAtUtc.Add(2*time.Hour)) // Note: .Add() only works for "time.Time". We have changed the type of "Board.CreatedAtUtc" from "time.Time" to int64 with the .Unix() usage.
+		pipe.ExpireAt(c.ctx, boardColsKey, autoDeleteTime)
+		pipe.ExpireAt(c.ctx, key, autoDeleteTime)
 		return nil
 	})
 
@@ -270,8 +277,8 @@ func (c *RedisConnector) CommitUserPresence(boardId string, user *User, isPresen
 			pipe.HSet(c.ctx, userKey, "xid", user.Xid)
 			pipe.HSet(c.ctx, userKey, "nickname", user.Nickname)
 			pipe.SAdd(c.ctx, boardUsersKey, user.Id)
-			pipe.Expire(c.ctx, userKey, 2*time.Hour)       // Todo: Remove TTL hardcode
-			pipe.Expire(c.ctx, boardUsersKey, 2*time.Hour) // Todo: Remove TTL hardcode
+			pipe.Expire(c.ctx, userKey, c.timeToLive)       // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
+			pipe.Expire(c.ctx, boardUsersKey, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
 			return nil
 		} else {
 			pipe.Del(c.ctx, userKey)
@@ -479,8 +486,8 @@ func (c *RedisConnector) Save(msg *Message) bool {
 		pipe.HSet(c.ctx, msgKey, "content", msg.Content)
 		pipe.HSet(c.ctx, msgKey, "category", msg.Category)
 		pipe.SAdd(c.ctx, boardKey, msg.Id)
-		pipe.Expire(c.ctx, msgKey, 2*time.Hour)   // Todo: Remove TTL hardcode
-		pipe.Expire(c.ctx, boardKey, 2*time.Hour) // Todo: Remove TTL hardcode
+		pipe.Expire(c.ctx, msgKey, c.timeToLive)   // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
+		pipe.Expire(c.ctx, boardKey, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
 		return nil
 	})
 
@@ -499,7 +506,7 @@ func (c *RedisConnector) Like(msgId string, by string, like bool) bool {
 
 	if like {
 		affected, err = c.client.SAdd(c.ctx, key, by).Result() // Todo: Pipeline ?
-		c.client.Expire(c.ctx, key, 2*time.Hour)               // Todo: Remove TTL hardcode
+		c.client.Expire(c.ctx, key, c.timeToLive)              // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
 	} else {
 		affected, err = c.client.SRem(c.ctx, key, by).Result()
 	}

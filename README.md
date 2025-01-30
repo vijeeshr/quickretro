@@ -1,5 +1,5 @@
 # quickretro
-A websocket based example app for conducting a quick sprint retro.
+A websocket based app for conducting a quick sprint retro.
 
 ## Live app demo
 https://demo.quickretro.app  
@@ -7,7 +7,7 @@ https://demo.quickretro.app
 ## Site
 https://quickretro.app 
 
-## Runnning the app locally
+## Running the app locally
 Ensure Go, Nodejs and Docker are installed.  
 
 ### Build the Vue frontend
@@ -32,7 +32,7 @@ docker compose up
 Visit http://localhost:8080 to open the Vue app and start creating a board.  
 
 ## For Frontend Development
-### Runing Vue app in development mode
+### Running Vue app in development mode
 Run the app.  
 ```sh
 npm run dev
@@ -40,12 +40,13 @@ npm run dev
 Visit http://localhost:5173/ to open.  
 
 ## Features/Capabilities/Limitations
-No logins.  
+No Signups/logins.  
 Share the board url with people to participate in the retro meeting.  
 Board creator can opt to blur/unblur messages during the retro meeting.  
 Board creator can update/delete any message (including messages of other participants).   
 Board creator can lock/unlock board (Lock to make it read-only).  
 Board creator can download details as Pdf.  
+Countdown Timer.  
 Online presence display.   
 All data auto-deleted within 2 hours of most recent update.  
 
@@ -53,6 +54,3 @@ All data auto-deleted within 2 hours of most recent update.
 
 ![quickretro2](https://github.com/vijeeshr/quickretro/assets/16733867/6802b697-362b-4f99-b6da-8b9bc0c3c4ab)
 
-
-## Note
-Use in production after vetting it. This example was created with the intent of learning Go.

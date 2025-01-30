@@ -4,4 +4,3 @@ export function logMessage(...args: any[]): void {
         console.log(...args)
     }
 }
-  
