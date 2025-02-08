@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import Avatar from './Avatar.vue';
 import Card from './Card.vue';
 import Category from './Category.vue';
@@ -15,7 +15,11 @@ import autoTable from 'jspdf-autotable';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import CountdownTimer from './CountdownTimer.vue';
 import TimerPanel from './TimerPanel.vue';
-import { logMessage } from '../util/Logger';
+import { logMessage } from '../utils';
+import { useToast } from 'vue-toast-notification';
+// import 'vue-toast-notification/dist/theme-sugar.css';
+// import 'vue-toast-notification/dist/theme-bootstrap.css';
+import 'vue-toast-notification/dist/theme-default.css';
 
 const isMasked = ref(true)
 const isOwner = ref(false)
@@ -54,6 +58,16 @@ const onCountdownProgressUpdate = (value: boolean) => {
     isTimerCountdownInProgress.value = value
 }
 
+const toast = useToast()
+
+const onOneMinuteLeftWarning = () => {
+    toast.info("One minute left for countdown", { pauseOnHover: false })
+}
+
+const onCountdownCompleted = () => {
+    toast.error("Hey! You've run out of time", { pauseOnHover: false, duration: 4000 })
+}
+
 const filterCards = (category: string) => {
     return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase());
 }
@@ -81,6 +95,10 @@ const onAdded = (card: DraftMessage) => {
     logMessage('newcontent received:', card)
     newCardCategory.value = '' //unmount newCard
     dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat })
+}
+
+const onInvalidContent = (errorMessage: string) => {
+    toast.error(errorMessage)
 }
 
 const onUpdated = (card: DraftMessage) => {
@@ -329,6 +347,19 @@ const handleVisibilityChange = () => {
     }
 }
 
+const handleConnectivity = () => {
+    if (!navigator.onLine) {
+        toast.error("You seem to be offline.", { pauseOnHover: false, duration: 4000 })
+    }
+    // if (navigator.onLine) {
+    //     toast.success("You are online", { pauseOnHover: false, duration: 4000 })
+    //     // Attempt reinitializing the app (with browser reload) when websocket is closed because of connectivity issues
+    //     if (socket.readyState !== WebSocket.OPEN) {
+    //         window.location.reload()
+    //     }
+    // }
+}
+
 onMounted(() => {
     const websocketProtocol = import.meta.env.VITE_WS_PROTOCOL || 'wss'
     socket = new WebSocket(`${websocketProtocol}://${document.location.host}/ws/board/${board}/user/${user}/meet`)
@@ -338,14 +369,18 @@ onMounted(() => {
     socket.onmessage = socketOnMessage
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener("offline", handleConnectivity)
+    // window.addEventListener("online", handleConnectivity)
 })
 
-// onUnmounted(() => {
-//     document.removeEventListener('visibilitychange', handleVisibilityChange)
-//     if (socket && (!socket.CLOSED || !socket.CLOSING)) {
-//         socket.close(1001)
-//     }
-// })
+onUnmounted(() => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+    window.removeEventListener("offline", handleConnectivity)
+    // window.removeEventListener("online", handleConnectivity)
+    // if (socket && (!socket.CLOSED || !socket.CLOSING)) {
+    //     socket.close(1001)
+    // }
+})
 
 </script>
 
@@ -390,10 +425,11 @@ onMounted(() => {
         <!-- Left Sidebar -->
         <div class="w-16 p-3">
             <!-- Timer -->
-            <CountdownTimer :timeLeftInSeconds="timerExpiresInSeconds" title="Time left in Minutes:Seconds"
+            <CountdownTimer :timeLeftInSeconds="timerExpiresInSeconds" title="Countdown Timer"
                 class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-[1rem] font-bold text-white ml-auto mx-auto mb-4"
                 :class="isOwner ? 'cursor-pointer' : 'cursor-default'" @click="timerSettings"
-                @on-countdown-progress-update="onCountdownProgressUpdate" />
+                @countdown-progress-update="onCountdownProgressUpdate" @one-minute-left-warning="onOneMinuteLeftWarning"
+                @countdown-completed="onCountdownCompleted" />
             <!-- Share -->
             <div title="Share board with others">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -464,10 +500,12 @@ onMounted(() => {
             <div class="flex-1 flex bg-gray-100 h-full min-h-screen overflow-hidden">
                 <Category v-for="column in columns" :button-text="column.text" :color="column.color"
                     :width="columnWidthClass" @add-card="add(column.id)">
-                    <NewCard v-if="newCardCategory == column.id" :category="column.id" @added="onAdded" />
-                    <Card v-for="card in filterCards(column.id)" :card="card" :mask="isMasked"
+                    <NewCard v-if="newCardCategory == column.id" :category="column.id" :by="user" :nickname="nickname"
+                        :board="board" @added="onAdded" @invalidContent="onInvalidContent" />
+                    <Card v-for="card in filterCards(column.id)" :card="card" :current-user="user"
+                        :current-user-nickname="nickname" :board="board" :mask="isMasked"
                         :updateable="card.mine || isOwner" :key="card.id" @updated="onUpdated" @deleted="onDeleted"
-                        @liked="onLiked" :locked="isLocked" />
+                        @liked="onLiked" @invalidContent="onInvalidContent" :locked="isLocked" />
                 </Category>
             </div>
         </div>

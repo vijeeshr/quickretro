@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { DraftMessage } from '../models/DraftMessage';
+import { assertMessageContentValidation, canAssertMessageContentValidation, MessageContentValidationResult } from '../utils';
 
-const props = defineProps<{ category: string }>()
-const emit = defineEmits(['added'])
+const props = defineProps<{ category: string, by: string, nickname: string, board: string }>()
+const emit = defineEmits(['added', 'invalidContent'])
 
 const editing = ref(true)
 
@@ -31,6 +32,17 @@ const vFocus = {
     el.focus()
   }
 }
+
+const validate = (event: Event) => {
+  if (!canAssertMessageContentValidation()) return
+  const validationResult: MessageContentValidationResult = assertMessageContentValidation(event, props.by, props.nickname, props.board, props.category)
+  if (validationResult.isValid) return
+
+  let errorMessage: string = "Content more than allowed limit."
+  if (validationResult.isTrimmed) errorMessage = 'Content more than allowed limit. Extra text is stripped from the end.'
+
+  emit('invalidContent', errorMessage)
+}
 </script>
 
 <template>
@@ -38,7 +50,7 @@ const vFocus = {
 
     <div class="text-gray-500 pb-2">
       <article v-focus class="min-h-[3.5rem] text-center break-words focus:outline-none cursor-auto"
-        contenteditable="true" @blur="add" @keydown.enter="addOnEnter"></article>
+        contenteditable="true" @blur="add" @keydown.enter="addOnEnter" @input="validate"></article>
     </div>
 
   </div>

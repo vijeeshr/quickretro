@@ -10,7 +10,7 @@ const props = withDefaults(defineProps<Props>(), {
     timeLeftInSeconds: 0
 })
 
-const emit = defineEmits(['onCountdownProgressUpdate'])
+const emit = defineEmits(['CountdownProgressUpdate', 'OneMinuteLeftWarning', 'CountdownCompleted'])
 
 let interval: any = null
 const remainingTime = ref(props.timeLeftInSeconds)
@@ -24,7 +24,7 @@ const formattedRemainingTime = computed(() => {
 const startCountdown = () => {
     if (interval) return // Prevent multiple intervals
 
-    emit('onCountdownProgressUpdate', true)
+    emit('CountdownProgressUpdate', true)
 
     interval = setInterval(() => {
         if (remainingTime.value <= 0) {
@@ -32,10 +32,12 @@ const startCountdown = () => {
             // ..Chrome seems fine. Should we try a check for interval object before clearing it. Doesn't seem necessary.
             clearInterval(interval)
             interval = null
-            emit('onCountdownProgressUpdate', false)
+            emit('CountdownProgressUpdate', false)
+            emit('CountdownCompleted') // Keeping a separate event for notifying the user that time's up. Can probably reuse "CountdownProgressUpdate", but not sure of it may end up being fired multiple times?
             return
         }
         remainingTime.value--
+        if (remainingTime.value === 60) emit('OneMinuteLeftWarning')
     }, 1000)
 }
 
@@ -43,13 +45,13 @@ const stopCountdown = () => {
     // Todo: Check for interval truthyness?
     clearInterval(interval)
     interval = null
-    emit('onCountdownProgressUpdate', false)
+    emit('CountdownProgressUpdate', false)
 }
 
 // Watch for changes in timeLeftInSeconds and reset the timer accordingly
 // Note: If we try to add a feature to "Extend" a running timer, and the extended time is the same a the initial time, this watcher won't execute..
 //  e.g. Start a timer with 120 secs and while the timer is in progress, props.timeLeftInSeconds 120 secs again. There is no change in value for props.timeLeftInSeconds.
-// Check the hack done in - Dashboard.vue.onTimerResponse
+// To fix the above: Check the hack done in - Dashboard.vue.onTimerResponse
 watch(
     () => props.timeLeftInSeconds,
     (newValue) => {

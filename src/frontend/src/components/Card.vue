@@ -4,16 +4,23 @@ import Avatar from './Avatar.vue';
 import { MessageResponse } from '../models/Requests';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
-import { logMessage } from '../util/Logger';
+import { assertMessageContentValidation, canAssertMessageContentValidation, logMessage, MessageContentValidationResult } from '../utils';
 
+// "currentUser", "currentUserNickname", "board", "card.cat" only used to calculate message size in bytes. "category" already passed with "card.cat".
+// Message size calc and trimming only done when editing.
+// Apart from message owner, only board creator/owner can update someone else's message.
+// Only a message's content and category are actually updated in the backend
 interface Props {
     card: MessageResponse // Todo: Change name of model. Or use a different model.
     mask: boolean
     updateable: boolean
     locked: boolean
+    currentUser: string // Only used for message size calc
+    currentUserNickname: string // Only used for message size calc
+    board: string // Only used for message size calc
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['updated', 'deleted', 'liked'])
+const emit = defineEmits(['updated', 'deleted', 'liked', 'invalidContent'])
 
 const editing = ref(false)
 
@@ -97,6 +104,17 @@ const remove = () => {
     }
 }
 
+const validate = (event: Event) => {
+    if (!editing.value && !props.updateable) return
+    if (!canAssertMessageContentValidation()) return
+    const validationResult: MessageContentValidationResult = assertMessageContentValidation(event, props.currentUser, props.currentUserNickname, props.board, props.card.cat)
+    if (validationResult.isValid) return
+
+    let errorMessage: string = "Content more than allowed limit."
+    if (validationResult.isTrimmed) errorMessage = 'Content more than allowed limit. Extra text is stripped from the end.'
+
+    emit('invalidContent', errorMessage)
+}
 </script>
 
 <template>
@@ -106,8 +124,9 @@ const remove = () => {
         <div class="text-gray-500 pb-2" :class="{ 'blur-sm': mask && !card.mine }">
             <article class="min-h-4 text-center break-words focus:outline-none"
                 :class="[editing && updateable ? 'cursor-auto' : 'cursor-default']"
-                :contenteditable="editing && updateable" @click="edit" @blur="save" @keydown.enter="saveOnEnter">{{
-            content }}</article>
+                :contenteditable="editing && updateable" @click="edit" @blur="save" @keydown.enter="saveOnEnter"
+                @input="validate">{{
+                    content }}</article>
         </div>
 
         <div class="flex items-center text-gray-500 pt-2">

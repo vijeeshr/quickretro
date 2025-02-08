@@ -15,6 +15,7 @@ allowed_origins = [
 
 [websocket]
 # Maximum message size (in bytes) allowed from peer for the websocket connection
+# For the front-end validation, keep the same value in (src/frontend/.env [VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES])
 max_message_size_bytes = 1024
 
 [data]
