@@ -1,8 +1,8 @@
 [server]
 # When self-hosting, add your domain to allowed_origins list. 
-# For e.g. if you are hosting your site at https://abc.com, allowed_origins will look like -
+# For e.g. if you are hosting your site at https://example.com, allowed_origins will look like -
 # allowed_origins = [
-#     "https://abc.com"
+#     "https://example.com"
 # ]
 allowed_origins = [
     "http://localhost:8080",

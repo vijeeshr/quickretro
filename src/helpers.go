@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type malformedRequest struct {
@@ -78,4 +80,31 @@ func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}) err
 	}
 
 	return nil
+}
+
+func parseDuration(s string) (time.Duration, error) {
+	var multiplier time.Duration = 1
+	switch {
+	case strings.HasSuffix(s, "s"):
+		multiplier = time.Second
+		s = strings.TrimSuffix(s, "s")
+	case strings.HasSuffix(s, "m"):
+		multiplier = time.Minute
+		s = strings.TrimSuffix(s, "m")
+	case strings.HasSuffix(s, "h"):
+		multiplier = time.Hour
+		s = strings.TrimSuffix(s, "h")
+	case strings.HasSuffix(s, "d"):
+		multiplier = 24 * time.Hour
+		s = strings.TrimSuffix(s, "d")
+	default:
+		return 0, fmt.Errorf("invalid duration format: missing unit (use s/m/h/d)")
+	}
+
+	value, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, fmt.Errorf("invalid duration value: %w", err)
+	}
+
+	return time.Duration(value) * multiplier, nil
 }
