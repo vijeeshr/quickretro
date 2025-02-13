@@ -169,6 +169,6 @@ services:
     depends_on:
       - redis
     environment:
-      - REDIS_HOST=redis:6379
+      - REDIS_CONNSTR=redis://redis:6379/0  # Default Redis (No Auth or ACL). Outside docker - redis://localhost:6379/0
     ports:
       - "8080:8080"      
