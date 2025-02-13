@@ -1,33 +1,7 @@
-quickretro.app {
-   encode gzip
-   root * /var/www/homepage
-   file_server
-   route /images/* {
-      uri strip_prefix /images
-      root * /var/www/homepage/images
-      file_server
-   }
+localhost {
+    encode gzip
+    reverse_proxy app:8080
 }
-
-demo.quickretro.app {
-   encode gzip
-   reverse_proxy app:8080
-}
-
-secretmsg.us {
-   encode gzip
-   reverse_proxy secretnoteapp:8085
-}
-
-# quickretro.app {
-#    encode gzip
-#    reverse_proxy app:8080
-# }
-
-# localhost {
-#    encode gzip
-#    reverse_proxy app:8080
-# }
 
 # Uncomment below block and comment above block when used with comnpose.multiservice.yml
 # localhost {
