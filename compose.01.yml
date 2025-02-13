@@ -8,6 +8,12 @@
 services:
   redis:
     image: "redis:7.2.3-alpine"
+    ############## Redis ACL ##############
+    # volumes:
+    #   - ./redis/users.acl:/usr/local/etc/redis/users.acl
+    # command: redis-server --aclfile /usr/local/etc/redis/users.acl
+    # # command: ["redis-server", "--aclfile", "/usr/local/etc/redis/users.acl"]
+    ############## Redis ACL ##############    
     restart: always
     networks:
       - redisnet
@@ -20,7 +26,10 @@ services:
     depends_on:
       - redis
     environment:
-      - REDIS_HOST=redis:6379
+      - REDIS_CONNSTR=redis://redis:6379/0  # Default Redis (No Auth or ACL). Outside docker - redis://localhost:6379/0
+      ############## Redis ACL ##############
+      # - REDIS_CONNSTR=redis://app-user:mysecretpassword@redis:6379/0  # Using ACL with Username & Password. Outside docker - redis://app-user:mysecretpassword@localhost:6379/0
+      ############## Redis ACL ##############
     networks:
       - redisnet
     ports:
