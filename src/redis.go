@@ -38,19 +38,29 @@ func NewRedisConnector(ctx context.Context, timeToLive time.Duration) *RedisConn
 	// 	DB:       0,  // use default DB
 	// })
 
-	// Get Redis server address from environment variable, defaulting to ":6379" for accessing redis from host.
-	redisAddr := getEnv("REDIS_HOST", ":6379")
+	// Get Redis connection string from environment variable.
+	// The default "redis://localhost:6379/0" is for accessing redis from host, during development, when running the app locally i.e. not within Docker.
+	// This default may fail when running inside a Docker container as localhost inside a container refers to itself.
+	// So, ensure REDIS_CONNSTR environment variable is correctly set.
+	redisConnStr := getEnv("REDIS_CONNSTR", "redis://localhost:6379/0")
+	// redisConnStr := getEnv("REDIS_CONNSTR", "redis://app-user:mysecretpassword@localhost:6379/0") // Pattern for ACL from local
+
+	opt, err := redis.ParseURL(redisConnStr)
+	if err != nil {
+		slog.Error("Cannot parsing Redis connection string", "details", err.Error())
+	}
 
 	// Todo: Add auth and pull from config
 	rdb := redis.NewUniversalClient(&redis.UniversalOptions{
 		// Addrs:    []string{":6379"},
 		// Addrs:    []string{"my-redis:6379"},
-		Addrs:    []string{redisAddr},
-		Password: "",
-		DB:       0,
+		Addrs:    []string{opt.Addr},
+		Username: opt.Username,
+		Password: opt.Password,
+		DB:       opt.DB,
 	})
 
-	_, err := rdb.Ping(ctx).Result()
+	_, err = rdb.Ping(ctx).Result()
 	if err != nil {
 		slog.Error("Cannot connect to Redis", "details", err.Error())
 		os.Exit(1)

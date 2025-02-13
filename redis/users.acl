@@ -1,0 +1,3 @@
+user default off
+user admin on >mysecretadminpassword ~* &* +@all
+user app-user on >mysecretpassword ~* &* +@read +@write +@pubsub -@dangerous -FLUSHDB -CONFIG +PING
