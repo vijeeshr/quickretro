@@ -21,3 +21,7 @@
 go.work
 
 node_modules
+
+# VitePress output directory
+docs/docs/.vitepress/cache/
+docs/docs/.vitepress/dist/
