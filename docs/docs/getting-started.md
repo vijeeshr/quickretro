@@ -1,6 +1,6 @@
 # Getting Started Guide
 
-This guide gives a quick and easy to follow functional walkthrough of QuickRetro app.\
+This guide gives a quick and easy functional walkthrough of QuickRetro app.\
 To start, visit the site and type in a name to join as guest. There is no signup/login process.
 
 ::: info NOTE

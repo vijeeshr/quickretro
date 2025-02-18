@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="canonical" href="https://quickretro.app" />
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickRetro - Open-Source Sprint Retrospective App</title>
+    <meta name="title" content="QuickRetro - Open-Source Sprint Retrospective App">
+    <meta name="description" content="Easily conduct a Sprint retrospective online with this free and open-source app">
+    <meta name="robots" content="index, follow">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="language" content="English">
+    <meta property="og:title" content="QuickRetro - Open-Source Sprint Retrospective App">
+    <meta property="og:site_name" content="QuickRetro">
+    <meta property="og:url" content="https://quickretro.app">
+    <meta property="og:description" content="Easily conduct a Sprint retrospective online with this free and open-source app">
+    <meta property="og:image" content="https://quickretro.app/images/dashboard.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="twitter:domain" content="quickretro.app">
+    <meta property="twitter:url" content="https://quickretro.app/">
+    <meta name="twitter:title" content="QuickRetro - Open-Source Sprint Retrospective App">
+    <meta name="twitter:description" content="Easily conduct a Sprint retrospective online with this free and open-source app">
+    <meta name="twitter:image" content="https://quickretro.app/images/dashboard.png">    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22256%22 height=%22256%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%230a0a0a%22></rect><path fill=%22%23fff%22 d=%22M42 36.60L42 81.80Q41.60 81.96 40.76 82.16Q39.92 82.36 39.04 82.36L39.04 82.36Q35.60 82.36 35.60 79.40L35.60 79.40L35.60 65.88Q34 66.84 31.72 67.52Q29.44 68.20 26.32 68.20L26.32 68.20Q22.40 68.20 19.08 67.08Q15.76 65.96 13.36 63.64Q10.96 61.32 9.60 57.64Q8.24 53.96 8.24 48.92L8.24 48.92Q8.24 43.88 9.68 40.16Q11.12 36.44 13.68 34.00Q16.24 31.56 19.72 30.36Q23.20 29.16 27.20 29.16L27.20 29.16Q31.04 29.16 34.16 30.12Q37.28 31.08 39.36 32.36L39.36 32.36Q40.56 33.08 41.28 34.12Q42 35.16 42 36.60L42 36.60ZM27.28 62.92L27.28 62.92Q29.84 62.92 32 62.16Q34.16 61.40 35.60 60.20L35.60 60.20L35.60 36.68Q34.24 35.80 32.20 35.12Q30.16 34.44 27.36 34.44L27.36 34.44Q24.80 34.44 22.52 35.24Q20.24 36.04 18.52 37.80Q16.80 39.56 15.80 42.28Q14.80 45 14.80 48.92L14.80 48.92Q14.80 56.28 18.20 59.60Q21.60 62.92 27.28 62.92ZM61.68 48.76L61.68 67Q61.20 67.16 60.40 67.36Q59.60 67.56 58.64 67.56L58.64 67.56Q55.12 67.56 55.12 64.60L55.12 64.60L55.12 22.04Q55.12 20.76 55.76 20.08Q56.40 19.40 57.76 19.00L57.76 19.00Q60.08 18.28 63.48 17.96Q66.88 17.64 70.08 17.64L70.08 17.64Q80.16 17.64 85.08 21.68Q90 25.72 90 33.16L90 33.16Q90 38.68 87.16 42.44Q84.32 46.20 78.56 47.80L78.56 47.80Q80.56 50.36 82.56 52.92Q84.56 55.48 86.36 57.76Q88.16 60.04 89.56 61.88Q90.96 63.72 91.76 64.76L91.76 64.76Q91.44 66.12 90.36 66.92Q89.28 67.72 88.16 67.72L88.16 67.72Q86.80 67.72 85.92 67.08Q85.04 66.44 84.08 65.08L84.08 65.08L72.40 48.76L61.68 48.76ZM61.60 43.32L70.80 43.32Q76.72 43.32 80.08 40.76Q83.44 38.20 83.44 33.16L83.44 33.16Q83.44 28.12 79.92 25.60Q76.40 23.08 69.84 23.08L69.84 23.08Q67.68 23.08 65.48 23.28Q63.28 23.48 61.60 23.80L61.60 23.80L61.60 43.32Z%22></path></svg>" />
+    <link href="./output.css" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav class="bg-white border-gray-200 px-4 lg:px-6 py-2.5">
+            <div class="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl">
+                <a href="https://quickretro.app" class="flex items-center">
+                    <div class="inline-flex items-center justify-center overflow-hidden rounded-full w-8 h-8 ml-auto mx-auto mr-2 bg-sky-500"></div>
+                    <span class="self-center text-xl font-semibold whitespace-nowrap">QuickRetro</span>
+                </a>
+                <div class="flex items-center lg:order-2">
+                    <a href="https://github.com/vijeeshr/quickretro" target="_blank" class="text-gray-800 hover:bg-gray-50 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" /></svg>
+                    </a>                   
+                    <a href="https://demo.quickretro.app" target="_blank" class="text-white bg-sky-500 hover:bg-sky-600 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2 focus:outline-none">Live demo</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <section class="bg-white">
+        <div class="grid max-w-screen-xl px-4 pt-20 pb-8 mx-auto">
+            <div class="mr-auto place-self-center">
+                <h1 class="mb-4 text-4xl leading-none tracking-tight md:text-5xl xl:text-6xl">Self-hosted, Free & Open-source <br /> Sprint retro app</h1>
+                <p class="mb-6 font-light text-gray-500 lg:mb-8 md:text-lg lg:text-xl">Easily conduct a Sprint retrospective online with this free and open-source app</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-white">
+        <div class="max-w-screen-xl px-4 py-8 mx-auto space-y-12">
+            <div class="items-center gap-8 lg:grid lg:grid-cols-2 xl:gap-16">
+                <div class="text-gray-500 sm:text-lg">
+                    <h2 class="mb-4 text-3xl font-bold tracking-tight text-gray-500">Features</h2>
+                    <ul role="list" class="pt-8 space-y-5">
+                        <li class="flex space-x-3">
+                            <svg class="flex-shrink-0 w-5 h-5 text-sky-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span class="text-base font-medium leading-tight text-gray-900">No logins</span>
+                        </li>
+                        <li class="flex space-x-3">
+                            <svg class="flex-shrink-0 w-5 h-5 text-sky-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span class="text-base font-medium leading-tight text-gray-900">Can have maximum 5 columns. Choose the column names you want.</span>
+                        </li>
+                        <li class="flex space-x-3">
+                            <svg class="flex-shrink-0 w-5 h-5 text-sky-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span class="text-base font-medium leading-tight text-gray-900">Mask/Un-mask messages during the retro meeting (Board creator)</span>
+                        </li>
+                        <li class="flex space-x-3">
+                            <svg class="flex-shrink-0 w-5 h-5 text-sky-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span class="text-base font-medium leading-tight text-gray-900">Update/Delete any message (Board creator)</span>
+                        </li>
+                        <li class="flex space-x-3">
+                            <svg class="flex-shrink-0 w-5 h-5 text-sky-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span class="text-base font-medium leading-tight text-gray-900">Lock/Unlock board (Board creator)</span>
+                        </li>
+                        <li class="flex space-x-3">
+                            <svg class="flex-shrink-0 w-5 h-5 text-sky-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span class="text-base font-medium leading-tight text-gray-900">Download as PDF (Board creator)</span>
+                        </li>
+                        <li class="flex space-x-3">
+                            <svg class="flex-shrink-0 w-5 h-5 text-sky-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span class="text-base font-medium leading-tight text-gray-900">Online presence display</span>
+                        </li>
+                        <li class="flex space-x-3">
+                            <svg class="flex-shrink-0 w-5 h-5 text-sky-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span class="text-base font-medium leading-tight text-gray-900">Auto-delete data in 2 hours</span>
+                        </li>
+                    </ul>
+                </div>
+                <img class="hidden w-full mb-4 rounded-lg lg:mb-0 lg:flex shadow-xl" src="./images/dashboard.png" alt="dashboard feature image">
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-white">
+        <div class="max-w-screen-xl px-4 py-8 mx-auto space-y-12">
+            <!-- Row -->
+            <div class="items-center gap-8 lg:grid lg:grid-cols-2 xl:gap-16">
+                <img class="hidden w-full mb-4 rounded-lg lg:mb-0 lg:flex shadow-xl" src="./images/addmessage.png" alt="feature image">
+                <div class="text-gray-500 sm:text-lg">
+                    <h2 class="mb-4 text-3xl font-bold tracking-tight text-gray-500">Add/Edit/Delete messages</h2>
+                    <p class="mb-8 font-light lg:text-xl">Click buttons at the top of each column to add a message. <br />To edit a message, just click one of your existing messages. Press enter to save. Board creator update any message. <br />To delete, use the message's delete button.</p>
+                </div>
+            </div>
+            <!-- Row -->
+            <div class="items-center gap-8 lg:grid lg:grid-cols-2 xl:gap-16">
+                <div class="text-gray-500 sm:text-lg">
+                    <h2 class="mb-4 text-3xl font-bold tracking-tight text-gray-500">Share url to participants</h2>
+                    <p class="mb-8 font-light lg:text-xl">Use the Share button in left sidebar to get the board link to share to participants.</p>
+                </div>
+                <img class="hidden w-full mb-4 rounded-lg lg:mb-0 lg:flex shadow-xl" src="./images/share.png" alt="feature image">
+            </div>
+            <!-- Row -->
+            <div class="items-center gap-8 lg:grid lg:grid-cols-2 xl:gap-16">
+                <img class="hidden w-full mb-4 rounded-lg lg:mb-0 lg:flex shadow-xl" src="./images/createboard.png" alt="feature image">
+                <div class="text-gray-500 sm:text-lg">
+                    <h2 class="mb-4 text-3xl font-bold tracking-tight text-gray-500">Customizing columns</h2>
+                    <p class="mb-8 font-light lg:text-xl">Click the colored column bullets to enable or disable. Click the text to enter a separate column name other than the default.</p>
+                </div>
+            </div>
+            <!-- Row -->
+            <div class="items-center gap-8 lg:grid lg:grid-cols-2 xl:gap-16">
+                <div class="text-gray-500 sm:text-lg">
+                    <h2 class="mb-4 text-3xl font-bold tracking-tight text-gray-500">Masking/Blocking/Downloading</h2>
+                    <p class="mb-8 font-light lg:text-xl">Board creators can perform additional actions using buttons on the left sidebar.<br /> Masking/UnMasking of messages. <br /> Locking/Unlocking the board. <br />Downloaing messages as PDF.</p>
+                </div>
+                <img class="hidden w-full mb-4 rounded-lg lg:mb-0 lg:flex shadow-xl" src="./images/owneractions.png" alt="feature image">
+            </div>                                                
+        </div>
+    </section>
+
+    <footer class="bg-white">
+        <div class="max-w-screen-xl p-4 py-6 mx-auto lg:py-16 md:p-8 lg:p-10">
+            <div class="text-center">
+                <span class="block text-sm text-center text-gray-500">© 2024 QuickRetro™
+                </span>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

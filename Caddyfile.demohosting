@@ -1,13 +1,21 @@
 quickretro.app {
    encode gzip
    root * /var/www/homepage
+   # try_files {path} /404.html
+   try_files {path}.html {path}/ {path} /404.html
    file_server
-   route /images/* {
-      uri strip_prefix /images
-      root * /var/www/homepage/images
-      file_server
-   }
 }
+
+# quickretro.app {
+#    encode gzip
+#    root * /var/www/homepage
+#    file_server
+#    route /images/* {
+#       uri strip_prefix /images
+#       root * /var/www/homepage/images
+#       file_server
+#    }
+# }
 
 demo.quickretro.app {
    encode gzip

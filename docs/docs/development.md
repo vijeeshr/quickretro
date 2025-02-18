@@ -25,7 +25,7 @@ cd .\src\frontend\
 npm install
 npm run build-dev
 ```
-This installs the packages, dependencies, and creates assets in <code>frontend/dist</code> directory. This dist directory is embedded in the backend Golang binary when it is built.\
+This installs the packages, dependencies, and creates assets in <code>frontend/dist</code> directory. This directory is embedded in the backend Golang binary when it is built.
 
 ### Run with Docker
 Navigate back to root directory and run -

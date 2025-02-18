@@ -22,7 +22,7 @@ export default defineConfig({
     ['meta', { property: 'og:description', content: 'Easily conduct a Sprint retrospective online with this free and open-source app' }],
     ['meta', { property: 'og:image', content: 'https://quickretro.app/logo.png' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    // Twittere tags
+    // Twitter tags
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['meta', { name: 'twitter:title', content: 'QuickRetro - Free and Open-Source Sprint Retrospective App' }],
     ['meta', { name: 'twitter:description', content: 'Easily conduct a Sprint retrospective online with this free and open-source app' }],
@@ -42,6 +42,11 @@ export default defineConfig({
   ],
 
   lastUpdated: true,
+  cleanUrls: true,
+  ignoreDeadLinks: [
+    // ignore all localhost links
+    /^https?:\/\/localhost/
+  ],
 
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
