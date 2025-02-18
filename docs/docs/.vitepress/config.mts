@@ -41,13 +41,15 @@ export default defineConfig({
     `]
   ],
 
+  lastUpdated: true,
+
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     logo : { light: "logo_large_light.png", dark: "logo_large_dark.png", width: 24, height: 24 },
 
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Development', link: '/running-locally' }
+      { text: 'Development', link: '/development' }
     ],
 
     sidebar: [
@@ -60,16 +62,16 @@ export default defineConfig({
         ]
       },
       {
-        text: 'Development',
+        // text: 'Development',
         items: [
-          { text: 'Running locally', link: '/running-locally' },
+          { text: 'Development', link: '/development' },
           { text: 'Configurations', link: '/configurations' }
         ]
       },
       {
-        text: 'Self-hosting',
+        // text: 'Self-hosting',
         items: [
-          { text: 'Considerations', link: '/considerations' }
+          { text: 'Self-Hosting', link: '/self-hosting' }
         ]
       }             
     ],
