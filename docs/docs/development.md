@@ -2,15 +2,14 @@
 outline: deep
 ---
 # Development Guide
-This guide is intended to help you get started with running the application locally.
-::: tip 
-For development, ensure Go (ver >= 1.22.0), NodeJs and Docker are installed locally
-:::
+This guide is intended to help you get started with running the application locally, and making changes to it.
 
-## Tech Stack
-Go <Badge type="tip" text="1.22.0" /> for backend\
-Vue <Badge type="tip" text="^3.3.11" /> for frontend\
-Redis is used as the datastore and for pubsub
+## Prerequisites
+- Go <Badge type="tip" text="1.22.0" /> or higher
+- Node.js version <Badge type="tip" text="20.10.0" /> or higher
+- Docker
+- Redis is used as the datastore and for pubsub
+- A text editor, preferably VS Code, and a CLI
 ::: info
 The Go app runs as a single binary with the frontend embedded inside it
 :::

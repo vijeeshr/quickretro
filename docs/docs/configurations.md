@@ -1,5 +1,5 @@
 # Configurations
-Some parts of the app can be modified to change the default behaviour. This document provides a quick overview about it.
+The application's default behaviour can be altered with configuration settings. This document provides a quick overview about it.
 
 ## Auto-Delete Duration
 By default, data is deleted within 2 hours in Redis. This can be updated by making the below changes.\
