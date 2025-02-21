@@ -55,7 +55,7 @@ onMounted(() => {
                     </div>
                     <div>
                         <button type="submit"
-                            class="flex justify-center px-4 py-2 text-sm w-full shadow-md bg-sky-100 text-sky-600 font-medium rounded-md border border-sky-300 hover:text-white hover:bg-sky-400 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2 select-none"
+                            class="flex justify-center px-4 py-2 text-sm w-full shadow-md bg-sky-100 text-sky-600 font-medium rounded-md border border-sky-300 hover:text-white hover:bg-sky-400 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2 select-none disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed"
                             :disabled="!isGuestNameValid" @click="join">
                             Join
                         </button>
