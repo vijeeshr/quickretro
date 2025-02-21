@@ -20,7 +20,7 @@ The easiest way to run locally is by using Docker.
 ### Build Vue frontend
 The Vue frontend must be built first
 ```sh
-cd .\src\frontend\
+cd ./src/frontend/
 npm install
 npm run build-dev
 ```
@@ -43,7 +43,7 @@ From the previous docker step, you can keep the Redis container running and stop
 To run the Go app directly (outside the container) -
 Open a terminal and from the root directory
 ```sh
-cd .\src\
+cd ./src/
 go run .
 ```
 This starts the Go server. You are ready to make changes to the Go app now.
@@ -55,7 +55,7 @@ Go must be installed for this step.
 ### Running Vue frontend app
 Open another terminal and from the root directoy - 
 ```sh
-cd .\src\frontend\
+cd ./src/frontend/
 npm run dev
 ```
 This starts the Vue app at http://localhost:5173\
