@@ -203,6 +203,16 @@ const share = () => {
     isShareDialogOpen.value = true
 }
 
+const copyShareLink = async () => {
+    try {
+        await navigator.clipboard.writeText(shareLink)
+        toast.success("Link copied!")
+        setIsShareDialogOpen(false)
+    } catch (err) {
+        toast.error("Failed to copy. Please copy directly.")
+    }
+}
+
 const timerSettings = () => {
     if (isOwner.value) {
         isTimerDialogOpen.value = true
@@ -413,9 +423,9 @@ onUnmounted(() => {
                     <article class="select-all bg-slate-100 my-6 rounded-sm">{{ shareLink }}</article>
                     <div class="mt-4">
                         <button type="button"
-                            class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none"
-                            @click="setIsShareDialogOpen(false)">
-                            Close
+                            class="px-4 py-2 text-sm w-full shadow-md bg-sky-100 text-sky-600 font-medium rounded-md border border-sky-300 hover:text-white hover:bg-sky-400 hover:border-transparent select-none focus:outline-none focus:ring-0"
+                            @click="copyShareLink">
+                            Copy
                         </button>
                     </div>
                 </DialogPanel>

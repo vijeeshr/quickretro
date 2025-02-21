@@ -119,14 +119,14 @@ const decrementSeconds = () => {
     </p>
 
     <div class="flex justify-center mt-8">
-        <button type="submit"
-            class="px-4 py-2 text-sm w-full shadow-md bg-sky-100 text-sky-600 font-medium rounded-md border border-sky-300 hover:text-white hover:bg-sky-400 hover:border-transparent select-none"
+        <button type="button"
+            class="px-4 py-2 text-sm w-full shadow-md bg-sky-100 text-sky-600 font-medium rounded-md border border-sky-300 hover:text-white hover:bg-sky-400 hover:border-transparent select-none focus:outline-none focus:ring-0"
             v-if="!isCountdownInProgress" @click="start" :disabled="!isTimeValid">
             Start
         </button>
 
-        <button type="submit"
-            class="px-4 py-2 text-sm w-full shadow-md bg-red-100 text-red-600 font-medium rounded-md border border-red-300 hover:text-white hover:bg-red-400 hover:border-transparent select-none"
+        <button type="button"
+            class="px-4 py-2 text-sm w-full shadow-md bg-red-100 text-red-600 font-medium rounded-md border border-red-300 hover:text-white hover:bg-red-400 hover:border-transparent select-none focus:outline-none focus:ring-0"
             v-if="isCountdownInProgress" @click="stop">
             Stop
         </button>
