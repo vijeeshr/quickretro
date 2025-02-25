@@ -8,18 +8,25 @@ export default {
       }),
     }
   },
+  darkMode: 'class',
   plugins: [],
   safelist: [
+    // Backgrounds
     {
-      pattern: /bg-(red|green|yellow|fuchsia|orange)-(100|400)/,
-      variants: ['hover'],
+      pattern: /^(bg|hover:bg|dark:bg|dark:hover:bg)-(red|green|yellow|fuchsia|orange)-(100|400|600|800)/,
+      variants: ['hover', 'dark', 'dark:hover'],
     },
+    // Borders
     {
-      pattern: /border-(red|green|yellow|fuchsia|orange)-(300)/
+      pattern: /^(border|dark:border)-(red|green|yellow|fuchsia|orange)-(300|700)/,
+      variants: ['dark'],
     },
+    // Text
     {
-      pattern: /text-(red|green|yellow|fuchsia|orange)-(600)/
+      pattern: /^(text|dark:text)-(red|green|yellow|fuchsia|orange)-(100|600)/,
+      variants: ['dark'],
     },
+    // Sizes
     {
       pattern: /w-(6|8)/,
     },

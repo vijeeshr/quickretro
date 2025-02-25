@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { BoardColumn, CreateBoardRequest, createBoard } from '../api'
 
@@ -56,13 +56,18 @@ const create = async () => {
     }
 }
 
+onMounted(() => {
+    const isDark = ref(localStorage.getItem("theme") === "dark")
+    document.documentElement.classList.toggle("dark", isDark.value)
+})
+
 </script>
 
 <template>
-    <div class="bg-gray-100 flex h-screen items-center justify-center p-4">
+    <div class="bg-gray-100 dark:bg-gray-950 flex h-screen items-center justify-center p-4">
         <div class="w-full max-w-md">
-            <div class="bg-white shadow-md rounded-md p-8">
-                <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-600">
+            <div class="bg-white dark:bg-gray-900 shadow-md rounded-md p-8">
+                <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-600 dark:text-gray-400">
                     Create Board
                 </h2>
                 <div class="space-y-6 mt-4">
@@ -70,16 +75,17 @@ const create = async () => {
                         <div class="mt-1">
                             <input v-model.trim="boardname" name="name" type="text" placeholder="Type board name here!"
                                 required autofocus
-                                class="px-2 py-2 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-sky-500 sm:text-sm" />
+                                class="px-2 py-2 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-sky-500 sm:text-sm dark:bg-slate-800 dark:text-slate-200" />
                         </div>
-                        <p v-show="!boardnameEntered" name="name-required" class="text-sm text-red-600 mt-2">Please
+                        <p v-show="!boardnameEntered" name="name-required"
+                            class="text-sm text-red-600 dark:text-red-300 mt-2">Please
                             enter
                             board name</p>
                     </div>
                     <div>
                         <div class="mt-1">
                             <input v-model.trim="team" name="team" type="text" placeholder="Type team name here!"
-                                class="px-2 py-2 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-sky-500 sm:text-sm" />
+                                class="px-2 py-2 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-sky-500 sm:text-sm dark:bg-slate-800 dark:text-slate-200" />
                         </div>
                     </div>
                     <div>
@@ -102,7 +108,7 @@ const create = async () => {
                                     </svg>
                                 </button>
                                 <input type="text" v-model.trim="column.text" :placeholder="column.defaultText"
-                                    class="w-full rounded-md focus:outline-none focus:border focus:border-gray-200 focus:ring-gray-200" />
+                                    class="w-full rounded-md focus:outline-none focus:border focus:border-gray-200 focus:ring-gray-200 dark:text-slate-200 dark:bg-gray-900 dark:focus:border-gray-800 dark:focus:ring-gray-800" />
                             </li>
                         </ul>
                         <p v-show="!isColumnSelectionValid" class="text-sm text-red-600 mt-2">Please select column(s)
@@ -110,7 +116,7 @@ const create = async () => {
                     </div>
                     <div>
                         <button type="submit"
-                            class="flex justify-center px-4 py-2 text-sm w-full shadow-md bg-sky-100 text-sky-600 font-medium rounded-md border border-sky-300 hover:text-white hover:bg-sky-400 hover:border-transparent focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2 select-none disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed"
+                            class="flex justify-center px-4 py-2 text-sm w-full shadow-md bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2 dark:focus:ring-2 dark:focus:ring-offset-0 select-none"
                             :disabled="!boardnameEntered || !isColumnSelectionValid" @click="create">
                             Create
                         </button>

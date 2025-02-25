@@ -20,6 +20,7 @@ import { useToast } from 'vue-toast-notification';
 // import 'vue-toast-notification/dist/theme-sugar.css';
 // import 'vue-toast-notification/dist/theme-bootstrap.css';
 import 'vue-toast-notification/dist/theme-default.css';
+import DarkModeToggle from './DarkModeToggle.vue';
 
 const isMasked = ref(true)
 const isOwner = ref(false)
@@ -395,15 +396,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="flex h-full min-h-screen bg-gray-800 text-white">
+    <div class="flex h-full min-h-screen bg-gray-800 dark:bg-gray-950 text-white">
 
         <!-- Dialog for Timer settings -->
         <Dialog :open="isTimerDialogOpen" @close="setIsTimerDialogOpen" class="relative z-50">
             <!-- The backdrop, rendered as a fixed sibling to the panel container -->
             <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
             <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
-                <DialogPanel class="rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
-                    <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">Start/Stop Timer
+                <DialogPanel class="rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
+                    <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200">
+                        Start/Stop Timer
                     </DialogTitle>
                     <TimerPanel :is-countdown-in-progress="isTimerCountdownInProgress" @start="onTimerStart"
                         @stop="onTimerStop"></TimerPanel>
@@ -416,14 +418,16 @@ onUnmounted(() => {
             <!-- The backdrop, rendered as a fixed sibling to the panel container -->
             <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
             <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
-                <DialogPanel class="rounded-2xl bg-white p-6 text-left align-middle shadow-xl">
-                    <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">Copy and share below url to
+                <DialogPanel class="rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
+                    <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200">Copy and
+                        share below url to
                         participants
                     </DialogTitle>
-                    <article class="select-all bg-slate-100 my-6 rounded-sm">{{ shareLink }}</article>
+                    <article class="select-all bg-slate-100 dark:bg-slate-700 dark:text-gray-100 my-6 rounded-sm">{{
+                        shareLink }}</article>
                     <div class="mt-4">
                         <button type="button"
-                            class="px-4 py-2 text-sm w-full shadow-md bg-sky-100 text-sky-600 font-medium rounded-md border border-sky-300 hover:text-white hover:bg-sky-400 hover:border-transparent select-none focus:outline-none focus:ring-0"
+                            class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-none focus:ring-0"
                             @click="copyShareLink">
                             Copy
                         </button>
@@ -487,6 +491,7 @@ onUnmounted(() => {
                         d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                 </svg>
             </div>
+            <DarkModeToggle class="w-8 h-8 mx-auto mb-4 cursor-pointer" />
             <a href="https://github.com/vijeeshr/quickretro" target="_blank">
                 <svg viewBox="0 0 24 24" aria-hidden="true" class="h-8 w-8 mx-auto fill-slate-100">
                     <path fill-rule="evenodd" clip-rule="evenodd"
@@ -499,7 +504,8 @@ onUnmounted(() => {
 
         <!-- Dashboard Content -->
         <div class="w-full min-h-screen overflow-hidden">
-            <div class="flex justify-center items-center bg-gray-100 w-full text-red-500 pt-1" v-if="isLocked">
+            <div class="flex justify-center items-center bg-gray-100 dark:bg-gray-900 w-full text-red-500 dark:text-red-300 pt-1"
+                v-if="isLocked">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="currentColor" class="w-6 h-6 mr-2">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -507,7 +513,7 @@ onUnmounted(() => {
                 </svg>
                 Cannot add or update. Board is locked by owner.
             </div>
-            <div class="flex-1 flex bg-gray-100 h-full min-h-screen overflow-hidden">
+            <div class="flex-1 flex bg-gray-100 dark:bg-gray-900 h-full min-h-screen overflow-hidden">
                 <Category v-for="column in columns" :button-text="column.text" :color="column.color"
                     :width="columnWidthClass" @add-card="add(column.id)">
                     <NewCard v-if="newCardCategory == column.id" :category="column.id" :by="user" :nickname="nickname"

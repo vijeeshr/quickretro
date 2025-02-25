@@ -24,9 +24,15 @@ defineEmits(['addCard'])
 <template>
     <div class="flex-none p-6" :class="[`${width}`]">
         <button
-            class="px-4 py-1 text-sm w-full font-semibold rounded-lg mb-4 border hover:text-white hover:border-transparent focus:outline-none select-none break-words"
-            :class="[`bg-${color}-100`, `hover:bg-${color}-400`, `border-${color}-300`, `text-${color}-600`]"
-            @click="$emit('addCard')">
+            class="px-4 py-1 text-sm w-full font-semibold rounded-lg mb-4 border hover:border-transparent focus:outline-none select-none break-words"
+            :class="[
+                `bg-${color}-100 hover:bg-${color}-400`,
+                `border-${color}-300`,
+                `text-${color}-600 hover:text-white`,
+                `dark:bg-${color}-800 dark:hover:bg-${color}-600`,
+                `dark:border-${color}-700`,
+                `dark:text-${color}-100`
+            ]" @click="$emit('addCard')">
             {{ buttonText }}
         </button>
         <slot></slot>
