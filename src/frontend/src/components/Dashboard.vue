@@ -513,7 +513,7 @@ onUnmounted(() => {
                 </svg>
                 Cannot add or update. Board is locked by owner.
             </div>
-            <div class="flex-1 flex bg-gray-100 dark:bg-gray-900 h-full min-h-screen overflow-hidden">
+            <div class="flex flex-1 flex-col md:flex-row h-full min-h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
                 <Category v-for="column in columns" :button-text="column.text" :color="column.color"
                     :width="columnWidthClass" @add-card="add(column.id)">
                     <NewCard v-if="newCardCategory == column.id" :category="column.id" :by="user" :nickname="nickname"

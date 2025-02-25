@@ -22,7 +22,7 @@ defineEmits(['addCard'])
 </script>
 
 <template>
-    <div class="flex-none p-6" :class="[`${width}`]">
+    <div class="p-6" :class="[`w-full md:${width}`]">
         <button
             class="px-4 py-1 text-sm w-full font-semibold rounded-lg mb-4 border hover:border-transparent focus:outline-none select-none break-words"
             :class="[
