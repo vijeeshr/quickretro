@@ -56,13 +56,64 @@ export default defineConfig({
     // ignore all localhost links
     /^https?:\/\/localhost/
   ],
+  sitemap: {
+    hostname: 'https://quickretro.app',
+    transformItems: (items) => {
+      // modify/filter existing items
+      items.forEach(item => {
+        // Default priority
+        item.priority = 0.5
+        // Dashboard
+        if (item.url === 'dashboard') {
+          item.priority = 1
+          item.img = {
+            url: 'https://quickretro.app/dashboard_owner.png',
+            caption: 'Dashboard features',
+            title: 'Dashboard features'
+          }
+        }
+        // Home page
+        if (item.url === '') {
+          item.priority = 1
+          item.img = {
+            url: 'https://quickretro.app/logo.png',
+            caption: 'Free and Open-Source Sprint Retrospective App',
+            title: 'QuickRetro | Free and Open-Source Sprint Retrospective App'
+          }
+        }
+        // Create-Board
+        if (item.url === 'create-board') {
+          item.priority = 0.9
+          item.img = {
+            url: 'https://quickretro.app/createboard.png',
+            caption: 'Create board',
+            title: 'Create board'
+          }
+        }
+        // Development
+        if (item.url === 'development' || item.url === 'getting-started') {
+          item.priority = 0.9
+        }
+      })
 
+      // add new items
+      // Demo link
+      items.push({
+        url: 'https://demo.quickretro.app',
+        priority: 1
+      })
+
+      return items
+    }
+  },
+  
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     logo : { light: "logo_large_light.png", dark: "logo_large_dark.png", width: 24, height: 24 },
 
     nav: [
       { text: 'Home', link: '/' },
+      { text: 'Features', link: '/dashboard' },
       { text: 'Development', link: '/development' }
     ],
 
