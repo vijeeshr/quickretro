@@ -529,7 +529,7 @@ onUnmounted(() => {
 
         <!-- Right Sidebar -->
         <div class="w-16 p-4">
-            <Avatar v-for="user in onlineUsers" :name="user.nickname" class="ml-auto mx-auto mb-4" />
+            <Avatar v-for="user in onlineUsers" :name="user.nickname" class="w-8 h-8 ml-auto mx-auto mb-4" />
         </div>
         <!-- Right Sidebar -->
     </div>

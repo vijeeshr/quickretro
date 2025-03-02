@@ -25,13 +25,13 @@ export default {
     {
       pattern: /^(text|dark:text)-(red|green|yellow|fuchsia|orange)-(100|600)/,
       variants: ['dark'],
-    },
-    // Sizes
-    {
-      pattern: /w-(6|8)/,
-    },
-    {
-      pattern: /h-(6|8)/,
     }
+    // Sizes
+    // {
+    //   pattern: /w-(6|8)/,
+    // },
+    // {
+    //   pattern: /h-(6|8)/,
+    // }
   ],
 }

@@ -3,12 +3,10 @@ import { computed } from 'vue'
 
 interface Props {
     name?: string
-    size?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    name: 'Anonymous',
-    size: '8'
+    name: 'Anonymous'
 })
 
 const avatarText = computed(() => {
@@ -35,8 +33,8 @@ const avatarColor = computed(() => {
 </script>
 
 <template>
-    <div class="inline-flex items-center justify-center overflow-hidden rounded-full" :class="[`w-${size}`, `h-${size}`]"
-        :title="name" :style="{ backgroundColor: avatarColor }">
+    <div class="inline-flex items-center justify-center overflow-hidden rounded-full" :title="name"
+        :style="{ backgroundColor: avatarColor }">
         <span class="font-medium text-xs cursor-default text-white">{{ avatarText }}</span>
     </div>
 </template>

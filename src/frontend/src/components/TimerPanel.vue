@@ -107,7 +107,7 @@ const decrementSeconds = () => {
     <p class="flex justify-items-normal mt-2 text-xs text-slate-400">
         Adjust minutes and seconds using the + and - controls, or
     </p>
-    <p class="flex jjustify-items-normal text-xs text-slate-400">
+    <p class="flex justify-items-normal text-xs text-slate-400">
         the Up and Down arrows on keyboard. Max allowed is 1 hour.
     </p>
 
