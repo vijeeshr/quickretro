@@ -145,7 +145,7 @@ const validate = (event: Event) => {
         :class="{ 'border': editing && updateable, 'border-sky-400 dark:border-white': editing && updateable }">
 
         <div class="text-gray-500 pb-2 dark:text-white" :class="{ 'blur-sm': mask && !card.mine }">
-            <article class="min-h-4 text-center break-words focus:outline-none"
+            <article class="min-h-4 text-center break-all focus:outline-none"
                 :class="[editing && updateable ? 'cursor-auto' : 'cursor-default']"
                 :contenteditable="editing && updateable" @click="edit" @blur="save" @keydown.enter="saveOnEnter"
                 @input="validate">{{

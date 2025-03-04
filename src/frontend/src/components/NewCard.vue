@@ -49,7 +49,7 @@ const validate = (event: Event) => {
   <div class="bg-white dark:bg-gray-700 rounded-lg p-3 mb-2 shadow-xl border border-sky-400 dark:border-white">
 
     <div class="text-gray-500 dark:text-white pb-2">
-      <article v-focus class="min-h-[3.5rem] text-center break-words focus:outline-none cursor-auto"
+      <article v-focus class="min-h-[3.5rem] text-center break-all focus:outline-none cursor-auto"
         contenteditable="true" @blur="add" @keydown.enter="addOnEnter" @input="validate"></article>
     </div>
 
