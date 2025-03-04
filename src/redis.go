@@ -554,6 +554,16 @@ func (c *RedisConnector) DeleteMessage(msg *Message) bool {
 	return true
 }
 
+func (c *RedisConnector) UpdateMessageCategory(msgId string, category string) bool {
+	key := fmt.Sprintf("msg:%s", msgId)
+
+	if _, err := c.client.HSet(c.ctx, key, "category", category).Result(); err != nil {
+		slog.Error("Failed to update message category", "details", err.Error(), "messageId", msgId, "category", category)
+		return false
+	}
+	return true
+}
+
 func (c *RedisConnector) Close() {
 	c.subscriber.Close()
 	c.client.Close()

@@ -5,6 +5,9 @@ import { MessageResponse } from '../models/Requests';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
 import { assertMessageContentValidation, canAssertMessageContentValidation, logMessage, MessageContentValidationResult } from '../utils';
+import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
+import { BoardColumn } from '../models/BoardColumn';
+import { CategoryChangeMessage } from '../models/CategoryChangeMessage';
 
 // "currentUser", "currentUserNickname", "board", "card.cat" only used to calculate message size in bytes. "category" already passed with "card.cat".
 // Message size calc and trimming only done when editing.
@@ -18,9 +21,10 @@ interface Props {
     currentUser: string // Only used for message size calc
     currentUserNickname: string // Only used for message size calc
     board: string // Only used for message size calc
+    categories: BoardColumn[]
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['updated', 'deleted', 'liked', 'invalidContent'])
+const emit = defineEmits(['updated', 'deleted', 'liked', 'invalidContent', 'categoryChanged'])
 
 const editing = ref(false)
 
@@ -29,6 +33,10 @@ const content = computed(() => {
         return props.card.msg.slice(0).replaceAll(/[^ ]/g, '*');
     }
     return props.card.msg
+})
+
+const otherCategories = computed(() => {
+    return props.categories.filter(c => c.id !== props.card.cat)
 })
 
 const edit = async (event: Event) => {
@@ -104,6 +112,21 @@ const remove = () => {
     }
 }
 
+const changeCategory = (newCategory: string, oldCategory: string) => {
+    if (props.locked) {
+        logMessage("Locked! Cannot change category.")
+        return
+    }
+    if (props.updateable && newCategory !== oldCategory) {
+        const payload: CategoryChangeMessage = {
+            msgId: props.card.id,
+            newCategoryId: newCategory,
+            oldCategoryId: oldCategory
+        }
+        emit('categoryChanged', payload)
+    }
+}
+
 const validate = (event: Event) => {
     if (!editing.value && !props.updateable) return
     if (!canAssertMessageContentValidation()) return
@@ -130,7 +153,8 @@ const validate = (event: Event) => {
         </div>
 
         <div class="flex items-center text-gray-500 pt-2">
-            <div class="flex mr-2">
+            <!-- Like button and count display -->
+            <div class="flex mr-1">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="currentColor" class="w-6 h-6 cursor-pointer"
                     :class="{ 'text-blue-500 dark:text-white': card.liked }" @click="toggleLike">
@@ -140,12 +164,48 @@ const validate = (event: Event) => {
                 <span class="cursor-default dark:text-gray-200" :class="{ 'invisible': card.likes == '0' }">{{
                     card.likes }}</span>
             </div>
+            <!-- Delete button -->
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                stroke="currentColor" class="w-6 h-6 cursor-pointer dark:text-gray-200"
+                stroke="currentColor" class="w-6 h-6 cursor-pointer dark:text-gray-200 mr-2"
                 :class="{ 'invisible': !updateable }" @click="remove">
                 <path stroke-linecap="round" stroke-linejoin="round"
                     d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
             </svg>
+            <!-- Change category button -->
+            <div class="relative" :class="{ 'invisible': !updateable || otherCategories.length == 0 }">
+                <Menu as="div" class="relative text-left flex justify-center items-center">
+                    <MenuButton>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-6 h-6 cursor-pointer dark:text-gray-200"
+                            :class="{ 'invisible': !updateable }">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                        </svg>
+                    </MenuButton>
+
+                    <transition enter-active-class="transition duration-100 ease-out"
+                        enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100"
+                        leave-active-class="transition duration-75 ease-in"
+                        leave-from-class="transform scale-100 opacity-100"
+                        leave-to-class="transform scale-95 opacity-0">
+                        <MenuItems
+                            class="absolute left-6 top-1 min-w-max origin-top-right rounded-md bg-transparent border-0 space-y-0.5 focus:outline-none">
+                            <MenuItem v-for="otherCategory in otherCategories">
+                            <button :class="[
+                                `bg-${otherCategory.color}-400 hover:bg-${otherCategory.color}-500`,
+                                `text-white`,
+                                `dark:bg-${otherCategory.color}-800 dark:hover:bg-${otherCategory.color}-600`,
+                                `dark:text-${otherCategory.color}-100`,
+                                'group flex w-full items-center justify-center rounded-md text-xs px-1',
+                            ]" @click="changeCategory(otherCategory.id, props.card.cat)">
+                                {{ otherCategory.text }}
+                            </button>
+                            </MenuItem>
+                        </MenuItems>
+                    </transition>
+                </Menu>
+            </div>
+
             <Avatar :name="card.nickname" class="ml-auto w-6 h-6" />
         </div>
 

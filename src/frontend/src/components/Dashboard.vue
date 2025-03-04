@@ -5,11 +5,10 @@ import Card from './Card.vue';
 import Category from './Category.vue';
 import NewCard from './NewCard.vue';
 import { useRoute } from 'vue-router';
-import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent } from '../models/Requests';
+import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent, CategoryChangeEvent, CategoryChangeResponse } from '../models/Requests';
 import { OnlineUser } from '../models/OnlineUser';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
-import { BoardColumn } from '../api';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
@@ -21,6 +20,8 @@ import { useToast } from 'vue-toast-notification';
 // import 'vue-toast-notification/dist/theme-bootstrap.css';
 import 'vue-toast-notification/dist/theme-default.css';
 import DarkModeToggle from './DarkModeToggle.vue';
+import { BoardColumn } from '../models/BoardColumn';
+import { CategoryChangeMessage } from '../models/CategoryChangeMessage';
 
 const isMasked = ref(true)
 const isOwner = ref(false)
@@ -70,7 +71,7 @@ const onCountdownCompleted = () => {
 }
 
 const filterCards = (category: string) => {
-    return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase());
+    return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase())
 }
 
 const add = (category: string) => {
@@ -113,6 +114,10 @@ const onDeleted = (cardId: string) => {
 
 const onLiked = (likeMessage: LikeMessage) => {
     dispatchEvent<LikeMessageEvent>("like", { msgId: likeMessage.msgId, by: user, like: likeMessage.like })
+}
+
+const onCategoryChanged = (pyl: CategoryChangeMessage) => {
+    dispatchEvent<CategoryChangeEvent>("catchng", { msgId: pyl.msgId, by: user, grp: board, newcat: pyl.newCategoryId, oldcat: pyl.oldCategoryId })
 }
 
 const mask = () => {
@@ -268,6 +273,13 @@ const onDeleteMessageResponse = (response: DeleteMessageResponse) => {
     }
 }
 
+const onCategoryChangeResponse = (response: CategoryChangeResponse) => {
+    let index = cards.value.findIndex(x => x.id === response.id)
+    if (index !== -1) {
+        cards.value[index].cat = response.newcat
+    }
+}
+
 const onLikeMessageResponse = (response: LikeMessageResponse) => {
     let index = cards.value.findIndex(x => x.id === response.id)
     if (index !== -1) {
@@ -340,6 +352,9 @@ const socketOnMessage = (event: MessageEvent<any>) => {
                 break
             case "del":
                 onDeleteMessageResponse(response)
+                break
+            case "catchng":
+                onCategoryChangeResponse(response)
                 break
             case "like":
                 onLikeMessageResponse(response)
@@ -513,15 +528,17 @@ onUnmounted(() => {
                 </svg>
                 Cannot add or update. Board is locked by owner.
             </div>
-            <div class="flex flex-1 flex-col md:flex-row h-full min-h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
+            <div
+                class="flex flex-1 flex-col md:flex-row h-full min-h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
                 <Category v-for="column in columns" :button-text="column.text" :color="column.color"
                     :width="columnWidthClass" @add-card="add(column.id)">
                     <NewCard v-if="newCardCategory == column.id" :category="column.id" :by="user" :nickname="nickname"
                         :board="board" @added="onAdded" @invalidContent="onInvalidContent" />
                     <Card v-for="card in filterCards(column.id)" :card="card" :current-user="user"
                         :current-user-nickname="nickname" :board="board" :mask="isMasked"
-                        :updateable="card.mine || isOwner" :key="card.id" @updated="onUpdated" @deleted="onDeleted"
-                        @liked="onLiked" @invalidContent="onInvalidContent" :locked="isLocked" />
+                        :updateable="card.mine || isOwner" :key="card.id" :categories="columns" @updated="onUpdated"
+                        @deleted="onDeleted" @liked="onLiked" @category-changed="onCategoryChanged"
+                        @invalidContent="onInvalidContent" :locked="isLocked" />
                 </Category>
             </div>
         </div>

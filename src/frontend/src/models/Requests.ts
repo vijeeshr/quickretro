@@ -1,4 +1,4 @@
-import { BoardColumn } from "../api"
+import { BoardColumn } from "./BoardColumn"
 import { OnlineUser } from "./OnlineUser"
 
 export interface EventRequest<T> {
@@ -44,6 +44,14 @@ export interface DeleteMessageEvent {
     msgId: string
     by: string
     grp: string
+}
+
+export interface CategoryChangeEvent {
+    msgId: string
+    by: string
+    grp: string
+    newcat: string
+    oldcat: string
 }
 
 export interface TimerEvent {
@@ -106,13 +114,19 @@ export interface DeleteMessageResponse {
     id: string
 }
 
+export interface CategoryChangeResponse {
+    typ: 'catchng'
+    id: string
+    newcat: string
+}
+
 export interface TimerResponse {
     typ: 'timer'
     expiresInSeconds: number
 }
 
 export type SocketResponse = RegisterResponse | MaskResponse | LockResponse | MessageResponse |
-    LikeMessageResponse | DeleteMessageResponse | UserClosingResponse | TimerResponse
+    LikeMessageResponse | DeleteMessageResponse | CategoryChangeResponse | UserClosingResponse | TimerResponse
 
 export function toSocketResponse(json: any): SocketResponse | null {
 
@@ -130,10 +144,12 @@ export function toSocketResponse(json: any): SocketResponse | null {
                 return json as LikeMessageResponse
             case 'del':
                 return json as DeleteMessageResponse
+            case 'catchng':
+                return json as CategoryChangeResponse                
             case 'closing':
                 return json as UserClosingResponse
             case 'timer':
-                return json as TimerResponse    
+                return json as TimerResponse
             // const data: MaskResponse = json
             // return data
 

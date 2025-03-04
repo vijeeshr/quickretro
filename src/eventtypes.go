@@ -288,13 +288,13 @@ func (p *MessageEvent) Handle(i *Event, h *Hub) {
 		saved = h.redis.Save(msg)
 	}
 	if exists {
-		// Only Content and Category can be updated. The remaining fields must not be modified.
+		// Only Content can be updated. The remaining fields must not be modified.
 		// Validation: User can only update own message.
 		// Validation: Board owner can update any message.
 		isBoardOwner := h.redis.IsBoardOwner(p.Group, p.By) // Todo: No need to run this evey time. Check.
 		if msg.Id == p.Id && msg.Group == p.Group && (msg.By == p.By || isBoardOwner) {
 			msg.Content = p.Content
-			msg.Category = p.Category
+			// msg.Category = p.Category
 			saved = h.redis.Save(msg)
 		} else {
 			slog.Warn("Cannot update someone else's message in MessageEvent handle", "msgId", p.Id, "user", p.By)
@@ -407,6 +407,65 @@ func (i *DeleteMessageEvent) Broadcast(m *Message, h *Hub) {
 	response := m.NewResponse("del").(DeleteMessageResponse)
 
 	clients := h.clients[m.Group]
+	for client := range clients {
+		select {
+		case client.send <- response:
+		default:
+			client.hub.unregister <- client
+		}
+	}
+}
+
+type CategoryChangeEvent struct {
+	MessageId   string `json:"msgId"`
+	By          string `json:"by"`
+	Group       string `json:"grp"`
+	NewCategory string `json:"newcat"`
+	OldCategory string `json:"oldcat"`
+}
+
+func (p *CategoryChangeEvent) Handle(i *Event, h *Hub) {
+	// Validation: Do not allow updates in read-only board
+	if isLocked := h.redis.IsBoardLocked(p.Group); isLocked {
+		slog.Warn("Cannot change message category in read-only board", "board", p.Group)
+		return
+	}
+	// Update Redis
+	updated := false
+	msg, exists := h.redis.GetMessage(p.MessageId)
+	if !exists {
+		slog.Warn("Message doesn't exist in CategoryChangeEvent handle", "msgId", p.MessageId)
+		return
+	}
+	// Validate if new and old categories are different
+	if msg.Category == p.NewCategory {
+		slog.Warn("Old and New categories are same. Not changing.", "msgId", p.MessageId, "newCategory", p.NewCategory)
+		return
+	}
+	// Validate before changing category; especially if the message being moved is of the user who created/owns it.
+	// Board owner can change category of any message.
+	isBoardOwner := h.redis.IsBoardOwner(p.Group, p.By)
+	if msg.Id == p.MessageId && msg.Group == p.Group && (msg.By == p.By || isBoardOwner) {
+		// msg.Category = p.NewCategory
+		if updated = h.redis.UpdateMessageCategory(p.MessageId, p.NewCategory); !updated {
+			return
+		}
+	} else {
+		slog.Warn("Cannot change category of someone else's message", "msgId", p.MessageId, "user", p.By)
+		return
+	}
+	// Publish to Redis (for broadcasting)
+	// *Message is nil as all message details need not be broadcasted. Event details should be enough.
+	if updated {
+		h.redis.Publish(msg.Group, &BroadcastArgs{Message: nil, Event: i})
+	}
+}
+func (i *CategoryChangeEvent) Broadcast(h *Hub) {
+	// Transform to Outgoing format
+	// We can trust the "i" *CategoryChangeResponse payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
+	response := &CategoryChangeResponse{Type: "catchng", MessageId: i.MessageId, NewCategory: i.NewCategory}
+
+	clients := h.clients[i.Group]
 	for client := range clients {
 		select {
 		case client.send <- response:

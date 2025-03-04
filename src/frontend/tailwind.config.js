@@ -13,7 +13,7 @@ export default {
   safelist: [
     // Backgrounds
     {
-      pattern: /^(bg|hover:bg|dark:bg|dark:hover:bg)-(red|green|yellow|fuchsia|orange)-(100|400|600|800)/,
+      pattern: /^(bg|hover:bg|dark:bg|dark:hover:bg)-(red|green|yellow|fuchsia|orange)-(100|400|500|600|800)/,
       variants: ['hover', 'dark', 'dark:hover'],
     },
     // Borders

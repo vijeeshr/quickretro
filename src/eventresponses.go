@@ -58,6 +58,12 @@ type DeleteMessageResponse struct {
 	Id   string `json:"id"`
 }
 
+type CategoryChangeResponse struct {
+	Type        string `json:"typ"`
+	MessageId   string `json:"id"`
+	NewCategory string `json:"newcat"`
+}
+
 type TimerResponse struct {
 	Type             string `json:"typ"`
 	ExpiresInSeconds uint16 `json:"expiresInSeconds"`

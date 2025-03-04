@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { BoardColumn, CreateBoardRequest, createBoard } from '../api'
+import { CreateBoardRequest, createBoard } from '../api'
 import DarkModeToggle from './DarkModeToggle.vue';
+import { BoardColumn } from '../models/BoardColumn';
 
 const router = useRouter()
 const boardname = ref('')
@@ -112,7 +113,8 @@ onMounted(() => {
                                     class="w-full rounded-md focus:outline-none focus:border focus:border-gray-200 focus:ring-gray-200 dark:text-slate-200 dark:bg-gray-900 dark:focus:border-gray-800 dark:focus:ring-gray-800" />
                             </li>
                         </ul>
-                        <p v-show="!isColumnSelectionValid" class="text-sm text-red-600 dark:text-red-300 mt-2">Please select column(s)
+                        <p v-show="!isColumnSelectionValid" class="text-sm text-red-600 dark:text-red-300 mt-2">Please
+                            select column(s)
                         </p>
                     </div>
                     <div class="flex w-full gap-2">
@@ -121,7 +123,8 @@ onMounted(() => {
                             :disabled="!boardnameEntered || !isColumnSelectionValid" @click="create">
                             Create
                         </button>
-                        <div class="w-[10%] flex items-center justify-center shadow-md border rounded-md border-sky-200">
+                        <div
+                            class="w-[10%] flex items-center justify-center shadow-md border rounded-md border-sky-200">
                             <DarkModeToggle class="w-6 h-6 cursor-pointer text-sky-200 hover:text-sky-400" />
                         </div>
                     </div>

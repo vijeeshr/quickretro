@@ -1,10 +1,6 @@
-const createBoardUrl = `/api/board/create`
+import { BoardColumn } from "../models/BoardColumn"
 
-export interface BoardColumn {
-    id: string
-    text: string
-    color: string
-}
+const createBoardUrl = `/api/board/create`
 
 export interface CreateBoardRequest {
     name: string
