@@ -174,7 +174,7 @@ const validate = (event: Event) => {
                     </path>
                 </svg>
                 <span :class="{ 'invisible': card.likes == '0' }"
-                    class="absolute -top-0.5 -left-1.5 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                    class="absolute -top-0.5 -left-1.5 cursor-default bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                     {{ card.likes }}
                 </span>
             </div>
