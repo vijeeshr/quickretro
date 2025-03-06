@@ -23,19 +23,27 @@ hero:
 
 features:
   - title: No Signups
-    details: That's right! No need to signup or login. Just start using it.
+    details: That's right! No need to signup or login
+  - title: No Board Limits
+    details: Create Boards or Invite Users without limits
+  - title: Mobile Friendly UI
+    details: Easily participate from your mobile phone
   - title: Customize Column Names
-    details: Choose upto 5 columns with any name     
+    details: Choose upto 5 columns with any name
   - title: Mask/Blur messages
-    details: Avoid revealing messages of other participants         
+    details: Avoid revealing messages of other participants
+  - title: Anonymous Messages
+    details: Post messages without revealing your name
   - title: Download as PDF
     details: Download messages as PDF
   - title: Countdown Timer
     details: Stopwatch with max 1 hour limit
   - title: Board Lock
     details: Lock to stop addition/updation of messages
+  - title: Dark Theme
+    details: Easily switch to use a Dark theme
   - title: Online Presence Display
     details: See participants present in the meeting
   - title: Auto-Delete data
-    details: Auto-delete data with configurable retention duration    
+    details: Auto-delete data with configurable retention duration  
 ---
