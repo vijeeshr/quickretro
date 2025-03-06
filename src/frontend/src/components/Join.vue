@@ -54,7 +54,8 @@ onMounted(() => {
                     </svg>
                     <Avatar :name="guestname" class="w-10 h-10" v-if="isGuestNameValid" />
                 </div>
-                <h2 class="mt-3 text-center text-3xl font-bold tracking-tight text-gray-600 dark:text-gray-400">
+                <h2
+                    class="mt-3 text-center text-3xl font-bold tracking-tight text-gray-600 dark:text-gray-400 select-none">
                     Join as guest
                 </h2>
                 <div class="space-y-6 mt-4">
@@ -66,7 +67,7 @@ onMounted(() => {
                         </div>
                         <div class="h-5 flex items-center">
                             <p v-show="!isGuestNameValid" name="guestname-required"
-                                class="text-sm text-red-600 dark:text-red-300 mt-2">Please
+                                class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">Please
                                 enter your name</p>
                         </div>
                     </div>

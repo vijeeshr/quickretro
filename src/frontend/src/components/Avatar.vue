@@ -35,6 +35,6 @@ const avatarColor = computed(() => {
 <template>
     <div class="inline-flex items-center justify-center overflow-hidden rounded-full" :title="name"
         :style="{ backgroundColor: avatarColor }">
-        <span class="font-medium text-xs cursor-default text-white">{{ avatarText }}</span>
+        <span class="font-medium text-xs cursor-default text-white select-none">{{ avatarText }}</span>
     </div>
 </template>

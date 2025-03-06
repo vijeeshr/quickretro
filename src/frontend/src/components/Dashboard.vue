@@ -431,7 +431,8 @@ onUnmounted(() => {
             <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
             <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
                 <DialogPanel class="rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
-                    <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200">
+                    <DialogTitle as="h3"
+                        class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200 select-none">
                         Start/Stop Timer
                     </DialogTitle>
                     <TimerPanel :is-countdown-in-progress="isTimerCountdownInProgress" @start="onTimerStart"
@@ -446,7 +447,8 @@ onUnmounted(() => {
             <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
             <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
                 <DialogPanel class="rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
-                    <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200">Copy and
+                    <DialogTitle as="h3"
+                        class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200 select-none">Copy and
                         share below url to
                         participants
                     </DialogTitle>

@@ -104,17 +104,17 @@ const decrementSeconds = () => {
         <!-- Seconds Input End -->
     </div>
 
-    <p class="flex justify-items-normal mt-2 text-xs text-slate-400">
+    <p class="flex justify-items-normal mt-2 text-xs text-slate-400 select-none">
         Adjust minutes and seconds using the + and - controls, or
     </p>
-    <p class="flex justify-items-normal text-xs text-slate-400">
+    <p class="flex justify-items-normal text-xs text-slate-400 select-none">
         the Up and Down arrows on keyboard. Max allowed is 1 hour.
     </p>
 
-    <p v-show="!isTimeValid" name="invalid-time" class="text-sm text-red-600 dark:text-red-300 mt-2">
+    <p v-show="!isTimeValid" name="invalid-time" class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">
         Please enter valid minutes/seconds values.
     </p>
-    <p v-show="!isTimeValid" name="invalid-time" class="text-sm text-red-600 dark:text-red-300">
+    <p v-show="!isTimeValid" name="invalid-time" class="text-sm text-red-600 dark:text-red-300 select-none">
         Allowed range is 1 second to 60 minutes.
     </p>
 
