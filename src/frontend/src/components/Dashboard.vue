@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
-import AnonymousCard from './AnonymousCard.vue';
 import Avatar from './Avatar.vue';
 import Card from './Card.vue';
 import Category from './Category.vue';

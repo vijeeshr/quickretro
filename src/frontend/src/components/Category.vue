@@ -30,7 +30,7 @@ defineEmits(['addCard', 'addAnonymousCard'])
                     `bg-${color}-100`,
                     `border-${color}-300`,
                     `text-${color}-600`,
-                    `dark:bg-${color}-800 dark:hover:bg-${color}-600`,
+                    `dark:bg-${color}-800`,
                     `dark:border-${color}-700`,
                     `dark:text-${color}-100`
                 ]">{{ buttonText }}</div>
