@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import AnonymousCard from './AnonymousCard.vue';
 import Avatar from './Avatar.vue';
 import Card from './Card.vue';
 import Category from './Category.vue';
+import NewAnonymousCard from './NewAnonymousCard.vue';
 import NewCard from './NewCard.vue';
 import { useRoute } from 'vue-router';
 import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent, CategoryChangeEvent, CategoryChangeResponse } from '../models/Requests';
@@ -28,6 +30,7 @@ const isOwner = ref(false)
 const isLocked = ref(false)
 const timerExpiresInSeconds = ref(0)
 const newCardCategory = ref('')
+const newAnonymousCardCategory = ref('')
 const route = useRoute()
 const board = Array.isArray(route.params.board)
     ? route.params.board[0]
@@ -74,12 +77,19 @@ const filterCards = (category: string) => {
     return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase())
 }
 
-const add = (category: string) => {
+const add = (category: string, anonymous: boolean) => {
     if (isLocked.value) {
         logMessage('Locked! Cannot add.')
         return
     }
-    newCardCategory.value = category
+    if (!anonymous) {
+        // Unmounts NewAnonymousCard and mounts NewCard, and vice-versa
+        newAnonymousCardCategory.value = ''
+        newCardCategory.value = category
+    } else {
+        newCardCategory.value = ''
+        newAnonymousCardCategory.value = category
+    }
 }
 
 const columnWidthClass = computed(() => {
@@ -96,7 +106,9 @@ const columnWidthClass = computed(() => {
 const onAdded = (card: DraftMessage) => {
     logMessage('newcontent received:', card)
     newCardCategory.value = '' //unmount newCard
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat })
+    newAnonymousCardCategory.value = '' //unmount newAnonymousCard
+    const nicknameToSend = card.anon === true ? '' : nickname
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nicknameToSend, grp: board, msg: card.msg, cat: card.cat, anon: card.anon })
 }
 
 const onInvalidContent = (errorMessage: string) => {
@@ -105,7 +117,7 @@ const onInvalidContent = (errorMessage: string) => {
 
 const onUpdated = (card: DraftMessage) => {
     logMessage('Updated content received:', card)
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat })
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat, anon: false })
 }
 
 const onDeleted = (cardId: string) => {
@@ -531,9 +543,12 @@ onUnmounted(() => {
             <div
                 class="flex flex-1 flex-col md:flex-row h-full min-h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
                 <Category v-for="column in columns" :button-text="column.text" :color="column.color"
-                    :width="columnWidthClass" @add-card="add(column.id)">
+                    :width="columnWidthClass" @add-card="add(column.id, false)"
+                    @add-anonymous-card="add(column.id, true)">
                     <NewCard v-if="newCardCategory == column.id" :category="column.id" :by="user" :nickname="nickname"
                         :board="board" @added="onAdded" @invalidContent="onInvalidContent" />
+                    <NewAnonymousCard v-if="newAnonymousCardCategory == column.id" :category="column.id" :by="user"
+                        nickname="" :board="board" @added="onAdded" @invalidContent="onInvalidContent" />
                     <Card v-for="card in filterCards(column.id)" :card="card" :current-user="user"
                         :current-user-nickname="nickname" :board="board" :mask="isMasked"
                         :updateable="card.mine || isOwner" :key="card.id" :categories="columns" @updated="onUpdated"

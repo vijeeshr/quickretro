@@ -66,7 +66,7 @@ export const assertMessageContentValidation = (event: Event, user: string, nickn
     // emptyMessagePayload allows us to compute bytes available for the message content
     const emptyMessagePayload: EventRequest<SaveMessageEvent> = {
         typ: 'msg',
-        pyl: { id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', by: user, nickname: nickname, grp: board, msg: '', cat: category }
+        pyl: { id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', by: user, nickname: nickname, grp: board, msg: '', cat: category, anon: false }
     }
     const emptyPayloadBytes: number = getByteLength(JSON.stringify(emptyMessagePayload))
     const maxAllowedBytes: number = parseInt(import.meta.env.VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES, 10)

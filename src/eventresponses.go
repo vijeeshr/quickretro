@@ -44,6 +44,7 @@ type MessageResponse struct {
 	Likes      string `json:"likes"`
 	Liked      bool   `json:"liked"` // True if receiving user has liked this message.
 	Mine       bool   `json:"mine"`
+	Anonymous  bool   `json:"anon"`
 }
 
 type LikeMessageResponse struct {

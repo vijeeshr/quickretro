@@ -32,6 +32,7 @@ export interface SaveMessageEvent {
     grp: string
     msg: string
     cat: string
+    anon: boolean
 }
 
 export interface LikeMessageEvent {
@@ -100,6 +101,7 @@ export interface MessageResponse {
     likes: string
     liked: boolean
     mine: boolean
+    anon: boolean
 }
 
 export interface LikeMessageResponse {

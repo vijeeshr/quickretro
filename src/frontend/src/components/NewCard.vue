@@ -14,7 +14,8 @@ const add = (event: Event) => {
     const payload: DraftMessage = {
       id: crypto.randomUUID(),
       msg: (event.target as HTMLElement).innerText.trim(),
-      cat: props.category
+      cat: props.category,
+      anon: false
     }
     emit('added', payload)
   }

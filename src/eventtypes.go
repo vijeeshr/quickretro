@@ -271,6 +271,7 @@ type MessageEvent struct {
 	Group      string `json:"grp"`
 	Content    string `json:"msg"`
 	Category   string `json:"cat"`
+	Anonymous  bool   `json:"anon"`
 }
 
 func (p *MessageEvent) Handle(i *Event, h *Hub) {

@@ -495,6 +495,7 @@ func (c *RedisConnector) Save(msg *Message) bool {
 		pipe.HSet(c.ctx, msgKey, "group", msg.Group)
 		pipe.HSet(c.ctx, msgKey, "content", msg.Content)
 		pipe.HSet(c.ctx, msgKey, "category", msg.Category)
+		pipe.HSet(c.ctx, msgKey, "anon", msg.Anonymous)
 		pipe.SAdd(c.ctx, boardKey, msg.Id)
 		pipe.Expire(c.ctx, msgKey, c.timeToLive)   // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
 		pipe.Expire(c.ctx, boardKey, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.

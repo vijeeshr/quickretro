@@ -12,7 +12,7 @@ withDefaults(defineProps<Props>(), {
     width: 'w-1/3'
 })
 
-defineEmits(['addCard'])
+defineEmits(['addCard', 'addAnonymousCard'])
 
 // const emit = defineEmits(['inFocus'])
 // function buttonClick() {
@@ -22,19 +22,60 @@ defineEmits(['addCard'])
 </script>
 
 <template>
-    <div class="p-6" :class="[`w-full md:${width}`]">
-        <button
-            class="px-4 py-1 text-sm w-full font-semibold rounded-lg mb-4 border hover:border-transparent focus:outline-none select-none break-words"
-            :class="[
-                `bg-${color}-100 hover:bg-${color}-400`,
-                `border-${color}-300`,
-                `text-${color}-600 hover:text-white`,
-                `dark:bg-${color}-800 dark:hover:bg-${color}-600`,
-                `dark:border-${color}-700`,
-                `dark:text-${color}-100`
-            ]" @click="$emit('addCard')">
-            {{ buttonText }}
-        </button>
+    <div class="p-1" :class="[`w-full md:px-6 md:pb-6 md:pt-2 md:${width}`]">
+
+        <div class="grid grid-cols-2 gap-1 mb-2">
+            <div class="col-span-2 flex items-center justify-center p-1 text-sm w-full font-semibold rounded-md border select-none break-words"
+                :class="[
+                    `bg-${color}-100`,
+                    `border-${color}-300`,
+                    `text-${color}-600`,
+                    `dark:bg-${color}-800 dark:hover:bg-${color}-600`,
+                    `dark:border-${color}-700`,
+                    `dark:text-${color}-100`
+                ]">{{ buttonText }}</div>
+            <button
+                class="rounded-lg backdrop-blur-md border font-bold bg-gray-50 dark:bg-white/30 hover:bg-gray-200 dark:hover:bg-white/40 border-gray-300 dark:border-white/20 text-gray-600 hover:text-gray-700 dark:text-white flex items-center justify-center p-1 shadow-md"
+                @click="$emit('addCard')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+            </button>
+            <button
+                class="rounded-lg backdrop-blur-md border font-semibold bg-gray-50 dark:bg-white/30 hover:bg-gray-200 dark:hover:bg-white/40 border-gray-300 dark:border-white/20 text-gray-500 hover:text-gray-700 dark:text-white flex items-center justify-center p-1 shadow-md"
+                @click="$emit('addAnonymousCard')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M3 11h18" />
+                    <path d="M5 11v-4a3 3 0 0 1 3 -3h8a3 3 0 0 1 3 3v4" />
+                    <path d="M7 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                    <path d="M17 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                    <path d="M10 17h4" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Sample icons -->
+        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 11c-1.5 0-2.5.5-3 2" />
+            <path
+                d="M4 6a2 2 0 0 0-2 2v4a5 5 0 0 0 5 5 8 8 0 0 1 5 2 8 8 0 0 1 5-2 5 5 0 0 0 5-5V8a2 2 0 0 0-2-2h-3a8 8 0 0 0-5 2 8 8 0 0 0-5-2z" />
+            <path d="M6 11c1.5 0 2.5.5 3 2" />
+        </svg>
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M3 11h18" />
+            <path d="M5 11v-4a3 3 0 0 1 3 -3h8a3 3 0 0 1 3 3v4" />
+            <path d="M7 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+            <path d="M17 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+            <path d="M10 17h4" />
+        </svg> -->
+
         <slot></slot>
     </div>
 </template>

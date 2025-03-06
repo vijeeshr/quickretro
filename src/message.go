@@ -8,11 +8,12 @@ type Message struct {
 	Group      string `redis:"group"`
 	Content    string `redis:"content"`
 	Category   string `redis:"category"`
+	Anonymous  bool   `redis:"anon"`
 }
 
 func (m *MessageEvent) ToMessage() *Message {
 	return &Message{
-		Id: m.Id, By: m.By, ByNickname: m.ByNickname, Group: m.Group, Content: m.Content, Category: m.Category}
+		Id: m.Id, By: m.By, ByNickname: m.ByNickname, Group: m.Group, Content: m.Content, Category: m.Category, Anonymous: m.Anonymous}
 }
 
 func (m *Message) NewResponse(reqType string) interface{} {
@@ -34,6 +35,7 @@ func (m *Message) NewResponse(reqType string) interface{} {
 			ByNickname: m.ByNickname,
 			Content:    m.Content,
 			Category:   m.Category,
+			Anonymous:  m.Anonymous,
 		}
 	}
 }
