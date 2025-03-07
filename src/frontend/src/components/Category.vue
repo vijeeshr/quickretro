@@ -3,13 +3,17 @@
 interface Props {
     color?: string,
     buttonText?: string,
-    width?: string
+    width?: string,
+    buttonHighlight: boolean,
+    anonymousButtonHighlight: boolean
 }
 
 withDefaults(defineProps<Props>(), {
     color: 'green',
     buttonText: 'Add',
-    width: 'w-1/3'
+    width: 'w-1/3',
+    buttonHighlight: false,
+    anonymousButtonHighlight: false
 })
 
 defineEmits(['addCard', 'addAnonymousCard'])
@@ -35,12 +39,14 @@ defineEmits(['addCard', 'addAnonymousCard'])
                     `dark:text-${color}-100`
                 ]">{{ buttonText }}</div>
             <button
-                class="rounded-lg backdrop-blur-md border font-bold bg-gray-50 dark:bg-white/30 hover:bg-gray-200 dark:hover:bg-white/40 border-gray-300 dark:border-white/20 text-gray-600 hover:text-gray-700 dark:text-white select-none p-1 shadow-md"
+                class="rounded-lg backdrop-blur-md border font-bold bg-gray-50 dark:bg-white/30 hover:bg-gray-200 dark:hover:bg-white/40 select-none p-1 shadow-md"
+                :class="{ 'border-sky-400 dark:border-white text-sky-400 hover:text-sky-600 dark:text-white': buttonHighlight, 'border-gray-300 dark:border-white/20 text-gray-600 hover:text-gray-700 dark:text-white': !buttonHighlight }"
                 @click="$emit('addCard')">
                 +
             </button>
             <button
-                class="rounded-lg backdrop-blur-md border font-semibold bg-gray-50 dark:bg-white/30 hover:bg-gray-200 dark:hover:bg-white/40 border-gray-300 dark:border-white/20 text-gray-500 hover:text-gray-700 dark:text-white flex items-center justify-center p-1 shadow-md"
+                class="rounded-lg backdrop-blur-md border font-semibold bg-gray-50 dark:bg-white/30 hover:bg-gray-200 dark:hover:bg-white/40 flex items-center justify-center p-1 shadow-md"
+                :class="{ 'border-sky-400 dark:border-white text-sky-400 hover:text-sky-600 dark:text-white': anonymousButtonHighlight, 'border-gray-300 dark:border-white/20 text-gray-500 hover:text-gray-700 dark:text-white': !anonymousButtonHighlight }"
                 @click="$emit('addAnonymousCard')">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">

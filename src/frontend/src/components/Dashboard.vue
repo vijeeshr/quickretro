@@ -76,6 +76,17 @@ const filterCards = (category: string) => {
     return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase())
 }
 
+const onlineUsersCardsCount = computed(() => {
+    const counts: Record<string, number> = {}
+    for (const card of cards.value) {
+        counts[card.nickname] = (counts[card.nickname] || 0) + 1
+    }
+    return onlineUsers.value.map(user => ({
+        nickname: user.nickname,
+        cardsCount: counts[user.nickname] || 0
+    }))
+})
+
 const add = (category: string, anonymous: boolean) => {
     if (isLocked.value) {
         logMessage('Locked! Cannot add.')
@@ -544,8 +555,9 @@ onUnmounted(() => {
             <div
                 class="flex flex-1 flex-col md:flex-row h-full min-h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
                 <Category v-for="column in columns" :button-text="column.text" :color="column.color"
-                    :width="columnWidthClass" @add-card="add(column.id, false)"
-                    @add-anonymous-card="add(column.id, true)">
+                    :width="columnWidthClass" :button-highlight="newCardCategory == column.id"
+                    :anonymous-button-highlight="newAnonymousCardCategory == column.id"
+                    @add-card="add(column.id, false)" @add-anonymous-card="add(column.id, true)">
                     <NewCard v-if="newCardCategory == column.id" :category="column.id" :by="user" :nickname="nickname"
                         :board="board" @added="onAdded" @invalidContent="onInvalidContent" />
                     <NewAnonymousCard v-if="newAnonymousCardCategory == column.id" :category="column.id" :by="user"
@@ -562,7 +574,13 @@ onUnmounted(() => {
 
         <!-- Right Sidebar -->
         <div class="w-16 p-4">
-            <Avatar v-for="user in onlineUsers" :name="user.nickname" class="w-8 h-8 ml-auto mx-auto mb-4" />
+            <div v-for="user in onlineUsersCardsCount" class="relative w-8 h-8 ml-auto mx-auto mb-4">
+                <Avatar :name="user.nickname" class="w-8 h-8" />
+                <span v-if="user.cardsCount > 0"
+                    class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none">
+                    {{ user.cardsCount }}
+                </span>
+            </div>
         </div>
         <!-- Right Sidebar -->
     </div>
