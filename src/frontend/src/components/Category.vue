@@ -26,9 +26,9 @@ defineEmits(['addCard', 'addAnonymousCard'])
 </script>
 
 <template>
-    <div class="p-1" :class="[`w-full md:px-6 md:pb-6 md:pt-2 md:${width}`]">
+    <div class="p-1" :class="[`w-full md:px-6 md:pb-6 md:pt-2 md:${width} min-w-0`]">
 
-        <div class="grid grid-cols-2 gap-1 mb-2">
+        <div class="grid grid-cols-2 gap-1 mb-2 min-w-0">
             <div class="col-span-2 flex items-center justify-center p-1 text-sm w-full font-semibold rounded-md border select-none break-words"
                 :class="[
                     `bg-${color}-100`,
