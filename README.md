@@ -39,16 +39,19 @@ npm run dev
 ```
 Visit http://localhost:5173/ to open.  
 
-## Features/Capabilities/Limitations
-No Signups/logins.  
-Share the board url with people to participate in the retro meeting.  
-Board creator can opt to blur/unblur messages during the retro meeting.  
-Board creator can update/delete any message (including messages of other participants).   
-Board creator can lock/unlock board (Lock to make it read-only).  
-Board creator can download details as Pdf.  
-Countdown Timer.  
-Online presence display.   
-All data auto-deleted within 2 hours of most recent update.  
+## Features
+No Signups or Logins - That's right! No need to signup or login.
+No Board Limits - Create Boards or Invite Users without limits.
+Mobile Friendly UI - Easily participate from your mobile phone.
+Customize Column Names - Choose upto 5 columns with any name.
+Mask/Blur messages - Avoid revealing messages of other participants.
+Anonymous Messages - Post messages without revealing your name.
+Download as PDF - Download messages as PDF.
+Countdown Timer - Stopwatch with max 1 hour limit.
+Board Lock - Lock to stop addition/updation of messages.
+Dark Theme - Easily switch to use a Dark theme.
+Online Presence Display - See participants present in the meeting in realtime.
+Auto-Delete data - Auto-delete with configurable retention duration. 
 
 ![quickretro1](https://github.com/vijeeshr/quickretro/assets/16733867/020b40d8-5b11-4daf-a2f3-95a0ee17f918)
 
