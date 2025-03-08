@@ -53,7 +53,6 @@ Visit http://localhost:5173/ to open.
 - Online Presence Display - See participants present in the meeting in realtime.  
 - Auto-Delete data - Auto-delete with configurable retention duration.  
 
-![quickretro1](https://github.com/vijeeshr/quickretro/assets/16733867/020b40d8-5b11-4daf-a2f3-95a0ee17f918)
+![dashboard_owner](https://github.com/user-attachments/assets/9f35a7fc-7c91-4b39-b4ef-b338a181cec8)
 
-![quickretro2](https://github.com/vijeeshr/quickretro/assets/16733867/6802b697-362b-4f99-b6da-8b9bc0c3c4ab)
-
+![dashboard_guest](https://github.com/user-attachments/assets/551886c9-d8e2-44ca-8eaa-28e2a8a16ce5)
