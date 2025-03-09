@@ -456,13 +456,13 @@ onUnmounted(() => {
             <!-- The backdrop, rendered as a fixed sibling to the panel container -->
             <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
             <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
-                <DialogPanel class="rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
+                <DialogPanel class="max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
                     <DialogTitle as="h3"
                         class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200 select-none">Copy and
                         share below url to
                         participants
                     </DialogTitle>
-                    <article class="select-all bg-slate-100 dark:bg-slate-700 dark:text-gray-100 my-6 rounded-sm">{{
+                    <article class="select-all break-all bg-slate-100 dark:bg-slate-700 dark:text-gray-100 my-6 rounded-sm">{{
                         shareLink }}</article>
                     <div class="mt-4">
                         <button type="button"
