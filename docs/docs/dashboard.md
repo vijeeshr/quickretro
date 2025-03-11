@@ -185,3 +185,22 @@ Use the dark
     <path stroke-linecap="round" stroke-linejoin="round"
         d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
 </svg> buttons to toggle between the two themes.
+
+## Focussed View
+Available from <code>v1.3.0</code>
+
+Use the focus toggle button
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+    class="display-icon">
+    <circle cx="12" cy="12" r="3" />
+    <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+    <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+    <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+    <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+</svg> to focus on cards by user.\
+A small navigation panel opens at the top to help you quickly navigate by each user's cards.
+<img src="/dashboard_focus_panel.png" class="shadow-img" alt="Dashboard Focus Panel" width="398" height="97" loading="lazy">
+::: tip
+Clicking on the Avatar displayed in each card also starts focussed view
+:::

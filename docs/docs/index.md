@@ -42,6 +42,8 @@ features:
     details: Lock to stop addition/updation of messages
   - title: Dark Theme
     details: Easily switch to use a Dark theme
+  - title: Focussed View
+    details: Highlight cards just for a User at a time
   - title: Online Presence Display
     details: See participants present in the meeting
   - title: Auto-Delete data
