@@ -24,7 +24,7 @@ interface Props {
     categories: BoardColumn[]
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['updated', 'deleted', 'liked', 'invalidContent', 'categoryChanged'])
+const emit = defineEmits(['updated', 'deleted', 'liked', 'invalidContent', 'categoryChanged', 'avatarClicked'])
 
 const editing = ref(false)
 
@@ -221,10 +221,11 @@ const validate = (event: Event) => {
                 </Menu>
             </div>
 
-            <Avatar v-if="!card.anon" :name="card.nickname" class="ml-auto w-6 h-6" />
+            <Avatar v-if="!card.anon" :name="card.nickname" class="ml-auto w-6 h-6 cursor-pointer"
+                @click="emit('avatarClicked', card.nickname)" />
             <div v-else
-                class="inline-flex items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-white/30 text-gray-600 dark:text-white ml-auto w-6 h-6"
-                title="Anonymous">
+                class="inline-flex items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-white/30 text-gray-600 dark:text-white ml-auto w-6 h-6 cursor-pointer"
+                title="Anonymous" @click="emit('avatarClicked', card.nickname)">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />

@@ -41,6 +41,8 @@ const nickname = localStorage.getItem("nickname") || ''
 const isConnected = ref(false)
 const boardName = ref('')
 const shareLink = `${window.location.href}`
+const isSpotlightOn = ref(false)
+const spotlightFor = ref('')
 let socket: WebSocket
 
 const cards = ref<MessageResponse[]>([]) // Todo: Rework models
@@ -76,17 +78,6 @@ const filterCards = (category: string) => {
     return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase())
 }
 
-const onlineUsersCardsCount = computed(() => {
-    const counts: Record<string, number> = {}
-    for (const card of cards.value) {
-        counts[card.nickname] = (counts[card.nickname] || 0) + 1
-    }
-    return onlineUsers.value.map(user => ({
-        nickname: user.nickname,
-        cardsCount: counts[user.nickname] || 0
-    }))
-})
-
 const add = (category: string, anonymous: boolean) => {
     if (isLocked.value) {
         logMessage('Locked! Cannot add.')
@@ -102,6 +93,39 @@ const add = (category: string, anonymous: boolean) => {
     }
 }
 
+const cardCountsByName = computed(() => {
+    const counts: Record<string, number> = {}
+    for (const card of cards.value) {
+        counts[card.nickname] = (counts[card.nickname] || 0) + 1
+    }
+    return counts
+})
+
+const onlineUsersCardsCount = computed(() => {
+    return onlineUsers.value.map(user => ({
+        nickname: user.nickname,
+        cardsCount: cardCountsByName.value[user.nickname] || 0
+    }))
+})
+
+const usersWithCards = computed(() => Object.keys(cardCountsByName.value))
+
+const nextSpotlight = () => {
+    if (usersWithCards.value.length === 0) return
+    let currentIndex = usersWithCards.value.indexOf(spotlightFor.value)
+    // If spotlightFor is not in the list (currentIndex = -1), start from the first item
+    const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % usersWithCards.value.length
+    spotlightFor.value = usersWithCards.value[nextIndex]
+}
+
+const prevSpotlight = () => {
+    if (usersWithCards.value.length === 0) return
+    let currentIndex = usersWithCards.value.indexOf(spotlightFor.value)
+    // If spotlightFor is not in the list, start from the last item
+    const prevIndex = currentIndex === -1 ? usersWithCards.value.length - 1 : (currentIndex - 1 + usersWithCards.value.length) % usersWithCards.value.length
+    spotlightFor.value = usersWithCards.value[prevIndex]
+}
+
 const columnWidthClass = computed(() => {
     switch (columns.value.length) {
         case 4:
@@ -112,6 +136,26 @@ const columnWidthClass = computed(() => {
             return "w-1/3"
     }
 })
+
+const openSpotlight = () => {
+    if (usersWithCards.value.length === 0) {
+        closeSpotlight()
+        toast.info("There are no cards to focus", { pauseOnHover: false })
+        return
+    }
+    spotlightFor.value = usersWithCards.value[0]
+    isSpotlightOn.value = !isSpotlightOn.value
+}
+
+const closeSpotlight = () => {
+    isSpotlightOn.value = false
+    spotlightFor.value = ''
+}
+
+const showSpotlightFor = (name: string) => {
+    spotlightFor.value = name
+    isSpotlightOn.value = true
+}
 
 const onAdded = (card: DraftMessage) => {
     logMessage('newcontent received:', card)
@@ -186,7 +230,7 @@ const download = () => {
 
     // text is placed using x, y coordinates
     doc.setFontSize(16).text(`Board - ${boardName.value}`, 0.5, 1.0)
-    // create a line under heading 
+    // create a line under heading
     doc.setLineWidth(0.01).line(0.5, 1.1, 8.0, 1.1);
 
     for (const col of columns.value) {
@@ -258,7 +302,7 @@ const onRegisterResponse = (response: RegisterResponse) => {
     columns.value.push(...response.columns) // Todo: find a better way
     boardName.value = response.boardName
     // Load messages.
-    // Only loading messages when the RegisterResponse is for the current User's RegisterEvent request. 
+    // Only loading messages when the RegisterResponse is for the current User's RegisterEvent request.
     // This prevents unnecessarily pushing messages in the ref for other users RegisterEvents. RegisterEvent happens just once in the beginning.
     if (response.mine) {
         cards.value = []
@@ -292,6 +336,14 @@ const onDeleteMessageResponse = (response: DeleteMessageResponse) => {
     let index = cards.value.findIndex(x => x.id === response.id)
     if (index !== -1) {
         cards.value.splice(index, 1)
+        // Re-adjust spotlight
+        if (isSpotlightOn.value) {
+            if (usersWithCards.value.length === 0) {
+                closeSpotlight();
+            } else if (!usersWithCards.value.includes(spotlightFor.value)) {
+                nextSpotlight();
+            }
+        }
     }
 }
 
@@ -435,6 +487,69 @@ onUnmounted(() => {
 <template>
     <div class="flex h-full min-h-screen bg-gray-800 dark:bg-gray-950 text-white">
 
+        <!-- Focus navigation panel -->
+        <div v-if="isSpotlightOn && usersWithCards.length > 0"
+            class="fixed flex items-center gap-2 top-4 left-1/2 transform -translate-x-1/2 text-white bg-black/50 border border-gray-500 px-4 py-2 rounded-lg shadow-md z-[60]">
+            <button class="rounded-md hover:bg-gray-200 hover:text-gray-600" @click="prevSpotlight">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6" />
+                </svg>
+            </button>
+            <Avatar v-if="spotlightFor !== ''" class="min-w-32" :name="spotlightFor" view-type="Badge" />
+            <div v-else
+                class="min-w-32 inline-flex items-center justify-center overflow-hidden rounded-md px-3 py-1 bg-gray-300">
+                <span class="font-medium text-xs cursor-default text-gray-600 select-none">Anonymous</span>
+            </div>
+            <button class="rounded-md hover:bg-gray-200 hover:text-gray-700 mr-3" @click="nextSpotlight">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6" />
+                </svg>
+            </button>
+            <button class="rounded-md hover:bg-gray-200 hover:text-gray-700 ml-auto" @click="closeSpotlight">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Focus overlay -->
+        <!-- <div v-if="isSpotlightOn && usersWithCards.length > 0"
+            class="fixed inset-0 bg-black bg-opacity-10 dark:bg-gray-400 dark:bg-opacity-40 border border-gray-200 z-[52] pointer-events-auto">
+            Focus navigation panel
+            <div
+                class="fixed flex items-center gap-2 top-4 left-1/2 transform -translate-x-1/2 bg-white text-gray-600 px-4 py-2 rounded-lg shadow-md z-[60]">
+                <button class="rounded-md hover:bg-gray-200 hover:text-gray-600" @click="prevSpotlight">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6" />
+                    </svg>
+                </button>
+                <Avatar v-if="spotlightFor !== ''" class="min-w-32" :name="spotlightFor" view-type="Badge" />
+                <div v-else
+                    class="min-w-32 inline-flex items-center justify-center overflow-hidden rounded-md px-3 py-1 bg-gray-300">
+                    <span class="font-medium text-xs cursor-default text-gray-600 select-none">Anonymous</span>
+                </div>
+                <button class="rounded-md hover:bg-gray-200 hover:text-gray-700 mr-3" @click="nextSpotlight">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m9 18 6-6-6-6" />
+                    </svg>
+                </button>
+                <button class="font-semibold hover:text-gray-700 ml-auto" @click="closeSpotlight">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="m15 9-6 6" />
+                        <path d="m9 9 6 6" />
+                    </svg>
+                </button>
+            </div>
+        </div> -->
+
         <!-- Dialog for Timer settings -->
         <Dialog :open="isTimerDialogOpen" @close="setIsTimerDialogOpen" class="relative z-50">
             <!-- The backdrop, rendered as a fixed sibling to the panel container -->
@@ -456,14 +571,17 @@ onUnmounted(() => {
             <!-- The backdrop, rendered as a fixed sibling to the panel container -->
             <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
             <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
-                <DialogPanel class="max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
+                <DialogPanel
+                    class="max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
                     <DialogTitle as="h3"
                         class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200 select-none">Copy and
                         share below url to
                         participants
                     </DialogTitle>
-                    <article class="select-all break-all bg-slate-100 dark:bg-slate-700 dark:text-gray-100 my-6 rounded-sm">{{
-                        shareLink }}</article>
+                    <article
+                        class="select-all break-all bg-slate-100 dark:bg-slate-700 dark:text-gray-100 my-6 rounded-sm">
+                        {{
+                            shareLink }}</article>
                     <div class="mt-4">
                         <button type="button"
                             class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-none focus:ring-0"
@@ -531,6 +649,18 @@ onUnmounted(() => {
                 </svg>
             </div>
             <DarkModeToggle class="w-8 h-8 mx-auto mb-4 cursor-pointer" />
+            <!-- Focus -->
+            <div title="Focus cards">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="w-8 h-8 mx-auto mb-4 cursor-pointer" @click="openSpotlight">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                    <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                    <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                    <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                </svg>
+            </div>
             <a href="https://github.com/vijeeshr/quickretro" target="_blank">
                 <svg viewBox="0 0 24 24" aria-hidden="true" class="h-8 w-8 mx-auto fill-slate-100">
                     <path fill-rule="evenodd" clip-rule="evenodd"
@@ -564,9 +694,12 @@ onUnmounted(() => {
                         nickname="" :board="board" @added="onAdded" @invalidContent="onInvalidContent" />
                     <Card v-for="card in filterCards(column.id)" :card="card" :current-user="user"
                         :current-user-nickname="nickname" :board="board" :mask="isMasked"
-                        :updateable="card.mine || isOwner" :key="card.id" :categories="columns" @updated="onUpdated"
-                        @deleted="onDeleted" @liked="onLiked" @category-changed="onCategoryChanged"
-                        @invalidContent="onInvalidContent" :locked="isLocked" />
+                        :updateable="card.mine || isOwner" :key="card.id" :categories="columns" :locked="isLocked"
+                        @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" @category-changed="onCategoryChanged"
+                        @invalidContent="onInvalidContent" @avatar-clicked="showSpotlightFor" :class="{
+                            'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none': isSpotlightOn && usersWithCards.length > 0 && card.nickname !== spotlightFor,
+                            'bg-black dark:bg-black border border-gray-200 z-[51]': isSpotlightOn && usersWithCards.length > 0 && card.nickname === spotlightFor,
+                        }" />
                 </Category>
             </div>
         </div>
