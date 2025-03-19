@@ -3,7 +3,7 @@
 This guide gives a quick and easy functional walkthrough of QuickRetro app.\
 To start, visit the site and type in a name to join as guest. There is no signup/login process.
 
-### Lastest stable version
+### Latest version
 <code>v1.3.0</code>
 
 ## Try the Demo
@@ -15,3 +15,14 @@ The name you enter initially is saved in your browser cache. It will be auto-fil
 ::: warning
 All data in [demo](https://demo.quickretro.app) site is deleted in 2 hours.
 :::
+
+## Supported Languages
+English\
+Español\
+Deutsch\
+Français\
+Português (Brasil)\
+Português\
+Français (Canada)\
+Nederlands\
+Italiano
