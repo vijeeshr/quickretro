@@ -4,7 +4,7 @@ This guide gives a quick and easy functional walkthrough of QuickRetro app.\
 To start, visit the site and type in a name to join as guest. There is no signup/login process.
 
 ### Latest version
-<code>v1.3.0</code>
+<code>v1.4.0</code>
 
 ## Try the Demo
 Try out the [live demo](https://demo.quickretro.app). It is recommended to self-host.

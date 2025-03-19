@@ -204,3 +204,15 @@ A small navigation panel opens at the top to help you quickly navigate by each u
 ::: tip
 Clicking on the Avatar displayed in each card also starts focussed view
 :::
+
+## Multi-Language support
+Available from <code>v1.3.0</code>
+
+Use the 
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" @click="openLanguageDialog"
+    class="display-icon">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+    <path d="M2 12h20" />
+</svg> button to change the current language.
