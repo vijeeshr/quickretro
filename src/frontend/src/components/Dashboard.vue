@@ -10,8 +10,8 @@ import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse,
 import { OnlineUser } from '../models/OnlineUser';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// import { jsPDF } from 'jspdf';
+// import autoTable from 'jspdf-autotable';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import CountdownTimer from './CountdownTimer.vue';
 import TimerPanel from './TimerPanel.vue';
@@ -230,54 +230,62 @@ const getRGBizedColor = (color: string): any => {
     }
 }
 
-const download = () => {
-    const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "in",
-        format: "letter"
-    });
+const download = async () => {
+    try {
+        const { default: jsPDF } = await import('jspdf')
+        const { default: autoTable } = await import('jspdf-autotable')
 
-    // text is placed using x, y coordinates
-    doc.setFontSize(16).text(`${t('common.board')} - ${boardName.value}`, 0.5, 1.0)
-    // create a line under heading
-    doc.setLineWidth(0.01).line(0.5, 1.1, 8.0, 1.1);
-
-    for (const col of columns.value) {
-        const columnForExport = [
-            { title: col.isDefault ? t(`dashboard.columns.${col.id}`) : col.text, dataKey: "text" }
-        ]
-        const itemsForExport = cards.value.filter(c => c.cat.toLowerCase() === col.id.toLowerCase())
-            .map(c => ({
-                text: c.msg
-            }))
-
-        // Using autoTable plugin
-        autoTable(doc, {
-            columns: columnForExport,
-            headStyles: { fillColor: getRGBizedColor(col.color) },
-            body: itemsForExport,
-            margin: { left: 0.5, top: 1.25 }
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "in",
+            format: "letter"
         })
+
+        // text is placed using x, y coordinates
+        doc.setFontSize(16).text(`${t('common.board')} - ${boardName.value}`, 0.5, 1.0)
+        // create a line under heading
+        doc.setLineWidth(0.01).line(0.5, 1.1, 8.0, 1.1)
+
+        for (const col of columns.value) {
+            const columnForExport = [
+                { title: col.isDefault ? t(`dashboard.columns.${col.id}`) : col.text, dataKey: "text" }
+            ]
+            const itemsForExport = cards.value.filter(c => c.cat.toLowerCase() === col.id.toLowerCase())
+                .map(c => ({
+                    text: c.msg
+                }))
+
+            // Using autoTable plugin
+            autoTable(doc, {
+                columns: columnForExport,
+                headStyles: { fillColor: getRGBizedColor(col.color) },
+                body: itemsForExport,
+                margin: { left: 0.5, top: 1.25 }
+            })
+        }
+
+        // Footer
+        doc
+            .setFont("times")
+            .setFontSize(11)
+            .setTextColor("gray")
+            .text(
+                `${t('dashboard.pdfFooter')} QuickRetro https://quickretro.app`,
+                0.5,
+                doc.internal.pageSize.height - 0.5
+            )
+
+        doc.save(`quickretro.pdf`)
+
+        // Using array of sentences
+        // doc
+        //     .setFont("helvetica")
+        //     .setFontSize(12)
+        //     .text(moreText, 0.5, 3.5, { align: "left", maxWidth: 7.5 });
+    } catch (error) {
+        // toast.error(t('dashboard.download.error'), { pauseOnHover: false })
+        console.error('PDF download failed:', error)
     }
-
-    // Footer
-    doc
-        .setFont("times")
-        .setFontSize(11)
-        .setTextColor("gray")
-        .text(
-            `${t('dashboard.pdfFooter')} QuickRetro https://quickretro.app`,
-            0.5,
-            doc.internal.pageSize.height - 0.5
-        )
-
-    doc.save(`quickretro.pdf`)
-
-    // Using array of sentences
-    // doc
-    //     .setFont("helvetica")
-    //     .setFontSize(12)
-    //     .text(moreText, 0.5, 3.5, { align: "left", maxWidth: 7.5 });
 }
 
 const share = () => {
