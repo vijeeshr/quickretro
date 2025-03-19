@@ -9,6 +9,13 @@ We'll soon see it in [Dashboard](dashboard) section.
 :::
 
 ## Configuring Board Columns
+::: tip
+Since the introduction of multi-language support with <code>v1.3.0</code>, default column names can be automatically translated to other
+languages.\
+***Custom column names are not automatically translated.***\
+It is recommended to use the defaults, if any of your team members use the app in a different language.
+:::
+
 A max of 5 columns are allowed. The first 3 columns are always enabled by default.\
 You can choose which columns you want and name them accordingly.
 
