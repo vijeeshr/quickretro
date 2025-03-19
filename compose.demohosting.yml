@@ -44,23 +44,23 @@ services:
     expose:
       - 8080
 
-  secretnoteapp:
-    image: "vijeesh82/secretnote-app"
-    restart: unless-stopped  
-    depends_on:
-      - redis
-    environment:
-      - REDIS_CONNSTR=redis://redis:6379/0  # Default Redis (No Auth or ACL). Outside docker - redis://localhost:6379/0
-      ############## Redis ACL ##############
-      # - REDIS_CONNSTR=redis://app-user:mysecretpassword@redis:6379/0  # Using ACL with Username & Password. Outside docker - redis://app-user:mysecretpassword@localhost:6379/0
-      ############## Redis ACL ##############
-    networks:
-      - redisnet
-      - proxynet
-    # ports:
-    #   - "8085:8085"
-    expose:
-      - 8085     
+  # secretnoteapp:
+  #   image: "vijeesh82/secretnote-app"
+  #   restart: unless-stopped  
+  #   depends_on:
+  #     - redis
+  #   environment:
+  #     - REDIS_CONNSTR=redis://redis:6379/0  # Default Redis (No Auth or ACL). Outside docker - redis://localhost:6379/0
+  #     ############## Redis ACL ##############
+  #     # - REDIS_CONNSTR=redis://app-user:mysecretpassword@redis:6379/0  # Using ACL with Username & Password. Outside docker - redis://app-user:mysecretpassword@localhost:6379/0
+  #     ############## Redis ACL ##############
+  #   networks:
+  #     - redisnet
+  #     - proxynet
+  #   # ports:
+  #   #   - "8085:8085"
+  #   expose:
+  #     - 8085     
 
   caddy:
     image: caddy:2.7.6-alpine
