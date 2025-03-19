@@ -8,6 +8,7 @@ import { assertMessageContentValidation, canAssertMessageContentValidation, logM
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { BoardColumn } from '../models/BoardColumn';
 import { CategoryChangeMessage } from '../models/CategoryChangeMessage';
+import { useI18n } from 'vue-i18n';
 
 // "currentUser", "currentUserNickname", "board", "card.cat" only used to calculate message size in bytes. "category" already passed with "card.cat".
 // Message size calc and trimming only done when editing.
@@ -25,6 +26,8 @@ interface Props {
 }
 const props = defineProps<Props>()
 const emit = defineEmits(['updated', 'deleted', 'liked', 'invalidContent', 'categoryChanged', 'avatarClicked'])
+
+const { t } = useI18n()
 
 const editing = ref(false)
 
@@ -134,8 +137,8 @@ const validate = (event: Event) => {
     const validationResult: MessageContentValidationResult = assertMessageContentValidation(event, props.currentUser, props.currentUserNickname, props.board, props.card.cat)
     if (validationResult.isValid) return
 
-    let errorMessage: string = "Content more than allowed limit."
-    if (validationResult.isTrimmed) errorMessage = 'Content more than allowed limit. Extra text is stripped from the end.'
+    let errorMessage: string = t('common.contentOverloadError')
+    if (validationResult.isTrimmed) errorMessage = t('common.contentStrippingError')
 
     emit('invalidContent', errorMessage)
 }
@@ -205,7 +208,7 @@ const validate = (event: Event) => {
                         leave-to-class="transform scale-95 opacity-0">
                         <MenuItems
                             class="absolute left-6 top-1 min-w-max origin-top-right rounded-md bg-transparent border-0 space-y-0.5 focus:outline-none">
-                            <MenuItem v-for="otherCategory in otherCategories">
+                            <MenuItem v-for="otherCategory in otherCategories" :key="otherCategory.id">
                             <button :class="[
                                 `bg-${otherCategory.color}-400 hover:bg-${otherCategory.color}-500`,
                                 `text-white`,
@@ -213,7 +216,8 @@ const validate = (event: Event) => {
                                 `dark:text-${otherCategory.color}-100`,
                                 'group flex w-full items-center justify-center rounded-md text-xs px-1',
                             ]" @click="changeCategory(otherCategory.id, props.card.cat)">
-                                {{ otherCategory.text }}
+                                {{ otherCategory.isDefault ? t(`dashboard.columns.${otherCategory.id}`) :
+                                otherCategory.text }}
                             </button>
                             </MenuItem>
                         </MenuItems>
@@ -225,7 +229,7 @@ const validate = (event: Event) => {
                 @click="emit('avatarClicked', card.nickname)" />
             <div v-else
                 class="inline-flex items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-white/30 text-gray-600 dark:text-white ml-auto w-6 h-6 cursor-pointer"
-                title="Anonymous" @click="emit('avatarClicked', card.nickname)">
+                :title="t('common.anonymous')" @click="emit('avatarClicked', card.nickname)">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />

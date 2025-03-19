@@ -2,7 +2,9 @@
 import { ref } from 'vue';
 import { DraftMessage } from '../models/DraftMessage';
 import { assertMessageContentValidation, canAssertMessageContentValidation, MessageContentValidationResult } from '../utils';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n()
 const props = defineProps<{ category: string, by: string, nickname: string, board: string }>()
 const emit = defineEmits(['added', 'invalidContent'])
 
@@ -39,8 +41,8 @@ const validate = (event: Event) => {
   const validationResult: MessageContentValidationResult = assertMessageContentValidation(event, props.by, props.nickname, props.board, props.category)
   if (validationResult.isValid) return
 
-  let errorMessage: string = "Content more than allowed limit."
-  if (validationResult.isTrimmed) errorMessage = 'Content more than allowed limit. Extra text is stripped from the end.'
+  let errorMessage: string = t('common.contentOverloadError')
+  if (validationResult.isTrimmed) errorMessage = t('common.contentStrippingError')
 
   emit('invalidContent', errorMessage)
 }

@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n()
 
 const isDark = ref(localStorage.getItem("theme") === "dark");
 
@@ -17,7 +20,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div :title="!isDark ? 'Turn on dark theme' : 'Turn on light theme'">
+    <div :title="!isDark ? t('common.toolTips.darkTheme') : t('common.toolTips.lightTheme')">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" @click="toggleDarkMode"
             :class="{ 'hidden': isDark }">
             <path fill-rule="evenodd"

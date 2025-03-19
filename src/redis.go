@@ -116,6 +116,7 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 			colKey := fmt.Sprintf("board:col:%s:%s", b.Id, col.Id)
 			pipe.HSet(c.ctx, colKey, "id", col.Id)
 			pipe.HSet(c.ctx, colKey, "text", col.Text)
+			pipe.HSet(c.ctx, colKey, "isDefault", col.IsDefault)
 			pipe.HSet(c.ctx, colKey, "color", col.Color)
 			// pipe.Expire(c.ctx, colKey, 2*time.Hour)
 			pipe.ExpireAt(c.ctx, colKey, autoDeleteTime)

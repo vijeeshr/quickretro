@@ -38,9 +38,10 @@ type Board struct {
 }
 
 type BoardColumn struct {
-	Id    string `redis:"id" json:"id"`
-	Text  string `redis:"text" json:"text"`
-	Color string `redis:"color" json:"color"`
+	Id        string `redis:"id" json:"id"`
+	Text      string `redis:"text" json:"text"`
+	IsDefault bool   `redis:"isDefault" json:"isDefault"`
+	Color     string `redis:"color" json:"color"`
 }
 
 func (b BoardColumn) String() string {

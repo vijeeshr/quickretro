@@ -1,0 +1,77 @@
+export default {
+    langName: 'Português (Brasil)',  
+    common: {
+        anonymous: 'Anônimo',
+        minutes: 'Minutos',
+        seconds: 'Segundos',
+        start: 'Iniciar',
+        stop: 'Parar',
+        copy: 'Copiar',
+        board: 'Quadro',
+        toolTips: {
+            darkTheme: 'Ativar tema escuro',
+            lightTheme: 'Ativar tema claro'
+        },
+        contentOverloadError: 'Conteúdo excede o limite permitido.',
+        contentStrippingError: 'Texto adicional foi removido do final.'
+    },
+    join: {
+        label: 'Entrar como visitante',
+        namePlaceholder: 'Digite seu nome aqui!',
+        nameRequired: 'Por favor, digite seu nome',
+        button: 'Entrar'
+    },
+    createBoard: {
+        label: 'Criar quadro',
+        namePlaceholder: 'Digite o nome do quadro aqui!',
+        nameRequired: 'Por favor, digite o nome do quadro',
+        teamNamePlaceholder: 'Digite o nome do time aqui!',
+        invalidColumnSelection: 'Selecione pelo menos uma coluna',
+        colOnePlaceholder: 'Bom',
+        button: 'Criar'
+    },
+    dashboard: {
+        timer: {
+            oneMinuteLeft: 'Último minuto restante',
+            timeCompleted: 'Tempo esgotado!',
+            title: 'Iniciar/Parar temporizador',
+            helpTip: 'Ajuste minutos/segundos com os botões + - ou teclas direcionais. Máximo de 1 hora.',
+            invalid: 'Valores inválidos. Intervalo permitido: 1 segundo a 60 minutos.',
+            tooltip: 'Temporizador regressivo'
+        },
+        share: {
+            title: 'Copie e compartilhe o link abaixo',
+            linkCopied: 'Link copiado!',
+            linkCopyError: 'Falha ao copiar. Copie manualmente.',
+            toolTip: 'Compartilhar quadro'
+        },
+        mask: {
+            maskTooltip: 'Ocultar mensagens',
+            unmaskTooltip: 'Exibir mensagens'
+        },
+        lock: {
+            lockTooltip: 'Bloquear quadro',
+            unlockTooltip: 'Desbloquear quadro',
+            message: 'Quadro bloqueado pelo dono.'
+        },
+        spotlight: {
+            noCardsToFocus: 'Nenhum card para destacar',
+            tooltip: 'Destacar cards'
+        },
+        download: {
+            tooltip: 'Baixar como PDF'
+        },
+        language: {
+            tooltip : 'Mudar idioma'
+        },
+        columns: {
+            col01: 'O que funcionou bem',
+            col02: 'Desafios',
+            col03: 'Ações',
+            col04: 'Agradecimentos',
+            col05: 'Melhorias'
+        },
+        pdfFooter: 'Criado com',
+        offline: 'Você parece estar offline.'
+    }
+}

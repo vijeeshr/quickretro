@@ -1,22 +1,33 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import { BoardColumn } from '../models/BoardColumn';
+import { useI18n } from 'vue-i18n';
 
 interface Props {
-    color?: string,
-    buttonText?: string,
+    column: BoardColumn,
+    // color?: string,
+    // buttonText?: string,
     width?: string,
     buttonHighlight: boolean,
     anonymousButtonHighlight: boolean
 }
 
-withDefaults(defineProps<Props>(), {
-    color: 'green',
-    buttonText: 'Add',
+const props = withDefaults(defineProps<Props>(), {
+    // color: 'green',
+    // buttonText: 'Add',
     width: 'w-1/3',
     buttonHighlight: false,
     anonymousButtonHighlight: false
 })
 
 defineEmits(['addCard', 'addAnonymousCard'])
+
+const { t } = useI18n()
+
+const displayText = computed(() => {
+    if (props.column.isDefault) return t(`dashboard.columns.${props.column.id}`)
+    return props.column.text
+})
 
 // const emit = defineEmits(['inFocus'])
 // function buttonClick() {
@@ -31,13 +42,13 @@ defineEmits(['addCard', 'addAnonymousCard'])
         <div class="grid grid-cols-2 gap-1 mb-2 min-w-0">
             <div class="col-span-2 flex items-center justify-center p-1 text-sm w-full font-semibold rounded-md border select-none break-words"
                 :class="[
-                    `bg-${color}-100`,
-                    `border-${color}-300`,
-                    `text-${color}-600`,
-                    `dark:bg-${color}-800`,
-                    `dark:border-${color}-700`,
-                    `dark:text-${color}-100`
-                ]">{{ buttonText }}</div>
+                    `bg-${column.color}-100`,
+                    `border-${column.color}-300`,
+                    `text-${column.color}-600`,
+                    `dark:bg-${column.color}-800`,
+                    `dark:border-${column.color}-700`,
+                    `dark:text-${column.color}-100`
+                ]">{{ displayText }}</div>
             <button
                 class="rounded-lg border font-bold bg-gray-50 dark:bg-white/30 hover:bg-gray-200 dark:hover:bg-white/40 select-none p-1 shadow-md"
                 :class="{ 'border-sky-400 dark:border-white text-sky-400 hover:text-sky-600 dark:text-white': buttonHighlight, 'border-gray-300 dark:border-white/20 text-gray-600 hover:text-gray-700 dark:text-white': !buttonHighlight }"

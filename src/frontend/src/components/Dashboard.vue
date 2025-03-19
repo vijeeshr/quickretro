@@ -23,7 +23,11 @@ import 'vue-toast-notification/dist/theme-default.css';
 import DarkModeToggle from './DarkModeToggle.vue';
 import { BoardColumn } from '../models/BoardColumn';
 import { CategoryChangeMessage } from '../models/CategoryChangeMessage';
+import { useI18n } from 'vue-i18n';
+import { useLanguage } from '../composables/useLanguage';
 
+const { locale, setLocale, languageOptions } = useLanguage()
+const { t } = useI18n()
 const isMasked = ref(true)
 const isOwner = ref(false)
 const isLocked = ref(false)
@@ -64,14 +68,19 @@ const onCountdownProgressUpdate = (value: boolean) => {
     isTimerCountdownInProgress.value = value
 }
 
+const isLanguageDialogOpen = ref(false)
+const setIsLanguageDialogOpen = (value: boolean) => {
+    isLanguageDialogOpen.value = value
+}
+
 const toast = useToast()
 
 const onOneMinuteLeftWarning = () => {
-    toast.info("One minute left for countdown", { pauseOnHover: false })
+    toast.info(t('dashboard.timer.oneMinuteLeft'), { pauseOnHover: false })
 }
 
 const onCountdownCompleted = () => {
-    toast.error("Hey! You've run out of time", { pauseOnHover: false, duration: 4000 })
+    toast.error(t('dashboard.timer.timeCompleted'), { pauseOnHover: false, duration: 4000 })
 }
 
 const filterCards = (category: string) => {
@@ -140,7 +149,7 @@ const columnWidthClass = computed(() => {
 const openSpotlight = () => {
     if (usersWithCards.value.length === 0) {
         closeSpotlight()
-        toast.info("There are no cards to focus", { pauseOnHover: false })
+        toast.info(t('dashboard.spotlight.noCardsToFocus'), { pauseOnHover: false })
         return
     }
     spotlightFor.value = usersWithCards.value[0]
@@ -229,13 +238,13 @@ const download = () => {
     });
 
     // text is placed using x, y coordinates
-    doc.setFontSize(16).text(`Board - ${boardName.value}`, 0.5, 1.0)
+    doc.setFontSize(16).text(`${t('common.board')} - ${boardName.value}`, 0.5, 1.0)
     // create a line under heading
     doc.setLineWidth(0.01).line(0.5, 1.1, 8.0, 1.1);
 
     for (const col of columns.value) {
         const columnForExport = [
-            { title: col.text, dataKey: "text" }
+            { title: col.isDefault ? t(`dashboard.columns.${col.id}`) : col.text, dataKey: "text" }
         ]
         const itemsForExport = cards.value.filter(c => c.cat.toLowerCase() === col.id.toLowerCase())
             .map(c => ({
@@ -257,7 +266,7 @@ const download = () => {
         .setFontSize(11)
         .setTextColor("gray")
         .text(
-            "Created with QuickRetro https://quickretro.app",
+            `${t('dashboard.pdfFooter')} QuickRetro https://quickretro.app`,
             0.5,
             doc.internal.pageSize.height - 0.5
         )
@@ -278,11 +287,15 @@ const share = () => {
 const copyShareLink = async () => {
     try {
         await navigator.clipboard.writeText(shareLink)
-        toast.success("Link copied!")
+        toast.success(t('dashboard.share.linkCopied'))
         setIsShareDialogOpen(false)
     } catch (err) {
-        toast.error("Failed to copy. Please copy directly.")
+        toast.error(t('dashboard.share.linkCopyError'))
     }
+}
+
+const openLanguageDialog = () => {
+    isLanguageDialogOpen.value = true
 }
 
 const timerSettings = () => {
@@ -449,7 +462,7 @@ const handleVisibilityChange = () => {
 
 const handleConnectivity = () => {
     if (!navigator.onLine) {
-        toast.error("You seem to be offline.", { pauseOnHover: false, duration: 4000 })
+        toast.error(t('dashboard.offline'), { pauseOnHover: false, duration: 4000 })
     }
     // if (navigator.onLine) {
     //     toast.success("You are online", { pauseOnHover: false, duration: 4000 })
@@ -499,7 +512,8 @@ onUnmounted(() => {
             <Avatar v-if="spotlightFor !== ''" class="min-w-32" :name="spotlightFor" view-type="Badge" />
             <div v-else
                 class="min-w-32 inline-flex items-center justify-center overflow-hidden rounded-md px-3 py-1 bg-gray-300">
-                <span class="font-medium text-xs cursor-default text-gray-600 select-none">Anonymous</span>
+                <span class="font-medium text-xs cursor-default text-gray-600 select-none">{{ t('common.anonymous')
+                }}</span>
             </div>
             <button class="rounded-md hover:bg-gray-200 hover:text-gray-700 mr-3" @click="nextSpotlight">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -516,40 +530,6 @@ onUnmounted(() => {
             </button>
         </div>
 
-        <!-- Focus overlay -->
-        <!-- <div v-if="isSpotlightOn && usersWithCards.length > 0"
-            class="fixed inset-0 bg-black bg-opacity-10 dark:bg-gray-400 dark:bg-opacity-40 border border-gray-200 z-[52] pointer-events-auto">
-            Focus navigation panel
-            <div
-                class="fixed flex items-center gap-2 top-4 left-1/2 transform -translate-x-1/2 bg-white text-gray-600 px-4 py-2 rounded-lg shadow-md z-[60]">
-                <button class="rounded-md hover:bg-gray-200 hover:text-gray-600" @click="prevSpotlight">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m15 18-6-6 6-6" />
-                    </svg>
-                </button>
-                <Avatar v-if="spotlightFor !== ''" class="min-w-32" :name="spotlightFor" view-type="Badge" />
-                <div v-else
-                    class="min-w-32 inline-flex items-center justify-center overflow-hidden rounded-md px-3 py-1 bg-gray-300">
-                    <span class="font-medium text-xs cursor-default text-gray-600 select-none">Anonymous</span>
-                </div>
-                <button class="rounded-md hover:bg-gray-200 hover:text-gray-700 mr-3" @click="nextSpotlight">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m9 18 6-6-6-6" />
-                    </svg>
-                </button>
-                <button class="font-semibold hover:text-gray-700 ml-auto" @click="closeSpotlight">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="m15 9-6 6" />
-                        <path d="m9 9 6 6" />
-                    </svg>
-                </button>
-            </div>
-        </div> -->
-
         <!-- Dialog for Timer settings -->
         <Dialog :open="isTimerDialogOpen" @close="setIsTimerDialogOpen" class="relative z-50">
             <!-- The backdrop, rendered as a fixed sibling to the panel container -->
@@ -558,7 +538,7 @@ onUnmounted(() => {
                 <DialogPanel class="rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
                     <DialogTitle as="h3"
                         class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200 select-none">
-                        Start/Stop Timer
+                        {{ t('dashboard.timer.title') }}
                     </DialogTitle>
                     <TimerPanel :is-countdown-in-progress="isTimerCountdownInProgress" @start="onTimerStart"
                         @stop="onTimerStop"></TimerPanel>
@@ -574,9 +554,8 @@ onUnmounted(() => {
                 <DialogPanel
                     class="max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
                     <DialogTitle as="h3"
-                        class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200 select-none">Copy and
-                        share below url to
-                        participants
+                        class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200 select-none">{{
+                            t('dashboard.share.title') }}
                     </DialogTitle>
                     <article
                         class="select-all break-all bg-slate-100 dark:bg-slate-700 dark:text-gray-100 my-6 rounded-sm">
@@ -586,7 +565,29 @@ onUnmounted(() => {
                         <button type="button"
                             class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-none focus:ring-0"
                             @click="copyShareLink">
-                            Copy
+                            {{ t('common.copy') }}
+                        </button>
+                    </div>
+                </DialogPanel>
+            </div>
+        </Dialog>
+
+        <!-- Dialog for Language selection -->
+        <Dialog :open="isLanguageDialogOpen" @close="setIsLanguageDialogOpen" class="relative z-50">
+            <!-- The backdrop, rendered as a fixed sibling to the panel container -->
+            <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
+            <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
+                <DialogPanel
+                    class="max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
+                    <div class="flex flex-wrap gap-2">
+                        <button v-for="lang in languageOptions" :key="lang.code"
+                            @click="setLocale(lang.code); setIsLanguageDialogOpen(false)"
+                            class="px-3 py-1.5 text-sm rounded-lg border transition-colors" :class="[
+                                locale === lang.code
+                                    ? 'bg-blue-100 border-blue-200 text-blue-800 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-200'
+                                    : 'bg-gray-100 border-gray-200 text-gray-700 hover:bg-gray-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600'
+                            ]">
+                            {{ lang.name }}
                         </button>
                     </div>
                 </DialogPanel>
@@ -596,13 +597,13 @@ onUnmounted(() => {
         <!-- Left Sidebar -->
         <div class="w-16 p-3">
             <!-- Timer -->
-            <CountdownTimer :timeLeftInSeconds="timerExpiresInSeconds" title="Countdown Timer"
+            <CountdownTimer :timeLeftInSeconds="timerExpiresInSeconds" :title="t('dashboard.timer.tooltip')"
                 class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-[1rem] font-bold text-white ml-auto mx-auto mb-4"
                 :class="isOwner ? 'cursor-pointer' : 'cursor-default'" @click="timerSettings"
                 @countdown-progress-update="onCountdownProgressUpdate" @one-minute-left-warning="onOneMinuteLeftWarning"
                 @countdown-completed="onCountdownCompleted" />
             <!-- Share -->
-            <div title="Share board with others">
+            <div :title="t('dashboard.share.toolTip')">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" @click="share">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -610,7 +611,7 @@ onUnmounted(() => {
                 </svg>
             </div>
             <!-- Mask controls -->
-            <div :title="!isMasked ? 'Mask messages' : 'Unmask messages'">
+            <div :title="!isMasked ? t('dashboard.mask.maskTooltip') : t('dashboard.mask.unmaskTooltip')">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" v-if="isOwner"
                     :class="{ 'hidden': isMasked }" @click="mask">
@@ -626,7 +627,7 @@ onUnmounted(() => {
                 </svg>
             </div>
             <!-- Lock controls -->
-            <div :title="!isLocked ? 'Lock board' : 'Unlock board'">
+            <div :title="!isLocked ? t('dashboard.lock.lockTooltip') : t('dashboard.lock.unlockTooltip')">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" v-if="isOwner"
                     :class="{ 'hidden': isLocked }" @click="lock">
@@ -641,7 +642,7 @@ onUnmounted(() => {
                 </svg>
             </div>
             <!-- Download -->
-            <div title="Download as Pdf">
+            <div :title="t('dashboard.download.tooltip')">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" v-if="isOwner" @click="download">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -650,15 +651,24 @@ onUnmounted(() => {
             </div>
             <DarkModeToggle class="w-8 h-8 mx-auto mb-4 cursor-pointer" />
             <!-- Focus -->
-            <div title="Focus cards">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="w-8 h-8 mx-auto mb-4 cursor-pointer" @click="openSpotlight">
+            <div :title="t('dashboard.spotlight.tooltip')" class="w-8 h-8 mx-auto mb-4 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" @click="openSpotlight">
                     <circle cx="12" cy="12" r="3" />
                     <path d="M3 7V5a2 2 0 0 1 2-2h2" />
                     <path d="M17 3h2a2 2 0 0 1 2 2v2" />
                     <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
                     <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                </svg>
+            </div>
+            <!-- Language picker -->
+            <div :title="t('dashboard.language.tooltip')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" @click="openLanguageDialog"
+                    class="w-8 h-8 mx-auto mb-4 cursor-pointer">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                    <path d="M2 12h20" />
                 </svg>
             </div>
             <a href="https://github.com/vijeeshr/quickretro" target="_blank">
@@ -680,12 +690,12 @@ onUnmounted(() => {
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
                 </svg>
-                Cannot add or update. Board is locked by owner.
+                {{ t('dashboard.lock.message') }}
             </div>
             <div
                 class="flex flex-1 flex-col md:flex-row h-full min-h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
-                <Category v-for="column in columns" :button-text="column.text" :color="column.color"
-                    :width="columnWidthClass" :button-highlight="newCardCategory == column.id"
+                <Category v-for="column in columns" :key="column.id" :column="column" :width="columnWidthClass"
+                    :button-highlight="newCardCategory == column.id"
                     :anonymous-button-highlight="newAnonymousCardCategory == column.id"
                     @add-card="add(column.id, false)" @add-anonymous-card="add(column.id, true)">
                     <NewCard v-if="newCardCategory == column.id" :category="column.id" :by="user" :nickname="nickname"
