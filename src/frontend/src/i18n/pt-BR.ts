@@ -28,7 +28,10 @@ export default {
         teamNamePlaceholder: 'Digite o nome do time aqui!',
         invalidColumnSelection: 'Selecione pelo menos uma coluna',
         colOnePlaceholder: 'Bom',
-        button: 'Criar'
+        button: 'Criar',
+        buttonProgress: 'Criando..',
+        captchaInfo: 'Complete o CAPTCHA para prosseguir',
+        boardCreationError: 'Erro ao criar o quadro'
     },
     dashboard: {
         timer: {

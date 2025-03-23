@@ -38,14 +38,7 @@ func NewRedisConnector(ctx context.Context, timeToLive time.Duration) *RedisConn
 	// 	DB:       0,  // use default DB
 	// })
 
-	// Get Redis connection string from environment variable.
-	// The default "redis://localhost:6379/0" is for accessing redis from host, during development, when running the app locally i.e. not within Docker.
-	// This default may fail when running inside a Docker container as localhost inside a container refers to itself.
-	// So, ensure REDIS_CONNSTR environment variable is correctly set.
-	redisConnStr := getEnv("REDIS_CONNSTR", "redis://localhost:6379/0")
-	// redisConnStr := getEnv("REDIS_CONNSTR", "redis://app-user:mysecretpassword@localhost:6379/0") // Pattern for ACL from local
-
-	opt, err := redis.ParseURL(redisConnStr)
+	opt, err := redis.ParseURL(envConfig.RedisConnStr)
 	if err != nil {
 		slog.Error("Cannot parsing Redis connection string", "details", err.Error())
 	}
@@ -569,11 +562,4 @@ func (c *RedisConnector) UpdateMessageCategory(msgId string, category string) bo
 func (c *RedisConnector) Close() {
 	c.subscriber.Close()
 	c.client.Close()
-}
-
-func getEnv(key, fallback string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return fallback
 }

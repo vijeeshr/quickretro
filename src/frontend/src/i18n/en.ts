@@ -28,7 +28,10 @@ export default {
         teamNamePlaceholder: 'Type team name here!',
         invalidColumnSelection: 'Please select column(s)',
         colOnePlaceholder: 'Good',
-        button: 'Create'
+        button: 'Create',
+        buttonProgress: 'Creating..',
+        captchaInfo: 'Please complete the CAPTCHA to continue',
+        boardCreationError: 'Error when creating board'
     },
     dashboard: {
         timer: {

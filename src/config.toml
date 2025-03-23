@@ -12,6 +12,7 @@ allowed_origins = [
     "https://quickretro.app",
     "https://demo.quickretro.app"
 ]
+turnstile_site_verify_url = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 
 [websocket]
 # Maximum message size (in bytes) allowed from peer for the websocket connection

@@ -43,7 +43,10 @@ services:
       # Default Redis (No Auth or ACL). Outside docker - redis://localhost:6379/0
       # - REDIS_CONNSTR=redis://redis:6379/0 
       # Using Redis ACL with Username & Password. Outside docker - redis://app-user:mysecretpassword@localhost:6379/0
-      # - REDIS_CONNSTR=redis://app-user:mysecretpassword@redis:6379/0    
+      # - REDIS_CONNSTR=redis://app-user:mysecretpassword@redis:6379/0
+      - TURNSTILE_ENABLED=${TURNSTILE_ENABLED}
+      - TURNSTILE_SITE_KEY=${TURNSTILE_SITE_KEY}
+      - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY}          
     networks:
       - redisnet
       - proxynet

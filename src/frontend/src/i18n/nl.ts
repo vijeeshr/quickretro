@@ -28,7 +28,10 @@ export default {
         teamNamePlaceholder: 'Teamnaam hier invullen!',
         invalidColumnSelection: 'Selecteer kolom(en)',
         colOnePlaceholder: 'Goed',
-        button: 'Aanmaken'
+        button: 'Aanmaken',
+        buttonProgress: 'Aanmaken..',
+        captchaInfo: 'Voltooi de CAPTCHA om door te gaan',
+        boardCreationError: 'Fout bij het aanmaken van het bord'
     },
     dashboard: {
         timer: {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"flag"
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -18,7 +19,8 @@ var frontendFiles embed.FS
 
 type Config struct {
 	Server struct {
-		AllowedOrigins []string `toml:"allowed_origins"`
+		AllowedOrigins         []string `toml:"allowed_origins"`
+		TurnstileSiteVerifyUrl string   `toml:"turnstile_site_verify_url"`
 	} `toml:"server"`
 	Websocket struct {
 		MaxMessageSize int64 `toml:"max_message_size_bytes"`
@@ -28,7 +30,15 @@ type Config struct {
 	} `toml:"data"`
 }
 
+type EnvironmentConfig struct {
+	RedisConnStr       string
+	TurnstileEnabled   bool
+	TurnstileSiteKey   string
+	TurnstileSecretKey string
+}
+
 var config Config
+var envConfig EnvironmentConfig
 
 func main() {
 	debug := flag.Bool("debug", false, "set to true to run in debug mode")
@@ -57,6 +67,10 @@ func main() {
 		slog.Error("Invalid auto-delete duration format", "error", err)
 		os.Exit(1)
 	}
+
+	// Load Environment configuration
+	envConfig = LoadEnvironmentConfig()
+	// slog.Info("Loaded environment configuration", "TurnstileEnabled", envConfig.TurnstileEnabled)
 
 	// Connect to Redis
 	ctx := context.Background()
@@ -91,6 +105,16 @@ func main() {
 	assetsFS, _ := fs.Sub(frontendFiles, "frontend/dist/assets")
 	assetsHandler := http.FileServer(http.FS(assetsFS))
 	router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", assetsHandler)).Methods("GET")
+	router.HandleFunc("/config.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/javascript")
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+		turnstileEnabled := os.Getenv("TURNSTILE_ENABLED") == "true"
+		turnstileSiteKey := os.Getenv("TURNSTILE_SITE_KEY")
+		js := fmt.Sprintf(`window.APP_CONFIG = { turnstileEnabled: %t, turnstileSiteKey: "%s" };`, turnstileEnabled, turnstileSiteKey)
+		w.Write([]byte(js))
+	}).Methods("GET")
 	router.HandleFunc("/create", frontendIndexHandler).Methods("GET")
 	router.HandleFunc("/board/{id}/join", frontendIndexHandler).Methods("GET")
 	router.HandleFunc("/board/{id}/", frontendIndexHandler).Methods("GET")
@@ -114,4 +138,48 @@ func frontendIndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(indexFile)
+}
+
+func LoadEnvironmentConfig() EnvironmentConfig {
+
+	// The values to "fallback" arg of getEnv is treated as default when running the app outside of Docker (with Compose)
+	// This is usually the case during local development, as the ENV vars may not exist.
+	// So for local development, you can modify the values as per your need.
+
+	// Note for Redis
+	// --------------
+	// The default "redis://localhost:6379/0" is for accessing redis from host, during development, when running the app locally i.e. not within Docker.
+	// This default may fail when running inside a Docker container as localhost inside a container refers to itself.
+	// So, ensure REDIS_CONNSTR environment variable is correctly set.
+	// redisConnStr := getEnv("REDIS_CONNSTR", "redis://app-user:mysecretpassword@localhost:6379/0") // Pattern for ACL from local
+
+	// Cloudflare Turnstile Dummy SiteKeys and SecretKeys for development
+	// Sitekey					Description	                    Visibility
+	// -------                  -----------                     ----------
+	// 1x00000000000000000000AA	Always passes	                visible
+	// 2x00000000000000000000AB	Always blocks	                visible
+	// 1x00000000000000000000BB	Always passes	                invisible
+	// 2x00000000000000000000BB	Always blocks	                invisible
+	// 3x00000000000000000000FF	Forces an interactive challenge	visible
+
+	// SecretKey							Result
+	// ---------							------
+	// 1x0000000000000000000000000000000AA	Always passes
+	// 2x0000000000000000000000000000000AA	Always fails
+	// 3x0000000000000000000000000000000AA	Yields a "token already spent" error
+	// https://developers.cloudflare.com/turnstile/troubleshooting/testing/
+
+	return EnvironmentConfig{
+		RedisConnStr:       getEnv("REDIS_CONNSTR", "redis://localhost:6379/0"),
+		TurnstileEnabled:   getEnv("TURNSTILE_ENABLED", "false") == "true",
+		TurnstileSiteKey:   getEnv("TURNSTILE_SITE_KEY", "1x00000000000000000000AA"),
+		TurnstileSecretKey: getEnv("TURNSTILE_SECRET_KEY", "1x0000000000000000000000000000000AA"),
+	}
+}
+
+func getEnv(key, fallback string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return fallback
 }

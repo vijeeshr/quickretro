@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -49,10 +51,11 @@ func (b BoardColumn) String() string {
 }
 
 type CreateBoardReq struct {
-	Name    string         `json:"name"`
-	Team    string         `json:"team"`
-	Owner   string         `json:"owner"`
-	Columns []*BoardColumn `json:"columns"`
+	Name                string         `json:"name"`
+	Team                string         `json:"team"`
+	Owner               string         `json:"owner"`
+	Columns             []*BoardColumn `json:"columns"`
+	CfTurnstileResponse string         `json:"cfTurnstileResponse"`
 }
 
 type CreateBoardRes struct {
@@ -89,6 +92,29 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Add Turnstile validation
+	if envConfig.TurnstileEnabled {
+		if createReq.CfTurnstileResponse == "" {
+			http.Error(w, "CAPTCHA verification required", http.StatusBadRequest)
+			return
+		}
+
+		// Get client IP (consider X-Forwarded-For if behind proxy)
+		ip, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			slog.Error("Error parsing remote address", "error", err)
+			http.Error(w, "Invalid request", http.StatusBadRequest)
+			return
+		}
+
+		valid, err := verifyTurnstile(createReq.CfTurnstileResponse, ip)
+		if err != nil || !valid {
+			slog.Warn("Turnstile verification failed", "error", err, "ip", ip)
+			http.Error(w, "CAPTCHA verification failed", http.StatusBadRequest)
+			return
+		}
+	}
+
 	// Todo: Validate parsed payload
 	// name, ok := mux.Vars(r)["name"]
 	// if !ok || name == "" {
@@ -123,6 +149,32 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(data)
+}
+
+func verifyTurnstile(token, remoteIP string) (bool, error) {
+	if envConfig.TurnstileSecretKey == "" {
+		return false, fmt.Errorf("TURNSTILE_SECRET_KEY not configured")
+	}
+
+	data := url.Values{}
+	data.Set("secret", envConfig.TurnstileSecretKey)
+	data.Set("response", token)
+	data.Set("remoteip", remoteIP)
+
+	resp, err := http.PostForm(config.Server.TurnstileSiteVerifyUrl, data)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Success bool `json:"success"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return false, err
+	}
+
+	return result.Success, nil
 }
 
 // Returns board by id

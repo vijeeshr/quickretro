@@ -7,6 +7,7 @@ export interface CreateBoardRequest {
     team: string
     owner: string
     columns: BoardColumn[]
+    cfTurnstileResponse: string
 }
 
 export interface CreateBoardResponse {

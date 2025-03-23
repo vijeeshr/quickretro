@@ -28,7 +28,10 @@ export default {
         teamNamePlaceholder: 'Nome del team qui!',
         invalidColumnSelection: 'Seleziona colonna(e)',
         colOnePlaceholder: 'Buono',
-        button: 'Crea'
+        button: 'Crea',
+        buttonProgress: 'Creazione..',
+        captchaInfo: 'Completa il CAPTCHA per continuare',
+        boardCreationError: 'Errore durante la creazione della bacheca'
     },
     dashboard: {
         timer: {

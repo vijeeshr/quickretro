@@ -6,11 +6,20 @@ import DarkModeToggle from './DarkModeToggle.vue';
 import { BoardColumn } from '../models/BoardColumn';
 import { useI18n } from 'vue-i18n';
 import LanguageSelector from './LanguageSelector.vue';
+import TurnstileWidget from './TurnstileWidget.vue';
+import { useToast } from 'vue-toast-notification';
 
 const { t } = useI18n()
 const router = useRouter()
 const boardname = ref('')
 const team = ref('')
+const isDark = ref(localStorage.getItem("theme") === "dark")
+const isTurnstileEnabled = ref(window.APP_CONFIG?.turnstileEnabled || false)
+const turnstileSiteKey = ref(window.APP_CONFIG?.turnstileSiteKey || '')
+const turnstileToken = ref('')
+const isTurnstileVerified = ref(false)
+const isSubmitting = ref(false)
+const turnstileRef = ref<{ reset: () => void }>()
 
 const columns = ref([
     { id: "col01", text: "", color: "green", colorClass: "text-green-500", enabled: true },
@@ -36,8 +45,24 @@ const boardnameEntered = computed(() => {
     return false
 })
 
+const handleTokenError = () => {
+    console.log('Turnstile error occurred')
+}
+const handleTokenExpired = () => {
+    console.log('Turnstile token expired')
+    turnstileRef.value?.reset()
+}
+const handleTokenVerified = (token: string) => {
+    isTurnstileVerified.value = true
+    turnstileToken.value = token
+}
+
+const toast = useToast()
+
 const create = async () => {
     // Todo: Throttle this.
+    if (isTurnstileEnabled.value && !isTurnstileVerified.value) return
+
     const selectedColumns: BoardColumn[] = columns.value.filter(c => c.enabled === true)
         .map(c => ({
             id: c.id,
@@ -50,19 +75,23 @@ const create = async () => {
         name: boardname.value,
         team: team.value,
         owner: localStorage.getItem('user') || '',
-        columns: selectedColumns
+        columns: selectedColumns,
+        cfTurnstileResponse: turnstileToken.value
     }
 
+    isSubmitting.value = true
     try {
         const createdBoard = await createBoard(payload)
         router.push(`/board/${createdBoard.id}`)
     } catch (error) {
+        toast.error(t('createBoard.boardCreationError', { pauseOnHover: false }))
         console.error('Error creating board:', error);
+    } finally {
+        isSubmitting.value = false
     }
 }
 
 onMounted(() => {
-    const isDark = ref(localStorage.getItem("theme") === "dark")
     document.documentElement.classList.toggle("dark", isDark.value)
 })
 
@@ -71,11 +100,11 @@ onMounted(() => {
 <template>
     <div class="bg-gray-100 dark:bg-gray-950 flex h-screen items-center justify-center p-4">
         <div class="w-full max-w-md">
-            <div class="bg-white dark:bg-gray-900 shadow-md rounded-md p-8">
+            <div class="bg-white dark:bg-gray-900 shadow-md rounded-md p-5 md:p-8">
                 <h2 class="text-center text-3xl font-bold tracking-tight text-gray-600 dark:text-gray-400 select-none">
                     {{ t('createBoard.label') }}
                 </h2>
-                <div class="space-y-4 mt-4">
+                <div class="space-y-2 md:space-y-4 mt-4">
                     <div>
                         <div class="mt-1">
                             <input v-model.trim="boardname" name="name" type="text"
@@ -125,8 +154,9 @@ onMounted(() => {
                     <div class="flex w-full gap-2">
                         <button type="submit"
                             class="flex justify-center px-4 py-2 text-sm w-[90%] shadow-md bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2 dark:focus:ring-2 dark:focus:ring-offset-0 select-none"
-                            :disabled="!boardnameEntered || !isColumnSelectionValid" @click="create">
-                            {{ t('createBoard.button') }}
+                            :disabled="!boardnameEntered || !isColumnSelectionValid || (isTurnstileEnabled && !isTurnstileVerified)"
+                            @click="create">
+                            {{ isSubmitting ? t('createBoard.buttonProgress') : t('createBoard.button') }}
                         </button>
                         <div
                             class="w-[10%] flex items-center justify-center shadow-md border rounded-md border-sky-200">
@@ -135,6 +165,15 @@ onMounted(() => {
                     </div>
                     <div class="w-full">
                         <LanguageSelector />
+                    </div>
+                    <div v-if="isTurnstileEnabled" class="min-w-[300px] flex items-center justify-center">
+                        <TurnstileWidget ref="turnstileRef" v-if="isTurnstileEnabled" class="w-full"
+                            :sitekey="turnstileSiteKey" :dark-theme="isDark" @error="handleTokenError"
+                            @expired="handleTokenExpired" @verified="handleTokenVerified" />
+                    </div>
+                    <div v-show="isTurnstileEnabled && !isTurnstileVerified"
+                        class="text-sm text-red-600 dark:text-red-300 select-none w-full flex items-center justify-center">
+                        {{ t('createBoard.captchaInfo') }}
                     </div>
                 </div>
             </div>
