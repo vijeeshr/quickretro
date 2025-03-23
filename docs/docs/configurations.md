@@ -69,3 +69,19 @@ The Go app always attempts to connect to Redis when its starts. It errors out if
 The app looks for an <code>ENV</code> variable named <code>REDIS_CONNSTR</code> for the connection details.
 
 The Redis ACL username and password can be passed as part of the url to <code>REDIS_CONNSTR</code>. 
+
+## Enable Cloudflare Turnstile
+Turnstile is a smart CAPTCHA alternative from Cloudflare used to prevent bots. It is disabled by default for the Create board page.
+
+To enable it, set the <code>TURNSTILE_ENABLED</code>, <code>TURNSTILE_SITE_KEY</code> and <code>TURNSTILE_SECRET_KEY</code> environment variables.
+
+```ini{2-4}
+REDIS_CONNSTR=<YOUR_REDIS_CONNECTION_STRING>
+TURNSTILE_ENABLED=true
+TURNSTILE_SITE_KEY=<YOUR_SITE_KEY>
+TURNSTILE_SECRET_KEY=<YOUR_SECRET_KEY>
+```
+
+::: tip
+You need to register with Cloudflare to get <code>TURNSTILE_SITE_KEY</code> and <code>TURNSTILE_SECRET_KEY</code>. Visit [Cloudflare](https://www.cloudflare.com/en-in/application-services/products/turnstile/) for more details.
+:::

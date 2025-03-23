@@ -33,6 +33,16 @@ When a Board is created, the user is taken to the [Dashboard](dashboard).
   Your browser does not support the video tag.
 </video>
 
+## Cloudflare Turnstile Integration
+
+Available from <code>v1.4.0</code>
+
+<img src="/createboard_turnstile.png" class="shadow-img" alt="Cloudflare Turnstile" width="360" loading="lazy">
+
+Cloudflare Turnstile is a CAPTCHA alternative provided by Cloudflare. The integration can be enabled/disabled in a configurable way. It is disabled by default. 
+
+Details to enable it provided in [Configurations](configurations#enable-cloudflare-turnstile)
+
 <script setup>
 import { onMounted } from 'vue';
 
