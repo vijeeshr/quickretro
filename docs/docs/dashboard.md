@@ -10,7 +10,7 @@ The left side-bar for a guest user has fewer controls.
 <img src="/dashboard_guest.png" class="shadow-img" alt="Dashboard" width="640" loading="lazy">
 
 The right-sidebar shows a real-time display of all participants who are currently in the meeting.\
-From <code>v1.2.0</code> onwards, each participant's message count is also displayed.
+From <Badge type="tip" text="v1.2.0" /> onwards, each participant's message count is also displayed.
 
 ::: tip
 Hover over the user's Avatar to know the full nickname.
@@ -35,7 +35,7 @@ Board owner can update any message.
 :::
 
 ::: danger BEHAVIOR CHANGE
-From <code>v1.2.0</code>, each column has dedicated buttons to create messages. Columns names no longer act as buttons.\
+From <Badge type="danger" text="v1.2.0" />, each column has dedicated buttons to create messages. Columns names no longer act as buttons.\
 To create a message, click the **+** button.
 :::
 <img src="/dashboard_add_cards.png" class="shadow-img" alt="Dashboard Add Cards" width="312" loading="lazy">
@@ -46,14 +46,14 @@ Type in text and press Enter *or* click anywhere else on the page. The message i
 To Update a message, click on the text and the card becomes updateable.\
 Press Enter *or* click anywhere else on the page. The update is instantly sent to all.
 
-### Quick video - For versions prior to <code>v1.2.0</code>
+### Quick video - For versions prior to <Badge type="tip" text="v1.2.0" />
 <video class="video-play" controls width="640">
   <source src="/videos/add-update-message.mp4" type="video/webm">
   Your browser does not support the video tag.
 </video>
 
 ## Anonymous message
-Available from <code>v1.2.0</code>
+Available from <Badge type="tip" text="v1.2.0" />
 
 Use the 
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -90,7 +90,7 @@ Hit the like button
 on each card to toggle like.
 
 ## Move message across columns
-Available from <code>v1.2.0</code>
+Available from <Badge type="tip" text="v1.2.0" />
 
 Use the move icon button
 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -157,7 +157,9 @@ buttons to Lock or Unlock a board.
 
 ## Download as PDF
 ::: info NOTE
-Only available for Board owner
+Only available for Board owner.
+
+This option is currently ***NOT*** available for Simplified Chinese, Japanese, Korean, Russian and Ukrainian languages. Instead, clicking the button will initiate a Print screen which can be used to Print to PDF.
 :::
 ::: tip
 If using the [live demo](https://demo.quickretro.app), remember to download as PDF. The data is deleted in 2 hours.
@@ -171,8 +173,13 @@ Use the Download button
 </svg>
 to download the messages as PDF.
 
+::: danger KNOWN ISSUES
+With the Print option for Simplified Chinese, Japanese, Korean, Russian and Ukrainian languages, Chromium based browsers print the first page as empty. The content appears from the second page.\
+Firefox doesn't show the empty page, but it renders without colored formatting.
+:::
+
 ## Dark Theme
-Available from <code>v1.1.0</code>
+Available from <Badge type="tip" text="v1.1.0" />
 
 Use the dark
 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
@@ -187,7 +194,7 @@ Use the dark
 </svg> buttons to toggle between the two themes.
 
 ## Focussed View
-Available from <code>v1.3.0</code>
+Available from <Badge type="tip" text="v1.3.0" />
 
 Use the focus toggle button
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -206,7 +213,7 @@ Clicking on the Avatar displayed in each card also starts focussed view
 :::
 
 ## Multi-Language support
-Available from <code>v1.3.0</code>
+Available from <Badge type="tip" text="^v1.3.0" />
 
 Use the 
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"

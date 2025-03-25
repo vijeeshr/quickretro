@@ -10,7 +10,7 @@ We'll soon see it in [Dashboard](dashboard) section.
 
 ## Configuring Board Columns
 ::: tip
-Since the introduction of multi-language support with <code>v1.3.0</code>, default column names can be automatically translated to other
+Since the introduction of multi-language support with <Badge type="tip" text="v1.3.0" />, default column names can be automatically translated to other
 languages.\
 ***Custom column names are not automatically translated.***\
 It is recommended to use the defaults, if any of your team members use the app in a different language.
@@ -35,7 +35,7 @@ When a Board is created, the user is taken to the [Dashboard](dashboard).
 
 ## Cloudflare Turnstile Integration
 
-Available from <code>v1.4.0</code>
+Available from <Badge type="tip" text="v1.4.0" />
 
 <img src="/createboard_turnstile.png" class="shadow-img" alt="Cloudflare Turnstile" width="360" loading="lazy">
 
