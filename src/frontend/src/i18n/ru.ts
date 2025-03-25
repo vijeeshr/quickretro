@@ -1,0 +1,80 @@
+export default {
+    langName: 'Русский (ru)',  
+    common: {
+        anonymous: 'Аноним',
+        minutes: 'Минуты',
+        seconds: 'Секунды',
+        start: 'Старт',
+        stop: 'Стоп',
+        copy: 'Копировать',
+        board: 'Доска',
+        toolTips: {
+            darkTheme: 'Тёмная тема',
+            lightTheme: 'Светлая тема'
+        },
+        contentOverloadError: 'Превышен лимит содержимого',
+        contentStrippingError: 'Лишний текст удалён'
+    },
+    join: {
+        label: 'Войти как гость',
+        namePlaceholder: 'Введите имя здесь!',
+        nameRequired: 'Введите имя',
+        button: 'Присоединиться'
+    },
+    createBoard: {
+        label: 'Создать доску',
+        namePlaceholder: 'Название доски здесь!',
+        nameRequired: 'Введите название доски',
+        teamNamePlaceholder: 'Название команды здесь!',
+        invalidColumnSelection: 'Выберите столбцы',
+        colOnePlaceholder: 'Хорошо',
+        button: 'Создать',
+		buttonProgress: 'Создание..',
+        captchaInfo: 'Пройдите CAPTCHA для продолжения',
+        boardCreationError: 'Ошибка при создании доски'
+    },
+    dashboard: {
+        timer: {
+            oneMinuteLeft: 'Осталась минута',
+            timeCompleted: 'Время вышло!',
+            title: 'Старт/Стоп таймер',
+            helpTip: 'Используйте +/- или стрелки. Макс. 1 час.',
+            invalid: 'Недопустимое время (1 сек - 60 мин)',
+            tooltip: 'Таймер обратного отсчёта'
+        },
+        share: {
+            title: 'Скопируйте и поделитесь ссылкой',
+            linkCopied: 'Ссылка скопирована!',
+            linkCopyError: 'Ошибка копирования',
+            toolTip: 'Поделиться доской'
+        },
+        mask: {
+            maskTooltip: 'Скрыть сообщения',
+            unmaskTooltip: 'Показать сообщения'
+        },
+        lock: {
+            lockTooltip: 'Заблокировать доску',
+            unlockTooltip: 'Разблокировать доску',
+            message: 'Доска заблокирована'
+        },
+        spotlight: {
+            noCardsToFocus: 'Нет карточек',
+            tooltip: 'Выделить карточки'
+        },
+        download: {
+            tooltip: 'Печать'
+        },
+        language: {
+            tooltip : 'Сменить язык'
+        },
+        columns: {
+            col01: 'Что прошло хорошо',
+            col02: 'Сложности',
+            col03: 'Действия',
+            col04: 'Благодарности',
+            col05: 'Улучшения'
+        },
+        pdfFooter: 'Создано с',
+        offline: 'Офлайн'
+    }
+}

@@ -8,23 +8,22 @@ import ptBR from './pt-BR'
 import pt from './pt'
 import nl from './nl'
 import it from './it'
+import zhCN from './zh-CN'
+import ja from './ja'
+import ko from './ko'
+import ru from './ru'
+import uk from './uk'
 
 type MessageSchema = typeof en
 
 const savedLanguage = localStorage.getItem('lang')
 
-export default createI18n<[MessageSchema], 'en' | 'es' | 'de' | 'fr' | 'ptBR' | 'nl' | 'it' | 'pt' | 'frCA'>({
+export default createI18n<[MessageSchema], 'en' | 'zhCN' | 'es' | 'de' | 'fr' | 'ptBR' | 'ru' | 'ja' | 'nl' | 'ko' | 'it' | 'pt' | 'uk' | 'frCA'>({
     legacy: false,
     locale: savedLanguage || 'en',
     fallbackLocale: 'en',
     messages : {
-        en,
-        es,
-        de,
-        fr, frCA,
-        ptBR, pt,
-        nl,
-        it
+        en, zhCN, es, de, fr, ptBR, ru, ja, nl, ko, it, pt, uk, frCA
     }
 })
 

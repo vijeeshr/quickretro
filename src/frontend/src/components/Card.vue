@@ -150,7 +150,7 @@ const validate = (event: Event) => {
 
         <div class="text-gray-500 pb-2 dark:text-white" :class="{ 'blur-sm': mask && !card.mine }">
             <article class="min-h-4 text-center break-words focus:outline-none"
-                :class="[editing && updateable ? 'cursor-auto' : 'cursor-default']"
+                :class="[editing ? 'cursor-auto' : updateable && !locked ? 'cursor-pointer' : 'cursor-default']"
                 :contenteditable="editing && updateable" @click="edit" @blur="save" @keydown.enter="saveOnEnter"
                 @input="validate">{{
                     content }}</article>
@@ -217,7 +217,7 @@ const validate = (event: Event) => {
                                 'group flex w-full items-center justify-center rounded-md text-xs px-1',
                             ]" @click="changeCategory(otherCategory.id, props.card.cat)">
                                 {{ otherCategory.isDefault ? t(`dashboard.columns.${otherCategory.id}`) :
-                                otherCategory.text }}
+                                    otherCategory.text }}
                             </button>
                             </MenuItem>
                         </MenuItems>

@@ -213,7 +213,7 @@ const onTimerStop = () => {
     setIsTimerDialogOpen(false)
 }
 
-const getRGBizedColor = (color: string): any => {
+const getRGBizedColor = (color: string): [number, number, number] => {
     switch (color) {
         case "green":
             return [74, 222, 128]
@@ -227,6 +227,38 @@ const getRGBizedColor = (color: string): any => {
             return [251, 146, 60]
         default:
             return [128, 128, 128]
+    }
+}
+
+// const getHexizedColor = (color: string): string => {
+//     const rgb = getRGBizedColor(color);
+//     return `#${rgb.map(c =>
+//         c.toString(16).padStart(2, '0').toUpperCase()
+//     ).join('')}`
+// }
+
+const getHexizedColor = (color: string): string => {
+    switch (color) {
+        case "green":
+            return "#4ADE80"
+        case "red":
+            return "#F87171"
+        case "yellow":
+            return "#FACC15"
+        case "fuchsia":
+            return "#E879F9"
+        case "orange":
+            return "#FB923C"
+        default:
+            return "#808080"
+    }
+}
+
+const generateDocument = () => {
+    if (locale.value === 'zhCN' || locale.value === 'ja' || locale.value === 'ko' || locale.value === 'ru' || locale.value === 'uk') {
+        print()
+    } else {
+        download()
     }
 }
 
@@ -270,9 +302,10 @@ const download = async () => {
             .setFontSize(11)
             .setTextColor("gray")
             .text(
-                `${t('dashboard.pdfFooter')} QuickRetro https://quickretro.app`,
-                0.5,
-                doc.internal.pageSize.height - 0.5
+                `${t('dashboard.pdfFooter')} QuickRetro ( https://quickretro.app )`,
+                doc.internal.pageSize.width / 2, // Center horizontally
+                doc.internal.pageSize.height - 0.5, // Position vertically
+                { align: "center" }
             )
 
         doc.save(`quickretro.pdf`)
@@ -285,6 +318,150 @@ const download = async () => {
     } catch (error) {
         // toast.error(t('dashboard.download.error'), { pauseOnHover: false })
         console.error('PDF download failed:', error)
+    }
+}
+
+const print = async () => {
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+
+    try {
+        const { default: useSanitize } = await import('../composables/useSanitize')
+        const { sanitize } = useSanitize()
+
+        // Create document structure
+        const doc = printWindow.document
+        const html = `
+        <html>
+            <head>
+                <title>QuickRetro</title>
+                <style>
+                    @media print {
+                        @page {
+                            margin: 20px;
+                            size: A4 portrait;
+                        }
+                        
+                        body { 
+                            margin: 0;
+                            padding: 20px;
+                            -webkit-print-color-adjust: exact; 
+                            font-family: Arial, sans-serif, "Noto Sans CJK SC", "Hiragino Sans GB";
+                        }
+
+                        .print-section {
+                            margin: 0;
+                            padding: 0;
+                            width: 100%;
+                        }
+
+                        .print-title {
+                            font-size: 1.5rem;
+                            font-weight: normal;
+                            border-bottom: 1px solid black;
+                            margin: 0 0 1rem 0;
+                            padding: 0.5rem;
+                            page-break-after: avoid;
+                        }
+
+                        .print-columns {
+                            columns: 1;
+                            column-fill: auto;
+                            page-break-inside: avoid;
+                        }
+
+                        .print-column {
+                            page-break-inside: avoid;
+                            break-inside: avoid-page;
+                            margin-bottom: 1rem;
+                        }
+
+                        .print-category {
+                            font-weight: bold;
+                            background-color: #f8fafc;
+                            padding: 0.5rem;
+                            page-break-after: avoid;
+                        }
+
+                        .print-card {
+                            padding: 0.5rem;
+                            page-break-inside: avoid;
+                            color: #505050;
+                            font-size: 1rem;
+                            word-break: break-all;
+                        }
+
+                        .print-card:nth-child(even) {
+                            background-color: #f3f3f3;
+                        }
+
+                        .print-card:nth-child(odd) {
+                            background-color: #ffffff;
+                        }
+
+                        .print-footer {
+                            position: fixed;
+                            bottom: 0;
+                            left: 0;
+                            right: 0;
+                            font-size: 0.8rem;
+                            text-align: center;
+                            padding: 0.5rem;
+                            color: gray;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="print-section">
+                <h1 class="print-title">${t('common.board')} - ${sanitize(boardName.value)}</h1>
+                <div class="print-columns">
+                    ${columns.value.map(col => `
+                    <div class="print-column">
+                        <div class="print-category" style="background-color:${getHexizedColor(col.color)};color:white">${col.isDefault ? t(`dashboard.columns.${col.id}`) : sanitize(col.text)}</div>
+                        ${cards.value
+                .filter(c => c.cat.toLowerCase() === col.id.toLowerCase() && c.msg && c.msg.trim() !== '')
+                .map(c => `<div class="print-card">${sanitize(c.msg)}</div>`)
+                .join('')}
+                    </div>
+                    `).join('')}
+                </div>
+                <footer class="print-footer">
+                    ${t('dashboard.pdfFooter')} QuickRetro ( https://quickretro.app )
+                </footer>
+                </div>
+            </body>
+        </html>`
+
+        // Modern parsing method
+        const parser = new DOMParser()
+        const parsedDoc = parser.parseFromString(html, 'text/html')
+
+        // Clone nodes to new document
+        Array.from(parsedDoc.documentElement.childNodes).forEach(node => {
+            doc.documentElement.appendChild(doc.importNode(node, true))
+        })
+
+        // Handle printing
+        const printAndClose = () => {
+            printWindow.print()
+            setTimeout(() => printWindow.close(), 500)
+        };
+
+        if (doc.fonts) {
+            doc.fonts.ready.then(printAndClose)
+        } else {
+            printWindow.addEventListener('load', printAndClose)
+        }
+    } catch (error) {
+        // toast.error(t('dashboard.download.error'), { pauseOnHover: false })
+        console.error('Print failed:', error)
+    } finally {
+        setTimeout(() => {
+            if (printWindow && !printWindow.closed) {
+                printWindow.close();
+            }
+        }, 2000); // Force close after 2s
     }
 }
 
@@ -521,7 +698,7 @@ onUnmounted(() => {
             <div v-else
                 class="min-w-32 inline-flex items-center justify-center overflow-hidden rounded-md px-3 py-1 bg-gray-300">
                 <span class="font-medium text-xs cursor-default text-gray-600 select-none">{{ t('common.anonymous')
-                }}</span>
+                    }}</span>
             </div>
             <button class="rounded-md hover:bg-gray-200 hover:text-gray-700 mr-3" @click="nextSpotlight">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -652,7 +829,8 @@ onUnmounted(() => {
             <!-- Download -->
             <div :title="t('dashboard.download.tooltip')">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                    stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" v-if="isOwner" @click="download">
+                    stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" v-if="isOwner"
+                    @click="generateDocument">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                 </svg>
