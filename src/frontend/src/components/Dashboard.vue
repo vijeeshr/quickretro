@@ -345,7 +345,8 @@ const print = async () => {
                         body { 
                             margin: 0;
                             padding: 20px;
-                            -webkit-print-color-adjust: exact; 
+                            -webkit-print-color-adjust: exact;
+                            print-color-adjust: exact;
                             font-family: Arial, sans-serif, "Noto Sans CJK SC", "Hiragino Sans GB";
                         }
 
@@ -378,8 +379,7 @@ const print = async () => {
 
                         .print-category {
                             font-weight: bold;
-                            background-color: #f8fafc;
-                            padding: 0.5rem;
+                            padding: 0.25rem;
                             page-break-after: avoid;
                         }
 

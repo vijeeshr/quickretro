@@ -158,8 +158,6 @@ buttons to Lock or Unlock a board.
 ## Download as PDF
 ::: info NOTE
 Only available for Board owner.
-
-This option is currently ***NOT*** available for Simplified Chinese, Japanese, Korean, Russian and Ukrainian languages. Instead, clicking the button will initiate a Print screen which can be used to Print to PDF.
 :::
 ::: tip
 If using the [live demo](https://demo.quickretro.app), remember to download as PDF. The data is deleted in 2 hours.
@@ -173,9 +171,11 @@ Use the Download button
 </svg>
 to download the messages as PDF.
 
-::: danger KNOWN ISSUES
-With the Print option for Simplified Chinese, Japanese, Korean, Russian and Ukrainian languages, Chromium based browsers print the first page as empty. The content appears from the second page.\
-Firefox doesn't show the empty page, but it renders without colored formatting.
+This option is currently ***NOT*** available for Simplified Chinese, Japanese, Korean, Russian and Ukrainian languages.\
+Instead, clicking the button will initiate a Print screen which can be used to Print to PDF.
+
+::: danger KNOWN ISSUE
+With the Print option, Chromium based browsers print the first page as empty. The content appears from the second page.
 :::
 
 ## Dark Theme
