@@ -14,7 +14,7 @@ hero:
       link: https://demo.quickretro.app
     - theme: alt
       text: Getting Started
-      link: /getting-started
+      link: /guide/getting-started
   image:
     light: /logo_large_light.png
     dark: /logo_large_dark.png

@@ -64,7 +64,7 @@ export default defineConfig({
         // Default priority
         item.priority = 0.5
         // Dashboard
-        if (item.url === 'dashboard') {
+        if (item.url === 'guide/dashboard') {
           item.priority = 1
           item.img = {
             url: 'https://quickretro.app/dashboard_owner.png',
@@ -82,7 +82,7 @@ export default defineConfig({
           }
         }
         // Create-Board
-        if (item.url === 'create-board') {
+        if (item.url === 'guide/create-board') {
           item.priority = 0.9
           item.img = {
             url: 'https://quickretro.app/createboard.png',
@@ -91,7 +91,7 @@ export default defineConfig({
           }
         }
         // Development
-        if (item.url === 'development' || item.url === 'getting-started') {
+        if (item.url === 'guide/development' || item.url === 'guide/getting-started') {
           item.priority = 0.9
         }
       })
@@ -113,30 +113,30 @@ export default defineConfig({
 
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Features', link: '/dashboard' },
-      { text: 'Development', link: '/development' }
+      { text: 'Features', link: '/guide/dashboard' },
+      { text: 'Development', link: '/guide/development' }
     ],
 
     sidebar: [
       {
         text: 'Guide',
         items: [
-          { text: 'Getting Started', link: '/getting-started' },
-          { text: 'Create Board', link: '/create-board' },
-          { text: 'Dashboard', link: '/dashboard' }
+          { text: 'Getting Started', link: '/guide/getting-started' },
+          { text: 'Create Board', link: '/guide/create-board' },
+          { text: 'Dashboard', link: '/guide/dashboard' }
         ]
       },
       {
         // text: 'Development',
         items: [
-          { text: 'Development', link: '/development' },
-          { text: 'Configurations', link: '/configurations' }
+          { text: 'Development', link: '/guide/development' },
+          { text: 'Configurations', link: '/guide/configurations' }
         ]
       },
       {
         // text: 'Self-hosting',
         items: [
-          { text: 'Self-Hosting', link: '/self-hosting' }
+          { text: 'Self-Hosting', link: '/guide/self-hosting' }
         ]
       }             
     ],

@@ -1,3 +1,21 @@
+docs.localhost {
+    # Permanent redirects for changed URLs
+    redir /configurations /guide/configurations 301
+    redir /create-board /guide/create-board 301
+    redir /dashboard /guide/dashboard 301
+    redir /development /guide/development 301
+    redir /getting-started /guide/getting-started 301
+    redir /self-hosting /guide/self-hosting 301
+    # Handle trailing slash for guide
+    redir /guide/ /guide/getting-started 301
+    redir /guide /guide/getting-started 301
+
+    encode gzip
+    root * /var/www/homepage
+    try_files {path}.html {path}/ {path} /404.html
+    file_server
+}
+
 localhost {
     encode gzip
     reverse_proxy app:8080
