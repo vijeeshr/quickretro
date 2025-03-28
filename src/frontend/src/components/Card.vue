@@ -25,7 +25,7 @@ interface Props {
     categories: BoardColumn[]
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['updated', 'deleted', 'liked', 'invalidContent', 'categoryChanged', 'avatarClicked'])
+const emit = defineEmits(['updated', 'deleted', 'liked', 'invalidContent', 'categoryChanged', 'avatarClicked', 'discard'])
 
 const { t } = useI18n()
 
@@ -62,6 +62,15 @@ const edit = async (event: Event) => {
 
 const save = (event: Event) => {
     if (props.locked) {
+        if (editing.value) {
+            // Board lock received when the user is editing a message.
+            // The message will be forcefully discarded.
+            const target = event.target as HTMLElement
+            target.innerText = content.value // Discard new changes by reseting value back to original
+            editing.value = false
+            emit('discard')
+            return
+        }
         logMessage("Locked! Cannot save.")
         return
     }
@@ -151,8 +160,8 @@ const validate = (event: Event) => {
         <div class="text-gray-500 pb-2 dark:text-white" :class="{ 'blur-sm': mask && !card.mine }">
             <article class="min-h-4 text-center break-words focus:outline-none"
                 :class="[editing ? 'cursor-auto' : updateable && !locked ? 'cursor-pointer' : 'cursor-default']"
-                :contenteditable="editing && updateable" @click="edit" @blur="save" @keydown.enter="saveOnEnter"
-                @input="validate">{{
+                :contenteditable="editing && updateable && !(locked && editing)" @click="edit" @blur="save"
+                @keydown.enter="saveOnEnter" @input="validate">{{
                     content }}</article>
         </div>
 

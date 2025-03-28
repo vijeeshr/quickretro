@@ -55,7 +55,8 @@ export default {
         lock: {
             lockTooltip: 'Blocca bacheca',
             unlockTooltip: 'Sblocca bacheca',
-            message: 'Bacheca bloccata.'
+            message: 'Bacheca bloccata.',
+            discardChanges: 'Bacheca bloccata! Messaggi non salvati eliminati'
         },
         spotlight: {
             noCardsToFocus: 'Nessuna carta da focalizzare',

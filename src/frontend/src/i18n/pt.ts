@@ -55,7 +55,8 @@ export default {
         lock: {
             lockTooltip: 'Bloquear quadro',
             unlockTooltip: 'Desbloquear quadro',
-            message: 'Quadro bloqueado.'
+            message: 'Quadro bloqueado.',
+            discardChanges: 'Quadro bloqueado! Mensagens não guardadas foram descartadas'
         },
         spotlight: {
             noCardsToFocus: 'Nenhum cartão para focar',

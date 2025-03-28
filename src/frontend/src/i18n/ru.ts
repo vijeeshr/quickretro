@@ -55,7 +55,8 @@ export default {
         lock: {
             lockTooltip: 'Заблокировать доску',
             unlockTooltip: 'Разблокировать доску',
-            message: 'Доска заблокирована'
+            message: 'Доска заблокирована',
+            discardChanges: 'Доска заблокирована! Несохранённые сообщения удалены'
         },
         spotlight: {
             noCardsToFocus: 'Нет карточек',

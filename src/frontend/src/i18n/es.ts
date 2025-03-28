@@ -55,7 +55,8 @@ export default {
         lock: {
             lockTooltip: 'Bloquear tablero',
             unlockTooltip: 'Desbloquear tablero',
-            message: 'Tablero bloqueado por el propietario.'
+            message: 'Tablero bloqueado por el propietario.',
+            discardChanges: '¡Tablero bloqueado! Los mensajes no guardados se han descartado'
         },
         spotlight: {
             noCardsToFocus: 'No hay tarjetas para enfocar',

@@ -55,7 +55,8 @@ export default {
         lock: {
             lockTooltip: '锁定看板',
             unlockTooltip: '解锁看板',
-            message: '看板已被锁定'
+            message: '看板已被锁定',
+            discardChanges: '看板已锁定！未保存的消息已丢弃'
         },
         spotlight: {
             noCardsToFocus: '没有可聚焦的卡片',

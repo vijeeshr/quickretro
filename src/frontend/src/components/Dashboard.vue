@@ -166,10 +166,22 @@ const showSpotlightFor = (name: string) => {
     isSpotlightOn.value = true
 }
 
-const onAdded = (card: DraftMessage) => {
-    logMessage('newcontent received:', card)
+const notifyForLostMessages = () => {
+    toast.error(t('dashboard.lock.discardChanges'))
+}
+
+const newCardCreationInProgress = computed(() => {
+    return newCardCategory.value.trim() !== '' || newAnonymousCardCategory.value.trim() !== ''
+})
+
+const clearNewCards = () => {
     newCardCategory.value = '' //unmount newCard
     newAnonymousCardCategory.value = '' //unmount newAnonymousCard
+}
+
+const onAdded = (card: DraftMessage) => {
+    logMessage('newcontent received:', card)
+    clearNewCards()
     const nicknameToSend = card.anon === true ? '' : nickname
     dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nicknameToSend, grp: board, msg: card.msg, cat: card.cat, anon: card.anon })
 }
@@ -519,6 +531,12 @@ const onMaskResponse = (response: MaskResponse) => {
 
 const onLockResponse = (response: LockResponse) => {
     isLocked.value = response.lock
+    if (isLocked.value && newCardCreationInProgress.value) {
+        // Board lock received when the user is adding new messages.
+        // The message will be forcefully discarded.
+        clearNewCards()
+        notifyForLostMessages()
+    }
 }
 
 const onSaveMessageResponse = (response: MessageResponse) => {
@@ -698,7 +716,7 @@ onUnmounted(() => {
             <div v-else
                 class="min-w-32 inline-flex items-center justify-center overflow-hidden rounded-md px-3 py-1 bg-gray-300">
                 <span class="font-medium text-xs cursor-default text-gray-600 select-none">{{ t('common.anonymous')
-                    }}</span>
+                }}</span>
             </div>
             <button class="rounded-md hover:bg-gray-200 hover:text-gray-700 mr-3" @click="nextSpotlight">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -892,7 +910,8 @@ onUnmounted(() => {
                         :current-user-nickname="nickname" :board="board" :mask="isMasked"
                         :updateable="card.mine || isOwner" :key="card.id" :categories="columns" :locked="isLocked"
                         @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" @category-changed="onCategoryChanged"
-                        @invalidContent="onInvalidContent" @avatar-clicked="showSpotlightFor" :class="{
+                        @invalidContent="onInvalidContent" @avatar-clicked="showSpotlightFor"
+                        @discard="notifyForLostMessages" :class="{
                             'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none': isSpotlightOn && usersWithCards.length > 0 && card.nickname !== spotlightFor,
                             'bg-black dark:bg-black border border-gray-200 z-[51]': isSpotlightOn && usersWithCards.length > 0 && card.nickname === spotlightFor,
                         }" />
