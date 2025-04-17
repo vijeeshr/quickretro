@@ -54,7 +54,7 @@ services:
       - 8080
 
   caddy:
-    image: caddy:2.7.6-alpine
+    image: caddy:2.9.1-alpine
     restart: unless-stopped
     ports:
       - "80:80"

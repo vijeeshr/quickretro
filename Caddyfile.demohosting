@@ -1,3 +1,7 @@
+{
+   email vijeesh82@gmail.com
+}
+
 quickretro.app {
    # Permanent redirects for changed URLs
    redir /configurations /guide/configurations 301

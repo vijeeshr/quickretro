@@ -1,6 +1,6 @@
 # docker build -f onlybackend.Dockerfile -t quickretro-app .
 
-FROM golang:1.22.0-alpine AS builder
+FROM golang:1.24.2-alpine AS builder
 WORKDIR /app
 COPY src/go.mod src/go.sum ./
 RUN go mod download

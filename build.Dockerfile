@@ -1,11 +1,11 @@
-FROM node:20.10.0-alpine3.19 AS frontend-builder
+FROM node:22.14.0-alpine AS frontend-builder
 WORKDIR /app
 # node_modules directory is excluded with .dockerignore
 COPY src/frontend/ .
 RUN npm install
 RUN npm run build
 
-FROM golang:1.22.0-alpine AS backend-builder
+FROM golang:1.24.2-alpine AS backend-builder
 WORKDIR /app
 COPY src/go.mod src/go.sum ./
 RUN go mod download
