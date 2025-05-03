@@ -7,6 +7,9 @@ https://demo.quickretro.app
 ## Site
 https://quickretro.app 
 
+### Docs
+https://quickretro.app/guide/getting-started 
+
 ## Running the app locally
 Ensure Go, Nodejs and Docker are installed.  
 
