@@ -108,7 +108,7 @@ A small menu opens up with the target columns.
 ::: info NOTE
 Only Board owner can Start or Stop the timer
 :::
-The Timer control appear view-only for guests.\
+The Timer control is view-only for guests.\
 For a Board owner, it appears as a ***button and is clickable***. Enter the minutes or seconds in the popup and start it.\
 The coundown stops when it runs its course.\
 To Stop the timer before-hand, click the Timer control to open the popup again and Stop it.
