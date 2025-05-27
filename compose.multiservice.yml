@@ -34,7 +34,7 @@ x-app-defaults: &app-defaults
 
 services:
   redis:
-    image: "redis:7.2.3-alpine"
+    image: "redis:8.0.1-alpine"
     ############## Redis ACL ##############
     # volumes:
     #   - ./redis/users.acl:/usr/local/etc/redis/users.acl
@@ -54,7 +54,7 @@ services:
     <<: *app-defaults     
 
   caddy:
-    image: caddy:2.9.1-alpine
+    image: caddy:2.10.0-alpine
     restart: unless-stopped
     ports:
       - "80:80"
