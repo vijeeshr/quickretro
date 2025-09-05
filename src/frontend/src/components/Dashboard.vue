@@ -291,20 +291,16 @@ const download = async () => {
         doc.setLineWidth(0.01).line(0.5, 1.1, 8.0, 1.1)
 
         for (const col of columns.value) {
-            const columnForExport = [
-                { title: col.isDefault ? t(`dashboard.columns.${col.id}`) : col.text, dataKey: "text" }
-            ]
+            const headerText = col.isDefault ? t(`dashboard.columns.${col.id}`) : col.text
             const itemsForExport = cards.value.filter(c => c.cat.toLowerCase() === col.id.toLowerCase())
-                .map(c => ({
-                    text: c.msg
-                }))
+                .map(c => [c.msg])
 
-            // Using autoTable plugin
+            // Using autoTable plugin               
             autoTable(doc, {
-                columns: columnForExport,
-                headStyles: { fillColor: getRGBizedColor(col.color) },
+                head: [[headerText]],
                 body: itemsForExport,
-                margin: { left: 0.5, top: 1.25 }
+                headStyles: { fillColor: getRGBizedColor(col.color) },
+                margin: { left: 0.5, top: 1.25 },
             })
         }
 
