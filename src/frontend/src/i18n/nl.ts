@@ -76,6 +76,7 @@ export default {
             col05: 'Verbeterpunten'
         },
         pdfFooter: 'Gemaakt met',
-        offline: 'Offline.'
+        offline: 'Offline.',
+        notExists: 'Het bord bestaat niet. Het is automatisch verwijderd nadat het was verlopen.'
     }
 }

@@ -76,6 +76,7 @@ export default {
             col05: 'Improvements'
         },
         pdfFooter: 'Created with',
-        offline: 'You seem to be offline.'
+        offline: 'You seem to be offline.',
+        notExists: 'Board does not exist. It has been auto-deleted after expiry.'
     }
 }

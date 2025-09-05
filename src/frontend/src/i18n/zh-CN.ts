@@ -76,6 +76,7 @@ export default {
             col05: '改进建议'
         },
         pdfFooter: '创建于',
-        offline: '离线状态'
+        offline: '离线状态',
+        notExists: '看板不存在。它已在过期后被自动删除。'
     }
 }

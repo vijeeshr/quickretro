@@ -76,6 +76,7 @@ export default {
             col05: 'Miglioramenti'
         },
         pdfFooter: 'Creato con',
-        offline: 'Disconnesso.'
+        offline: 'Disconnesso.',
+        notExists: 'La bacheca non esiste. È stata eliminata automaticamente dopo la scadenza.'
     }
 }

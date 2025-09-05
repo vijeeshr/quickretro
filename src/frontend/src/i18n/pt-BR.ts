@@ -76,6 +76,7 @@ export default {
             col05: 'Melhorias'
         },
         pdfFooter: 'Criado com',
-        offline: 'Você parece estar offline.'
+        offline: 'Você parece estar offline.',
+        notExists: 'O quadro não existe. Ele foi excluído automaticamente após expirar.'
     }
 }

@@ -76,6 +76,7 @@ export default {
             col05: 'Verbesserungen'
         },
         pdfFooter: 'Erstellt mit',
-        offline: 'Offline.'
+        offline: 'Offline.',
+        notExists: 'Das Board existiert nicht. Es wurde nach Ablauf automatisch gelöscht.'
     }
 }

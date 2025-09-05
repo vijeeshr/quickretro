@@ -76,6 +76,7 @@ export default {
             col05: '改善点'
         },
         pdfFooter: '作成者',
-        offline: 'オフライン'
+        offline: 'オフライン',
+        notExists: 'ボードは存在しません。有効期限後、自動的に削除されました。'
     }
 }

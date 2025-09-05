@@ -76,6 +76,7 @@ export default {
             col05: '개선점'
         },
         pdfFooter: '생성 도구',
-        offline: '오프라인 상태'
+        offline: '오프라인 상태',
+        notExists: '보드가 존재하지 않습니다. 만료 후 자동으로 삭제되었습니다.'
     }
 }

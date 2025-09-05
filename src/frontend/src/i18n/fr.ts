@@ -76,6 +76,7 @@ export default {
             col05: 'Améliorations'
         },
         pdfFooter: 'Créé avec',
-        offline: 'Hors ligne.'
+        offline: 'Hors ligne.',
+        notExists: 'Le tableau n’existe pas. Il a été supprimé automatiquement après expiration.'
     }
 }

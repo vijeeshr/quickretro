@@ -136,8 +136,22 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	// if !hub.redis.BoardExists(board) {
+	// 	w.WriteHeader(http.StatusNotFound)
+	// 	return
+	// }
+
+	// If board doesn't exist, upgrade and close immediately with a reason
 	if !hub.redis.BoardExists(board) {
-		w.WriteHeader(http.StatusNotFound)
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			slog.Error("Board not found", "boardId", board)
+			return
+		}
+		// Send close control frame with code + reason
+		msg := websocket.FormatCloseMessage(websocket.ClosePolicyViolation, "BOARDNOTFOUND")
+		_ = conn.WriteControl(websocket.CloseMessage, msg, time.Now().Add(time.Second))
+		conn.Close()
 		return
 	}
 

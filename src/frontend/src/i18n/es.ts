@@ -76,6 +76,7 @@ export default {
             col05: 'Mejoras'
         },
         pdfFooter: 'Creado con',
-        offline: 'Sin conexión.'
+        offline: 'Sin conexión.',
+        notExists: 'El tablero no existe. Se ha eliminado automáticamente después de expirar.'
     }
 }
