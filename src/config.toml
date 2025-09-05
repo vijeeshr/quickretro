@@ -23,4 +23,4 @@ max_message_size_bytes = 1024
 # Format: <number><unit>
 # Units: s=seconds, m=minutes, h=hours, d=days
 # Examples: "50s" for 50 seconds, "5m" for 5 minutes, "2h" for 2 hours, "7d" for 7 days
-auto_delete_duration = "2h"
+auto_delete_duration = "2d"
