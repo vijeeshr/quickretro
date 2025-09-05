@@ -164,8 +164,8 @@ Any unsaved messages of edits the user is making will be lost when a board lock 
 Only available for Board owner.
 :::
 ::: tip
-If using the [live demo](https://demo.quickretro.app), remember to download as PDF. The data is deleted in 2 hours.
-To retain data for more than 2 hours, it is recommended to self-host.
+If using the [live demo](https://demo.quickretro.app), remember to download as PDF. The data is deleted in **2 days**.
+To retain data for more than 2 days, it is recommended to [self-host](self-hosting).
 :::
 Use the Download button 
 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"

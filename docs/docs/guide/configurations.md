@@ -2,7 +2,7 @@
 The application's default behaviour can be altered with configuration settings. This document provides a quick overview about it.
 
 ## Auto-Delete Duration
-By default, data is deleted within 2 hours in Redis. This can be updated by making the below changes.\
+By default, data is deleted within 2 days in Redis. This can be updated by making the below changes.\
 In the <code>src/config.toml</code> file, update the value for <code>auto_delete_duration</code>
 
 ```toml{5}
@@ -10,7 +10,7 @@ In the <code>src/config.toml</code> file, update the value for <code>auto_delete
 # Format: <number><unit>
 # Units: s=seconds, m=minutes, h=hours, d=days
 # Examples: "50s" for 50 seconds, "5m" for 5 minutes, "2h" for 2 hours, "7d" for 7 days
-auto_delete_duration = "2h"
+auto_delete_duration = "2d"
 ```
 
 ## Websocket Max Message Size

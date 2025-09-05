@@ -1,6 +1,6 @@
 # Self-Hosting
 
-Although the [demo app](https://demo.quickretro.app) has all the features and can be used as-is, it runs on low resources. The data is auto-deleted within 2 hours. It is recommended to self-host the app for better flexibility.
+Although the [demo app](https://demo.quickretro.app) has all the features and can be used as-is, it runs on low resources. The data is auto-deleted within 2 days. It is recommended to self-host the app for better flexibility.
 
 ## Update Allowed-Origins
 As defined in [Configurations](configurations#allowed-origins), update the config setting with your site origin.
