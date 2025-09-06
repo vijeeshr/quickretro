@@ -47,6 +47,11 @@ export interface DeleteMessageEvent {
     grp: string
 }
 
+export interface DeleteAllEvent {
+    by: string
+    grp: string
+}
+
 export interface CategoryChangeEvent {
     msgId: string
     by: string
@@ -116,6 +121,10 @@ export interface DeleteMessageResponse {
     id: string
 }
 
+export interface DeleteAllResponse {
+    typ: 'delall'
+}
+
 export interface CategoryChangeResponse {
     typ: 'catchng'
     id: string
@@ -128,7 +137,7 @@ export interface TimerResponse {
 }
 
 export type SocketResponse = RegisterResponse | MaskResponse | LockResponse | MessageResponse |
-    LikeMessageResponse | DeleteMessageResponse | CategoryChangeResponse | UserClosingResponse | TimerResponse
+    LikeMessageResponse | DeleteMessageResponse | DeleteAllResponse | CategoryChangeResponse | UserClosingResponse | TimerResponse
 
 export function toSocketResponse(json: any): SocketResponse | null {
 
@@ -146,6 +155,8 @@ export function toSocketResponse(json: any): SocketResponse | null {
                 return json as LikeMessageResponse
             case 'del':
                 return json as DeleteMessageResponse
+            case 'delall':
+                return json as DeleteAllResponse
             case 'catchng':
                 return json as CategoryChangeResponse                
             case 'closing':

@@ -68,6 +68,13 @@ export default {
         language: {
             tooltip : 'Changer de langue'
         },
+        delete: {
+            title: 'Confirmer la suppression',
+            text: 'Les données ne peuvent pas être récupérées après leur suppression. Êtes-vous sûr de vouloir continuer?',
+            tooltip: 'Supprimer ce tableau',
+            continueDelete: 'Oui',
+            cancelDelete: 'Non'
+        },
         columns: {
             col01: 'Ce qui a bien fonctionné',
             col02: 'Défis',

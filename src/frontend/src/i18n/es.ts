@@ -68,6 +68,13 @@ export default {
         language: {
             tooltip : 'Cambiar idioma'
         },
+        delete: {
+            title: 'Confirmar eliminación',
+            text: 'Los datos no se pueden recuperar después de ser eliminados. ¿Seguro que desea continuar?',
+            tooltip: 'Eliminar este tablero',
+            continueDelete: 'Sí',
+            cancelDelete: 'No'
+        },
         columns: {
             col01: 'Lo que salió bien',
             col02: 'Desafíos',

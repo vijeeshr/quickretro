@@ -68,6 +68,13 @@ export default {
         language: {
             tooltip : 'Sprache ändern'
         },
+        delete: {
+            title: 'Löschen bestätigen',
+            text: 'Daten können nach dem Löschen nicht wiederhergestellt werden. Sind Sie sicher, dass Sie fortfahren möchten?',
+            tooltip: 'Dieses Board löschen',
+            continueDelete: 'Ja',
+            cancelDelete: 'Nein'
+        },
         columns: {
             col01: 'Was gut lief',
             col02: 'Herausforderungen',

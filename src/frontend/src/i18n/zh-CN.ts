@@ -68,6 +68,13 @@ export default {
         language: {
             tooltip : '更改语言'
         },
+        delete: {
+            title: '确认删除',
+            text: '数据删除后无法恢复。确定要继续吗？',
+            tooltip: '删除此看板',
+            continueDelete: '是',
+            cancelDelete: '否'
+        },
         columns: {
             col01: '做得好的',
             col02: '挑战',

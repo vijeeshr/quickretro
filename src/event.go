@@ -6,7 +6,7 @@ import (
 )
 
 type Event struct {
-	Type    string          `json:"typ"` // Values can be one of "reg", "msg", "del", "like", "mask", "timer", "catchng". "closing" is not initiated from UI.
+	Type    string          `json:"typ"` // Values can be one of "reg", "msg", "del", "delall", "like", "mask", "timer", "catchng". "closing" is not initiated from UI.
 	Payload json.RawMessage `json:"pyl"`
 }
 
@@ -30,6 +30,8 @@ func (e *Event) Handle(h *Hub) {
 		payload.(*LikeMessageEvent).Handle(e, h)
 	case "del":
 		payload.(*DeleteMessageEvent).Handle(e, h)
+	case "delall":
+		payload.(*DeleteAllEvent).Handle(e, h)
 	case "catchng":
 		payload.(*CategoryChangeEvent).Handle(e, h)
 	case "timer":
@@ -57,6 +59,8 @@ func (e *Event) Broadcast(m *Message, h *Hub) {
 		payload.(*LikeMessageEvent).Broadcast(m, h)
 	case "del":
 		payload.(*DeleteMessageEvent).Broadcast(m, h)
+	case "delall":
+		payload.(*DeleteAllEvent).Broadcast(h)
 	case "catchng":
 		payload.(*CategoryChangeEvent).Broadcast(h)
 	case "timer":
@@ -75,6 +79,7 @@ func (e *Event) ParsePayload() interface{} {
 		"msg":     &MessageEvent{},
 		"like":    &LikeMessageEvent{},
 		"del":     &DeleteMessageEvent{},
+		"delall":  &DeleteAllEvent{},
 		"catchng": &CategoryChangeEvent{},
 		"timer":   &TimerEvent{},
 		"closing": &UserClosingEvent{},

@@ -68,6 +68,13 @@ export default {
         language: {
             tooltip : '언어 변경'
         },
+        delete: {
+            title: '삭제 확인',
+            text: '삭제 후에는 데이터를 복구할 수 없습니다. 계속 진행하시겠습니까?',
+            tooltip: '이 보드 삭제',
+            continueDelete: '예',
+            cancelDelete: '아니오'
+        },
         columns: {
             col01: '잘된 점',
             col02: '어려운 점',

@@ -417,6 +417,46 @@ func (i *DeleteMessageEvent) Broadcast(m *Message, h *Hub) {
 	}
 }
 
+type DeleteAllEvent struct {
+	By    string `json:"by"`
+	Group string `json:"grp"`
+}
+
+func (p *DeleteAllEvent) Handle(i *Event, h *Hub) {
+	// Update Redis
+	b, ok := h.redis.GetBoard(p.Group)
+	if !ok {
+		slog.Warn("Cannot find board when handling DeleteAllEvent", "board", p.Group)
+		return
+	}
+	// validate
+	if b.Owner != p.By {
+		slog.Warn("Non-owner cannot execute DeleteAllEvent", "board", p.Group, "user", p.By)
+		return
+	}
+	// Delete
+	if deleted := h.redis.DeleteAll(b.Id); !deleted {
+		slog.Warn("Could not delete all related data for board.", "board", p.Group)
+		return
+	}
+	// Publish to Redis (for broadcasting)
+	// *Message is nil as this is not a message related update.
+	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
+}
+func (i *DeleteAllEvent) Broadcast(h *Hub) {
+	// Transform to Outgoing format
+	response := &DeleteAllResponse{Type: "delall"}
+
+	clients := h.clients[i.Group]
+	for client := range clients {
+		select {
+		case client.send <- response:
+		default:
+			client.hub.unregister <- client
+		}
+	}
+}
+
 type CategoryChangeEvent struct {
 	MessageId   string `json:"msgId"`
 	By          string `json:"by"`

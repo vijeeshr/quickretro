@@ -59,6 +59,10 @@ type DeleteMessageResponse struct {
 	Id   string `json:"id"`
 }
 
+type DeleteAllResponse struct {
+	Type string `json:"typ"`
+}
+
 type CategoryChangeResponse struct {
 	Type        string `json:"typ"`
 	MessageId   string `json:"id"`

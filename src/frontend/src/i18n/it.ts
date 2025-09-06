@@ -68,6 +68,13 @@ export default {
         language: {
             tooltip : 'Cambia lingua'
         },
+        delete: {
+            title: 'Conferma eliminazione',
+            text: 'I dati non possono essere recuperati dopo l’eliminazione. Sei sicuro di voler procedere?',
+            tooltip: 'Elimina questa bacheca',
+            continueDelete: 'Sì',
+            cancelDelete: 'No'
+        },
         columns: {
             col01: 'Cosa ha funzionato',
             col02: 'Sfide',

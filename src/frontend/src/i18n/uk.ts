@@ -68,6 +68,13 @@ export default {
         language: {
             tooltip : 'Змінити мову'
         },
+        delete: {
+            title: 'Підтвердження видалення',
+            text: 'Після видалення дані неможливо відновити. Ви впевнені, що хочете продовжити?',
+            tooltip: 'Видалити цю дошку',
+            continueDelete: 'Так',
+            cancelDelete: 'Ні'
+        },
         columns: {
             col01: 'Що вдалося',
             col02: 'Складності',

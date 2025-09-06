@@ -6,10 +6,10 @@ package main
 (KEY)msg:{messageId}				(VALUE)message					Message - Redis Hash. Useful for fetch/add/update for an individual message.
 (KEY)board:msg:{boardId}			(VALUE)[messageIds] 			Board-wise Messages - Redis Set. Useful for fetching list of messages.
 (KEY)msg:likes:{messageId}			(VALUE)[userIds]				Likes - Redis Set. For recording likes/votes for a message
-(KEY)board:user:{boardId}:{userId}	(VALUE)User						Users - Redis Hash. User master. Keeping as board specific.
+(KEY)board:user:{boardId}:{userId}	(VALUE)User						User - Redis Hash. User master. Keeping as board specific.
 (KEY)board:users:{boardId}			(VALUE)[userIds]				Board-wise Users - Redis Set. Useful for fetching members of a board.
 (KEY)board:col:{boardId}:{colId}	(VALUE)column					Column - Redis Hash. Column definition for a Board.
-(KEY)board:col:{boardId}			(Value)colIds					Board-wise columns - Redis Set. Just a list of colIds for a board.
+(KEY)board:col:{boardId}			(Value)[colIds]					Board-wise columns - Redis Set. Just a list of colIds for a board.
 */
 
 import (
@@ -546,6 +546,72 @@ func (c *RedisConnector) DeleteMessage(msg *Message) bool {
 		slog.Error("Error when deleting message from Redis", "payload", msg)
 		return false
 	}
+	return true
+}
+
+func (c *RedisConnector) DeleteAll(boardId string) bool {
+	/*
+		Board
+		(KEY)board:{boardId}					(VALUE)board					Board - Redis Hash. The board details. Owned by single user.
+
+		Messages and Likes
+		(KEY)board:msg:{boardId}				(VALUE)[messageIds] 			Board-wise Messages - Redis Set. Useful for fetching list of messages.
+		(KEY)msg:{messageId}					(VALUE)message					Message - Redis Hash. Useful for fetch/add/update for an individual message.
+		(KEY)msg:likes:{messageId}				(VALUE)[userIds]				Likes - Redis Set. For recording likes/votes for a message
+
+		Users
+		(KEY)board:users:{boardId}				(VALUE)[userIds]				Board-wise Users - Redis Set. Useful for fetching members of a board.
+		(KEY)board:user:{boardId}:{userId}	    (VALUE)User						User - Redis Hash. User master. Keeping as board specific.
+
+		Columns
+		(KEY)board:col:{boardId}				(Value)[colIds]					Board-wise columns - Redis Set. Just a list of colIds for a board.
+		(KEY)board:col:{boardId}:{colId}		(VALUE)column					Column - Redis Hash. Column definition for a Board.
+	*/
+	boardMsgsKey := fmt.Sprintf("board:msg:%s", boardId)
+	boardUsersKey := fmt.Sprintf("board:users:%s", boardId)
+	boardColsKey := fmt.Sprintf("board:col:%s", boardId)
+	boardKey := fmt.Sprintf("board:%s", boardId)
+
+	// Collect all message Ids, user Ids, and column Ids
+	messageIds, _ := c.client.SMembers(c.ctx, boardMsgsKey).Result()
+	userIds, _ := c.client.SMembers(c.ctx, boardUsersKey).Result()
+	colIds, _ := c.client.SMembers(c.ctx, boardColsKey).Result()
+
+	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+
+		// Delete messages + likes
+		for _, msgId := range messageIds {
+			likesKey := fmt.Sprintf("msg:likes:%s", msgId)
+			msgKey := fmt.Sprintf("msg:%s", msgId)
+			pipe.Del(c.ctx, likesKey, msgKey)
+		}
+		pipe.Del(c.ctx, boardMsgsKey)
+
+		// Delete users
+		for _, userId := range userIds {
+			userKey := fmt.Sprintf("board:user:%s:%s", boardId, userId)
+			pipe.Del(c.ctx, userKey)
+		}
+		pipe.Del(c.ctx, boardUsersKey)
+
+		// Delete columns
+		for _, colId := range colIds {
+			colKey := fmt.Sprintf("board:col:%s:%s", boardId, colId)
+			pipe.Del(c.ctx, colKey)
+		}
+		pipe.Del(c.ctx, boardColsKey)
+
+		// Delete board hash
+		pipe.Del(c.ctx, boardKey)
+
+		return nil
+	})
+
+	if err != nil {
+		slog.Error("Error when deleting all board data from Redis", "boardId", boardId, "details", err.Error())
+		return false
+	}
+
 	return true
 }
 

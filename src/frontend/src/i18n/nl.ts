@@ -68,6 +68,13 @@ export default {
         language: {
             tooltip : 'Taal wijzigen'
         },
+        delete: {
+            title: 'Verwijderen bevestigen',
+            text: 'Gegevens kunnen niet worden hersteld nadat ze zijn verwijderd. Weet je zeker dat je wilt doorgaan?',
+            tooltip: 'Dit bord verwijderen',
+            continueDelete: 'Ja',
+            cancelDelete: 'Nee'
+        },
         columns: {
             col01: 'Wat ging goed',
             col02: 'Uitdagingen',

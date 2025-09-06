@@ -6,7 +6,7 @@ import Category from './Category.vue';
 import NewAnonymousCard from './NewAnonymousCard.vue';
 import NewCard from './NewCard.vue';
 import { useRoute } from 'vue-router';
-import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent, CategoryChangeEvent, CategoryChangeResponse } from '../models/Requests';
+import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent, CategoryChangeEvent, CategoryChangeResponse, DeleteAllEvent } from '../models/Requests';
 import { OnlineUser } from '../models/OnlineUser';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
@@ -66,6 +66,11 @@ const setIsTimerDialogOpen = (value: boolean) => {
 const isTimerCountdownInProgress = ref(false)
 const onCountdownProgressUpdate = (value: boolean) => {
     isTimerCountdownInProgress.value = value
+}
+
+const isDeleteAllDialogOpen = ref(false)
+const setIsDeleteAllDialogOpen = (value: boolean) => {
+    isDeleteAllDialogOpen.value = value
 }
 
 const isLanguageDialogOpen = ref(false)
@@ -213,6 +218,10 @@ const mask = () => {
 
 const lock = () => {
     dispatchEvent<LockEvent>("lock", { by: user, grp: board, lock: !isLocked.value })
+}
+
+const deleteAll = () => {
+    dispatchEvent<DeleteAllEvent>("delall", { by: user, grp: board })
 }
 
 const onTimerStart = (expiryDurationInSeconds: number) => {
@@ -491,6 +500,10 @@ const openLanguageDialog = () => {
     isLanguageDialogOpen.value = true
 }
 
+const openDeleteAllDialog = () => {
+    isDeleteAllDialogOpen.value = true
+}
+
 const timerSettings = () => {
     if (isOwner.value) {
         isTimerDialogOpen.value = true
@@ -557,6 +570,10 @@ const onDeleteMessageResponse = (response: DeleteMessageResponse) => {
             }
         }
     }
+}
+
+const onDeleteAllResponse = () => {
+    window.location.reload()
 }
 
 const onCategoryChangeResponse = (response: CategoryChangeResponse) => {
@@ -641,6 +658,9 @@ const socketOnMessage = (event: MessageEvent<any>) => {
                 break
             case "del":
                 onDeleteMessageResponse(response)
+                break
+            case "delall":
+                onDeleteAllResponse()
                 break
             case "catchng":
                 onCategoryChangeResponse(response)
@@ -796,6 +816,36 @@ onUnmounted(() => {
             </div>
         </Dialog>
 
+        <!-- Dialog for DeleteAll Confirmation -->
+        <Dialog :open="isDeleteAllDialogOpen" @close="setIsDeleteAllDialogOpen" class="relative z-50">
+            <!-- The backdrop, rendered as a fixed sibling to the panel container -->
+            <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
+            <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
+                <DialogPanel
+                    class="max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
+                    <DialogTitle as="h3"
+                        class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200 select-none">{{
+                            t('dashboard.delete.title') }}
+                    </DialogTitle>
+                    <p class="text-gray-900 dark:text-gray-200 select-none">
+                        {{ t('dashboard.delete.text') }}
+                    </p>
+                    <div class="flex justify-center mt-8 space-x-2">
+                        <button type="button"
+                            class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-none focus:ring-0"
+                            @click="setIsDeleteAllDialogOpen(false)">
+                            {{ t('dashboard.delete.cancelDelete') }}
+                        </button>
+                        <button type="button"
+                            class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-red-100 hover:bg-red-400 border-red-300 text-red-600 hover:text-white hover:border-transparent dark:bg-red-800 dark:hover:bg-red-600 dark:border-red-700 dark:text-red-100 select-none focus:outline-none focus:ring-0"
+                            @click="deleteAll(); setIsDeleteAllDialogOpen(false)">
+                            {{ t('dashboard.delete.continueDelete') }}
+                        </button>
+                    </div>
+                </DialogPanel>
+            </div>
+        </Dialog>
+
         <!-- Left Sidebar -->
         <div class="w-16 p-3">
             <!-- Timer -->
@@ -872,6 +922,15 @@ onUnmounted(() => {
                     <circle cx="12" cy="12" r="10" />
                     <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
                     <path d="M2 12h20" />
+                </svg>
+            </div>
+            <!-- Delete All-->
+            <div :title="t('dashboard.delete.tooltip')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" v-if="isOwner"
+                    @click="openDeleteAllDialog">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                 </svg>
             </div>
             <a href="https://github.com/vijeeshr/quickretro" target="_blank">

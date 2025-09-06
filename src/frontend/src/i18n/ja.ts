@@ -68,6 +68,13 @@ export default {
         language: {
             tooltip : '言語を変更'
         },
+        delete: {
+            title: '削除の確認',
+            text: '削除後はデータを復元できません。続行してもよろしいですか？',
+            tooltip: 'このボードを削除',
+            continueDelete: 'はい',
+            cancelDelete: 'いいえ'
+        },
         columns: {
             col01: '良かった点',
             col02: '課題',

@@ -66,7 +66,14 @@ export default {
             tooltip: 'Download as Pdf'
         },
         language: {
-            tooltip : 'Change language'
+            tooltip: 'Change language'
+        },
+        delete: {
+            title: 'Confirm deletion',
+            text: 'Data cannot be recovered after its deleted. Are you sure to proceed?',
+            tooltip: 'Delete this Board',
+            continueDelete: 'Yes',
+            cancelDelete: 'No'
         },
         columns: {
             col01: 'What went well',

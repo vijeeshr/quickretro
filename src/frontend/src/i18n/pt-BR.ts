@@ -68,6 +68,13 @@ export default {
         language: {
             tooltip : 'Mudar idioma'
         },
+        delete: {
+            title: 'Confirmar exclusão',
+            text: 'Os dados não podem ser recuperados após serem excluídos. Tem certeza de que deseja continuar?',
+            tooltip: 'Excluir este quadro',
+            continueDelete: 'Sim',
+            cancelDelete: 'Não'
+        },
         columns: {
             col01: 'O que funcionou bem',
             col02: 'Desafios',

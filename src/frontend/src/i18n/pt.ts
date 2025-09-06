@@ -68,6 +68,13 @@ export default {
         language: {
             tooltip : 'Mudar idioma'
         },
+        delete: {
+            title: 'Confirmar eliminação',
+            text: 'Os dados não podem ser recuperados após serem eliminados. Tem a certeza de que deseja continuar?',
+            tooltip: 'Eliminar este quadro',
+            continueDelete: 'Sim',
+            cancelDelete: 'Não'
+        },
         columns: {
             col01: 'O que deu certo',
             col02: 'Desafios',
