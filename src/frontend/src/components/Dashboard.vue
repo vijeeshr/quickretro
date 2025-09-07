@@ -529,6 +529,11 @@ const onRegisterResponse = (response: RegisterResponse) => {
         cards.value = []
         cards.value.push(...response.messages)
     }
+
+    // Show expiration notification for newly created board. Show only for board creator/owner
+    if (response.isBoardOwner && response.notifyNewBoardExpiry) {
+        toast.warning(`${t('dashboard.autoDeleteScheduleText')} ${boardExpiryLocalTime.value}`, { pauseOnHover: false, duration: 10000 })
+    }
 }
 
 const onUserClosingResponse = (response: UserClosingResponse) => {

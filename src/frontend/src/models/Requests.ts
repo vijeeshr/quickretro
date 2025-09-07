@@ -81,6 +81,7 @@ export interface RegisterResponse {
     messages: MessageResponse[]
     timerExpiresInSeconds: number
     boardExpiryUtcSeconds: number // Unix Timestamp Seconds
+    notifyNewBoardExpiry: boolean
 }
 
 export interface UserClosingResponse {

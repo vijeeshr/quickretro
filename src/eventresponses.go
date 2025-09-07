@@ -19,6 +19,7 @@ type RegisterResponse struct {
 	Messages                  []MessageResponse `json:"messages"`              //Todo: Change to *MessageResponse
 	TimerExpiresInSeconds     uint16            `json:"timerExpiresInSeconds"` // uint16 since we are restricting timer to max 1 hour (3600 seconds)
 	BoardExpiryTimeUtcSeconds int64             `json:"boardExpiryUtcSeconds"` // Unix Timestamp Seconds
+	NotifyNewBoardExpiry      bool              `json:"notifyNewBoardExpiry"`
 }
 
 type UserClosingResponse struct {

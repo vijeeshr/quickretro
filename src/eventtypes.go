@@ -99,6 +99,7 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 		Messages:                  messagesDetails,
 		TimerExpiresInSeconds:     uint16(remainingTimeInSeconds), // This shouldn't error out since we will restrict expiry to max 1 hour (3600 seconds) future time, when saving "board.TimerExpiresAtUtc".
 		BoardExpiryTimeUtcSeconds: board.AutoDeleteAtUtc,
+		NotifyNewBoardExpiry:      time.Now().UTC().Unix()-board.CreatedAtUtc < 10, // Prepare board expiry notification prompt for New board (less than 10 seconds)
 	}
 
 	clients := h.clients[i.Group]
