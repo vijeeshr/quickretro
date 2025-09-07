@@ -88,16 +88,17 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 
 	// Prepare response
 	response := RegisterResponse{
-		Type:                  "reg",
-		BoardName:             board.Name,
-		BoardTeam:             board.Team,
-		BoardColumns:          cols,
-		BoardStatus:           board.Status.String(),
-		BoardMasking:          board.Mask,
-		BoardLock:             board.Lock,
-		Users:                 userDetails,
-		Messages:              messagesDetails,
-		TimerExpiresInSeconds: uint16(remainingTimeInSeconds), // This shouldn't error out since we will restrict expiry to max 1 hour (3600 seconds) future time, when saving "board.TimerExpiresAtUtc".
+		Type:                      "reg",
+		BoardName:                 board.Name,
+		BoardTeam:                 board.Team,
+		BoardColumns:              cols,
+		BoardStatus:               board.Status.String(),
+		BoardMasking:              board.Mask,
+		BoardLock:                 board.Lock,
+		Users:                     userDetails,
+		Messages:                  messagesDetails,
+		TimerExpiresInSeconds:     uint16(remainingTimeInSeconds), // This shouldn't error out since we will restrict expiry to max 1 hour (3600 seconds) future time, when saving "board.TimerExpiresAtUtc".
+		BoardExpiryTimeUtcSeconds: board.AutoDeleteAtUtc,
 	}
 
 	clients := h.clients[i.Group]

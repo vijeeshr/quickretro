@@ -7,6 +7,14 @@ export const logMessage = (...args: any[]): void => {
     }
 }
 
+// Show Unix timestamp as local date
+export const formatDate = (timestamp: number): string => {
+    if (!timestamp) return ""
+
+    const date = new Date(timestamp * 1000)
+    return date.toLocaleString()
+}
+
 // export const getByteLength = (text: string) => new Blob([text]).size
 export const getByteLength = (text: string): number => new TextEncoder().encode(text).length
 

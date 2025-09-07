@@ -84,6 +84,7 @@ export default {
         },
         pdfFooter: 'Created with',
         offline: 'You seem to be offline.',
-        notExists: 'Board was either auto-deleted, or manually deleted by its creator.'
+        notExists: 'Board was either auto-deleted, or manually deleted by its creator.',
+        autoDeleteScheduleText: 'This board is schedule to be automatically deleted at'
     }
 }

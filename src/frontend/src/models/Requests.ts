@@ -80,6 +80,7 @@ export interface RegisterResponse {
     users: OnlineUser[]
     messages: MessageResponse[]
     timerExpiresInSeconds: number
+    boardExpiryUtcSeconds: number // Unix Timestamp Seconds
 }
 
 export interface UserClosingResponse {

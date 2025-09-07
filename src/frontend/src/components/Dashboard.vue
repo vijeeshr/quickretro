@@ -15,7 +15,7 @@ import { LikeMessage } from '../models/LikeMessage';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import CountdownTimer from './CountdownTimer.vue';
 import TimerPanel from './TimerPanel.vue';
-import { logMessage } from '../utils';
+import { formatDate, logMessage } from '../utils';
 import { useToast } from 'vue-toast-notification';
 // import 'vue-toast-notification/dist/theme-sugar.css';
 // import 'vue-toast-notification/dist/theme-bootstrap.css';
@@ -47,6 +47,7 @@ const boardName = ref('')
 const shareLink = `${window.location.href}`
 const isSpotlightOn = ref(false)
 const spotlightFor = ref('')
+const boardExpiryLocalTime = ref('')
 let socket: WebSocket
 
 const cards = ref<MessageResponse[]>([]) // Todo: Rework models
@@ -515,6 +516,7 @@ const onRegisterResponse = (response: RegisterResponse) => {
     isMasked.value = response.boardMasking
     isLocked.value = response.boardLock
     timerExpiresInSeconds.value = response.timerExpiresInSeconds
+    boardExpiryLocalTime.value = formatDate(response.boardExpiryUtcSeconds)
     onlineUsers.value = []
     onlineUsers.value.push(...response.users) // Todo: find a better way
     columns.value = []
@@ -830,7 +832,7 @@ onUnmounted(() => {
                     <p class="text-gray-900 dark:text-gray-200 select-none">
                         {{ t('dashboard.delete.text') }}
                     </p>
-                    <div class="flex justify-center mt-8 space-x-2">
+                    <div class="flex justify-center mt-4 space-x-2">
                         <button type="button"
                             class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-none focus:ring-0"
                             @click="setIsDeleteAllDialogOpen(false)">
@@ -842,6 +844,10 @@ onUnmounted(() => {
                             {{ t('dashboard.delete.continueDelete') }}
                         </button>
                     </div>
+                    <p v-if="boardExpiryLocalTime !== ''"
+                        class="flex justify-items-normal mt-4 text-xs text-slate-400 select-none max-w-xs">
+                        {{ t('dashboard.autoDeleteScheduleText') }} {{ boardExpiryLocalTime }}
+                    </p>
                 </DialogPanel>
             </div>
         </Dialog>

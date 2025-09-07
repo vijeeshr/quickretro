@@ -84,6 +84,7 @@ export default {
         },
         pdfFooter: 'Creado con',
         offline: 'Sin conexión.',
-        notExists: 'El tablero fue eliminado automáticamente o lo eliminó manualmente su creador.'
+        notExists: 'El tablero fue eliminado automáticamente o lo eliminó manualmente su creador.',
+        autoDeleteScheduleText: 'Este tablero está programado para eliminarse automáticamente a las'
     }
 }

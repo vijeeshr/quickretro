@@ -84,6 +84,7 @@ export default {
         },
         pdfFooter: 'Creato con',
         offline: 'Disconnesso.',
-        notExists: 'La bacheca è stata eliminata automaticamente o manualmente dal suo creatore.'
+        notExists: 'La bacheca è stata eliminata automaticamente o manualmente dal suo creatore.',
+        autoDeleteScheduleText: 'La bacheca è programmata per essere eliminata automaticamente alle'
     }
 }

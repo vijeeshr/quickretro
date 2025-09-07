@@ -84,6 +84,7 @@ export default {
         },
         pdfFooter: 'Erstellt mit',
         offline: 'Offline.',
-        notExists: 'Das Board wurde entweder automatisch gelöscht oder manuell von seinem Ersteller entfernt.'
+        notExists: 'Das Board wurde entweder automatisch gelöscht oder manuell von seinem Ersteller entfernt.',
+        autoDeleteScheduleText: 'Dieses Board ist zur automatischen Löschung um eingeplant am'
     }
 }

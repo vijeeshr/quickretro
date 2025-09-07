@@ -84,6 +84,7 @@ export default {
         },
         pdfFooter: 'Créé avec',
         offline: 'Hors ligne.',
-        notExists: 'Le tableau a été soit supprimé automatiquement, soit manuellement par son créateur.'
+        notExists: 'Le tableau a été soit supprimé automatiquement, soit manuellement par son créateur.',
+        autoDeleteScheduleText: 'Ce tableau est prévu pour être automatiquement supprimé à'
     }
 }

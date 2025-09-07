@@ -84,6 +84,7 @@ export default {
         },
         pdfFooter: 'Criado com',
         offline: 'Offline.',
-        notExists: 'O quadro foi eliminado automaticamente ou então manualmente pelo seu criador.'
+        notExists: 'O quadro foi eliminado automaticamente ou então manualmente pelo seu criador.',
+        autoDeleteScheduleText: 'Este quadro está agendado para ser eliminado automaticamente às'
     }
 }

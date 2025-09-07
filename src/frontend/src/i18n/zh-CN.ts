@@ -84,6 +84,7 @@ export default {
         },
         pdfFooter: '创建于',
         offline: '离线状态',
-        notExists: '看板已被自动删除，或由创建者手动删除。'
+        notExists: '看板已被自动删除，或由创建者手动删除。',
+        autoDeleteScheduleText: '此看板计划在以下时间自动删除：'
     }
 }
