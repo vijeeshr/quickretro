@@ -84,6 +84,6 @@ export default {
         },
         pdfFooter: 'Créé avec',
         offline: 'Hors ligne.',
-        notExists: 'Le tableau n’existe pas. Il a été supprimé automatiquement après expiration.'
+        notExists: 'Le tableau a été soit supprimé automatiquement, soit manuellement par son créateur.'
     }
 }

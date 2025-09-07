@@ -84,6 +84,6 @@ export default {
         },
         pdfFooter: 'Creato con',
         offline: 'Disconnesso.',
-        notExists: 'La bacheca non esiste. È stata eliminata automaticamente dopo la scadenza.'
+        notExists: 'La bacheca è stata eliminata automaticamente o manualmente dal suo creatore.'
     }
 }

@@ -84,6 +84,6 @@ export default {
         },
         pdfFooter: '생성 도구',
         offline: '오프라인 상태',
-        notExists: '보드가 존재하지 않습니다. 만료 후 자동으로 삭제되었습니다.'
+        notExists: '보드는 자동으로 삭제되었거나 생성자가 수동으로 삭제했습니다.'
     }
 }

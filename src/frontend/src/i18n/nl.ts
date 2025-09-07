@@ -84,6 +84,6 @@ export default {
         },
         pdfFooter: 'Gemaakt met',
         offline: 'Offline.',
-        notExists: 'Het bord bestaat niet. Het is automatisch verwijderd nadat het was verlopen.'
+        notExists: 'Het bord is automatisch verwijderd of handmatig door de maker verwijderd.'
     }
 }

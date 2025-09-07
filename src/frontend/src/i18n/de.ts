@@ -84,6 +84,6 @@ export default {
         },
         pdfFooter: 'Erstellt mit',
         offline: 'Offline.',
-        notExists: 'Das Board existiert nicht. Es wurde nach Ablauf automatisch gelöscht.'
+        notExists: 'Das Board wurde entweder automatisch gelöscht oder manuell von seinem Ersteller entfernt.'
     }
 }

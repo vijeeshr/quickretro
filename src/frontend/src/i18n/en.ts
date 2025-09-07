@@ -84,6 +84,6 @@ export default {
         },
         pdfFooter: 'Created with',
         offline: 'You seem to be offline.',
-        notExists: 'Board does not exist. It has been auto-deleted after expiry.'
+        notExists: 'Board was either auto-deleted, or manually deleted by its creator.'
     }
 }

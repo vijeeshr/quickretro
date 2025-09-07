@@ -84,6 +84,6 @@ export default {
         },
         pdfFooter: 'Creado con',
         offline: 'Sin conexión.',
-        notExists: 'El tablero no existe. Se ha eliminado automáticamente después de expirar.'
+        notExists: 'El tablero fue eliminado automáticamente o lo eliminó manualmente su creador.'
     }
 }

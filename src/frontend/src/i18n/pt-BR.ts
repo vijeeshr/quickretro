@@ -84,6 +84,6 @@ export default {
         },
         pdfFooter: 'Criado com',
         offline: 'Você parece estar offline.',
-        notExists: 'O quadro não existe. Ele foi excluído automaticamente após expirar.'
+        notExists: 'O quadro foi excluído automaticamente ou manualmente por seu criador.'
     }
 }

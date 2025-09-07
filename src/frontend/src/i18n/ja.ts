@@ -84,6 +84,6 @@ export default {
         },
         pdfFooter: '作成者',
         offline: 'オフライン',
-        notExists: 'ボードは存在しません。有効期限後、自動的に削除されました。'
+        notExists: 'ボードは自動的に削除されたか、作成者によって手動で削除されました。'
     }
 }
