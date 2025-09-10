@@ -85,6 +85,7 @@ export default {
         pdfFooter: 'Criado com',
         offline: 'Você parece estar offline.',
         notExists: 'O quadro foi excluído automaticamente ou manualmente por seu criador.',
-        autoDeleteScheduleText: 'Este quadro está programado para ser excluído automaticamente às'
+        autoDeleteScheduleBase: 'Este quadro será automaticamente limpo em {date}',
+        autoDeleteScheduleAddon: ', então você não precisa se preocupar em excluí-lo manualmente.'
     }
 }

@@ -85,6 +85,7 @@ export default {
         pdfFooter: 'Créé avec',
         offline: 'Hors ligne.',
         notExists: 'Le tableau a été supprimé soit automatiquement, soit manuellement par son créateur.',
-        autoDeleteScheduleText: 'Ce tableau est prévu pour être supprimé automatiquement à'
+        autoDeleteScheduleBase: 'Ce tableau sera automatiquement nettoyé le {date}',
+        autoDeleteScheduleAddon: ', donc vous n’avez pas à vous en faire pour le supprimer manuellement.'
     }
 }

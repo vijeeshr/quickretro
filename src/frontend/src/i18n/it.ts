@@ -85,6 +85,7 @@ export default {
         pdfFooter: 'Creato con',
         offline: 'Disconnesso.',
         notExists: 'La bacheca è stata eliminata automaticamente o manualmente dal suo creatore.',
-        autoDeleteScheduleText: 'La bacheca è programmata per essere eliminata automaticamente alle'
+        autoDeleteScheduleBase: 'Questa board verrà pulita automaticamente il {date}',
+        autoDeleteScheduleAddon: ', quindi non devi preoccuparti di eliminarla manualmente.'
     }
 }

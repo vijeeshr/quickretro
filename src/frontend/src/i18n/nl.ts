@@ -85,6 +85,7 @@ export default {
         pdfFooter: 'Gemaakt met',
         offline: 'Offline.',
         notExists: 'Het bord is automatisch verwijderd of handmatig door de maker verwijderd.',
-        autoDeleteScheduleText: 'Dit bord staat gepland om automatisch verwijderd te worden om'
+        autoDeleteScheduleBase: 'Dit bord wordt automatisch opgeschoond op {date}',
+        autoDeleteScheduleAddon: ', dus je hoeft je geen zorgen te maken om het handmatig te verwijderen.'
     }
 }

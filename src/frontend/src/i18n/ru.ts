@@ -85,6 +85,7 @@ export default {
         pdfFooter: 'Создано с',
         offline: 'Офлайн',
         notExists: 'Доска была удалена автоматически или вручную её создателем.',
-        autoDeleteScheduleText: 'Эта доска запланирована для автоматического удаления в'
+        autoDeleteScheduleBase: 'Эта доска будет автоматически очищена {date}',
+        autoDeleteScheduleAddon: ', поэтому вам не нужно беспокоиться о её ручном удалении.'
     }
 }

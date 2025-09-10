@@ -85,6 +85,7 @@ export default {
         pdfFooter: 'Створено за допомогою',
         offline: 'Відсутнє інтернет-зʼєднання.',
         notExists: 'Дошку було видалено автоматично або вручну її творцем.',
-        autoDeleteScheduleText: 'Цю дошку заплановано автоматично видалити о'
+        autoDeleteScheduleBase: 'Цю дошку буде автоматично очищено {date}',
+        autoDeleteScheduleAddon: ', тож вам не потрібно турбуватися про її ручне видалення.'
     }
 }

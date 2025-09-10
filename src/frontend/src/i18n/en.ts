@@ -85,6 +85,7 @@ export default {
         pdfFooter: 'Created with',
         offline: 'You seem to be offline.',
         notExists: 'Board was either auto-deleted, or manually deleted by its creator.',
-        autoDeleteScheduleText: 'This board is schedule to be automatically deleted at'
+        autoDeleteScheduleBase: 'This board will be cleaned up automatically on {date}',
+        autoDeleteScheduleAddon: ', so you do not need to worry about deleting it manually.'
     }
 }

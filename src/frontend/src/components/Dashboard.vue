@@ -532,7 +532,8 @@ const onRegisterResponse = (response: RegisterResponse) => {
 
     // Show expiration notification for newly created board. Show only for board creator/owner
     if (response.isBoardOwner && response.notifyNewBoardExpiry) {
-        toast.warning(`${t('dashboard.autoDeleteScheduleText')} ${boardExpiryLocalTime.value}`, { pauseOnHover: false, duration: 10000 })
+        const initialExpiryMsg = `${t('dashboard.autoDeleteScheduleBase', { date: boardExpiryLocalTime.value })}${t('dashboard.autoDeleteScheduleAddon')}`
+        toast.warning(initialExpiryMsg, { pauseOnHover: false, duration: 10000 })
     }
 }
 
@@ -851,7 +852,7 @@ onUnmounted(() => {
                     </div>
                     <p v-if="boardExpiryLocalTime !== ''"
                         class="flex justify-items-normal mt-4 text-xs text-slate-400 select-none max-w-xs">
-                        {{ t('dashboard.autoDeleteScheduleText') }} {{ boardExpiryLocalTime }}
+                        {{ t('dashboard.autoDeleteScheduleBase', { date: boardExpiryLocalTime }) }}.
                     </p>
                 </DialogPanel>
             </div>

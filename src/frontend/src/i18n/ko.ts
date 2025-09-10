@@ -85,6 +85,7 @@ export default {
         pdfFooter: '생성 도구',
         offline: '오프라인 상태',
         notExists: '보드는 자동으로 삭제되었거나 생성자가 수동으로 삭제했습니다.',
-        autoDeleteScheduleText: '이 보드는 다음 시간에 자동으로 삭제되도록 예약되었습니다:'
+        autoDeleteScheduleBase: '{date}에 이 보드는 자동으로 정리됩니다',
+        autoDeleteScheduleAddon: ', 따라서 직접 삭제할 필요가 없습니다.'
     }
 }

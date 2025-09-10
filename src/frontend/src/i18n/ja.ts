@@ -85,6 +85,7 @@ export default {
         pdfFooter: '作成者',
         offline: 'オフライン',
         notExists: 'ボードは自動的に削除されたか、作成者によって手動で削除されました。',
-        autoDeleteScheduleText: 'このボードは次の時間に自動的に削除される予定です:'
+        autoDeleteScheduleBase: 'このボードは {date} に自動的にクリーンアップされます',
+        autoDeleteScheduleAddon: 'ので、手動で削除する必要はありません。'
     }
 }
