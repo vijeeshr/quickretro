@@ -196,6 +196,10 @@ const onInvalidContent = (errorMessage: string) => {
     toast.error(errorMessage)
 }
 
+const onDiscard = () => {
+    clearNewCards()
+}
+
 const onUpdated = (card: DraftMessage) => {
     logMessage('Updated content received:', card)
     dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat, anon: false })
@@ -980,9 +984,10 @@ onUnmounted(() => {
                     :anonymous-button-highlight="newAnonymousCardCategory == column.id"
                     @add-card="add(column.id, false)" @add-anonymous-card="add(column.id, true)">
                     <NewCard v-if="newCardCategory == column.id" :category="column.id" :by="user" :nickname="nickname"
-                        :board="board" @added="onAdded" @invalidContent="onInvalidContent" />
+                        :board="board" @added="onAdded" @invalidContent="onInvalidContent" @discard="onDiscard" />
                     <NewAnonymousCard v-if="newAnonymousCardCategory == column.id" :category="column.id" :by="user"
-                        nickname="" :board="board" @added="onAdded" @invalidContent="onInvalidContent" />
+                        nickname="" :board="board" @added="onAdded" @invalidContent="onInvalidContent"
+                        @discard="onDiscard" />
                     <Card v-for="card in filterCards(column.id)" :card="card" :current-user="user"
                         :current-user-nickname="nickname" :board="board" :mask="isMasked"
                         :updateable="card.mine || isOwner" :key="card.id" :categories="columns" :locked="isLocked"

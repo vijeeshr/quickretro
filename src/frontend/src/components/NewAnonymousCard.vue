@@ -3,7 +3,7 @@ import { DraftMessage } from '../models/DraftMessage';
 import NewCard from './NewCard.vue';
 
 const props = defineProps<{ category: string; by: string; nickname: string; board: string }>()
-const emit = defineEmits(['added', 'invalidContent'])
+const emit = defineEmits(['added', 'invalidContent', 'discard'])
 
 const handleAdded = (payload: DraftMessage) => {
     // Create a shallow copy to avoid mutating the original payload
@@ -16,5 +16,6 @@ const handleAdded = (payload: DraftMessage) => {
 </script>
 
 <template>
-    <NewCard v-bind="props" @added="handleAdded" @invalidContent="emit('invalidContent', $event)" />
+    <NewCard v-bind="props" @added="handleAdded" @invalidContent="emit('invalidContent', $event)"
+        @discard="emit('discard')" />
 </template>

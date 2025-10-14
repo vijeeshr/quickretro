@@ -6,19 +6,30 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n()
 const props = defineProps<{ category: string, by: string, nickname: string, board: string }>()
-const emit = defineEmits(['added', 'invalidContent'])
+const emit = defineEmits(['added', 'invalidContent', 'discard'])
 
 const editing = ref(true)
 
 const add = (event: Event) => {
   if (editing.value) {
     editing.value = false
+    const msg = (event.target as HTMLElement).innerText.trim()
+    
+    if (
+      msg.length === 0 ||
+      /^[\u0000\u200B\u200C\u200D\uFEFF]*$/.test(msg) // Check if contains only zero-width chars or null bytes
+    ) {
+      emit('discard')
+      return
+    }
+
     const payload: DraftMessage = {
       id: crypto.randomUUID(),
-      msg: (event.target as HTMLElement).innerText.trim(),
+      msg: msg,
       cat: props.category,
       anon: false
     }
+
     emit('added', payload)
   }
 }
