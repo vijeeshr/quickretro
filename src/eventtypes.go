@@ -293,11 +293,8 @@ func (p *MessageEvent) Handle(i *Event, h *Hub) {
 	if exists {
 		// Only Content can be updated. The remaining fields must not be modified.
 		// Validation: User can only update own message.
-		// Validation: Board owner can update any message.
-		isBoardOwner := h.redis.IsBoardOwner(p.Group, p.By) // Todo: No need to run this evey time. Check.
-		if msg.Id == p.Id && msg.Group == p.Group && (msg.By == p.By || isBoardOwner) {
+		if msg.Id == p.Id && msg.Group == p.Group && msg.By == p.By {
 			msg.Content = p.Content
-			// msg.Category = p.Category
 			saved = h.redis.Save(msg)
 		} else {
 			slog.Warn("Cannot update someone else's message in MessageEvent handle", "msgId", p.Id, "user", p.By)
@@ -321,7 +318,7 @@ func (i *MessageEvent) Broadcast(m *Message, h *Hub) {
 
 	clients := h.clients[m.Group]
 	for client := range clients {
-		response.Mine = client.id == m.By                  //client.id == i.By. Since board owner can also update message. "mine" should reflect owner of the message.
+		response.Mine = client.id == m.By
 		response.Liked = h.redis.HasLiked(m.Id, client.id) // Todo: This calls Redis SISMEMBER [O(1) as per doc] in a loop. Check for impact.
 		select {
 		case client.send <- response:

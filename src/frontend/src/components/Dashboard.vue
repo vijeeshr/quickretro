@@ -990,7 +990,7 @@ onUnmounted(() => {
                         @discard="onDiscard" />
                     <Card v-for="card in filterCards(column.id)" :card="card" :current-user="user"
                         :current-user-nickname="nickname" :board="board" :mask="isMasked"
-                        :updateable="card.mine || isOwner" :key="card.id" :categories="columns" :locked="isLocked"
+                        :manageable="card.mine || isOwner" :key="card.id" :categories="columns" :locked="isLocked"
                         @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" @category-changed="onCategoryChanged"
                         @invalidContent="onInvalidContent" @avatar-clicked="showSpotlightFor"
                         @discard="notifyForLostMessages" :class="{

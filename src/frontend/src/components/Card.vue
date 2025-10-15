@@ -12,12 +12,11 @@ import { useI18n } from 'vue-i18n';
 
 // "currentUser", "currentUserNickname", "board", "card.cat" only used to calculate message size in bytes. "category" already passed with "card.cat".
 // Message size calc and trimming only done when editing.
-// Apart from message owner, only board creator/owner can update someone else's message.
 // Only a message's content and category are actually updated in the backend
 interface Props {
     card: MessageResponse // Todo: Change name of model. Or use a different model.
     mask: boolean
-    updateable: boolean
+    manageable: boolean
     locked: boolean
     currentUser: string // Only used for message size calc
     currentUserNickname: string // Only used for message size calc
@@ -53,7 +52,7 @@ const edit = async (event: Event) => {
         await nextTick();
         (event.target as HTMLElement).focus();
     }
-    if (!editing.value && props.updateable && !props.mask) {
+    if (!editing.value && props.card.mine && !props.mask) {
         editing.value = true;
         await nextTick();
         (event.target as HTMLElement).focus();
@@ -74,7 +73,7 @@ const save = (event: Event) => {
         logMessage("Locked! Cannot save.")
         return
     }
-    if (editing.value && props.updateable) {
+    if (editing.value && props.card.mine) {
         editing.value = false
         if (props.card.msg !== (event.target as HTMLElement).innerText.trim()) {
             const payload: DraftMessage = {
@@ -120,7 +119,7 @@ const remove = () => {
         logMessage("Locked! Cannot delete.")
         return
     }
-    if (props.updateable) {
+    if (props.manageable) {
         emit('deleted', props.card.id)
     }
 }
@@ -130,7 +129,7 @@ const changeCategory = (newCategory: string, oldCategory: string) => {
         logMessage("Locked! Cannot change category.")
         return
     }
-    if (props.updateable && newCategory !== oldCategory) {
+    if (props.manageable && newCategory !== oldCategory) {
         const payload: CategoryChangeMessage = {
             msgId: props.card.id,
             newCategoryId: newCategory,
@@ -141,7 +140,7 @@ const changeCategory = (newCategory: string, oldCategory: string) => {
 }
 
 const validate = (event: Event) => {
-    if (!editing.value && !props.updateable) return
+    if (!editing.value && !props.card.mine) return
     if (!canAssertMessageContentValidation()) return
     const validationResult: MessageContentValidationResult = assertMessageContentValidation(event, props.currentUser, props.currentUserNickname, props.board, props.card.cat)
     if (validationResult.isValid) return
@@ -155,12 +154,12 @@ const validate = (event: Event) => {
 
 <template>
     <div class="bg-white dark:bg-gray-700 rounded-lg p-3 mb-2 shadow-xl"
-        :class="{ 'border': editing && updateable, 'border-sky-400 dark:border-white': editing && updateable }">
+        :class="{ 'border': editing && card.mine, 'border-sky-400 dark:border-white': editing && card.mine }">
 
         <div class="text-gray-500 pb-2 dark:text-white" :class="{ 'blur-sm': mask && !card.mine }">
             <article class="min-h-4 text-center break-words focus:outline-none"
-                :class="[editing ? 'cursor-auto' : updateable && !locked ? 'cursor-pointer' : 'cursor-default']"
-                :contenteditable="editing && updateable && !(locked && editing)" @click="edit" @blur="save"
+                :class="[editing ? 'cursor-auto' : card.mine && !locked ? 'cursor-pointer' : 'cursor-default']"
+                :contenteditable="editing && card.mine && !(locked && editing)" @click="edit" @blur="save"
                 @keydown.enter="saveOnEnter" @input="validate">{{
                     content }}</article>
         </div>
@@ -194,17 +193,17 @@ const validate = (event: Event) => {
             <!-- Delete button -->
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                 stroke="currentColor" class="w-6 h-6 cursor-pointer dark:text-gray-200 mr-1"
-                :class="{ 'invisible': !updateable }" @click="remove">
+                :class="{ 'invisible': !manageable }" @click="remove">
                 <path stroke-linecap="round" stroke-linejoin="round"
                     d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
             </svg>
             <!-- Change category button -->
-            <div class="relative" :class="{ 'invisible': !updateable || otherCategories.length == 0 }">
+            <div class="relative" :class="{ 'invisible': !manageable || otherCategories.length == 0 }">
                 <Menu as="div" class="relative z-50 text-left flex justify-center items-center">
                     <MenuButton>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                             stroke="currentColor" class="w-6 h-6 cursor-pointer dark:text-gray-200"
-                            :class="{ 'invisible': !updateable }">
+                            :class="{ 'invisible': !manageable }">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
                         </svg>
