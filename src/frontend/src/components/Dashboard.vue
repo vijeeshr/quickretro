@@ -51,6 +51,8 @@ const boardExpiryLocalTime = ref('')
 let socket: WebSocket
 
 const cards = ref<MessageResponse[]>([]) // Todo: Rework models
+const commentsMap = ref(new Map<string, MessageResponse[]>()) // map of messageId -> [comments]
+
 const columns = ref<BoardColumn[]>([])
 const onlineUsers = ref<OnlineUser[]>([])
 
@@ -91,6 +93,14 @@ const onCountdownCompleted = () => {
 
 const filterCards = (category: string) => {
     return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase())
+}
+
+const filterComments = (messageId: string): MessageResponse[] => {
+    return commentsMap.value.get(messageId) || []
+}
+
+const getCommentIds = (messageId: string): string[] => {
+    return commentsMap.value.get(messageId)?.map(c => c.id) ?? []
 }
 
 const add = (category: string, anonymous: boolean) => {
@@ -189,10 +199,20 @@ const onAdded = (card: DraftMessage) => {
     logMessage('newcontent received:', card)
     clearNewCards()
     const nicknameToSend = card.anon === true ? '' : nickname
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nicknameToSend, grp: board, msg: card.msg, cat: card.cat, anon: card.anon })
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nicknameToSend, grp: board, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
+}
+
+const onCommentAdded = (comment: DraftMessage) => {
+    logMessage('newcontent received:', comment)
+    // Todo: clear the comment field..maybe in the Card component?
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, nickname: nickname, grp: board, msg: comment.msg, cat: comment.cat, anon: comment.anon, pid: comment.pid })
 }
 
 const onInvalidContent = (errorMessage: string) => {
+    toast.error(errorMessage)
+}
+
+const onCommentInvalidContent = (errorMessage: string) => {
     toast.error(errorMessage)
 }
 
@@ -200,13 +220,27 @@ const onDiscard = () => {
     clearNewCards()
 }
 
+const onCommentDiscard = () => {
+
+}
+
 const onUpdated = (card: DraftMessage) => {
     logMessage('Updated content received:', card)
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat, anon: false })
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat, anon: false, pid: card.pid })
+}
+
+const onCommentUpdated = (comment: DraftMessage) => {
+    logMessage('Updated content received:', comment)
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, nickname: nickname, grp: board, msg: comment.msg, cat: comment.cat, anon: false, pid: comment.pid })
 }
 
 const onDeleted = (cardId: string) => {
-    dispatchEvent<DeleteMessageEvent>("del", { msgId: cardId, by: user, grp: board })
+    const commentIds = getCommentIds(cardId)
+    dispatchEvent<DeleteMessageEvent>("del", { msgId: cardId, by: user, grp: board, commentIds: commentIds })
+}
+
+const onCommentDeleted = (commendId: string) => {
+    dispatchEvent<DeleteMessageEvent>("del", { msgId: commendId, by: user, grp: board, commentIds: [] })
 }
 
 const onLiked = (likeMessage: LikeMessage) => {
@@ -214,6 +248,7 @@ const onLiked = (likeMessage: LikeMessage) => {
 }
 
 const onCategoryChanged = (pyl: CategoryChangeMessage) => {
+    // TODO: Pass associated commentIds in an array
     dispatchEvent<CategoryChangeEvent>("catchng", { msgId: pyl.msgId, by: user, grp: board, newcat: pyl.newCategoryId, oldcat: pyl.oldCategoryId })
 }
 
@@ -516,6 +551,7 @@ const timerSettings = () => {
 }
 
 const onRegisterResponse = (response: RegisterResponse) => {
+    // TODO - CHECK response.mine..except response.users there is no need to reassign data for another user's RegisterResponse. 
     isOwner.value = response.isBoardOwner
     isMasked.value = response.boardMasking
     isLocked.value = response.boardLock
@@ -532,6 +568,14 @@ const onRegisterResponse = (response: RegisterResponse) => {
     if (response.mine) {
         cards.value = []
         cards.value.push(...response.messages)
+
+        // Build Map: messageId → comments[]
+        const map = new Map<string, MessageResponse[]>() // Initialize everytime..TODO: remember to remove/update this when a message of comment is deleted.
+        response.comments.forEach(comment => {
+            if (!map.has(comment.pid)) map.set(comment.pid, [])
+            map.get(comment.pid)!.push(comment)
+        })
+        commentsMap.value = map
     }
 
     // Show expiration notification for newly created board. Show only for board creator/owner
@@ -747,7 +791,7 @@ onUnmounted(() => {
             <div v-else
                 class="min-w-32 inline-flex items-center justify-center overflow-hidden rounded-md px-3 py-1 bg-gray-300">
                 <span class="font-medium text-xs cursor-default text-gray-600 select-none">{{ t('common.anonymous')
-                }}</span>
+                    }}</span>
             </div>
             <button class="rounded-md hover:bg-gray-200 hover:text-gray-700 mr-3" @click="nextSpotlight">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -988,12 +1032,14 @@ onUnmounted(() => {
                     <NewAnonymousCard v-if="newAnonymousCardCategory == column.id" :category="column.id" :by="user"
                         nickname="" :board="board" @added="onAdded" @invalidContent="onInvalidContent"
                         @discard="onDiscard" />
-                    <Card v-for="card in filterCards(column.id)" :card="card" :current-user="user"
-                        :current-user-nickname="nickname" :board="board" :mask="isMasked"
-                        :manageable="card.mine || isOwner" :key="card.id" :categories="columns" :locked="isLocked"
+                    <Card v-for="card in filterCards(column.id)" :card="card" :comments="filterComments(card.id)"
+                        :current-user="user" :current-user-nickname="nickname" :board="board" :mask="isMasked"
+                        :can-manage="isOwner" :key="card.id" :categories="columns" :locked="isLocked"
                         @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" @category-changed="onCategoryChanged"
                         @invalidContent="onInvalidContent" @avatar-clicked="showSpotlightFor"
-                        @discard="notifyForLostMessages" :class="{
+                        @discard="notifyForLostMessages" @comment-added="onCommentAdded"
+                        @comment-updated="onCommentUpdated" @comment-deleted="onCommentDeleted" @comment-discard=""
+                        @comment-invalid-content="onCommentInvalidContent" :class="{
                             'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none': isSpotlightOn && usersWithCards.length > 0 && card.nickname !== spotlightFor,
                             'bg-black dark:bg-black border border-gray-200 z-[51]': isSpotlightOn && usersWithCards.length > 0 && card.nickname === spotlightFor,
                         }" />

@@ -33,6 +33,7 @@ export interface SaveMessageEvent {
     msg: string
     cat: string
     anon: boolean
+    pid: string
 }
 
 export interface LikeMessageEvent {
@@ -45,6 +46,7 @@ export interface DeleteMessageEvent {
     msgId: string
     by: string
     grp: string
+    commentIds: string[]
 }
 
 export interface DeleteAllEvent {
@@ -79,6 +81,7 @@ export interface RegisterResponse {
     mine: boolean
     users: OnlineUser[]
     messages: MessageResponse[]
+    comments: MessageResponse[]
     timerExpiresInSeconds: number
     boardExpiryUtcSeconds: number // Unix Timestamp Seconds
     notifyNewBoardExpiry: boolean
@@ -109,6 +112,7 @@ export interface MessageResponse {
     liked: boolean
     mine: boolean
     anon: boolean
+    pid: string
 }
 
 export interface LikeMessageResponse {

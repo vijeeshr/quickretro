@@ -5,11 +5,22 @@ package main
 (KEY)board:{boardId}				(VALUE)board					Board - Redis Hash. The board details. Owned by single user.
 (KEY)msg:{messageId}				(VALUE)message					Message - Redis Hash. Useful for fetch/add/update for an individual message.
 (KEY)board:msg:{boardId}			(VALUE)[messageIds] 			Board-wise Messages - Redis Set. Useful for fetching list of messages.
-(KEY)msg:likes:{messageId}			(VALUE)[userIds]				Likes - Redis Set. For recording likes/votes for a message
+(KEY)board:cmts:{boardId}      		(VALUE)[commentIds]      		Board-wise Comments - Redis Set. For fetching all comments.
+(KEY)msg:likes:{messageId}			(VALUE)[userIds]				Likes - Redis Set. For recording likes/votes for a message.
 (KEY)board:user:{boardId}:{userId}	(VALUE)User						User - Redis Hash. User master. Keeping as board specific.
 (KEY)board:users:{boardId}			(VALUE)[userIds]				Board-wise Users - Redis Set. Useful for fetching members of a board.
 (KEY)board:col:{boardId}:{colId}	(VALUE)column					Column - Redis Hash. Column definition for a Board.
 (KEY)board:col:{boardId}			(Value)[colIds]					Board-wise columns - Redis Set. Just a list of colIds for a board.
+
+TODO -
+	Add new comment.
+	Update comment.
+	Delete comment.
+	When deleting a message, delete all comments of that message.
+	When deleting a board, delete all comments.
+	Update reponses to include comments.
+	Since a "category" field is attached, moving a message will mean updating "cat" of its comments too.
+		There won't be any impact if its left as-is, but its better to sync the category for the sake of correctness.
 */
 
 import (
@@ -378,18 +389,35 @@ func (c *RedisConnector) GetMessage(msgId string) (*Message, bool) {
 }
 
 func (c *RedisConnector) GetMessages(boardId string) ([]*Message, bool) {
-	messages := make([]*Message, 0)
-
 	key := fmt.Sprintf("board:msg:%s", boardId)
 	messageIds, err := c.client.SMembers(c.ctx, key).Result()
 	if err != nil {
 		slog.Error("Failed getting messageIds from Redis", "details", err.Error(), "boardId", boardId)
-		return messages, false
+		return make([]*Message, 0), false
+	}
+	return c.GetMessagesByIds(messageIds, boardId)
+}
+
+func (c *RedisConnector) GetComments(boardId string) ([]*Message, bool) {
+	key := fmt.Sprintf("board:cmts:%s", boardId)
+	commentIds, err := c.client.SMembers(c.ctx, key).Result()
+	if err != nil {
+		slog.Error("Failed getting commentIds from Redis", "details", err.Error(), "boardId", boardId)
+		return make([]*Message, 0), false
+	}
+	return c.GetMessagesByIds(commentIds, boardId)
+}
+
+func (c *RedisConnector) GetMessagesByIds(ids []string, boardId string) ([]*Message, bool) {
+	messages := make([]*Message, 0)
+
+	if len(ids) == 0 {
+		return messages, true
 	}
 
 	cmds, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-		for _, id := range messageIds {
-			key = fmt.Sprintf("msg:%s", id)
+		for _, id := range ids {
+			key := fmt.Sprintf("msg:%s", id)
 			pipe.HGetAll(c.ctx, key)
 		}
 		return nil
@@ -450,54 +478,72 @@ func (c *RedisConnector) HasLiked(msgId string, by string) bool {
 	}
 }
 
-// Todo: Unused. Just added for checking.
-// Store helper - DTO
-type LikedBy struct {
-	By    string
-	Liked bool
-}
+// // Todo: Unused. Just added for checking.
+// // Store helper - DTO
+// type LikedBy struct {
+// 	By    string
+// 	Liked bool
+// }
 
-// Todo: Unused. Just added for checking.
-func (c *RedisConnector) HasLikedList(msgId string, by ...string) []*LikedBy {
-	var likes []*LikedBy
-	key := fmt.Sprintf("msg:likes:%s", msgId)
-	cmds, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-		for _, v := range by {
-			pipe.SIsMember(c.ctx, key, v)
-		}
-		return nil
-	})
-	if err != nil {
-		slog.Error(err.Error())
-		return nil
-	}
-	// Trusting Redis pipeline execution order for populating the result
-	for i, cmd := range cmds {
-		likes = append(likes, &LikedBy{By: by[i], Liked: cmd.(*redis.BoolCmd).Val()})
-	}
-	return likes
-}
+// // Todo: Unused. Just added for checking.
+// func (c *RedisConnector) HasLikedList(msgId string, by ...string) []*LikedBy {
+// 	var likes []*LikedBy
+// 	key := fmt.Sprintf("msg:likes:%s", msgId)
+// 	cmds, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+// 		for _, v := range by {
+// 			pipe.SIsMember(c.ctx, key, v)
+// 		}
+// 		return nil
+// 	})
+// 	if err != nil {
+// 		slog.Error(err.Error())
+// 		return nil
+// 	}
+// 	// Trusting Redis pipeline execution order for populating the result
+// 	for i, cmd := range cmds {
+// 		likes = append(likes, &LikedBy{By: by[i], Liked: cmd.(*redis.BoolCmd).Val()})
+// 	}
+// 	return likes
+// }
 
-func (c *RedisConnector) Save(msg *Message) bool {
-	msgKey := fmt.Sprintf("msg:%s", msg.Id)
-	boardKey := fmt.Sprintf("board:msg:%s", msg.Group)
+func (c *RedisConnector) Save(msg *Message, modes ...SaveMode) bool {
+	key := fmt.Sprintf("msg:%s", msg.Id)
+	messagesKey := fmt.Sprintf("board:msg:%s", msg.Group)
+	commentsKey := fmt.Sprintf("board:cmts:%s", msg.Group)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-		pipe.HSet(c.ctx, msgKey, "id", msg.Id)
-		pipe.HSet(c.ctx, msgKey, "by", msg.By)
-		pipe.HSet(c.ctx, msgKey, "nickname", msg.ByNickname)
-		pipe.HSet(c.ctx, msgKey, "group", msg.Group)
-		pipe.HSet(c.ctx, msgKey, "content", msg.Content)
-		pipe.HSet(c.ctx, msgKey, "category", msg.Category)
-		pipe.HSet(c.ctx, msgKey, "anon", msg.Anonymous)
-		pipe.SAdd(c.ctx, boardKey, msg.Id)
-		pipe.Expire(c.ctx, msgKey, c.timeToLive)   // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
-		pipe.Expire(c.ctx, boardKey, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
+		// Always save the message/comment to the Hash
+		pipe.HSet(c.ctx, key, "id", msg.Id)
+		pipe.HSet(c.ctx, key, "by", msg.By)
+		pipe.HSet(c.ctx, key, "nickname", msg.ByNickname)
+		pipe.HSet(c.ctx, key, "group", msg.Group)
+		pipe.HSet(c.ctx, key, "content", msg.Content)
+		pipe.HSet(c.ctx, key, "category", msg.Category)
+		pipe.HSet(c.ctx, key, "anon", msg.Anonymous)
+		pipe.HSet(c.ctx, key, "pid", msg.ParentId)
+		pipe.Expire(c.ctx, key, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But requires a call to get board details. Skipping it for now.
+
+		// Handle optional extra behavior
+		if len(modes) > 0 {
+			// Only considering first variadic argument in modes ...SaveMode
+			switch modes[0] {
+			case AsNewMessage:
+				// Add Id to board:msg:{boardId} SET
+				pipe.SAdd(c.ctx, messagesKey, msg.Id)         // This is safe to be called multiple times too, without adding new entries to the Set.
+				pipe.Expire(c.ctx, messagesKey, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But requires a call to get board details. Skipping it for now.
+
+			case AsNewComment:
+				// Add Id to board:cmts:{boardId} SET
+				pipe.SAdd(c.ctx, commentsKey, msg.Id)         // This is safe to be called multiple times too, without adding new entries to the Set.
+				pipe.Expire(c.ctx, commentsKey, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But requires a call to get board details. Skipping it for now.
+			}
+		}
+
 		return nil
 	})
 
 	if err != nil {
-		slog.Error("Failed to save message to Redis", "details", err.Error(), "payload", msg)
+		slog.Error("Failed to completely save message/comment to Redis", "details", err.Error(), "payloads", msg, "modes", modes)
 		return false
 	}
 
@@ -530,22 +576,92 @@ func (c *RedisConnector) Like(msgId string, by string, like bool) bool {
 	return true
 }
 
-func (c *RedisConnector) DeleteMessage(msg *Message) bool {
-	msgKey := fmt.Sprintf("msg:%s", msg.Id)
-	likesKey := fmt.Sprintf("msg:likes:%s", msg.Id)
-	boardKey := fmt.Sprintf("board:msg:%s", msg.Group)
+// func (c *RedisConnector) DeleteMessage(msg *Message) bool {
+// 	msgKey := fmt.Sprintf("msg:%s", msg.Id)
+// 	likesKey := fmt.Sprintf("msg:likes:%s", msg.Id)
+// 	boardKey := fmt.Sprintf("board:msg:%s", msg.Group)
+
+// 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+// 		pipe.Del(c.ctx, msgKey, likesKey)
+// 		pipe.SRem(c.ctx, boardKey, msg.Id)
+// 		return nil
+// 	})
+
+// 	// Todo: Should individual results be checked from the pipeline response?
+// 	if err != nil {
+// 		slog.Error("Error when deleting message from Redis", "payload", msg)
+// 		return false
+// 	}
+// 	return true
+// }
+
+func (c *RedisConnector) DeleteMessage(group string, msgId string, commentIds []string) bool {
+	/*
+		DELETE SINGLE MESSAGE
+		---------------------
+		1. Delete HASH msg:{messageId}
+		2. Delete SET msg:likes:{messageId}
+		3. Remove messageId entry from SET board:msg:{boardId}
+		4. For each associated comment:
+			4.1. Delete HASH msg:{commentId}
+			4.2. Remove commentId entry from SET board:cmts:{boardId}
+	*/
+	key := fmt.Sprintf("msg:%s", msgId)
+	likesKey := fmt.Sprintf("msg:likes:%s", msgId)
+	messagesKey := fmt.Sprintf("board:msg:%s", group)
+	commentsKey := fmt.Sprintf("board:cmts:%s", group)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-		pipe.Del(c.ctx, msgKey, likesKey)
-		pipe.SRem(c.ctx, boardKey, msg.Id)
+		// Delete the top-level message and other related data
+		pipe.Del(c.ctx, key, likesKey)
+		pipe.SRem(c.ctx, messagesKey, msgId)
+		for _, cid := range commentIds {
+			cKey := fmt.Sprintf("msg:%s", cid)
+			// Delete each attached comment
+			// Comments don't have likes right now
+			pipe.Del(c.ctx, cKey)
+			// Remove comment reference from board-level comments list
+			pipe.SRem(c.ctx, commentsKey, cid)
+		}
 		return nil
 	})
 
 	// Todo: Should individual results be checked from the pipeline response?
+	// Todo: Look into TxPipeline
 	if err != nil {
-		slog.Error("Error when deleting message from Redis", "payload", msg)
+		slog.Error("Error deleting data from DeleteMessage", "msgId", msgId, "commentIds", commentIds, "err", err)
 		return false
 	}
+
+	return true
+}
+
+func (c *RedisConnector) DeleteComment(group string, commentId string) bool {
+	/*
+		DELETE SINGLE COMMENT
+		---------------------
+		1. Delete HASH msg:{messageId}
+		2. Remove messageId entry from SET board:cmts:{boardId}
+	*/
+	key := fmt.Sprintf("msg:%s", commentId)
+	commentsKey := fmt.Sprintf("board:cmts:%s", group)
+
+	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+		// Delete the comment data
+		// Comments don't have likes right now
+		pipe.Del(c.ctx, key)
+		// Remove comment reference from board-level comments list
+		pipe.SRem(c.ctx, commentsKey, commentId)
+		return nil
+	})
+
+	// Todo: Should individual results be checked from the pipeline response?
+	// Todo: Look into TxPipeline
+	if err != nil {
+		slog.Error("Error deleting comment from DeleteComment", "commentId", commentId, "err", err)
+		return false
+	}
+
 	return true
 }
 
@@ -554,8 +670,9 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 		Board
 		(KEY)board:{boardId}					(VALUE)board					Board - Redis Hash. The board details. Owned by single user.
 
-		Messages and Likes
+		Messages, Comments, Likes
 		(KEY)board:msg:{boardId}				(VALUE)[messageIds] 			Board-wise Messages - Redis Set. Useful for fetching list of messages.
+		(KEY)board:cmts:{boardId}      			(VALUE)[commentIds]      		Board-wise Comments - Redis Set. For fetching all comments.
 		(KEY)msg:{messageId}					(VALUE)message					Message - Redis Hash. Useful for fetch/add/update for an individual message.
 		(KEY)msg:likes:{messageId}				(VALUE)[userIds]				Likes - Redis Set. For recording likes/votes for a message
 
@@ -567,42 +684,66 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 		(KEY)board:col:{boardId}				(Value)[colIds]					Board-wise columns - Redis Set. Just a list of colIds for a board.
 		(KEY)board:col:{boardId}:{colId}		(VALUE)column					Column - Redis Hash. Column definition for a Board.
 	*/
+	ctx := c.ctx
+
 	boardMsgsKey := fmt.Sprintf("board:msg:%s", boardId)
+	boardCommsKey := fmt.Sprintf("board:cmts:%s", boardId)
 	boardUsersKey := fmt.Sprintf("board:users:%s", boardId)
 	boardColsKey := fmt.Sprintf("board:col:%s", boardId)
 	boardKey := fmt.Sprintf("board:%s", boardId)
 
-	// Collect all message Ids, user Ids, and column Ids
-	messageIds, _ := c.client.SMembers(c.ctx, boardMsgsKey).Result()
-	userIds, _ := c.client.SMembers(c.ctx, boardUsersKey).Result()
-	colIds, _ := c.client.SMembers(c.ctx, boardColsKey).Result()
+	// Collect all message Ids, comment Ids, user Ids, and column Ids
+	// Pipeline SMEMBERS (read phase)
+	readPipe := c.client.Pipeline()
+	msgsCmd := readPipe.SMembers(ctx, boardMsgsKey)
+	cmtsCmd := readPipe.SMembers(ctx, boardCommsKey)
+	usrsCmd := readPipe.SMembers(ctx, boardUsersKey)
+	colsCmd := readPipe.SMembers(ctx, boardColsKey)
 
-	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+	if _, err := readPipe.Exec(ctx); err != nil {
+		slog.Error("Redis SMEMBERS pipeline failed in DeleteAll", "boardId", boardId, "error", err)
+		return false
+	}
+
+	messageIds := msgsCmd.Val()
+	commentIds := cmtsCmd.Val()
+	userIds := usrsCmd.Val()
+	colIds := colsCmd.Val()
+
+	// Pipeline Deletes (write phase)
+	_, err := c.client.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 
 		// Delete messages + likes
 		for _, msgId := range messageIds {
 			likesKey := fmt.Sprintf("msg:likes:%s", msgId)
 			msgKey := fmt.Sprintf("msg:%s", msgId)
-			pipe.Del(c.ctx, likesKey, msgKey)
+			pipe.Del(ctx, likesKey, msgKey)
 		}
-		pipe.Del(c.ctx, boardMsgsKey)
+		pipe.Del(ctx, boardMsgsKey)
+
+		// Delete comments
+		for _, cid := range commentIds {
+			commentKey := fmt.Sprintf("msg:%s", cid)
+			pipe.Del(ctx, commentKey)
+		}
+		pipe.Del(ctx, boardCommsKey)
 
 		// Delete users
 		for _, userId := range userIds {
 			userKey := fmt.Sprintf("board:user:%s:%s", boardId, userId)
-			pipe.Del(c.ctx, userKey)
+			pipe.Del(ctx, userKey)
 		}
-		pipe.Del(c.ctx, boardUsersKey)
+		pipe.Del(ctx, boardUsersKey)
 
 		// Delete columns
 		for _, colId := range colIds {
 			colKey := fmt.Sprintf("board:col:%s:%s", boardId, colId)
-			pipe.Del(c.ctx, colKey)
+			pipe.Del(ctx, colKey)
 		}
-		pipe.Del(c.ctx, boardColsKey)
+		pipe.Del(ctx, boardColsKey)
 
 		// Delete board hash
-		pipe.Del(c.ctx, boardKey)
+		pipe.Del(ctx, boardKey)
 
 		return nil
 	})
@@ -615,11 +756,29 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 	return true
 }
 
-func (c *RedisConnector) UpdateMessageCategory(msgId string, category string) bool {
-	key := fmt.Sprintf("msg:%s", msgId)
+func (c *RedisConnector) UpdateCategory(category string, msgId string, commentIds []string) bool {
+	// key := fmt.Sprintf("msg:%s", msgId)
 
-	if _, err := c.client.HSet(c.ctx, key, "category", category).Result(); err != nil {
-		slog.Error("Failed to update message category", "details", err.Error(), "messageId", msgId, "category", category)
+	// if _, err := c.client.HSet(c.ctx, key, "category", category).Result(); err != nil {
+	// 	slog.Error("Failed to update message category", "details", err.Error(), "messageId", msgId, "category", category)
+	// 	return false
+	// }
+	// return true
+
+	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+		// Update main message
+		key := fmt.Sprintf("msg:%s", msgId)
+		pipe.HSet(c.ctx, key, "category", category)
+		// Update associated comments (if any)
+		for _, cid := range commentIds {
+			ckey := fmt.Sprintf("msg:%s", cid)
+			pipe.HSet(c.ctx, ckey, "category", category)
+		}
+		return nil
+	})
+
+	if err != nil {
+		slog.Error("Failed to update category", "error", err.Error(), "category", category, "msgId", msgId, "commentIds", commentIds)
 		return false
 	}
 	return true

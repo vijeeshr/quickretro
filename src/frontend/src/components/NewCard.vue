@@ -27,7 +27,8 @@ const add = (event: Event) => {
       id: crypto.randomUUID(),
       msg: msg,
       cat: props.category,
-      anon: false
+      anon: false,
+      pid: ''
     }
 
     emit('added', payload)

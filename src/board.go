@@ -240,7 +240,7 @@ func HandleRefresh(red *RedisConnector, w http.ResponseWriter, r *http.Request) 
 		likes := red.GetLikesCountMultiple(ids...)
 
 		for _, m := range msgs {
-			msgRes := m.NewResponse("msg").(MessageResponse)
+			msgRes := m.NewMessageResponse()
 			if count, ok := likes[m.Id]; ok {
 				msgRes.Likes = strconv.FormatInt(count, 10)
 			}

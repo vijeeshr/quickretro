@@ -9,14 +9,17 @@ import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { BoardColumn } from '../models/BoardColumn';
 import { CategoryChangeMessage } from '../models/CategoryChangeMessage';
 import { useI18n } from 'vue-i18n';
+import NewComment from './NewComment.vue';
+import Comment from './Comment.vue';
 
 // "currentUser", "currentUserNickname", "board", "card.cat" only used to calculate message size in bytes. "category" already passed with "card.cat".
 // Message size calc and trimming only done when editing.
 // Only a message's content and category are actually updated in the backend
 interface Props {
     card: MessageResponse // Todo: Change name of model. Or use a different model.
+    comments?: MessageResponse[]
     mask: boolean
-    manageable: boolean
+    canManage: boolean
     locked: boolean
     currentUser: string // Only used for message size calc
     currentUserNickname: string // Only used for message size calc
@@ -24,11 +27,16 @@ interface Props {
     categories: BoardColumn[]
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['updated', 'deleted', 'liked', 'invalidContent', 'categoryChanged', 'avatarClicked', 'discard'])
+const emit = defineEmits(['updated', 'deleted', 'discard', 'invalidContent', 'liked', 'categoryChanged', 'avatarClicked',
+    'comment-added', 'comment-updated', 'comment-deleted', 'comment-discard', 'comment-invalidContent'
+])
 
 const { t } = useI18n()
 
 const editing = ref(false)
+const showComments = ref(false)
+
+const manageable = computed(() => props.card.mine || props.canManage)
 
 const content = computed(() => {
     if (props.mask && !props.card.mine && props.card.msg) {
@@ -65,7 +73,7 @@ const save = (event: Event) => {
             // Board lock received when the user is editing a message.
             // The message will be forcefully discarded.
             const target = event.target as HTMLElement
-            target.innerText = content.value // Discard new changes by reseting value back to original
+            target.innerText = content.value // Discard new changes by reseting value back to original..TODO: Check what happens when Mask is ON..the *** shouldn't be updated.
             editing.value = false
             emit('discard')
             return
@@ -80,7 +88,8 @@ const save = (event: Event) => {
                 id: props.card.id,
                 msg: (event.target as HTMLElement).innerText.trim(),
                 cat: props.card.cat,
-                anon: props.card.anon
+                anon: props.card.anon,
+                pid: props.card.pid
             }
             emit('updated', payload)
         } else {
@@ -114,12 +123,16 @@ const toggleLike = () => {
     emit('liked', payload)
 }
 
+const toggleComments = () => {
+    showComments.value = !showComments.value
+}
+
 const remove = () => {
     if (props.locked) {
         logMessage("Locked! Cannot delete.")
         return
     }
-    if (props.manageable) {
+    if (manageable) {
         emit('deleted', props.card.id)
     }
 }
@@ -129,7 +142,7 @@ const changeCategory = (newCategory: string, oldCategory: string) => {
         logMessage("Locked! Cannot change category.")
         return
     }
-    if (props.manageable && newCategory !== oldCategory) {
+    if (manageable && newCategory !== oldCategory) {
         const payload: CategoryChangeMessage = {
             msgId: props.card.id,
             newCategoryId: newCategory,
@@ -140,6 +153,7 @@ const changeCategory = (newCategory: string, oldCategory: string) => {
 }
 
 const validate = (event: Event) => {
+    // TODO: CHECK Message size validation since Message.Pid is introduced.
     if (!editing.value && !props.card.mine) return
     if (!canAssertMessageContentValidation()) return
     const validationResult: MessageContentValidationResult = assertMessageContentValidation(event, props.currentUser, props.currentUserNickname, props.board, props.card.cat)
@@ -176,7 +190,7 @@ const validate = (event: Event) => {
                 <span class="cursor-default dark:text-gray-200" :class="{ 'invisible': card.likes == '0' }">{{
                     card.likes }}</span>
             </div> -->
-            <div class="relative flex mr-1" @click="toggleLike">
+            <div class="relative inline-flex mr-1 min-w-0 shrink" @click="toggleLike">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="currentColor" class="w-6 h-6 cursor-pointer"
                     :class="{ 'text-blue-500 dark:text-white': card.liked }">
@@ -187,6 +201,19 @@ const validate = (event: Event) => {
                 <span :class="{ 'invisible': card.likes == '0' }"
                     class="absolute -top-0.5 -left-1.5 cursor-default bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none">
                     {{ card.likes }}
+                </span>
+            </div>
+
+            <!-- Comment button and count display -->
+            <div class="relative inline-flex ml-1 min-w-0 shrink" @click="toggleComments">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-6 h-6 cursor-pointer dark:text-gray-200 mr-1">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z" />
+                </svg>
+                <span :class="{ 'invisible': comments?.length == 0 }"
+                    class="absolute -top-0.5 -left-1.5 cursor-default bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none">
+                    {{ comments?.length }}
                 </span>
             </div>
 
@@ -250,6 +277,24 @@ const validate = (event: Event) => {
             </div>
 
         </div>
+
+        <!-- Comments panel -->
+        <div v-if="showComments" class="border-t border-gray-200 mt-2 pt-2 space-y-2">
+
+            <NewComment :parent-id="props.card.id" :category="props.card.cat" :by="props.currentUser"
+                :nickname="props.currentUserNickname" :board="props.board" @added="emit('comment-added', $event)"
+                @invalid-content="emit('comment-invalidContent', $event)"></NewComment>
+
+            <template v-if="comments?.length">
+                <Comment v-for="comment in comments" :key="comment.id" :comment="comment" :mask="mask"
+                    :current-user="currentUser" :current-user-nickname="currentUserNickname" :board="board"
+                    :can-manage="props.canManage" :locked="locked" @updated="emit('comment-updated', $event)"
+                    @deleted="emit('comment-deleted', $event)" @discard="emit('comment-discard', $event)"
+                    @invalid-content="emit('comment-invalidContent', $event)" />
+            </template>
+
+        </div>
+        <!-- Comments panel -->
 
     </div>
 </template>

@@ -3,4 +3,5 @@ export interface DraftMessage {
     msg: string
     cat: string
     anon: boolean
+    pid: string
 }
