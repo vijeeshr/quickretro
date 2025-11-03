@@ -551,26 +551,26 @@ const timerSettings = () => {
 }
 
 const onRegisterResponse = (response: RegisterResponse) => {
-    // TODO - CHECK response.mine..except response.users there is no need to reassign data for another user's RegisterResponse. 
-    isOwner.value = response.isBoardOwner
-    isMasked.value = response.boardMasking
-    isLocked.value = response.boardLock
-    timerExpiresInSeconds.value = response.timerExpiresInSeconds
-    boardExpiryLocalTime.value = formatDate(response.boardExpiryUtcSeconds)
-    onlineUsers.value = []
-    onlineUsers.value.push(...response.users) // Todo: find a better way
-    columns.value = []
-    columns.value.push(...response.columns) // Todo: find a better way
-    boardName.value = response.boardName
-    // Load messages.
-    // Only loading messages when the RegisterResponse is for the current User's RegisterEvent request.
-    // This prevents unnecessarily pushing messages in the ref for other users RegisterEvents. RegisterEvent happens just once in the beginning.
+    timerExpiresInSeconds.value = response.timerExpiresInSeconds // This always gets set. Todo: find a better way to sync timer.
+    // response.mine == true means RegisterResponse is for the current User's RegisterEvent request.
+    // This prevents unnecessarily updating values/pushing messages in the ref for other users RegisterEvents. 
+    // RegisterEvent happens just once per user in the beginning i.e. when user loads/reloads the page.
     if (response.mine) {
+        boardName.value = response.boardName
+        isOwner.value = response.isBoardOwner
+        isMasked.value = response.boardMasking
+        isLocked.value = response.boardLock
+        boardExpiryLocalTime.value = formatDate(response.boardExpiryUtcSeconds)
+        onlineUsers.value = []
+        onlineUsers.value.push(...response.users) // Todo: find a better way
+        columns.value = []
+        columns.value.push(...response.columns) // Todo: find a better way
+
         cards.value = []
         cards.value.push(...response.messages)
 
         // Build Map: messageId → comments[]
-        const map = new Map<string, MessageResponse[]>() // Initialize everytime..TODO: remember to remove/update this when a message of comment is deleted.
+        const map = new Map<string, MessageResponse[]>()
         response.comments.forEach(comment => {
             if (!map.has(comment.pid)) map.set(comment.pid, [])
             map.get(comment.pid)!.push(comment)

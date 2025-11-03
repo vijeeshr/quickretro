@@ -132,7 +132,7 @@ const remove = () => {
     <div class="bg-gray-50 dark:bg-gray-600 p-2 rounded-xl text-sm border" :class="editing && comment.mine
         ? 'border-sky-400 dark:border-white'
         : 'border-transparent'">
-        <div class="font-medium text-gray-700 dark:text-white">{{ comment.nickname }}</div>
+        <div class="font-semibold break-words text-gray-700 dark:text-white">{{ comment.nickname }}</div>
         <article class="text-gray-600 dark:text-white min-h-4 break-words focus:outline-none" :class="[
             { 'blur-sm': mask && !comment.mine },
             editing
