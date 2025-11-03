@@ -4,11 +4,16 @@ import { assertMessageContentValidation, canAssertMessageContentValidation, logM
 import { DraftMessage } from '../models/DraftMessage';
 
 const { t } = useI18n()
-const props = defineProps<{ parentId: string, category: string, by: string, nickname: string, board: string }>()
+const props = defineProps<{ parentId: string, category: string, locked: boolean, by: string, nickname: string, board: string }>()
 const emit = defineEmits(['added', 'invalidContent'])
 
 
 const add = (event: Event) => {
+    if (props.locked) {
+        logMessage('Locked! Cannot add comment.')
+        return
+    }
+
     const el = event.target as HTMLElement
     const msg = el.innerText.trim()
 
@@ -56,5 +61,5 @@ const validate = (event: Event) => {
 <template>
     <article
         class="w-full mt-2 border rounded-lg p-2 text-sm resize-none text-gray-500 dark:text-white min-h-[3.5rem] break-words focus:outline-none cursor-auto"
-        contenteditable="true" @blur="add" @keydown.enter="addOnEnter" @input="validate"></article>
+        :contenteditable="!locked" @blur="add" @keydown.enter="addOnEnter" @input="validate"></article>
 </template>

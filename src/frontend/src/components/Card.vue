@@ -281,7 +281,7 @@ const validate = (event: Event) => {
         <!-- Comments panel -->
         <div v-if="showComments" class="border-t border-gray-200 mt-2 pt-2 space-y-2">
 
-            <NewComment :parent-id="props.card.id" :category="props.card.cat" :by="props.currentUser"
+            <NewComment :parent-id="props.card.id" :category="props.card.cat" :locked="locked" :by="props.currentUser"
                 :nickname="props.currentUserNickname" :board="props.board" @added="emit('comment-added', $event)"
                 @invalid-content="emit('comment-invalidContent', $event)"></NewComment>
 
