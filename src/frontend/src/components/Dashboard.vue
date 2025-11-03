@@ -248,8 +248,8 @@ const onLiked = (likeMessage: LikeMessage) => {
 }
 
 const onCategoryChanged = (pyl: CategoryChangeMessage) => {
-    // TODO: Pass associated commentIds in an array
-    dispatchEvent<CategoryChangeEvent>("catchng", { msgId: pyl.msgId, by: user, grp: board, newcat: pyl.newCategoryId, oldcat: pyl.oldCategoryId })
+    const commentIds = getCommentIds(pyl.msgId)
+    dispatchEvent<CategoryChangeEvent>("catchng", { msgId: pyl.msgId, commentIds: commentIds, by: user, grp: board, newcat: pyl.newCategoryId, oldcat: pyl.oldCategoryId })
 }
 
 const mask = () => {
@@ -605,18 +605,37 @@ const onLockResponse = (response: LockResponse) => {
 }
 
 const onSaveMessageResponse = (response: MessageResponse) => {
-    let index = cards.value.findIndex(x => x.id === response.id)
-    if (index === -1) {
-        cards.value.push(response)
+    if (response.pid) {
+        // It's a comment — store under its parent message
+        const existingComments = commentsMap.value.get(response.pid) || []
+        const index = existingComments.findIndex(c => c.id === response.id)
+
+        if (index === -1) {
+            // New comment
+            commentsMap.value.set(response.pid, [...existingComments, response])
+        } else {
+            // Update existing comment
+            const updated = [...existingComments]
+            updated[index] = response
+            commentsMap.value.set(response.pid, updated)
+        }
     } else {
-        cards.value[index] = response
+        // It's a top-level message
+        const index = cards.value.findIndex(x => x.id === response.id)
+        if (index === -1) {
+            cards.value.push(response)
+        } else {
+            cards.value[index] = response
+        }
     }
 }
 
 const onDeleteMessageResponse = (response: DeleteMessageResponse) => {
-    let index = cards.value.findIndex(x => x.id === response.id)
-    if (index !== -1) {
-        cards.value.splice(index, 1)
+    // Delete message
+    let messageIndex = cards.value.findIndex(x => x.id === response.id)
+    if (messageIndex !== -1) {
+        commentsMap.value.delete(response.id) // remove associated comments
+        cards.value.splice(messageIndex, 1)
         // Re-adjust spotlight
         if (isSpotlightOn.value) {
             if (usersWithCards.value.length === 0) {
@@ -624,6 +643,20 @@ const onDeleteMessageResponse = (response: DeleteMessageResponse) => {
             } else if (!usersWithCards.value.includes(spotlightFor.value)) {
                 nextSpotlight();
             }
+        }
+        return // Just return no need to proceed further
+    }
+
+    // Delete comment
+    for (const [parentId, comments] of commentsMap.value.entries()) {
+        const index = comments.findIndex(c => c.id === response.id)
+        if (index !== -1) {
+            const updated = [...comments]
+            updated.splice(index, 1)
+            updated.length > 0
+                ? commentsMap.value.set(parentId, updated)
+                : commentsMap.value.delete(parentId)
+            return
         }
     }
 }
@@ -633,10 +666,28 @@ const onDeleteAllResponse = () => {
 }
 
 const onCategoryChangeResponse = (response: CategoryChangeResponse) => {
-    let index = cards.value.findIndex(x => x.id === response.id)
+    const msgId = response.id
+    const newCat = response.newcat
+    // Update category of message
+    let index = cards.value.findIndex(x => x.id === msgId)
     if (index !== -1) {
-        cards.value[index].cat = response.newcat
+        cards.value[index].cat = newCat
     }
+    // Update category of associated comments
+    const comments = commentsMap.value.get(msgId)
+    if (comments && comments.length > 0) {
+        const updatedComments = comments.map(c => ({
+            ...c,
+            cat: newCat,
+        }))
+        commentsMap.value.set(msgId, updatedComments)
+    }
+    // // Mutate in-place instead of creating a new array. 
+    // // Faster for large comment lists, but reactivity might not always trigger UI updates if Vue doesn’t deeply watch the comment array (depends on where it’s used in templates).
+    // const comments = commentsMap.value.get(msgId)
+    // if (comments) {
+    //     comments.forEach(c => (c.cat = newCat))
+    // }
 }
 
 const onLikeMessageResponse = (response: LikeMessageResponse) => {

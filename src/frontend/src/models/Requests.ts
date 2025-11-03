@@ -56,6 +56,7 @@ export interface DeleteAllEvent {
 
 export interface CategoryChangeEvent {
     msgId: string
+    commentIds: string[]
     by: string
     grp: string
     newcat: string
