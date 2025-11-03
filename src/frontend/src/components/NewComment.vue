@@ -60,6 +60,6 @@ const validate = (event: Event) => {
 
 <template>
     <article
-        class="w-full mt-2 border rounded-lg p-2 text-sm resize-none text-gray-500 dark:text-white min-h-[3.5rem] break-words focus:outline-none cursor-auto"
+        class="w-full mt-2 border dark:border-gray-400 rounded-lg p-2 text-sm resize-none text-gray-500 dark:text-white min-h-[3.5rem] break-words focus:outline-none cursor-auto focus:border-sky-400 dark:focus:border-white"
         :contenteditable="!locked" @blur="add" @keydown.enter="addOnEnter" @input="validate"></article>
 </template>
