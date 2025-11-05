@@ -96,7 +96,6 @@ const saveOnEnter = (event: KeyboardEvent) => {
 }
 
 const validate = (event: Event) => {
-    // TODO: CHECK Message size validation since Message.Pid is introduced.
     if (!editing.value && !props.comment.mine) return
     if (!canAssertMessageContentValidation()) return
     const validationResult: MessageContentValidationResult = assertMessageContentValidation(event, props.currentUser, props.currentUserNickname, props.board, props.comment.cat, true)
@@ -121,14 +120,6 @@ const remove = () => {
 </script>
 
 <template>
-    <!-- <div class="text-gray-500 mt-2 dark:text-white" :class="{ 'blur-sm': mask && !card.mine }">
-            <article class="min-h-4 text-center break-words focus:outline-none"
-                :class="[editing ? 'cursor-auto' : card.mine && !locked ? 'cursor-pointer' : 'cursor-default']"
-                :contenteditable="editing && card.mine && !(locked && editing)" @click="edit" @blur="save"
-                @keydown.enter="saveOnEnter" @input="validate">{{
-                    content }}</article>
-        </div> -->
-
     <div class="bg-gray-50 dark:bg-gray-600 p-2 rounded-xl text-sm border" :class="editing && comment.mine
         ? 'border-sky-400 dark:border-white'
         : 'border-transparent'">

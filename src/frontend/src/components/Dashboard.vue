@@ -220,10 +220,6 @@ const onDiscard = () => {
     clearNewCards()
 }
 
-const onCommentDiscard = () => {
-
-}
-
 const onUpdated = (card: DraftMessage) => {
     logMessage('Updated content received:', card)
     dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat, anon: false, pid: card.pid })
@@ -1089,7 +1085,7 @@ onUnmounted(() => {
                         @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" @category-changed="onCategoryChanged"
                         @invalidContent="onInvalidContent" @avatar-clicked="showSpotlightFor"
                         @discard="notifyForLostMessages" @comment-added="onCommentAdded"
-                        @comment-updated="onCommentUpdated" @comment-deleted="onCommentDeleted" @comment-discard=""
+                        @comment-updated="onCommentUpdated" @comment-deleted="onCommentDeleted" @comment-discard="notifyForLostMessages"
                         @comment-invalid-content="onCommentInvalidContent" :class="{
                             'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none': isSpotlightOn && usersWithCards.length > 0 && card.nickname !== spotlightFor,
                             'bg-black dark:bg-black border border-gray-200 z-[51]': isSpotlightOn && usersWithCards.length > 0 && card.nickname === spotlightFor,

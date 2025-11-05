@@ -15,9 +15,9 @@ type RegisterResponse struct {
 	BoardMasking              bool              `json:"boardMasking"`
 	BoardLock                 bool              `json:"boardLock"`
 	IsBoardOwner              bool              `json:"isBoardOwner"`
-	Users                     []*UserDetails    `json:"users"`
-	Messages                  []MessageResponse `json:"messages"`              //Todo: Change to *MessageResponse
-	Comments                  []MessageResponse `json:"comments"`              //Todo: Change to *MessageResponse
+	Users                     []UserDetails     `json:"users"`
+	Messages                  []MessageResponse `json:"messages"`              // Todo: Change to *MessageResponse
+	Comments                  []MessageResponse `json:"comments"`              // Todo: Change to *MessageResponse
 	TimerExpiresInSeconds     uint16            `json:"timerExpiresInSeconds"` // uint16 since we are restricting timer to max 1 hour (3600 seconds)
 	BoardExpiryTimeUtcSeconds int64             `json:"boardExpiryUtcSeconds"` // Unix Timestamp Seconds
 	NotifyNewBoardExpiry      bool              `json:"notifyNewBoardExpiry"`

@@ -11,16 +11,6 @@ package main
 (KEY)board:users:{boardId}			(VALUE)[userIds]				Board-wise Users - Redis Set. Useful for fetching members of a board.
 (KEY)board:col:{boardId}:{colId}	(VALUE)column					Column - Redis Hash. Column definition for a Board.
 (KEY)board:col:{boardId}			(Value)[colIds]					Board-wise columns - Redis Set. Just a list of colIds for a board.
-
-TODO -
-	Add new comment.
-	Update comment.
-	Delete comment.
-	When deleting a message, delete all comments of that message.
-	When deleting a board, delete all comments.
-	Update reponses to include comments.
-	Since a "category" field is attached, moving a message will mean updating "cat" of its comments too.
-		There won't be any impact if its left as-is, but its better to sync the category for the sake of correctness.
 */
 
 import (
@@ -449,26 +439,6 @@ func (c *RedisConnector) GetLikesCount(msgId string) int64 {
 	return count
 }
 
-func (c *RedisConnector) GetLikesCountMultiple(msgIds ...string) map[string]int64 {
-	result := make(map[string]int64)
-	cmds, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-		for _, id := range msgIds {
-			key := fmt.Sprintf("msg:likes:%s", id)
-			pipe.SCard(c.ctx, key)
-		}
-		return nil
-	})
-	if err != nil {
-		slog.Error("Failed getting multiple likes from Redis", "details", err.Error(), "msgIds", msgIds)
-		return result
-	}
-	// Trusting Redis pipeline execution order for populating the result
-	for i, cmd := range cmds {
-		result[msgIds[i]] = cmd.(*redis.IntCmd).Val()
-	}
-	return result
-}
-
 func (c *RedisConnector) HasLiked(msgId string, by string) bool {
 	key := fmt.Sprintf("msg:likes:%s", msgId)
 	if liked, err := c.client.SIsMember(c.ctx, key, by).Result(); err != nil {
@@ -478,33 +448,58 @@ func (c *RedisConnector) HasLiked(msgId string, by string) bool {
 	}
 }
 
-// // Todo: Unused. Just added for checking.
-// // Store helper - DTO
-// type LikedBy struct {
-// 	By    string
-// 	Liked bool
-// }
+// Store helper - DTO
+type LikeInfo struct {
+	Count int64
+	Liked bool
+}
 
-// // Todo: Unused. Just added for checking.
-// func (c *RedisConnector) HasLikedList(msgId string, by ...string) []*LikedBy {
-// 	var likes []*LikedBy
-// 	key := fmt.Sprintf("msg:likes:%s", msgId)
-// 	cmds, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-// 		for _, v := range by {
-// 			pipe.SIsMember(c.ctx, key, v)
-// 		}
-// 		return nil
-// 	})
-// 	if err != nil {
-// 		slog.Error(err.Error())
-// 		return nil
-// 	}
-// 	// Trusting Redis pipeline execution order for populating the result
-// 	for i, cmd := range cmds {
-// 		likes = append(likes, &LikedBy{By: by[i], Liked: cmd.(*redis.BoolCmd).Val()})
-// 	}
-// 	return likes
-// }
+func (c *RedisConnector) GetLikesInfo(by string, msgIds ...string) (map[string]LikeInfo, bool) {
+	result := make(map[string]LikeInfo, len(msgIds))
+	if len(msgIds) == 0 {
+		return result, true
+	}
+
+	// We'll store both IntCmds (for count) and BoolCmds (for liked)
+	type likeCmds struct {
+		count *redis.IntCmd
+		liked *redis.BoolCmd
+	}
+	cmds := make(map[string]likeCmds, len(msgIds))
+
+	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+		for _, id := range msgIds {
+			key := fmt.Sprintf("msg:likes:%s", id)
+			countCmd := pipe.SCard(c.ctx, key)
+			likedCmd := pipe.SIsMember(c.ctx, key, by)
+			cmds[id] = likeCmds{count: countCmd, liked: likedCmd}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, false
+	}
+
+	// Trusting Redis pipeline execution order for populating the result
+	for id, cmdPair := range cmds {
+		count, err1 := cmdPair.count.Result()
+		if err1 != nil {
+			count = 0
+		}
+
+		liked, err2 := cmdPair.liked.Result()
+		if err2 != nil {
+			liked = false
+		}
+
+		result[id] = LikeInfo{
+			Count: count,
+			Liked: liked,
+		}
+	}
+
+	return result, true
+}
 
 func (c *RedisConnector) Save(msg *Message, modes ...SaveMode) bool {
 	key := fmt.Sprintf("msg:%s", msg.Id)
@@ -757,14 +752,6 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 }
 
 func (c *RedisConnector) UpdateCategory(category string, msgId string, commentIds []string) bool {
-	// key := fmt.Sprintf("msg:%s", msgId)
-
-	// if _, err := c.client.HSet(c.ctx, key, "category", category).Result(); err != nil {
-	// 	slog.Error("Failed to update message category", "details", err.Error(), "messageId", msgId, "category", category)
-	// 	return false
-	// }
-	// return true
-
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		// Update main message
 		key := fmt.Sprintf("msg:%s", msgId)

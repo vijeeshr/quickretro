@@ -60,38 +60,42 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 	}
 
 	// Prepare user details
-	userDetails := make([]*UserDetails, 0)
-	for _, user := range users {
-		if user.Nickname == "" {
-			user.Nickname = "Anonymous" // This may not happen.
-		}
-		userDetails = append(userDetails, &UserDetails{Nickname: user.Nickname, Xid: user.Xid})
+	// userDetails := make([]UserDetails, 0)
+	// userDetails := make([]UserDetails, 0, len(users))
+	userDetails := make([]UserDetails, len(users)) // Preallocate length instead of capacity. len == cap == len(users), so can index directly.
+	for in, u := range users {
+		userDetails[in] = UserDetails{Nickname: u.Nickname, Xid: u.Xid}
 	}
 
 	// Prepare message details
-	messagesDetails := make([]MessageResponse, 0)
-	// Collect "like" count for all messages in one call via a Redis pipeline
-	ids := make([]string, 0)
-	for _, m := range messages {
-		ids = append(ids, m.Id)
+	messagesDetails := make([]MessageResponse, len(messages))
+	// Collect "likes" info
+	ids := make([]string, len(messages))
+	for in, m := range messages {
+		ids[in] = m.Id
 	}
-	likes := h.redis.GetLikesCountMultiple(ids...)
-	for _, m := range messages {
+	likesInfo, likesOk := h.redis.GetLikesInfo(i.By, ids...)
+	if !likesOk {
+		slog.Warn("Failed to fetch likes info")
+	}
+	for in, m := range messages {
 		msgRes := m.NewMessageResponse()
-		if count, ok := likes[m.Id]; ok {
-			msgRes.Likes = strconv.FormatInt(count, 10)
-		}
 		msgRes.Mine = m.By == i.By
-		msgRes.Liked = h.redis.HasLiked(m.Id, i.By) // Todo: This calls Redis SISMEMBER [O(1) as per doc] in a loop. Check for impact.
-		messagesDetails = append(messagesDetails, msgRes)
+		if likesOk {
+			if info, ok := likesInfo[m.Id]; ok {
+				msgRes.Likes = strconv.FormatInt(info.Count, 10)
+				msgRes.Liked = info.Liked
+			}
+		}
+		messagesDetails[in] = msgRes
 	}
 
 	// Prepare comment details
-	commentDetails := make([]MessageResponse, 0)
-	for _, c := range comments {
+	commentDetails := make([]MessageResponse, len(comments))
+	for in, c := range comments {
 		cmtRes := c.NewMessageResponse()
 		cmtRes.Mine = c.By == i.By
-		commentDetails = append(commentDetails, cmtRes)
+		commentDetails[in] = cmtRes
 	}
 
 	// Prepare timer details
