@@ -317,49 +317,6 @@ func (p *MessageEvent) Handle(i *Event, h *Hub) {
 		slog.Warn("Failed to save message/comment", "msgId", msg.Id)
 		return
 	}
-	/*
-		// Save to Redis
-		saved := false
-		msg, exists := h.redis.GetMessage(p.Id)
-
-		// If message/comment doesn't exist in Redis, consider it new and save it.
-		if !exists {
-			if p.ParentId == "" {
-				// Message
-				msg = p.ToMessage()
-				saved = h.redis.Save(msg, AsNewMessage)
-			} else {
-				// Comment
-				msg = p.ToMessage()
-				// Validate parent message exists
-				parentMsg, parentExists := h.redis.GetMessage(msg.ParentId)
-				if !parentExists {
-					slog.Warn("Parent message not found for comment", "commentId", msg.Id, "parentId", msg.ParentId)
-					return
-				}
-				// Ensure parent is not itself a comment (prevent nesting)
-				if parentMsg.ParentId != "" {
-					slog.Warn("Cannot attach a comment to another comment", "commentId", msg.Id, "parentId", msg.ParentId)
-					return
-				}
-				saved = h.redis.Save(msg, AsNewComment)
-			}
-		}
-		if exists {
-			// Only Content can be updated. The remaining fields must not be modified.
-			// Validation: User can only update own message.
-			if msg.Id == p.Id && msg.ParentId == p.ParentId && msg.Group == p.Group && msg.By == p.By {
-				msg.Content = p.Content
-				saved = h.redis.Save(msg)
-			} else {
-				slog.Warn("Cannot update someone else's message/comment in MessageEvent handle", "msgId", p.Id, "user", p.By)
-			}
-		}
-		if !saved {
-			slog.Warn("Failed to save message/comment in MessageEvent handle", "msgId", msg.Id)
-			return
-		}
-	*/
 
 	// Publish to Redis (for broadcasting)
 	if saved {
@@ -497,51 +454,6 @@ func (p *DeleteMessageEvent) Handle(i *Event, h *Hub) {
 	} else {
 		deleted = h.redis.DeleteComment(msg.Group, msg.Id)
 	}
-	/*
-		// Update Redis
-		deleted := false
-		// isBoardOwner := h.redis.IsBoardOwner(p.Group, p.By)
-
-		// Message
-		if msg.ParentId == "" {
-			commentIdsToDelete := make([]string, 0)
-			if len(p.CommentIds) > 0 {
-				cmts, cmtsOk := h.redis.GetMessagesByIds(p.CommentIds, p.Group)
-				if cmtsOk {
-					for _, c := range cmts {
-						if c.ParentId == msg.Id {
-							commentIdsToDelete = append(commentIdsToDelete, c.Id)
-						}
-					}
-				}
-			}
-
-			// Validate before deleting; especially if the message being deleted is of the user who created/owns it.
-			// Board owner can delete any message.
-			if msg.Id == p.MessageId && msg.Group == p.Group && (msg.By == p.By || isBoardOwner) {
-				if deleted = h.redis.DeleteMessage(msg.Group, msg.Id, commentIdsToDelete...); !deleted {
-					return
-				}
-			} else {
-				slog.Warn("Cannot delete someone else's message", "msgId", p.MessageId, "user", p.By)
-				return
-			}
-		}
-
-		// Comment
-		if msg.ParentId != "" {
-			// Validate before deleting; especially if the comment being deleted is of the user who created/owns it.
-			// Board owner can delete any comment.
-			if msg.Id == p.MessageId && msg.Group == p.Group && (msg.By == p.By || isBoardOwner) {
-				if deleted = h.redis.DeleteComment(msg.Group, msg.Id); !deleted {
-					return
-				}
-			} else {
-				slog.Warn("Cannot delete someone else's comment", "msgId", p.MessageId, "user", p.By)
-				return
-			}
-		}
-	*/
 
 	// Publish: to Redis (for broadcasting)
 	if deleted {
@@ -646,22 +558,6 @@ func (p *CategoryChangeEvent) Handle(i *Event, h *Hub) {
 	// Execute
 	commentIds := getValidComments(h, msg, p.CommentIds)
 	updated := h.redis.UpdateCategory(p.NewCategory, p.MessageId, commentIds)
-
-	/*
-		// Validate before changing category; especially if the message being moved is of the user who created/owns it.
-		// Board owner can change category of any message.
-		// isBoardOwner := h.redis.IsBoardOwner(p.Group, p.By)
-		commentIds := getValidComments(h, msg, p.CommentIds)
-		if msg.Id == p.MessageId && msg.Group == p.Group && (msg.By == p.By || isBoardOwner) {
-			// msg.Category = p.NewCategory
-			if updated = h.redis.UpdateCategory(p.NewCategory, p.MessageId, commentIds); !updated {
-				return
-			}
-		} else {
-			slog.Warn("Cannot change category of someone else's message", "msgId", p.MessageId, "user", p.By)
-			return
-		}
-	*/
 
 	// Publish to Redis (for broadcasting)
 	// *Message is nil as all message details need not be broadcasted. Event details should be enough.
