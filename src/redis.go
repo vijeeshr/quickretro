@@ -571,25 +571,6 @@ func (c *RedisConnector) Like(msgId string, by string, like bool) bool {
 	return true
 }
 
-// func (c *RedisConnector) DeleteMessage(msg *Message) bool {
-// 	msgKey := fmt.Sprintf("msg:%s", msg.Id)
-// 	likesKey := fmt.Sprintf("msg:likes:%s", msg.Id)
-// 	boardKey := fmt.Sprintf("board:msg:%s", msg.Group)
-
-// 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-// 		pipe.Del(c.ctx, msgKey, likesKey)
-// 		pipe.SRem(c.ctx, boardKey, msg.Id)
-// 		return nil
-// 	})
-
-// 	// Todo: Should individual results be checked from the pipeline response?
-// 	if err != nil {
-// 		slog.Error("Error when deleting message from Redis", "payload", msg)
-// 		return false
-// 	}
-// 	return true
-// }
-
 func (c *RedisConnector) DeleteMessage(group string, msgId string, commentIds []string) bool {
 	/*
 		DELETE SINGLE MESSAGE

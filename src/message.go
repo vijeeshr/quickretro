@@ -48,28 +48,3 @@ const (
 	AsNewMessage SaveMode = iota
 	AsNewComment
 )
-
-// func (m *Message) NewResponse(reqType string) interface{} {
-// 	switch reqType {
-// 	case "del":
-// 		return DeleteMessageResponse{
-// 			Type: reqType,
-// 			Id:   m.Id,
-// 		}
-// 	case "like":
-// 		return LikeMessageResponse{
-// 			Type: reqType,
-// 			Id:   m.Id,
-// 		}
-// 	default:
-// 		return MessageResponse{
-// 			Type:       reqType,
-// 			Id:         m.Id,
-// 			ByNickname: m.ByNickname,
-// 			Content:    m.Content,
-// 			Category:   m.Category,
-// 			Anonymous:  m.Anonymous,
-// 			ParentId:   m.ParentId,
-// 		}
-// 	}
-// }
