@@ -66,7 +66,7 @@ export const canAssertMessageContentValidation = (): boolean => {
         !isNaN(maxBytes) && maxBytes > 0
 }
 
-export const assertMessageContentValidation = (event: Event, user: string, nickname: string, board: string, category: string): MessageContentValidationResult => {
+export const assertMessageContentValidation = (event: Event, user: string, nickname: string, board: string, category: string, isComment: boolean = false): MessageContentValidationResult => {
 
     let el = event.target as HTMLElement
     let text = el.innerText.trim()
@@ -74,7 +74,11 @@ export const assertMessageContentValidation = (event: Event, user: string, nickn
     // emptyMessagePayload allows us to compute bytes available for the message content
     const emptyMessagePayload: EventRequest<SaveMessageEvent> = {
         typ: 'msg',
-        pyl: { id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', by: user, nickname: nickname, grp: board, msg: '', cat: category, anon: false }
+        pyl: { id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', by: user, nickname: nickname, grp: board, msg: '', cat: category, anon: false, pid: '' }
+    }
+    // Comment payload will have pid populated. Message payload will have pid as empty.
+    if (isComment) {
+        emptyMessagePayload.pyl.pid = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
     }
     const emptyPayloadBytes: number = getByteLength(JSON.stringify(emptyMessagePayload))
     const maxAllowedBytes: number = parseInt(import.meta.env.VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES, 10)

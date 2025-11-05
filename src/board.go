@@ -237,15 +237,17 @@ func HandleRefresh(red *RedisConnector, w http.ResponseWriter, r *http.Request) 
 		for _, m := range msgs {
 			ids = append(ids, m.Id)
 		}
-		likes := red.GetLikesCountMultiple(ids...)
+		likesInfo, likesOk := red.GetLikesInfo(user, ids...)
 
 		for _, m := range msgs {
-			msgRes := m.NewResponse("msg").(MessageResponse)
-			if count, ok := likes[m.Id]; ok {
-				msgRes.Likes = strconv.FormatInt(count, 10)
-			}
+			msgRes := m.NewMessageResponse()
 			msgRes.Mine = m.By == user
-			msgRes.Liked = red.HasLiked(m.Id, user) // Todo: This calls Redis SISMEMBER [O(1) as per doc] in a loop. Check for impact.
+			if likesOk {
+				if info, ok := likesInfo[m.Id]; ok {
+					msgRes.Likes = strconv.FormatInt(info.Count, 10)
+					msgRes.Liked = info.Liked
+				}
+			}
 			res = append(res, msgRes)
 		}
 	}

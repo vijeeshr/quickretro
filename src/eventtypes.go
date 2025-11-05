@@ -20,7 +20,7 @@ func (p *RegisterEvent) Handle(i *Event, h *Hub) {
 	if p.By == "" || p.Xid == "" || p.Group == "" {
 		return
 	}
-	// Update Redis
+	// Execute
 	if ok := h.redis.CommitUserPresence(p.Group, &User{Id: p.By, Xid: p.Xid, Nickname: p.ByNickname}, true); !ok {
 		return
 	}
@@ -30,6 +30,7 @@ func (p *RegisterEvent) Handle(i *Event, h *Hub) {
 	h.redis.Publish(p.Group, &BroadcastArgs{Message: nil, Event: i})
 }
 func (i *RegisterEvent) Broadcast(h *Hub) {
+	// Todo: Can below calls be pipelined?
 	// Transform to Outgoing format
 	// Don't want to add another field in BroadcastArgs{}.
 	board, boardOk := h.redis.GetBoard(i.Group)
@@ -52,32 +53,49 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 		slog.Error("Error getting messages in RegisterEvent broadcast", "board", i.Group)
 		return
 	}
+	comments, commentsOk := h.redis.GetComments(i.Group)
+	if !commentsOk {
+		slog.Error("Error getting comments in RegisterEvent broadcast", "board", i.Group)
+		return
+	}
 
 	// Prepare user details
-	userDetails := make([]*UserDetails, 0)
-	for _, user := range users {
-		if user.Nickname == "" {
-			user.Nickname = "Anonymous" // This may not happen.
-		}
-		userDetails = append(userDetails, &UserDetails{Nickname: user.Nickname, Xid: user.Xid})
+	// userDetails := make([]UserDetails, 0)
+	// userDetails := make([]UserDetails, 0, len(users))
+	userDetails := make([]UserDetails, len(users)) // Preallocate length instead of capacity. len == cap == len(users), so can index directly.
+	for in, u := range users {
+		userDetails[in] = UserDetails{Nickname: u.Nickname, Xid: u.Xid}
 	}
 
 	// Prepare message details
-	messagesDetails := make([]MessageResponse, 0)
-	// Collect "like" count for all messages in one call via a Redis pipeline
-	ids := make([]string, 0)
-	for _, m := range messages {
-		ids = append(ids, m.Id)
+	messagesDetails := make([]MessageResponse, len(messages))
+	// Collect "likes" info
+	ids := make([]string, len(messages))
+	for in, m := range messages {
+		ids[in] = m.Id
 	}
-	likes := h.redis.GetLikesCountMultiple(ids...)
-	for _, m := range messages {
-		msgRes := m.NewResponse("msg").(MessageResponse) // Todo: Type to return *MessageResponse
-		if count, ok := likes[m.Id]; ok {
-			msgRes.Likes = strconv.FormatInt(count, 10)
-		}
+	likesInfo, likesOk := h.redis.GetLikesInfo(i.By, ids...)
+	if !likesOk {
+		slog.Warn("Failed to fetch likes info")
+	}
+	for in, m := range messages {
+		msgRes := m.NewMessageResponse()
 		msgRes.Mine = m.By == i.By
-		msgRes.Liked = h.redis.HasLiked(m.Id, i.By) // Todo: This calls Redis SISMEMBER [O(1) as per doc] in a loop. Check for impact.
-		messagesDetails = append(messagesDetails, msgRes)
+		if likesOk {
+			if info, ok := likesInfo[m.Id]; ok {
+				msgRes.Likes = strconv.FormatInt(info.Count, 10)
+				msgRes.Liked = info.Liked
+			}
+		}
+		messagesDetails[in] = msgRes
+	}
+
+	// Prepare comment details
+	commentDetails := make([]MessageResponse, len(comments))
+	for in, c := range comments {
+		cmtRes := c.NewMessageResponse()
+		cmtRes.Mine = c.By == i.By
+		commentDetails[in] = cmtRes
 	}
 
 	// Prepare timer details
@@ -97,6 +115,7 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 		BoardLock:                 board.Lock,
 		Users:                     userDetails,
 		Messages:                  messagesDetails,
+		Comments:                  commentDetails,
 		TimerExpiresInSeconds:     uint16(remainingTimeInSeconds), // This shouldn't error out since we will restrict expiry to max 1 hour (3600 seconds) future time, when saving "board.TimerExpiresAtUtc".
 		BoardExpiryTimeUtcSeconds: board.AutoDeleteAtUtc,
 		NotifyNewBoardExpiry:      time.Now().UTC().Unix()-board.CreatedAtUtc < 10, // Prepare board expiry notification prompt for New board (less than 10 seconds)
@@ -104,6 +123,7 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 
 	clients := h.clients[i.Group]
 	for client := range clients {
+		// r := response              // shallow copy for each client
 		response.Mine = client.id == i.By // This is to identify if RegisterResponse is a result of a RegisterEvent initiated by same user. RegisterResponses are broadcasted to all.
 		response.IsBoardOwner = client.id == board.Owner
 		select {
@@ -181,13 +201,12 @@ type MaskEvent struct {
 }
 
 func (p *MaskEvent) Handle(i *Event, h *Hub) {
-	// Update Redis
+	// Validate
 	b, ok := h.redis.GetBoard(p.Group)
 	if !ok {
 		slog.Warn("Cannot find board when handling MaskEvent", "board", p.Group)
 		return
 	}
-	// validate
 	if b.Owner != p.By {
 		slog.Warn("Non-owner trying to update board when handling MaskEvent", "board", p.Group, "user", p.By)
 		return
@@ -196,7 +215,7 @@ func (p *MaskEvent) Handle(i *Event, h *Hub) {
 		slog.Warn("Skipping. Board is already masked/unmasked")
 		return
 	}
-	// Update
+	// Execute
 	if updated := h.redis.UpdateMasking(b, p.Mask); !updated {
 		slog.Warn("Skipping. Unable to update masking information.")
 		return
@@ -227,13 +246,12 @@ type LockEvent struct {
 }
 
 func (p *LockEvent) Handle(i *Event, h *Hub) {
-	// Update Redis
+	// validate
 	b, ok := h.redis.GetBoard(p.Group)
 	if !ok {
 		slog.Warn("Cannot find board when handling LockEvent", "board", p.Group)
 		return
 	}
-	// validate
 	if b.Owner != p.By {
 		slog.Warn("Non-owner trying to update board when handling LockEvent", "board", p.Group, "user", p.By)
 		return
@@ -242,7 +260,7 @@ func (p *LockEvent) Handle(i *Event, h *Hub) {
 		slog.Warn("Skipping. Board is already locked/unlocked")
 		return
 	}
-	// Update
+	// Execute
 	if updated := h.redis.UpdateBoardLock(b, p.Lock); !updated {
 		slog.Warn("Skipping. Unable to update lock information.")
 		return
@@ -274,34 +292,29 @@ type MessageEvent struct {
 	Content    string `json:"msg"`
 	Category   string `json:"cat"`
 	Anonymous  bool   `json:"anon"`
+	ParentId   string `json:"pid"`
 }
 
 func (p *MessageEvent) Handle(i *Event, h *Hub) {
-	// Validation: Do not allow updates in read-only board
-	if isLocked := h.redis.IsBoardLocked(p.Group); isLocked {
+	// Validate
+	if h.redis.IsBoardLocked(p.Group) {
 		slog.Warn("Cannot save message in read-only board", "board", p.Group)
 		return
 	}
-	// Save to Redis
+
+	msg := p.ToMessage() // From payload
+
+	existing, exists := h.redis.GetMessage(msg.Id)
 	saved := false
-	msg, exists := h.redis.GetMessage(p.Id)
-	// If message doesn't exist in Redis, consider it new and save it.
+
 	if !exists {
-		msg = p.ToMessage()
-		saved = h.redis.Save(msg)
+		saved = handleNewMessageOrComment(msg, h)
+	} else {
+		saved = handleUpdate(existing, msg, h)
 	}
-	if exists {
-		// Only Content can be updated. The remaining fields must not be modified.
-		// Validation: User can only update own message.
-		if msg.Id == p.Id && msg.Group == p.Group && msg.By == p.By {
-			msg.Content = p.Content
-			saved = h.redis.Save(msg)
-		} else {
-			slog.Warn("Cannot update someone else's message in MessageEvent handle", "msgId", p.Id, "user", p.By)
-		}
-	}
+
 	if !saved {
-		slog.Warn("Failed to save message in MessageEvent handle", "msgId", msg.Id)
+		slog.Warn("Failed to save message/comment", "msgId", msg.Id)
 		return
 	}
 
@@ -310,9 +323,41 @@ func (p *MessageEvent) Handle(i *Event, h *Hub) {
 		h.redis.Publish(msg.Group, &BroadcastArgs{Message: msg, Event: i})
 	}
 }
+func handleNewMessageOrComment(msg *Message, h *Hub) bool {
+	// New message
+	if isMessage(msg) {
+		return h.redis.Save(msg, AsNewMessage)
+	}
+
+	// New Comment
+	// Validate parent message exists
+	parent, exists := h.redis.GetMessage(msg.ParentId)
+	if !exists {
+		slog.Warn("Parent message not found", "commentId", msg.Id, "parentId", msg.ParentId)
+		return false
+	}
+	// Ensure parent is not itself a comment (prevent nesting)
+	if parent.ParentId != "" {
+		slog.Warn("Cannot attach a comment to another comment", "commentId", msg.Id, "parentId", msg.ParentId)
+		return false
+	}
+
+	return h.redis.Save(msg, AsNewComment)
+}
+func handleUpdate(existing, updated *Message, h *Hub) bool {
+	// Validation: user can only update own message, and only content is editable
+	if existing.Id != updated.Id || existing.Group != updated.Group || existing.By != updated.By || existing.ParentId != updated.ParentId {
+		slog.Warn("Unauthorized update attempt", "msgId", updated.Id, "user", updated.By)
+		return false
+	}
+
+	existing.Content = updated.Content
+	return h.redis.Save(existing)
+}
+
 func (i *MessageEvent) Broadcast(m *Message, h *Hub) {
 	// Transform to Outgoing format
-	response := m.NewResponse("msg").(MessageResponse)
+	response := m.NewMessageResponse()
 	count := h.redis.GetLikesCount(m.Id)
 	response.Likes = strconv.FormatInt(count, 10)
 
@@ -335,12 +380,13 @@ type LikeMessageEvent struct {
 }
 
 func (p *LikeMessageEvent) Handle(i *Event, h *Hub) {
-	// Save to Redis
+	// Validate
 	msg, exists := h.redis.GetMessage(p.MessageId) // Todo: Check if fetching a message is needed for a like. Can avoid extra calls. Also BroadcastArgs.Message may not be needed here if removed.
 	if !exists {
 		slog.Warn("Message doesn't exist in LikeMessageEvent handle", "msgId", p.MessageId)
 		return
 	}
+	// Execute
 	liked := h.redis.Like(p.MessageId, p.By, p.Like)
 	if !liked {
 		return
@@ -352,7 +398,7 @@ func (p *LikeMessageEvent) Handle(i *Event, h *Hub) {
 }
 func (i *LikeMessageEvent) Broadcast(m *Message, h *Hub) {
 	// Transform to Outgoing format
-	response := m.NewResponse("like").(LikeMessageResponse)
+	response := m.NewLikeResponse()
 	count := h.redis.GetLikesCount(m.Id)
 	response.Likes = strconv.FormatInt(count, 10)
 
@@ -368,43 +414,55 @@ func (i *LikeMessageEvent) Broadcast(m *Message, h *Hub) {
 }
 
 type DeleteMessageEvent struct {
-	MessageId string `json:"msgId"`
-	By        string `json:"by"`
-	Group     string `json:"grp"`
+	MessageId  string   `json:"msgId"` // MessageId or CommentId
+	By         string   `json:"by"`
+	Group      string   `json:"grp"`
+	CommentIds []string `json:"commentIds"` // Only used when deleting a top-level message i.e. when MessageId represents a message and not a comment.
 }
 
 func (p *DeleteMessageEvent) Handle(i *Event, h *Hub) {
-	// Validation: Do not allow updates in read-only board
-	if isLocked := h.redis.IsBoardLocked(p.Group); isLocked {
-		slog.Warn("Cannot delete message in read-only board", "board", p.Group)
+
+	// Validate
+	if h.redis.IsBoardLocked(p.Group) {
+		slog.Warn("Cannot delete data in read-only board", "board", p.Group)
 		return
 	}
-	// Update Redis
-	deleted := false
+
 	msg, exists := h.redis.GetMessage(p.MessageId)
 	if !exists {
-		slog.Warn("Message doesn't exist in DeleteMessageEvent handle", "msgId", p.MessageId)
+		slog.Warn("Message or Comment doesn't exist in DeleteMessageEvent handle", "msgId", p.MessageId)
 		return
 	}
-	// Validate before deleting; especially if the message being deleted is of the user who created/owns it.
-	// Board owner can delete any message.
+
+	if msg.Id != p.MessageId || msg.Group != p.Group {
+		slog.Warn("Mismatched message/group in delete event", "msgId", p.MessageId, "group", p.Group)
+		return
+	}
+
 	isBoardOwner := h.redis.IsBoardOwner(p.Group, p.By)
-	if msg.Id == p.MessageId && msg.Group == p.Group && (msg.By == p.By || isBoardOwner) {
-		if deleted = h.redis.DeleteMessage(msg); !deleted {
-			return
-		}
-	} else {
-		slog.Warn("Cannot delete someone else's message", "msgId", p.MessageId, "user", p.By)
+	canExecute := (msg.By == p.By || isBoardOwner)
+	if !canExecute {
+		slog.Warn("User not authorized to delete message/comment", "msgId", msg.Id, "user", p.By)
 		return
 	}
-	// Publish to Redis (for broadcasting)
+
+	// Execute
+	deleted := false
+	if isMessage(msg) {
+		commentIds := getValidComments(h, msg, p.CommentIds)
+		deleted = h.redis.DeleteMessage(msg.Group, msg.Id, commentIds)
+	} else {
+		deleted = h.redis.DeleteComment(msg.Group, msg.Id)
+	}
+
+	// Publish: to Redis (for broadcasting)
 	if deleted {
 		h.redis.Publish(msg.Group, &BroadcastArgs{Message: msg, Event: i}) // Todo: Similar to "Like", BroadcastArgs.Message may not be needed here.
 	}
 }
 func (i *DeleteMessageEvent) Broadcast(m *Message, h *Hub) {
 	// Transform to Outgoing format
-	response := m.NewResponse("del").(DeleteMessageResponse)
+	response := m.NewDeleteResponse()
 
 	clients := h.clients[m.Group]
 	for client := range clients {
@@ -457,43 +515,50 @@ func (i *DeleteAllEvent) Broadcast(h *Hub) {
 }
 
 type CategoryChangeEvent struct {
-	MessageId   string `json:"msgId"`
-	By          string `json:"by"`
-	Group       string `json:"grp"`
-	NewCategory string `json:"newcat"`
-	OldCategory string `json:"oldcat"`
+	MessageId   string   `json:"msgId"`
+	By          string   `json:"by"`
+	Group       string   `json:"grp"`
+	NewCategory string   `json:"newcat"`
+	OldCategory string   `json:"oldcat"`
+	CommentIds  []string `json:"commentIds"`
 }
 
 func (p *CategoryChangeEvent) Handle(i *Event, h *Hub) {
-	// Validation: Do not allow updates in read-only board
-	if isLocked := h.redis.IsBoardLocked(p.Group); isLocked {
+	// Validate
+	if h.redis.IsBoardLocked(p.Group) {
 		slog.Warn("Cannot change message category in read-only board", "board", p.Group)
 		return
 	}
-	// Update Redis
-	updated := false
+
 	msg, exists := h.redis.GetMessage(p.MessageId)
 	if !exists {
 		slog.Warn("Message doesn't exist in CategoryChangeEvent handle", "msgId", p.MessageId)
 		return
 	}
-	// Validate if new and old categories are different
+
+	if msg.Id != p.MessageId || msg.Group != p.Group {
+		slog.Warn("Mismatched message/group in CategoryChangeEvent handle", "msgId", p.MessageId, "group", p.Group)
+		return
+	}
+
 	if msg.Category == p.NewCategory {
 		slog.Warn("Old and New categories are same. Not changing.", "msgId", p.MessageId, "newCategory", p.NewCategory)
 		return
 	}
+
 	// Validate before changing category; especially if the message being moved is of the user who created/owns it.
 	// Board owner can change category of any message.
 	isBoardOwner := h.redis.IsBoardOwner(p.Group, p.By)
-	if msg.Id == p.MessageId && msg.Group == p.Group && (msg.By == p.By || isBoardOwner) {
-		// msg.Category = p.NewCategory
-		if updated = h.redis.UpdateMessageCategory(p.MessageId, p.NewCategory); !updated {
-			return
-		}
-	} else {
-		slog.Warn("Cannot change category of someone else's message", "msgId", p.MessageId, "user", p.By)
+	canExecute := (msg.By == p.By || isBoardOwner)
+	if !canExecute {
+		slog.Warn("User not authorized to change category message/comment", "msgId", p.MessageId, "user", p.By)
 		return
 	}
+
+	// Execute
+	commentIds := getValidComments(h, msg, p.CommentIds)
+	updated := h.redis.UpdateCategory(p.NewCategory, p.MessageId, commentIds)
+
 	// Publish to Redis (for broadcasting)
 	// *Message is nil as all message details need not be broadcasted. Event details should be enough.
 	if updated {
@@ -528,7 +593,7 @@ func (p *TimerEvent) Handle(i *Event, h *Hub) {
 	// 	"ExpiryDurationInSeconds" - Is used to convey the "Start" of a timer.
 	// Both are mutually exclusive mostly
 
-	// Update Redis
+	// Validate
 	b, ok := h.redis.GetBoard(p.Group)
 	if !ok {
 		slog.Warn("Cannot find board when handling TimerEvent", "board", p.Group)
@@ -609,4 +674,29 @@ func (i *TimerEvent) Broadcast(h *Hub) {
 type BroadcastArgs struct {
 	Event   *Event
 	Message *Message
+}
+
+// Helper: determine if this is a top-level message
+func isMessage(msg *Message) bool {
+	return msg.ParentId == ""
+}
+
+// Helper: return only comments that belong to this message
+func getValidComments(h *Hub, msg *Message, ids []string) []string {
+	if len(ids) == 0 {
+		return nil
+	}
+
+	cmts, ok := h.redis.GetMessagesByIds(ids, msg.Group)
+	if !ok {
+		return nil
+	}
+
+	valid := make([]string, 0, len(cmts))
+	for _, c := range cmts {
+		if c.ParentId == msg.Id {
+			valid = append(valid, c.Id)
+		}
+	}
+	return valid
 }

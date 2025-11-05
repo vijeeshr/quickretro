@@ -51,6 +51,8 @@ const boardExpiryLocalTime = ref('')
 let socket: WebSocket
 
 const cards = ref<MessageResponse[]>([]) // Todo: Rework models
+const commentsMap = ref(new Map<string, MessageResponse[]>()) // map of messageId -> [comments]
+
 const columns = ref<BoardColumn[]>([])
 const onlineUsers = ref<OnlineUser[]>([])
 
@@ -91,6 +93,14 @@ const onCountdownCompleted = () => {
 
 const filterCards = (category: string) => {
     return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase())
+}
+
+const filterComments = (messageId: string): MessageResponse[] => {
+    return commentsMap.value.get(messageId) || []
+}
+
+const getCommentIds = (messageId: string): string[] => {
+    return commentsMap.value.get(messageId)?.map(c => c.id) ?? []
 }
 
 const add = (category: string, anonymous: boolean) => {
@@ -189,10 +199,20 @@ const onAdded = (card: DraftMessage) => {
     logMessage('newcontent received:', card)
     clearNewCards()
     const nicknameToSend = card.anon === true ? '' : nickname
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nicknameToSend, grp: board, msg: card.msg, cat: card.cat, anon: card.anon })
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nicknameToSend, grp: board, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
+}
+
+const onCommentAdded = (comment: DraftMessage) => {
+    logMessage('newcontent received:', comment)
+    // Todo: clear the comment field..maybe in the Card component?
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, nickname: nickname, grp: board, msg: comment.msg, cat: comment.cat, anon: comment.anon, pid: comment.pid })
 }
 
 const onInvalidContent = (errorMessage: string) => {
+    toast.error(errorMessage)
+}
+
+const onCommentInvalidContent = (errorMessage: string) => {
     toast.error(errorMessage)
 }
 
@@ -202,11 +222,21 @@ const onDiscard = () => {
 
 const onUpdated = (card: DraftMessage) => {
     logMessage('Updated content received:', card)
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat, anon: false })
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat, anon: false, pid: card.pid })
+}
+
+const onCommentUpdated = (comment: DraftMessage) => {
+    logMessage('Updated content received:', comment)
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, nickname: nickname, grp: board, msg: comment.msg, cat: comment.cat, anon: false, pid: comment.pid })
 }
 
 const onDeleted = (cardId: string) => {
-    dispatchEvent<DeleteMessageEvent>("del", { msgId: cardId, by: user, grp: board })
+    const commentIds = getCommentIds(cardId)
+    dispatchEvent<DeleteMessageEvent>("del", { msgId: cardId, by: user, grp: board, commentIds: commentIds })
+}
+
+const onCommentDeleted = (commendId: string) => {
+    dispatchEvent<DeleteMessageEvent>("del", { msgId: commendId, by: user, grp: board, commentIds: [] })
 }
 
 const onLiked = (likeMessage: LikeMessage) => {
@@ -214,7 +244,8 @@ const onLiked = (likeMessage: LikeMessage) => {
 }
 
 const onCategoryChanged = (pyl: CategoryChangeMessage) => {
-    dispatchEvent<CategoryChangeEvent>("catchng", { msgId: pyl.msgId, by: user, grp: board, newcat: pyl.newCategoryId, oldcat: pyl.oldCategoryId })
+    const commentIds = getCommentIds(pyl.msgId)
+    dispatchEvent<CategoryChangeEvent>("catchng", { msgId: pyl.msgId, commentIds: commentIds, by: user, grp: board, newcat: pyl.newCategoryId, oldcat: pyl.oldCategoryId })
 }
 
 const mask = () => {
@@ -516,22 +547,31 @@ const timerSettings = () => {
 }
 
 const onRegisterResponse = (response: RegisterResponse) => {
-    isOwner.value = response.isBoardOwner
-    isMasked.value = response.boardMasking
-    isLocked.value = response.boardLock
-    timerExpiresInSeconds.value = response.timerExpiresInSeconds
-    boardExpiryLocalTime.value = formatDate(response.boardExpiryUtcSeconds)
-    onlineUsers.value = []
-    onlineUsers.value.push(...response.users) // Todo: find a better way
-    columns.value = []
-    columns.value.push(...response.columns) // Todo: find a better way
-    boardName.value = response.boardName
-    // Load messages.
-    // Only loading messages when the RegisterResponse is for the current User's RegisterEvent request.
-    // This prevents unnecessarily pushing messages in the ref for other users RegisterEvents. RegisterEvent happens just once in the beginning.
+    timerExpiresInSeconds.value = response.timerExpiresInSeconds // This always gets set. Todo: find a better way to sync timer.
+    // response.mine == true means RegisterResponse is for the current User's RegisterEvent request.
+    // This prevents unnecessarily updating values/pushing messages in the ref for other users RegisterEvents. 
+    // RegisterEvent happens just once per user in the beginning i.e. when user loads/reloads the page.
     if (response.mine) {
+        boardName.value = response.boardName
+        isOwner.value = response.isBoardOwner
+        isMasked.value = response.boardMasking
+        isLocked.value = response.boardLock
+        boardExpiryLocalTime.value = formatDate(response.boardExpiryUtcSeconds)
+        onlineUsers.value = []
+        onlineUsers.value.push(...response.users) // Todo: find a better way
+        columns.value = []
+        columns.value.push(...response.columns) // Todo: find a better way
+
         cards.value = []
         cards.value.push(...response.messages)
+
+        // Build Map: messageId → comments[]
+        const map = new Map<string, MessageResponse[]>()
+        response.comments.forEach(comment => {
+            if (!map.has(comment.pid)) map.set(comment.pid, [])
+            map.get(comment.pid)!.push(comment)
+        })
+        commentsMap.value = map
     }
 
     // Show expiration notification for newly created board. Show only for board creator/owner
@@ -561,18 +601,37 @@ const onLockResponse = (response: LockResponse) => {
 }
 
 const onSaveMessageResponse = (response: MessageResponse) => {
-    let index = cards.value.findIndex(x => x.id === response.id)
-    if (index === -1) {
-        cards.value.push(response)
+    if (response.pid) {
+        // It's a comment — store under its parent message
+        const existingComments = commentsMap.value.get(response.pid) || []
+        const index = existingComments.findIndex(c => c.id === response.id)
+
+        if (index === -1) {
+            // New comment
+            commentsMap.value.set(response.pid, [...existingComments, response])
+        } else {
+            // Update existing comment
+            const updated = [...existingComments]
+            updated[index] = response
+            commentsMap.value.set(response.pid, updated)
+        }
     } else {
-        cards.value[index] = response
+        // It's a top-level message
+        const index = cards.value.findIndex(x => x.id === response.id)
+        if (index === -1) {
+            cards.value.push(response)
+        } else {
+            cards.value[index] = response
+        }
     }
 }
 
 const onDeleteMessageResponse = (response: DeleteMessageResponse) => {
-    let index = cards.value.findIndex(x => x.id === response.id)
-    if (index !== -1) {
-        cards.value.splice(index, 1)
+    // Delete message
+    let messageIndex = cards.value.findIndex(x => x.id === response.id)
+    if (messageIndex !== -1) {
+        commentsMap.value.delete(response.id) // remove associated comments
+        cards.value.splice(messageIndex, 1)
         // Re-adjust spotlight
         if (isSpotlightOn.value) {
             if (usersWithCards.value.length === 0) {
@@ -580,6 +639,20 @@ const onDeleteMessageResponse = (response: DeleteMessageResponse) => {
             } else if (!usersWithCards.value.includes(spotlightFor.value)) {
                 nextSpotlight();
             }
+        }
+        return // Just return no need to proceed further
+    }
+
+    // Delete comment
+    for (const [parentId, comments] of commentsMap.value.entries()) {
+        const index = comments.findIndex(c => c.id === response.id)
+        if (index !== -1) {
+            const updated = [...comments]
+            updated.splice(index, 1)
+            updated.length > 0
+                ? commentsMap.value.set(parentId, updated)
+                : commentsMap.value.delete(parentId)
+            return
         }
     }
 }
@@ -589,10 +662,28 @@ const onDeleteAllResponse = () => {
 }
 
 const onCategoryChangeResponse = (response: CategoryChangeResponse) => {
-    let index = cards.value.findIndex(x => x.id === response.id)
+    const msgId = response.id
+    const newCat = response.newcat
+    // Update category of message
+    let index = cards.value.findIndex(x => x.id === msgId)
     if (index !== -1) {
-        cards.value[index].cat = response.newcat
+        cards.value[index].cat = newCat
     }
+    // Update category of associated comments
+    const comments = commentsMap.value.get(msgId)
+    if (comments && comments.length > 0) {
+        const updatedComments = comments.map(c => ({
+            ...c,
+            cat: newCat,
+        }))
+        commentsMap.value.set(msgId, updatedComments)
+    }
+    // // Mutate in-place instead of creating a new array. 
+    // // Faster for large comment lists, but reactivity might not always trigger UI updates if Vue doesn’t deeply watch the comment array (depends on where it’s used in templates).
+    // const comments = commentsMap.value.get(msgId)
+    // if (comments) {
+    //     comments.forEach(c => (c.cat = newCat))
+    // }
 }
 
 const onLikeMessageResponse = (response: LikeMessageResponse) => {
@@ -747,7 +838,7 @@ onUnmounted(() => {
             <div v-else
                 class="min-w-32 inline-flex items-center justify-center overflow-hidden rounded-md px-3 py-1 bg-gray-300">
                 <span class="font-medium text-xs cursor-default text-gray-600 select-none">{{ t('common.anonymous')
-                }}</span>
+                    }}</span>
             </div>
             <button class="rounded-md hover:bg-gray-200 hover:text-gray-700 mr-3" @click="nextSpotlight">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -988,12 +1079,14 @@ onUnmounted(() => {
                     <NewAnonymousCard v-if="newAnonymousCardCategory == column.id" :category="column.id" :by="user"
                         nickname="" :board="board" @added="onAdded" @invalidContent="onInvalidContent"
                         @discard="onDiscard" />
-                    <Card v-for="card in filterCards(column.id)" :card="card" :current-user="user"
-                        :current-user-nickname="nickname" :board="board" :mask="isMasked"
-                        :manageable="card.mine || isOwner" :key="card.id" :categories="columns" :locked="isLocked"
+                    <Card v-for="card in filterCards(column.id)" :card="card" :comments="filterComments(card.id)"
+                        :current-user="user" :current-user-nickname="nickname" :board="board" :mask="isMasked"
+                        :can-manage="isOwner" :key="card.id" :categories="columns" :locked="isLocked"
                         @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" @category-changed="onCategoryChanged"
                         @invalidContent="onInvalidContent" @avatar-clicked="showSpotlightFor"
-                        @discard="notifyForLostMessages" :class="{
+                        @discard="notifyForLostMessages" @comment-added="onCommentAdded"
+                        @comment-updated="onCommentUpdated" @comment-deleted="onCommentDeleted" @comment-discard="notifyForLostMessages"
+                        @comment-invalid-content="onCommentInvalidContent" :class="{
                             'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none': isSpotlightOn && usersWithCards.length > 0 && card.nickname !== spotlightFor,
                             'bg-black dark:bg-black border border-gray-200 z-[51]': isSpotlightOn && usersWithCards.length > 0 && card.nickname === spotlightFor,
                         }" />
