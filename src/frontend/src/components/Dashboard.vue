@@ -41,7 +41,11 @@ const board = Array.isArray(route.params.board)
 // Todo: Find a way of passing this from route..meta?
 const user = localStorage.getItem("user") || ''
 const externalId = localStorage.getItem("xid") || ''
-const nickname = localStorage.getItem("nickname") || ''
+const nickname = ref(localStorage.getItem('nickname') || '')
+const isNicknameValid = computed(() => {
+    if (nickname.value && nickname.value.trim() !== '') return true
+    return false
+})
 const isConnected = ref(false)
 const boardName = ref('')
 const shareLink = `${window.location.href}`
@@ -79,6 +83,11 @@ const setIsDeleteAllDialogOpen = (value: boolean) => {
 const isLanguageDialogOpen = ref(false)
 const setIsLanguageDialogOpen = (value: boolean) => {
     isLanguageDialogOpen.value = value
+}
+
+const isProfileDialogOpen = ref(false)
+const setIsProfileDialogOpen = (value: boolean) => {
+    isProfileDialogOpen.value = value
 }
 
 const toast = useToast()
@@ -127,11 +136,19 @@ const cardCountsByName = computed(() => {
     return counts
 })
 
+const myCardsCount = computed(() => {
+    return cardCountsByName.value[nickname.value] ?? 0
+})
+
 const onlineUsersCardsCount = computed(() => {
+    // Except current user
     return onlineUsers.value.map(user => ({
         nickname: user.nickname,
-        cardsCount: cardCountsByName.value[user.nickname] || 0
-    }))
+        cardsCount: cardCountsByName.value[user.nickname] || 0,
+        xid: user.xid
+        // me: user.xid == externalId
+    })).filter(u => u.xid !== externalId)
+    //.sort((a, b) => Number(b.me) - Number(a.me))
 })
 
 const usersWithCards = computed(() => Object.keys(cardCountsByName.value))
@@ -199,14 +216,14 @@ const clearNewCards = () => {
 const onAdded = (card: DraftMessage) => {
     logMessage('newcontent received:', card)
     clearNewCards()
-    const nicknameToSend = card.anon === true ? '' : nickname
+    const nicknameToSend = card.anon === true ? '' : nickname.value
     dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nicknameToSend, grp: board, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
 }
 
 const onCommentAdded = (comment: DraftMessage) => {
     logMessage('newcontent received:', comment)
     // Todo: clear the comment field..maybe in the Card component?
-    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, nickname: nickname, grp: board, msg: comment.msg, cat: comment.cat, anon: comment.anon, pid: comment.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, nickname: nickname.value, grp: board, msg: comment.msg, cat: comment.cat, anon: comment.anon, pid: comment.pid })
 }
 
 const onInvalidContent = (errorMessage: string) => {
@@ -223,12 +240,12 @@ const onDiscard = () => {
 
 const onUpdated = (card: DraftMessage) => {
     logMessage('Updated content received:', card)
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat, anon: false, pid: card.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname.value, grp: board, msg: card.msg, cat: card.cat, anon: false, pid: card.pid })
 }
 
 const onCommentUpdated = (comment: DraftMessage) => {
     logMessage('Updated content received:', comment)
-    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, nickname: nickname, grp: board, msg: comment.msg, cat: comment.cat, anon: false, pid: comment.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, nickname: nickname.value, grp: board, msg: comment.msg, cat: comment.cat, anon: false, pid: comment.pid })
 }
 
 const onDeleted = (cardId: string) => {
@@ -541,6 +558,16 @@ const openDeleteAllDialog = () => {
     isDeleteAllDialogOpen.value = true
 }
 
+const saveProfile = () => {
+    if (nickname.value && nickname.value.trim() !== '' && nickname.value.trim() !== (localStorage.getItem("nickname") || '').trim()) {
+        localStorage.setItem("nickname", nickname.value)
+    }
+    isProfileDialogOpen.value = false
+}
+const updateProfile = () => {
+    isProfileDialogOpen.value = true
+}
+
 const timerSettings = () => {
     if (isOwner.value) {
         isTimerDialogOpen.value = true
@@ -728,7 +755,7 @@ const dispatchEvent = <T>(eventType: string, payload: T) => {
 const socketOnOpen = (event: Event) => {
     logMessage("[open] Connection established", event)
     isConnected.value = true
-    dispatchEvent<RegisterEvent>("reg", { by: user, nickname: nickname, xid: externalId, grp: board })
+    dispatchEvent<RegisterEvent>("reg", { by: user, nickname: nickname.value, xid: externalId, grp: board })
 }
 const socketOnClose = (event: CloseEvent) => {
     isConnected.value = false
@@ -921,6 +948,52 @@ onUnmounted(() => {
             </div>
         </Dialog>
 
+        <!-- Dialog to update profile -->
+        <Dialog :open="isProfileDialogOpen" @close="setIsProfileDialogOpen" class="relative z-50">
+            <!-- The backdrop, rendered as a fixed sibling to the panel container -->
+            <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
+            <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
+                <DialogPanel class="rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
+                    <div class="flex justify-center items-center h-11 w-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="w-11 h-11 text-gray-600 dark:text-gray-400"
+                            v-if="!isNicknameValid">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                        <Avatar :name="nickname" class="w-10 h-10" v-if="isNicknameValid" />
+                    </div>
+                    <div class="space-y-6 mt-4">
+                        <div>
+                            <div class="mt-1">
+                                <input v-model.trim="nickname" name="newnickname" type="text"
+                                    placeholder="Type your name here!" required
+                                    class="px-2 py-2 mt-1 block w-[300px] rounded-md border border-gray-300 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-sky-500 sm:text-sm dark:bg-slate-800 dark:text-slate-200" />
+                            </div>
+                            <p class="flex justify-items-normal mt-2 text-xs text-slate-400">
+                                Only new messages will reflect new name.
+                            </p>
+                            <p class="flex justify-items-normal mt-2 text-xs text-slate-400">
+                                Older messages will continue to show previous name.
+                            </p>
+                            <div class="h-5 flex items-center">
+                                <p v-show="!isNicknameValid" name="newnickname-required"
+                                    class="text-sm text-red-600 dark:text-red-300 mt-2">Please
+                                    enter your name</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="button"
+                            class="flex justify-center px-4 py-2 text-sm w-full shadow-md bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2 dark:focus:ring-2 dark:focus:ring-offset-0 select-none"
+                            :disabled="!isNicknameValid" @click="saveProfile">
+                            Save
+                        </button>
+                    </div>
+                </DialogPanel>
+            </div>
+        </Dialog>
+
         <!-- Dialog for DeleteAll Confirmation -->
         <Dialog :open="isDeleteAllDialogOpen" @close="setIsDeleteAllDialogOpen" class="relative z-50">
             <!-- The backdrop, rendered as a fixed sibling to the panel container -->
@@ -1100,7 +1173,15 @@ onUnmounted(() => {
 
         <!-- Right Sidebar -->
         <div class="w-16 p-4">
-            <div v-for="user in onlineUsersCardsCount" class="relative w-8 h-8 ml-auto mx-auto mb-4">
+            <div class="relative w-8 h-8 ml-auto mx-auto mb-4">
+                <Avatar :name="nickname" class="w-8 h-8 border-2 border-white cursor-pointer" />
+                <span v-if="myCardsCount > 0"
+                    class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none">
+                    {{ myCardsCount }}
+                </span>
+            </div>
+
+            <div v-for="user in onlineUsersCardsCount" :key="user.xid" class="relative w-8 h-8 ml-auto mx-auto mb-4">
                 <Avatar :name="user.nickname" class="w-8 h-8" />
                 <span v-if="user.cardsCount > 0"
                     class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none">
