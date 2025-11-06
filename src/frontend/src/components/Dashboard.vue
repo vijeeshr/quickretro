@@ -118,6 +118,7 @@ const add = (category: string, anonymous: boolean) => {
     }
 }
 
+// Todo: Card counts by name isn't ideal. It will be incorrect when two users have the exact same nickname.
 const cardCountsByName = computed(() => {
     const counts: Record<string, number> = {}
     for (const card of cards.value) {
@@ -548,6 +549,10 @@ const timerSettings = () => {
 
 const onRegisterResponse = (response: RegisterResponse) => {
     timerExpiresInSeconds.value = response.timerExpiresInSeconds // This always gets set. Todo: find a better way to sync timer.
+    boardExpiryLocalTime.value = formatDate(response.boardExpiryUtcSeconds)
+    onlineUsers.value = []
+    onlineUsers.value.push(...response.users) // Todo: find a better way
+
     // response.mine == true means RegisterResponse is for the current User's RegisterEvent request.
     // This prevents unnecessarily updating values/pushing messages in the ref for other users RegisterEvents. 
     // RegisterEvent happens just once per user in the beginning i.e. when user loads/reloads the page.
@@ -556,9 +561,6 @@ const onRegisterResponse = (response: RegisterResponse) => {
         isOwner.value = response.isBoardOwner
         isMasked.value = response.boardMasking
         isLocked.value = response.boardLock
-        boardExpiryLocalTime.value = formatDate(response.boardExpiryUtcSeconds)
-        onlineUsers.value = []
-        onlineUsers.value.push(...response.users) // Todo: find a better way
         columns.value = []
         columns.value.push(...response.columns) // Todo: find a better way
 
@@ -1085,8 +1087,9 @@ onUnmounted(() => {
                         @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" @category-changed="onCategoryChanged"
                         @invalidContent="onInvalidContent" @avatar-clicked="showSpotlightFor"
                         @discard="notifyForLostMessages" @comment-added="onCommentAdded"
-                        @comment-updated="onCommentUpdated" @comment-deleted="onCommentDeleted" @comment-discard="notifyForLostMessages"
-                        @comment-invalid-content="onCommentInvalidContent" :class="{
+                        @comment-updated="onCommentUpdated" @comment-deleted="onCommentDeleted"
+                        @comment-discard="notifyForLostMessages" @comment-invalid-content="onCommentInvalidContent"
+                        :class="{
                             'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none': isSpotlightOn && usersWithCards.length > 0 && card.nickname !== spotlightFor,
                             'bg-black dark:bg-black border border-gray-200 z-[51]': isSpotlightOn && usersWithCards.length > 0 && card.nickname === spotlightFor,
                         }" />
