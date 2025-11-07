@@ -561,8 +561,16 @@ const onRegisterResponse = (response: RegisterResponse) => {
         isOwner.value = response.isBoardOwner
         isMasked.value = response.boardMasking
         isLocked.value = response.boardLock
-        columns.value = []
-        columns.value.push(...response.columns) // Todo: find a better way
+        // columns.value = []
+        // columns.value.push(...response.columns) // Todo: find a better way
+
+        // const sortedColumns = response.columns
+        //     .slice() // create a shallow copy (to avoid mutating response.columns)
+        //     .sort((a, b) => a.pos - b.pos)
+        // columns.value.push(...sortedColumns)
+        columns.value = response.columns
+            .slice()
+            .sort((a, b) => a.pos - b.pos)
 
         cards.value = []
         cards.value.push(...response.messages)

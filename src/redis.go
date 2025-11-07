@@ -112,6 +112,7 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 			pipe.HSet(c.ctx, colKey, "text", col.Text)
 			pipe.HSet(c.ctx, colKey, "isDefault", col.IsDefault)
 			pipe.HSet(c.ctx, colKey, "color", col.Color)
+			pipe.HSet(c.ctx, colKey, "pos", col.Position)
 			// pipe.Expire(c.ctx, colKey, 2*time.Hour)
 			pipe.ExpireAt(c.ctx, colKey, autoDeleteTime)
 			pipe.SAdd(c.ctx, boardColsKey, col.Id)

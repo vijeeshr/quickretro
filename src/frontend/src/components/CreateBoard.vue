@@ -20,13 +20,14 @@ const turnstileToken = ref('')
 const isTurnstileVerified = ref(false)
 const isSubmitting = ref(false)
 const turnstileRef = ref<{ reset: () => void }>()
+const dragSourceIndex = ref<number | null>(null) // Drag state
 
 const columns = ref([
-    { id: "col01", text: "", color: "green", colorClass: "text-green-500", enabled: true },
-    { id: "col02", text: "", color: "red", colorClass: "text-red-500", enabled: true },
-    { id: "col03", text: "", color: "yellow", colorClass: "text-yellow-500", enabled: true },
-    { id: "col04", text: "", color: "fuchsia", colorClass: "text-fuchsia-500", enabled: false },
-    { id: "col05", text: "", color: "orange", colorClass: "text-orange-500", enabled: false }
+    { id: "col01", text: "", color: "green", colorClass: "text-green-500", enabled: true, pos: 1 },
+    { id: "col02", text: "", color: "red", colorClass: "text-red-500", enabled: true, pos: 2 },
+    { id: "col03", text: "", color: "yellow", colorClass: "text-yellow-500", enabled: true, pos: 3 },
+    { id: "col04", text: "", color: "fuchsia", colorClass: "text-fuchsia-500", enabled: false, pos: 4 },
+    { id: "col05", text: "", color: "orange", colorClass: "text-orange-500", enabled: false, pos: 5 }
 ])
 
 const toggleColumn = (column: string, enable: boolean) => {
@@ -68,7 +69,8 @@ const create = async () => {
             id: c.id,
             text: c.text || t(`dashboard.columns.${c.id}`),
             isDefault: c.text === '' || c.text === t(`dashboard.columns.${c.id}`),
-            color: c.color
+            color: c.color,
+            pos: c.pos
         }))
 
     const payload: CreateBoardRequest = {
@@ -91,10 +93,27 @@ const create = async () => {
     }
 }
 
+const onDragStart = (index: number) => {
+    dragSourceIndex.value = index
+}
+// Fired when dragging over another item
+const onDragOver = (event: DragEvent) => {
+    event.preventDefault() // allow dropping
+}
+const onDrop = (targetIndex: number) => {
+    if (dragSourceIndex.value === null || dragSourceIndex.value === targetIndex) return
+    // Move item in array
+    const moved = columns.value.splice(dragSourceIndex.value, 1)[0]
+    columns.value.splice(targetIndex, 0, moved)
+    // Reset drag index
+    dragSourceIndex.value = null
+    // Update position numbers (for saving order later)
+    columns.value.forEach((c, i) => (c.pos = i + 1))
+}
+
 onMounted(() => {
     document.documentElement.classList.toggle("dark", isDark.value)
 })
-
 </script>
 
 <template>
@@ -124,7 +143,14 @@ onMounted(() => {
                     </div>
                     <div>
                         <ul class="space-y-2 text-sm">
-                            <li v-for="column in columns" :key="column.id" class="flex space-x-3">
+                            <li v-for="(column, index) in columns" :key="column.id" class="flex space-x-1"
+                                draggable="true" @dragstart="onDragStart(index)" @dragover="onDragOver"
+                                @drop="onDrop(index)">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                    stroke="currentColor" class="w-6 h-6 text-gray-900 dark:text-gray-400 cursor-move">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M8 9h.01M16 9h.01M8 15h.01M16 15h.01" />
+                                </svg>
                                 <button v-if="column.enabled" @click="toggleColumn(column.id, false)">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                         class="w-6 h-6" :class="[`${column.colorClass}`]">

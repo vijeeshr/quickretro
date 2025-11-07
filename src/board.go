@@ -44,10 +44,11 @@ type BoardColumn struct {
 	Text      string `redis:"text" json:"text"`
 	IsDefault bool   `redis:"isDefault" json:"isDefault"`
 	Color     string `redis:"color" json:"color"`
+	Position  int    `redis:"pos" json:"pos"`
 }
 
 func (b BoardColumn) String() string {
-	return fmt.Sprintf("Id:%s Text:%s Color:%s", b.Id, b.Text, b.Color)
+	return fmt.Sprintf("Id:%s Text:%s Color:%s Position:%d", b.Id, b.Text, b.Color, b.Position)
 }
 
 type CreateBoardReq struct {
