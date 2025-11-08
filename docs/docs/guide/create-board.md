@@ -24,6 +24,10 @@ You can choose which columns you want and name them accordingly.
 Click the coloured dot (***present towards left of each column name***) to enable/disable a column.\
 Click the column name text to type any custom name.
 
+### Changing column order
+Available from <Badge type="tip" text="v1.5.4" />  
+Drag-and-Drop columns vertically to change the column order.
+
 When a Board is created, the user is taken to the [Dashboard](dashboard).
 
 ## Quick video

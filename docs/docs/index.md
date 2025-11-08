@@ -32,8 +32,8 @@ features:
     title: Mobile Friendly UI
     details: Easily participate from your mobile phone
   - icon: 📝
-    title: Customize Column Names
-    details: Choose upto 5 columns with any name
+    title: Customize Columns
+    details: Choose upto 5 columns with any name in any order
   - icon: 🙈
     title: Mask/Blur messages
     details: Avoid revealing messages of other participants
@@ -49,6 +49,9 @@ features:
   - icon: 🔒
     title: Board Lock
     details: Lock to stop addition/updation of messages
+  - icon: 💬
+    title: Comments
+    details: Add comments to discuss ideas directly on each card 
   - icon: 🌙
     title: Dark Theme
     details: Easily switch to use a Dark theme

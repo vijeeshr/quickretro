@@ -30,13 +30,11 @@ You can also share the url directly from the browser address-bar.
 
 ## Add / Update a message
 
-::: info NOTE
-Board owner can update any message.
-:::
-
 ::: danger BEHAVIOR CHANGE
 From <Badge type="danger" text="v1.2.0" />, each column has dedicated buttons to create messages. Columns names no longer act as buttons.\
-To create a message, click the **+** button.
+To create a message, click the **+** button.\
+
+From <Badge type="danger" text="v1.5.4" />, **Board owner cannot update** another user's message. This was possible in prior versions.
 :::
 <img src="/dashboard_add_cards.png" class="shadow-img" alt="Dashboard Add Cards" width="312" loading="lazy">
 
@@ -103,6 +101,28 @@ on each card to move cards across columns or categories.
 <img src="/dashboard_move.png" class="shadow-img" alt="Dashboard Move Card" width="312" loading="lazy">
 
 A small menu opens up with the target columns.
+
+## Comments
+Available from <Badge type="tip" text="v1.5.4" /> 
+
+<img src="/comments.png" class="shadow-img" alt="Comments" width="312" loading="lazy">
+
+Use the comments icon button
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+    stroke="currentColor" class="display-icon">
+    <path stroke-linecap="round" stroke-linejoin="round"
+        d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z" />
+</svg>
+on each card to open/close the comments pane. The comments pane is closed by default.
+### Add / Edit / Delete comment
+Type your text in the text field in the comments pane, and press <Badge type="tip" text="Enter" /> or click/tap anywhere else on the screen, to add a new comment to a card.  
+
+Just like cards, click on your existing comment to update it.  
+
+To delete a comment, use the delete icon for that comment.  
+::: info NOTE
+Board owner can delete any comment.
+:::
 
 ## Start / Stop Timer
 ::: info NOTE
