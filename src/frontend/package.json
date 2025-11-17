@@ -12,8 +12,6 @@
   "dependencies": {
     "@headlessui/vue": "^1.7.23",
     "dompurify": "^3.2.6",
-    "jspdf": "^3.0.2",
-    "jspdf-autotable": "^5.0.2",
     "vue": "^3.5.21",
     "vue-i18n": "^11.1.11",
     "vue-router": "^4.5.1",

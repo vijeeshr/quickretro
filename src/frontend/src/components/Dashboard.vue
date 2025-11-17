@@ -271,22 +271,22 @@ const onTimerStop = () => {
     setIsTimerDialogOpen(false)
 }
 
-const getRGBizedColor = (color: string): [number, number, number] => {
-    switch (color) {
-        case "green":
-            return [74, 222, 128]
-        case "red":
-            return [248, 113, 113]
-        case "yellow":
-            return [250, 204, 21]
-        case "fuchsia":
-            return [232, 121, 249]
-        case "orange":
-            return [251, 146, 60]
-        default:
-            return [128, 128, 128]
-    }
-}
+// const getRGBizedColor = (color: string): [number, number, number] => {
+//     switch (color) {
+//         case "green":
+//             return [74, 222, 128]
+//         case "red":
+//             return [248, 113, 113]
+//         case "yellow":
+//             return [250, 204, 21]
+//         case "fuchsia":
+//             return [232, 121, 249]
+//         case "orange":
+//             return [251, 146, 60]
+//         default:
+//             return [128, 128, 128]
+//     }
+// }
 
 // const getHexizedColor = (color: string): string => {
 //     const rgb = getRGBizedColor(color);
@@ -313,67 +313,68 @@ const getHexizedColor = (color: string): string => {
 }
 
 const generateDocument = () => {
-    if (locale.value === 'zhCN' || locale.value === 'ja' || locale.value === 'ko' || locale.value === 'ru' || locale.value === 'uk') {
-        print()
-    } else {
-        download()
-    }
+    // if (locale.value === 'zhCN' || locale.value === 'ja' || locale.value === 'ko' || locale.value === 'ru' || locale.value === 'uk') {
+    //     print()
+    // } else {
+    //     download()
+    // }
+    print()
 }
 
-const download = async () => {
-    try {
-        const { default: jsPDF } = await import('jspdf')
-        const { default: autoTable } = await import('jspdf-autotable')
+// const download = async () => {
+//     try {
+//         const { default: jsPDF } = await import('jspdf')
+//         const { default: autoTable } = await import('jspdf-autotable')
 
-        const doc = new jsPDF({
-            orientation: "portrait",
-            unit: "in",
-            format: "letter"
-        })
+//         const doc = new jsPDF({
+//             orientation: "portrait",
+//             unit: "in",
+//             format: "letter"
+//         })
 
-        // text is placed using x, y coordinates
-        doc.setFontSize(16).text(`${t('common.board')} - ${boardName.value}`, 0.5, 1.0)
-        // create a line under heading
-        doc.setLineWidth(0.01).line(0.5, 1.1, 8.0, 1.1)
+//         // text is placed using x, y coordinates
+//         doc.setFontSize(16).text(`${t('common.board')} - ${boardName.value}`, 0.5, 1.0)
+//         // create a line under heading
+//         doc.setLineWidth(0.01).line(0.5, 1.1, 8.0, 1.1)
 
-        for (const col of columns.value) {
-            const headerText = col.isDefault ? t(`dashboard.columns.${col.id}`) : col.text
-            const itemsForExport = cards.value.filter(c => c.cat.toLowerCase() === col.id.toLowerCase())
-                .map(c => [c.msg])
+//         for (const col of columns.value) {
+//             const headerText = col.isDefault ? t(`dashboard.columns.${col.id}`) : col.text
+//             const itemsForExport = cards.value.filter(c => c.cat.toLowerCase() === col.id.toLowerCase())
+//                 .map(c => [c.msg])
 
-            // Using autoTable plugin               
-            autoTable(doc, {
-                head: [[headerText]],
-                body: itemsForExport,
-                headStyles: { fillColor: getRGBizedColor(col.color) },
-                margin: { left: 0.5, top: 1.25 },
-            })
-        }
+//             // Using autoTable plugin               
+//             autoTable(doc, {
+//                 head: [[headerText]],
+//                 body: itemsForExport,
+//                 headStyles: { fillColor: getRGBizedColor(col.color) },
+//                 margin: { left: 0.5, top: 1.25 },
+//             })
+//         }
 
-        // Footer
-        doc
-            .setFont("times")
-            .setFontSize(11)
-            .setTextColor("gray")
-            .text(
-                `${t('dashboard.pdfFooter')} QuickRetro ( https://quickretro.app )`,
-                doc.internal.pageSize.width / 2, // Center horizontally
-                doc.internal.pageSize.height - 0.5, // Position vertically
-                { align: "center" }
-            )
+//         // Footer
+//         doc
+//             .setFont("times")
+//             .setFontSize(11)
+//             .setTextColor("gray")
+//             .text(
+//                 `${t('dashboard.pdfFooter')} QuickRetro ( https://quickretro.app )`,
+//                 doc.internal.pageSize.width / 2, // Center horizontally
+//                 doc.internal.pageSize.height - 0.5, // Position vertically
+//                 { align: "center" }
+//             )
 
-        doc.save(`quickretro.pdf`)
+//         doc.save(`quickretro.pdf`)
 
-        // Using array of sentences
-        // doc
-        //     .setFont("helvetica")
-        //     .setFontSize(12)
-        //     .text(moreText, 0.5, 3.5, { align: "left", maxWidth: 7.5 });
-    } catch (error) {
-        // toast.error(t('dashboard.download.error'), { pauseOnHover: false })
-        console.error('PDF download failed:', error)
-    }
-}
+//         // Using array of sentences
+//         // doc
+//         //     .setFont("helvetica")
+//         //     .setFontSize(12)
+//         //     .text(moreText, 0.5, 3.5, { align: "left", maxWidth: 7.5 });
+//     } catch (error) {
+//         // toast.error(t('dashboard.download.error'), { pauseOnHover: false })
+//         console.error('PDF download failed:', error)
+//     }
+// }
 
 const print = async () => {
     const printWindow = window.open('', '_blank')
@@ -384,7 +385,7 @@ const print = async () => {
         const { sanitize } = useSanitize()
 
         // Create document structure
-        const doc = printWindow.document
+        // const doc = printWindow.document
         const html = `
         <html>
             <head>
@@ -487,26 +488,37 @@ const print = async () => {
             </body>
         </html>`
 
-        // Modern parsing method
-        const parser = new DOMParser()
-        const parsedDoc = parser.parseFromString(html, 'text/html')
+        // // Modern parsing method
+        // const parser = new DOMParser()
+        // const parsedDoc = parser.parseFromString(html, 'text/html')
+        // // Clone nodes to new document
+        // Array.from(parsedDoc.documentElement.childNodes).forEach(node => {
+        //     doc.documentElement.appendChild(doc.importNode(node, true))
+        // })
+        // // Handle printing
+        // const printAndClose = () => {
+        //     printWindow.print()
+        //     setTimeout(() => printWindow.close(), 500)
+        // }
+        // if (doc.fonts) {
+        //     doc.fonts.ready.then(printAndClose)
+        // } else {
+        //     printWindow.addEventListener('load', printAndClose)
+        // }
 
-        // Clone nodes to new document
-        Array.from(parsedDoc.documentElement.childNodes).forEach(node => {
-            doc.documentElement.appendChild(doc.importNode(node, true))
-        })
-
-        // Handle printing
-        const printAndClose = () => {
+        // Write in one synchronous block. Chrome-safe and Firefox-safe
+        printWindow.document.open()
+        // @ts-ignore - document.write is required for print reliability
+        printWindow.document.write(html)
+        printWindow.document.close()
+        // Once fully rendered, print
+        printWindow.onload = async () => {
+            if (printWindow.document.fonts) {
+                await printWindow.document.fonts.ready
+            }
             printWindow.print()
-            setTimeout(() => printWindow.close(), 500)
-        };
-
-        if (doc.fonts) {
-            doc.fonts.ready.then(printAndClose)
-        } else {
-            printWindow.addEventListener('load', printAndClose)
         }
+
     } catch (error) {
         // toast.error(t('dashboard.download.error'), { pauseOnHover: false })
         console.error('Print failed:', error)
