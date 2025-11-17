@@ -357,7 +357,7 @@ const generateDocument = () => {
 //             .setFontSize(11)
 //             .setTextColor("gray")
 //             .text(
-//                 `${t('dashboard.pdfFooter')} QuickRetro ( https://quickretro.app )`,
+//                 `${t('dashboard.printFooter')} QuickRetro ( https://quickretro.app )`,
 //                 doc.internal.pageSize.width / 2, // Center horizontally
 //                 doc.internal.pageSize.height - 0.5, // Position vertically
 //                 { align: "center" }
@@ -482,7 +482,7 @@ const print = async () => {
                     `).join('')}
                 </div>
                 <footer class="print-footer">
-                    ${t('dashboard.pdfFooter')} QuickRetro ( https://quickretro.app )
+                    ${t('dashboard.printFooter')} QuickRetro ( https://quickretro.app )
                 </footer>
                 </div>
             </body>
@@ -1022,8 +1022,8 @@ onUnmounted(() => {
                         d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                 </svg>
             </div>
-            <!-- Download -->
-            <div :title="t('dashboard.download.tooltip')">
+            <!-- Print -->
+            <div :title="t('dashboard.print.tooltip')">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                     stroke="currentColor" class="w-8 h-8 mx-auto mb-4 cursor-pointer" v-if="isOwner"
                     @click="generateDocument">

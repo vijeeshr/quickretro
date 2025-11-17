@@ -61,12 +61,12 @@ const displayText = computed(() => {
                 @click="$emit('addAnonymousCard')">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <path d="M3 11h18" />
-                    <path d="M5 11v-4a3 3 0 0 1 3 -3h8a3 3 0 0 1 3 3v4" />
-                    <path d="M7 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
-                    <path d="M17 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
-                    <path d="M10 17h4" />
+                    <path d="M14 18a2 2 0 0 0-4 0" />
+                    <path
+                        d="m19 11-2.11-6.657a2 2 0 0 0-2.752-1.148l-1.276.61A2 2 0 0 1 12 4H8.5a2 2 0 0 0-1.925 1.456L5 11" />
+                    <path d="M2 11h20" />
+                    <circle cx="17" cy="18" r="3" />
+                    <circle cx="7" cy="18" r="3" />
                 </svg>
             </button>
         </div>

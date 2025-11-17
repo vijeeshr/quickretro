@@ -62,8 +62,8 @@ export default {
             noCardsToFocus: 'There are no cards to focus',
             tooltip: 'Focus cards'
         },
-        download: {
-            tooltip: 'Download as Pdf'
+        print: {
+            tooltip: 'Print'
         },
         language: {
             tooltip: 'Change language'
@@ -82,7 +82,7 @@ export default {
             col04: 'Appreciations',
             col05: 'Improvements'
         },
-        pdfFooter: 'Created with',
+        printFooter: 'Created with',
         offline: 'You seem to be offline.',
         notExists: 'Board was either auto-deleted, or manually deleted by its creator.',
         autoDeleteScheduleBase: 'This board will be cleaned up automatically on {date}',

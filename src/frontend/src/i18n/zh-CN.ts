@@ -62,7 +62,7 @@ export default {
             noCardsToFocus: '没有可聚焦的卡片',
             tooltip: '聚焦卡片'
         },
-        download: {
+        print: {
             tooltip: '打印'
         },
         language: {
@@ -82,7 +82,7 @@ export default {
             col04: '感谢',
             col05: '改进建议'
         },
-        pdfFooter: '创建于',
+        printFooter: '创建于',
         offline: '离线状态',
         notExists: '看板已被自动删除，或由创建者手动删除。',
         autoDeleteScheduleBase: '该看板将于 {date} 自动清理',

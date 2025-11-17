@@ -62,7 +62,7 @@ export default {
             noCardsToFocus: 'カードがありません',
             tooltip: 'カードをフォーカス'
         },
-        download: {
+        print: {
             tooltip: '印刷'
         },
         language: {
@@ -82,7 +82,7 @@ export default {
             col04: '感謝',
             col05: '改善点'
         },
-        pdfFooter: '作成者',
+        printFooter: '作成者',
         offline: 'オフライン',
         notExists: 'ボードは自動的に削除されたか、作成者によって手動で削除されました。',
         autoDeleteScheduleBase: 'このボードは {date} に自動的にクリーンアップされます',

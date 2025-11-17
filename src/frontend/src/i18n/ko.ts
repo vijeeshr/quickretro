@@ -62,7 +62,7 @@ export default {
             noCardsToFocus: '포커스할 카드 없음',
             tooltip: '카드 강조'
         },
-        download: {
+        print: {
             tooltip: '인쇄'
         },
         language: {
@@ -82,7 +82,7 @@ export default {
             col04: '감사한 점',
             col05: '개선점'
         },
-        pdfFooter: '생성 도구',
+        printFooter: '생성 도구',
         offline: '오프라인 상태',
         notExists: '보드는 자동으로 삭제되었거나 생성자가 수동으로 삭제했습니다.',
         autoDeleteScheduleBase: '{date}에 이 보드는 자동으로 정리됩니다',

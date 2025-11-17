@@ -62,7 +62,7 @@ export default {
             noCardsToFocus: 'Нет карточек',
             tooltip: 'Выделить карточки'
         },
-        download: {
+        print: {
             tooltip: 'Печать'
         },
         language: {
@@ -82,7 +82,7 @@ export default {
             col04: 'Благодарности',
             col05: 'Улучшения'
         },
-        pdfFooter: 'Создано с',
+        printFooter: 'Создано с',
         offline: 'Офлайн',
         notExists: 'Доска была удалена автоматически или вручную её создателем.',
         autoDeleteScheduleBase: 'Эта доска будет автоматически очищена {date}',

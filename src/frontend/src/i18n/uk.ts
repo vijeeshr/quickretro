@@ -62,7 +62,7 @@ export default {
             noCardsToFocus: 'Немає карток для фокусування',
             tooltip: 'Фокусувати картки'
         },
-        download: {
+        print: {
             tooltip: 'Друк'
         },
         language: {
@@ -82,7 +82,7 @@ export default {
             col04: 'Подяки',
             col05: 'Покращення'
         },
-        pdfFooter: 'Створено за допомогою',
+        printFooter: 'Створено за допомогою',
         offline: 'Відсутнє інтернет-зʼєднання.',
         notExists: 'Дошку було видалено автоматично або вручну її творцем.',
         autoDeleteScheduleBase: 'Цю дошку буде автоматично очищено {date}',

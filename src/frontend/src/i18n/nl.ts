@@ -62,8 +62,8 @@ export default {
             noCardsToFocus: 'Geen kaarten om te focussen',
             tooltip: 'Focus kaarten'
         },
-        download: {
-            tooltip: 'Download als PDF'
+        print: {
+            tooltip: 'Afdrukken'
         },
         language: {
             tooltip : 'Taal wijzigen'
@@ -82,7 +82,7 @@ export default {
             col04: 'Waardering',
             col05: 'Verbeterpunten'
         },
-        pdfFooter: 'Gemaakt met',
+        printFooter: 'Gemaakt met',
         offline: 'Offline.',
         notExists: 'Het bord is automatisch verwijderd of handmatig door de maker verwijderd.',
         autoDeleteScheduleBase: 'Dit bord wordt automatisch opgeschoond op {date}',

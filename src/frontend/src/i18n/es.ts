@@ -62,8 +62,8 @@ export default {
             noCardsToFocus: 'No hay tarjetas para enfocar',
             tooltip: 'Enfocar tarjetas'
         },
-        download: {
-            tooltip: 'Descargar PDF'
+        print: {
+            tooltip: 'Imprimir'
         },
         language: {
             tooltip : 'Cambiar idioma'
@@ -82,7 +82,7 @@ export default {
             col04: 'Agradecimientos',
             col05: 'Mejoras'
         },
-        pdfFooter: 'Creado con',
+        printFooter: 'Creado con',
         offline: 'Sin conexión.',
         notExists: 'El tablero fue eliminado automáticamente o lo eliminó manualmente su creador.',
         autoDeleteScheduleBase: 'Este tablero se limpiará automáticamente el {date}',

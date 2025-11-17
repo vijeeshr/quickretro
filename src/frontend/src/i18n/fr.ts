@@ -62,8 +62,8 @@ export default {
             noCardsToFocus: 'Aucune carte à focaliser',
             tooltip: 'Mettre en avant'
         },
-        download: {
-            tooltip: 'Télécharger PDF'
+        print: {
+            tooltip: 'Imprimer'
         },
         language: {
             tooltip : 'Changer de langue'
@@ -82,7 +82,7 @@ export default {
             col04: 'Reconnaissance',
             col05: 'Améliorations'
         },
-        pdfFooter: 'Créé avec',
+        printFooter: 'Créé avec',
         offline: 'Hors ligne.',
         notExists: 'Le tableau a été soit supprimé automatiquement, soit manuellement par son créateur.',
         autoDeleteScheduleBase: 'Ce tableau sera automatiquement nettoyé le {date}',

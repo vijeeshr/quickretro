@@ -62,8 +62,8 @@ export default {
             noCardsToFocus: 'Nessuna carta da focalizzare',
             tooltip: 'Evidenzia carte'
         },
-        download: {
-            tooltip: 'Scarica PDF'
+        print: {
+            tooltip: 'Stampa'
         },
         language: {
             tooltip : 'Cambia lingua'
@@ -82,7 +82,7 @@ export default {
             col04: 'Apprezzamenti',
             col05: 'Miglioramenti'
         },
-        pdfFooter: 'Creato con',
+        printFooter: 'Creato con',
         offline: 'Disconnesso.',
         notExists: 'La bacheca è stata eliminata automaticamente o manualmente dal suo creatore.',
         autoDeleteScheduleBase: 'Questa board verrà pulita automaticamente il {date}',

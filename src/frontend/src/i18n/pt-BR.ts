@@ -62,8 +62,8 @@ export default {
             noCardsToFocus: 'Nenhum card para destacar',
             tooltip: 'Destacar cards'
         },
-        download: {
-            tooltip: 'Baixar como PDF'
+        print: {
+            tooltip: 'Imprimir'
         },
         language: {
             tooltip : 'Mudar idioma'
@@ -82,7 +82,7 @@ export default {
             col04: 'Agradecimentos',
             col05: 'Melhorias'
         },
-        pdfFooter: 'Criado com',
+        printFooter: 'Criado com',
         offline: 'Você parece estar offline.',
         notExists: 'O quadro foi excluído automaticamente ou manualmente por seu criador.',
         autoDeleteScheduleBase: 'Este quadro será automaticamente limpo em {date}',

@@ -62,8 +62,8 @@ export default {
             noCardsToFocus: 'Keine Karten vorhanden',
             tooltip: 'Karten fokussieren'
         },
-        download: {
-            tooltip: 'Als PDF herunterladen'
+        print: {
+            tooltip: 'Drucken'
         },
         language: {
             tooltip : 'Sprache ändern'
@@ -82,7 +82,7 @@ export default {
             col04: 'Dankbarkeiten',
             col05: 'Verbesserungen'
         },
-        pdfFooter: 'Erstellt mit',
+        printFooter: 'Erstellt mit',
         offline: 'Offline.',
         notExists: 'Das Board wurde entweder automatisch gelöscht oder manuell von seinem Ersteller entfernt.',
         autoDeleteScheduleBase: 'Dieses Board wird am {date} automatisch bereinigt',
