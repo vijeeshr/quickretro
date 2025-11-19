@@ -1,9 +1,25 @@
 # With reverse-proxy. Access only with https://localhost.
 
-# Run docker compose.
+# Cold start
 #   docker compose -f compose.demohosting.yml up
-# To stop and remove compose created items
+
+# Restart services.
+# Containers are NOT deleted, just STOPPED and STARTED. No data is lost.
+# Use case: ENV variable update.
+#   docker compose -f compose.demohosting.yml stop
+#   docker compose -f compose.demohosting.yml start
+
+# Deletes containers and networks, then create them back from already built/pulled images.
+# Volumes and images are retained, so data in volumes is not lost.
+# Use case: if the previous "Restart services" steps are inadequate.
+#   docker compose -f compose.demohosting.yml down
+#   docker compose -f compose.demohosting.yml up
+
+# Hard reset: removes containers, networks, volumes, and images.
+# ALL data stored in volumes will be lost (including Redis data).
+# Use case: code changes, new images, or if previous steps are inadequate.
 #   docker compose -f compose.demohosting.yml down --rmi "all" --volumes
+#   docker compose -f compose.demohosting.yml up
 
 services:
   redis:
@@ -21,6 +37,8 @@ services:
     #   - "6379:6379"
     expose:
       - 6379
+    volumes:
+      - redis_data:/data      
 
   app:
     image: "vijeesh82/quickretro-app"
@@ -84,6 +102,7 @@ services:
       - caddy_config:/config
 
 volumes:
+  redis_data:
   caddy_data:
   caddy_config:      
 

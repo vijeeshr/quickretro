@@ -4,10 +4,27 @@
 
 # Run following command to build the image before running docker compose.
 #   docker build -f build.Dockerfile -t quickretro-app .
-# Run docker compose.
+
+# Cold start
 #   docker compose -f compose.multiservice.yml up
-# To stop and remove compose created items
+
+# Restart services.
+# Containers are NOT deleted, just STOPPED and STARTED. No data is lost.
+# Use case: ENV variable update.
+#   docker compose -f compose.multiservice.yml stop
+#   docker compose -f compose.multiservice.yml start
+
+# Deletes containers and networks, then create them back from already built/pulled images.
+# Volumes and images are retained, so data in volumes is not lost.
+# Use case: if the previous "Restart services" steps are inadequate.
+#   docker compose -f compose.multiservice.yml down
+#   docker compose -f compose.multiservice.yml up
+
+# Hard reset: removes containers, networks, volumes, and images.
+# ALL data stored in volumes will be lost (including Redis data).
+# Use case: code changes, new images, or if previous steps are inadequate.
 #   docker compose -f compose.multiservice.yml down --rmi "all" --volumes
+#   docker compose -f compose.multiservice.yml up
 
 x-app-defaults: &app-defaults
     image: quickretro-app
@@ -46,6 +63,8 @@ services:
       - redisnet
     expose:
       - 6379
+    volumes:
+      - redis_data:/data  
 
   app:
     <<: *app-defaults
@@ -71,6 +90,7 @@ services:
       - caddy_config:/config
 
 volumes:
+  redis_data:
   caddy_data:
   caddy_config:      
 
