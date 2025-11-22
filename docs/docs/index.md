@@ -41,8 +41,8 @@ features:
     title: Anonymous Messages
     details: Post messages without revealing your name
   - icon: ⬇️
-    title: Download as PDF
-    details: Download messages as PDF
+    title: Print as PDF
+    details: Print to save messages as PDF
   - icon: ⏱️
     title: Countdown Timer
     details: Stopwatch with max 1 hour limit
