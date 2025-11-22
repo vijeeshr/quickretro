@@ -4,10 +4,12 @@ import { useRouter } from 'vue-router';
 import { CreateBoardRequest, createBoard } from '../api'
 import DarkModeToggle from './DarkModeToggle.vue';
 import { BoardColumn } from '../models/BoardColumn';
+import { ColumnDefinition } from "../models/ColumnDefinition";
 import { useI18n } from 'vue-i18n';
 import LanguageSelector from './LanguageSelector.vue';
 import TurnstileWidget from './TurnstileWidget.vue';
 import { useToast } from 'vue-toast-notification';
+import CategoryEditor from './CategoryEditor.vue';
 
 const { t } = useI18n()
 const router = useRouter()
@@ -20,9 +22,9 @@ const turnstileToken = ref('')
 const isTurnstileVerified = ref(false)
 const isSubmitting = ref(false)
 const turnstileRef = ref<{ reset: () => void }>()
-const dragSourceIndex = ref<number | null>(null) // Drag state
+// const dragSourceIndex = ref<number | null>(null) // Drag state
 
-const columns = ref([
+const columns = ref<ColumnDefinition[]>([
     { id: "col01", text: "", color: "green", colorClass: "text-green-500", enabled: true, pos: 1 },
     { id: "col02", text: "", color: "red", colorClass: "text-red-500", enabled: true, pos: 2 },
     { id: "col03", text: "", color: "yellow", colorClass: "text-yellow-500", enabled: true, pos: 3 },
@@ -30,11 +32,22 @@ const columns = ref([
     { id: "col05", text: "", color: "orange", colorClass: "text-orange-500", enabled: false, pos: 5 }
 ])
 
-const toggleColumn = (column: string, enable: boolean) => {
-    let cat = columns.value.find(c => c.id === column)
-    if (cat) {
-        cat.enabled = enable
-    }
+const onColumnsUpdate = (updatedColumns: ColumnDefinition[]) => {
+    columns.value = []
+    columns.value.push(...updatedColumns) // Todo: find a better way
+
+    // // Merge dynamic fields from child with static fields kept by parent
+    // testColumns.value = updatedColumns.map(u => {
+    //     const existing = testColumns.value.find(c => c.id === u.id)
+
+    //     return {
+    //         id: u.id,
+    //         text: u.text,
+    //         pos: u.pos,
+    //         isDefault: u.text === '' || u.text === t(`dashboard.columns.${u.id}`), // TODO: Can be inferred from CategoryEditor componenet
+    //         color: existing?.color ?? "#F0F0F0", // Todo: existing should always be there
+    //     } satisfies BoardColumn
+    // })
 }
 
 const isColumnSelectionValid = computed(() => {
@@ -93,24 +106,6 @@ const create = async () => {
     }
 }
 
-const onDragStart = (index: number) => {
-    dragSourceIndex.value = index
-}
-// Fired when dragging over another item
-const onDragOver = (event: DragEvent) => {
-    event.preventDefault() // allow dropping
-}
-const onDrop = (targetIndex: number) => {
-    if (dragSourceIndex.value === null || dragSourceIndex.value === targetIndex) return
-    // Move item in array
-    const moved = columns.value.splice(dragSourceIndex.value, 1)[0]
-    columns.value.splice(targetIndex, 0, moved)
-    // Reset drag index
-    dragSourceIndex.value = null
-    // Update position numbers (for saving order later)
-    columns.value.forEach((c, i) => (c.pos = i + 1))
-}
-
 onMounted(() => {
     document.documentElement.classList.toggle("dark", isDark.value)
 })
@@ -142,7 +137,7 @@ onMounted(() => {
                         </div>
                     </div>
                     <div>
-                        <ul class="space-y-2 text-sm">
+                        <!-- <ul class="space-y-2 text-sm">
                             <li v-for="(column, index) in columns" :key="column.id" class="flex space-x-1"
                                 draggable="true" @dragstart="onDragStart(index)" @dragover="onDragOver"
                                 @drop="onDrop(index)">
@@ -171,7 +166,8 @@ onMounted(() => {
                                     :placeholder="t(`dashboard.columns.${column.id}`)"
                                     class="w-full rounded-md focus:outline-none focus:border focus:border-gray-200 focus:ring-gray-200 dark:text-slate-200 dark:bg-gray-900 dark:focus:border-gray-800 dark:focus:ring-gray-800" />
                             </li>
-                        </ul>
+                        </ul> -->
+                        <CategoryEditor :columns="columns" @columns-update="onColumnsUpdate"></CategoryEditor>
                         <p v-show="!isColumnSelectionValid"
                             class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">{{
                                 t('createBoard.invalidColumnSelection') }}

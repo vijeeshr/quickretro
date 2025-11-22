@@ -25,6 +25,8 @@ import { BoardColumn } from '../models/BoardColumn';
 import { CategoryChangeMessage } from '../models/CategoryChangeMessage';
 import { useI18n } from 'vue-i18n';
 import { useLanguage } from '../composables/useLanguage';
+import CategoryEditor from './CategoryEditor.vue';
+import { ColumnDefinition } from '../models/ColumnDefinition';
 
 const { locale, setLocale, languageOptions } = useLanguage()
 const { t } = useI18n()
@@ -79,6 +81,11 @@ const setIsDeleteAllDialogOpen = (value: boolean) => {
 const isLanguageDialogOpen = ref(false)
 const setIsLanguageDialogOpen = (value: boolean) => {
     isLanguageDialogOpen.value = value
+}
+
+const isColumnEditDialogOpen = ref(false)
+const setIsColumnEditDialogOpen = (value: boolean) => {
+    isColumnEditDialogOpen.value = value
 }
 
 const toast = useToast()
@@ -559,6 +566,12 @@ const timerSettings = () => {
     }
 }
 
+const openColumnEditDialog = () => {
+    if (!isOwner) return
+    mergeColumns()
+    isColumnEditDialogOpen.value = true
+}
+
 const onRegisterResponse = (response: RegisterResponse) => {
     timerExpiresInSeconds.value = response.timerExpiresInSeconds // This always gets set. Todo: find a better way to sync timer.
     boardExpiryLocalTime.value = formatDate(response.boardExpiryUtcSeconds)
@@ -730,6 +743,57 @@ const onTimerResponse = (response: TimerResponse) => {
     } else {
         timerExpiresInSeconds.value = response.expiresInSeconds
     }
+}
+
+// For Edit Columns feature
+const mergedColumns = ref<ColumnDefinition[]>([])
+const onColumnsUpdate = (updatedColumns: ColumnDefinition[]) => {
+    mergedColumns.value = []
+    mergedColumns.value.push(...updatedColumns) // Todo: find a better way
+}
+const mergeColumns = () => {
+
+    const defaultColumns = [
+        { id: "col01", text: "", color: "green", colorClass: "text-green-500", enabled: true, pos: 1 },
+        { id: "col02", text: "", color: "red", colorClass: "text-red-500", enabled: true, pos: 2 },
+        { id: "col03", text: "", color: "yellow", colorClass: "text-yellow-500", enabled: true, pos: 3 },
+        { id: "col04", text: "", color: "fuchsia", colorClass: "text-fuchsia-500", enabled: false, pos: 4 },
+        { id: "col05", text: "", color: "orange", colorClass: "text-orange-500", enabled: false, pos: 5 }
+    ] as ColumnDefinition[]
+
+    const map = new Map<string, BoardColumn>(columns.value.map(c => [c.id, c]))
+
+    const merged = defaultColumns
+        .map((d) => {
+            const override = map.get(d.id)
+            return {
+                id: d.id,
+                color: d.color,
+                colorClass: d.colorClass,
+                text: override?.isDefault ? d.text : override?.text ?? d.text, // override?.text ?? d.text,
+                enabled: override !== undefined ? true : false, // override is present means, the column has been defined
+                pos: override?.pos ?? defaultColumns.length
+            }
+        })
+
+    merged.sort((a, b) => {
+        // sort by "enabled==true" first, then by "pos"
+        if (a.enabled !== b.enabled) {
+            return a.enabled ? -1 : 1; // enabled=true first
+        }
+        return a.pos - b.pos;
+    })
+
+    // reassign pos
+    // return merged.map((col, i) => ({
+    //     ...col,
+    //     pos: i + 1
+    // }))
+
+    mergedColumns.value = merged.map((col, i) => ({
+        ...col,
+        pos: i + 1
+    }))
 }
 
 const dispatchEvent = <T>(eventType: string, payload: T) => {
@@ -975,6 +1039,22 @@ onUnmounted(() => {
             </div>
         </Dialog>
 
+        <!-- TODO: Translation texts -->
+        <!-- Dialog for Column editing -->
+        <Dialog :open="isColumnEditDialogOpen" @close="setIsColumnEditDialogOpen" class="relative z-50">
+            <!-- The backdrop, rendered as a fixed sibling to the panel container -->
+            <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
+            <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
+                <DialogPanel class="rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
+                    <!-- <DialogTitle as="h3"
+                        class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200 select-none">
+                        Edit Columns
+                    </DialogTitle> -->
+                    <CategoryEditor :columns="mergedColumns" @columns-update="onColumnsUpdate"></CategoryEditor>
+                </DialogPanel>
+            </div>
+        </Dialog>
+
         <!-- Left Sidebar -->
         <div class="w-16 p-3">
             <!-- Timer -->
@@ -1062,6 +1142,18 @@ onUnmounted(() => {
                         d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                 </svg>
             </div>
+            <!-- TODO: Translations -->
+            <!-- Edit Columns -->
+            <!-- <div title="Edit columns">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="w-8 h-8 mx-auto mb-4 cursor-pointer" v-if="isOwner" @click="openColumnEditDialog">
+                    <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path
+                        d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" />
+                </svg>
+            </div> -->
+
             <a href="https://github.com/vijeeshr/quickretro" target="_blank" rel="noopener noreferrer">
                 <svg viewBox="0 0 24 24" aria-hidden="true" class="h-8 w-8 mx-auto mb-4 fill-slate-100">
                     <path fill-rule="evenodd" clip-rule="evenodd"
@@ -1094,8 +1186,8 @@ onUnmounted(() => {
                 class="flex flex-1 flex-col md:flex-row h-full min-h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
                 <Category v-for="column in columns" :key="column.id" :column="column" :width="columnWidthClass"
                     :button-highlight="newCardCategory == column.id"
-                    :anonymous-button-highlight="newAnonymousCardCategory == column.id"
-                    @add-card="add(column.id, false)" @add-anonymous-card="add(column.id, true)">
+                    :anonymous-button-highlight="newAnonymousCardCategory == column.id" :class="{ 'cursor-pointer': isOwner}"
+                    @add-card="add(column.id, false)" @add-anonymous-card="add(column.id, true)" @click="openColumnEditDialog">
                     <NewCard v-if="newCardCategory == column.id" :category="column.id" :by="user" :nickname="nickname"
                         :board="board" @added="onAdded" @invalidContent="onInvalidContent" @discard="onDiscard" />
                     <NewAnonymousCard v-if="newAnonymousCardCategory == column.id" :category="column.id" :by="user"
