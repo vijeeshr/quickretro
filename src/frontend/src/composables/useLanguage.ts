@@ -1,7 +1,7 @@
 import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
 
-export const availableLocales = ['en', 'zhCN', 'es', 'de', 'fr', 'ptBR', 'ru', 'ja', 'nl', 'ko', 'it', 'pt', 'uk', 'frCA'] as const
+export const availableLocales = ['en', 'zhCN', 'es', 'de', 'fr', 'ptBR', 'ru', 'ja', 'nl', 'ko', 'it', 'pt', 'uk', 'frCA', 'pl'] as const
 
 export type AvailableLocales = typeof availableLocales[number]
 

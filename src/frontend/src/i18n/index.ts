@@ -13,17 +13,18 @@ import ja from './ja'
 import ko from './ko'
 import ru from './ru'
 import uk from './uk'
+import pl from './pl'
 
 type MessageSchema = typeof en
 
 const savedLanguage = localStorage.getItem('lang')
 
-export default createI18n<[MessageSchema], 'en' | 'zhCN' | 'es' | 'de' | 'fr' | 'ptBR' | 'ru' | 'ja' | 'nl' | 'ko' | 'it' | 'pt' | 'uk' | 'frCA'>({
+export default createI18n<[MessageSchema], 'en' | 'zhCN' | 'es' | 'de' | 'fr' | 'ptBR' | 'ru' | 'ja' | 'nl' | 'ko' | 'it' | 'pt' | 'uk' | 'frCA' | 'pl'>({
     legacy: false,
     locale: savedLanguage || 'en',
     fallbackLocale: 'en',
     messages : {
-        en, zhCN, es, de, fr, ptBR, ru, ja, nl, ko, it, pt, uk, frCA
+        en, zhCN, es, de, fr, ptBR, ru, ja, nl, ko, it, pt, uk, frCA, pl
     }
 })
 
