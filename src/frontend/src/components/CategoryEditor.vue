@@ -1,82 +1,21 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { ColumnDefinition } from "../models/ColumnDefinition";
+import type { CategoryDefinition } from "../models/CategoryDefinition"
 
-const props = defineProps<{ columns: ColumnDefinition[] }>()
+const props = defineProps<{ categories: CategoryDefinition[] }>()
 
-// const emit = defineEmits<{
-//     (e: "columns-update", columns: ColumnDefinition[]): void
-// }>()
-const emit = defineEmits(['columns-update'])
+const emit = defineEmits([
+    'category-text-update',
+    'category-toggle',
+    'categories-reorder'
+])
 
 const { t } = useI18n()
 
-const defaultColumns = computed(() => {
-    const merged = props.columns.map((d) => {
-        return {
-            id: d.id,
-            color: d.color,
-            colorClass: d.colorClass,
-            text: d.text,
-            enabled: d.enabled,
-            pos: d.pos
-        }
-    })
-
-    return merged
+const localCategories = computed(() => {
+    return props.categories.map(col => ({ ...col }))
 })
-
-// const mergedColumns = computed({
-//     get() {
-//         // Map props.columns by ID
-//         const map = new Map<string, BoardColumn>(props.columns.map(c => [c.id, c]))
-
-//         const merged = defaultColumns.value
-//             .map((d) => {
-//                 const override = map.get(d.id)
-//                 return {
-//                     id: d.id,
-//                     color: d.color,
-//                     colorClass: d.colorClass,
-//                     text: override?.text ?? d.text,
-//                     enabled: override !== undefined ? true : false, // override is present means, the column has been defined
-//                     pos: override?.pos ?? defaultColumns.value.length
-//                 }
-//             })
-
-//         merged.sort((a, b) => {
-//             // sort by "enabled==true" first, then by "pos"
-//             if (a.enabled !== b.enabled) {
-//                 return a.enabled ? -1 : 1; // enabled=true first
-//             }
-//             return a.pos - b.pos;
-//         })
-
-//         // reassign pos
-//         return merged.map((col, i) => ({
-//             ...col,
-//             pos: i + 1
-//         }))
-//     },
-
-//     set(newValue) {
-//         // Emit *only* the dynamic fields back up
-//         const stripped: ColumnDefinition[] = newValue.map(col => ({
-//             id: col.id,
-//             text: col.text,
-//             enabled: col.enabled,
-//             pos: col.pos,
-//             color: col.color,
-//             colorClass: col.colorClass
-//             // isDefault: col.isDefault,
-//             // color: col.color  // include if parent stores this
-//         }))
-
-//         logMessage("MergedColumns_Set", stripped)
-//         emit("columns-update", stripped)
-//     }
-// })
 
 const dragSourceIndex = ref<number | null>(null) // Drag state
 
@@ -84,44 +23,47 @@ const dragSourceIndex = ref<number | null>(null) // Drag state
 const onDragStart = (index: number) => {
     dragSourceIndex.value = index
 }
+
 // Fired when dragging over another item
 const onDragOver = (event: DragEvent) => {
     event.preventDefault() // allow dropping
 }
+
 const onDrop = (targetIndex: number) => {
     if (dragSourceIndex.value === null || dragSourceIndex.value === targetIndex) return
     // Move item in array
-    const moved = defaultColumns.value.splice(dragSourceIndex.value, 1)[0]
-    defaultColumns.value.splice(targetIndex, 0, moved)
+    const updatedCategories = [...localCategories.value]
+    const moved = updatedCategories.splice(dragSourceIndex.value, 1)[0]
+    updatedCategories.splice(targetIndex, 0, moved)
+    // Update positions
+    updatedCategories.forEach((c, i) => (c.pos = i + 1))
     // Reset drag index
     dragSourceIndex.value = null
-    // Update position numbers (for saving order later)
-    defaultColumns.value.forEach((c, i) => (c.pos = i + 1))
-    emit('columns-update', [...defaultColumns.value])
+    emit('categories-reorder', updatedCategories)
 }
 
-const toggleColumn = (colId: string) => {
-    let col = defaultColumns.value.find(c => c.id === colId)
-    if (col) {
-        col.enabled = !col.enabled
+const toggleCategory = (id: string) => {
+    const cat = localCategories.value.find(c => c.id === id)
+    if (cat) {
+        emit('category-toggle', {
+            id: id,
+            enabled: !cat.enabled
+        })
     }
-    emit('columns-update', [...defaultColumns.value])
 }
 
-const updateText = (colId: string, event: Event) => {
+const updateCategoryText = (id: string, event: Event) => {
     const value = (event.target as HTMLInputElement)?.value ?? ""
-    let col = defaultColumns.value.find(c => c.id === colId)
-    if (col) {
-        col.text = value.trim()
-    }
-    emit('columns-update', [...defaultColumns.value])
+    emit('category-text-update', {
+        id: id,
+        text: value
+    })
 }
-
 </script>
 
 <template>
     <ul class="space-y-2 text-sm">
-        <li v-for="(column, index) in defaultColumns" :key="column.id" class="flex space-x-1" draggable="true"
+        <li v-for="(cat, index) in localCategories" :key="cat.id" class="flex space-x-1" draggable="true"
             @dragstart="onDragStart(index)" @dragover="onDragOver" @drop="onDrop(index)">
             <!-- Drag handle -->
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
@@ -130,16 +72,16 @@ const updateText = (colId: string, event: Event) => {
             </svg>
 
             <!-- Enable/Disable Button -->
-            <button v-if="column.enabled" @click="toggleColumn(column.id)">
+            <button v-if="cat.enabled" @click="toggleCategory(cat.id)">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"
-                    :class="column.colorClass">
+                    :class="cat.colorClass">
                     <path fill-rule="evenodd"
                         d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
                         clip-rule="evenodd" />
                 </svg>
             </button>
 
-            <button v-else @click="toggleColumn(column.id)">
+            <button v-else @click="toggleCategory(cat.id)">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                     class="w-6 h-6 text-gray-500">
                     <path fill-rule="evenodd"
@@ -149,8 +91,8 @@ const updateText = (colId: string, event: Event) => {
             </button>
 
             <!-- Text Input -->
-            <input type="text" :id="column.id" :value="column.text" @input="updateText(column.id, $event)"
-                :placeholder="t(`dashboard.columns.${column.id}`)" class="w-full rounded-md focus:outline-none focus:border
+            <input type="text" :id="cat.id" :value="cat.text" @input="updateCategoryText(cat.id, $event)"
+                :placeholder="t(`dashboard.columns.${cat.id}`)" class="w-full rounded-md focus:outline-none focus:border
                        focus:border-gray-200 focus:ring-gray-200
                        dark:text-slate-200 dark:bg-gray-900
                        dark:focus:border-gray-800 dark:focus:ring-gray-800" />

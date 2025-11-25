@@ -4,12 +4,13 @@ import { useRouter } from 'vue-router';
 import { CreateBoardRequest, createBoard } from '../api'
 import DarkModeToggle from './DarkModeToggle.vue';
 import { BoardColumn } from '../models/BoardColumn';
-import { ColumnDefinition } from "../models/ColumnDefinition";
+import { CategoryDefinition } from "../models/CategoryDefinition";
 import { useI18n } from 'vue-i18n';
 import LanguageSelector from './LanguageSelector.vue';
 import TurnstileWidget from './TurnstileWidget.vue';
 import { useToast } from 'vue-toast-notification';
 import CategoryEditor from './CategoryEditor.vue';
+import { defaultCategories } from '../constants/defaultCategories';
 
 const { t } = useI18n()
 const router = useRouter()
@@ -22,37 +23,27 @@ const turnstileToken = ref('')
 const isTurnstileVerified = ref(false)
 const isSubmitting = ref(false)
 const turnstileRef = ref<{ reset: () => void }>()
-// const dragSourceIndex = ref<number | null>(null) // Drag state
+const categories = ref<CategoryDefinition[]>([...defaultCategories])
 
-const columns = ref<ColumnDefinition[]>([
-    { id: "col01", text: "", color: "green", colorClass: "text-green-500", enabled: true, pos: 1 },
-    { id: "col02", text: "", color: "red", colorClass: "text-red-500", enabled: true, pos: 2 },
-    { id: "col03", text: "", color: "yellow", colorClass: "text-yellow-500", enabled: true, pos: 3 },
-    { id: "col04", text: "", color: "fuchsia", colorClass: "text-fuchsia-500", enabled: false, pos: 4 },
-    { id: "col05", text: "", color: "orange", colorClass: "text-orange-500", enabled: false, pos: 5 }
-])
-
-const onColumnsUpdate = (updatedColumns: ColumnDefinition[]) => {
-    columns.value = []
-    columns.value.push(...updatedColumns) // Todo: find a better way
-
-    // // Merge dynamic fields from child with static fields kept by parent
-    // testColumns.value = updatedColumns.map(u => {
-    //     const existing = testColumns.value.find(c => c.id === u.id)
-
-    //     return {
-    //         id: u.id,
-    //         text: u.text,
-    //         pos: u.pos,
-    //         isDefault: u.text === '' || u.text === t(`dashboard.columns.${u.id}`), // TODO: Can be inferred from CategoryEditor componenet
-    //         color: existing?.color ?? "#F0F0F0", // Todo: existing should always be there
-    //     } satisfies BoardColumn
-    // })
-}
-
-const isColumnSelectionValid = computed(() => {
-    return columns.value.some(c => c.enabled === true)
+const isCategorySelectionValid = computed(() => {
+    return categories.value.some(c => c.enabled === true)
 })
+
+const handleCategoryTextUpdate = (update: { id: string, text: string }) => {
+    const cat = categories.value.find(c => c.id === update.id)
+    if (cat) {
+        cat.text = update.text
+    }
+}
+const handleCategoryToggle = (update: { id: string, enabled: boolean }) => {
+    const cat = categories.value.find(c => c.id === update.id)
+    if (cat) {
+        cat.enabled = update.enabled
+    }
+}
+const handleCategoriesReorder = (reorderedCategories: CategoryDefinition[]) => {
+    categories.value = reorderedCategories
+}
 
 const boardnameEntered = computed(() => {
     if (boardname.value && boardname.value.trim() !== '') return true
@@ -77,10 +68,10 @@ const create = async () => {
     // Todo: Throttle this.
     if (isTurnstileEnabled.value && !isTurnstileVerified.value) return
 
-    const selectedColumns: BoardColumn[] = columns.value.filter(c => c.enabled === true)
+    const selectedColumns: BoardColumn[] = categories.value.filter(c => c.enabled === true)
         .map(c => ({
             id: c.id,
-            text: c.text || t(`dashboard.columns.${c.id}`),
+            text: c.text.trim() || t(`dashboard.columns.${c.id}`),
             isDefault: c.text === '' || c.text === t(`dashboard.columns.${c.id}`),
             color: c.color,
             pos: c.pos
@@ -167,8 +158,10 @@ onMounted(() => {
                                     class="w-full rounded-md focus:outline-none focus:border focus:border-gray-200 focus:ring-gray-200 dark:text-slate-200 dark:bg-gray-900 dark:focus:border-gray-800 dark:focus:ring-gray-800" />
                             </li>
                         </ul> -->
-                        <CategoryEditor :columns="columns" @columns-update="onColumnsUpdate"></CategoryEditor>
-                        <p v-show="!isColumnSelectionValid"
+                        <CategoryEditor :categories="categories" @category-text-update="handleCategoryTextUpdate"
+                            @category-toggle="handleCategoryToggle" @categories-reorder="handleCategoriesReorder">
+                        </CategoryEditor>
+                        <p v-show="!isCategorySelectionValid"
                             class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">{{
                                 t('createBoard.invalidColumnSelection') }}
                         </p>
@@ -176,7 +169,7 @@ onMounted(() => {
                     <div class="flex w-full gap-2">
                         <button type="submit"
                             class="flex justify-center px-4 py-2 text-sm w-[90%] shadow-md bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2 dark:focus:ring-2 dark:focus:ring-offset-0 select-none"
-                            :disabled="!boardnameEntered || !isColumnSelectionValid || (isTurnstileEnabled && !isTurnstileVerified)"
+                            :disabled="!boardnameEntered || !isCategorySelectionValid || (isTurnstileEnabled && !isTurnstileVerified)"
                             @click="create">
                             {{ isSubmitting ? t('createBoard.buttonProgress') : t('createBoard.button') }}
                         </button>

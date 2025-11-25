@@ -26,7 +26,8 @@ import { CategoryChangeMessage } from '../models/CategoryChangeMessage';
 import { useI18n } from 'vue-i18n';
 import { useLanguage } from '../composables/useLanguage';
 import CategoryEditor from './CategoryEditor.vue';
-import { ColumnDefinition } from '../models/ColumnDefinition';
+import { CategoryDefinition } from '../models/CategoryDefinition';
+import { defaultCategories } from '../constants/defaultCategories';
 
 const { locale, setLocale, languageOptions } = useLanguage()
 const { t } = useI18n()
@@ -276,6 +277,15 @@ const onTimerStart = (expiryDurationInSeconds: number) => {
 const onTimerStop = () => {
     dispatchEvent<TimerEvent>("timer", { by: user, grp: board, expiryDurationInSeconds: 0, stop: true }) // "expiryDurationInSeconds" is ignored
     setIsTimerDialogOpen(false)
+}
+
+const saveCategoryChanges = () => {
+    if (isLocked.value) {
+        logMessage('Locked! Cannot change categories.')
+        return
+    }
+    if (hasCardsInDisabledCategories || !isCategorySelectionValid) return
+
 }
 
 // const getRGBizedColor = (color: string): [number, number, number] => {
@@ -568,7 +578,7 @@ const timerSettings = () => {
 
 const openColumnEditDialog = () => {
     if (!isOwner) return
-    mergeColumns()
+    mergeCategories()
     isColumnEditDialogOpen.value = true
 }
 
@@ -745,25 +755,30 @@ const onTimerResponse = (response: TimerResponse) => {
     }
 }
 
-// For Edit Columns feature
-const mergedColumns = ref<ColumnDefinition[]>([])
-const onColumnsUpdate = (updatedColumns: ColumnDefinition[]) => {
-    mergedColumns.value = []
-    mergedColumns.value.push(...updatedColumns) // Todo: find a better way
-}
-const mergeColumns = () => {
+// For Edit Categories feature
+const mergedCategories = ref<CategoryDefinition[]>([])
 
-    const defaultColumns = [
-        { id: "col01", text: "", color: "green", colorClass: "text-green-500", enabled: true, pos: 1 },
-        { id: "col02", text: "", color: "red", colorClass: "text-red-500", enabled: true, pos: 2 },
-        { id: "col03", text: "", color: "yellow", colorClass: "text-yellow-500", enabled: true, pos: 3 },
-        { id: "col04", text: "", color: "fuchsia", colorClass: "text-fuchsia-500", enabled: false, pos: 4 },
-        { id: "col05", text: "", color: "orange", colorClass: "text-orange-500", enabled: false, pos: 5 }
-    ] as ColumnDefinition[]
+const isCategorySelectionValid = computed(() => {
+    return mergedCategories.value.some(c => c.enabled === true)
+})
+
+const hasCardsInDisabledCategories = computed(() => {
+    // Collect disabled category IDs
+    const disabledCatIds = mergedCategories.value
+        .filter(cat => !cat.enabled)
+        .map(cat => cat.id)
+    if (disabledCatIds.length === 0) return false
+
+    // Check if any card belongs to any disabled category
+    return cards.value.some(card => disabledCatIds.includes(card.cat))
+})
+
+const mergeCategories = () => {
+    const defaultCats: CategoryDefinition[] = [...defaultCategories]
 
     const map = new Map<string, BoardColumn>(columns.value.map(c => [c.id, c]))
 
-    const merged = defaultColumns
+    const merged = defaultCats
         .map((d) => {
             const override = map.get(d.id)
             return {
@@ -772,7 +787,7 @@ const mergeColumns = () => {
                 colorClass: d.colorClass,
                 text: override?.isDefault ? d.text : override?.text ?? d.text, // override?.text ?? d.text,
                 enabled: override !== undefined ? true : false, // override is present means, the column has been defined
-                pos: override?.pos ?? defaultColumns.length
+                pos: override?.pos ?? defaultCats.length
             }
         })
 
@@ -784,16 +799,26 @@ const mergeColumns = () => {
         return a.pos - b.pos;
     })
 
-    // reassign pos
-    // return merged.map((col, i) => ({
-    //     ...col,
-    //     pos: i + 1
-    // }))
-
-    mergedColumns.value = merged.map((col, i) => ({
+    mergedCategories.value = merged.map((col, i) => ({
         ...col,
         pos: i + 1
     }))
+}
+
+const handleCategoryTextUpdate = (update: { id: string, text: string }) => {
+    const cat = mergedCategories.value.find(c => c.id === update.id)
+    if (cat) {
+        cat.text = update.text
+    }
+}
+const handleCategoryToggle = (update: { id: string, enabled: boolean }) => {
+    const cat = mergedCategories.value.find(c => c.id === update.id)
+    if (cat) {
+        cat.enabled = update.enabled
+    }
+}
+const handleCategoriesReorder = (reorderedCategories: CategoryDefinition[]) => {
+    mergedCategories.value = reorderedCategories
 }
 
 const dispatchEvent = <T>(eventType: string, payload: T) => {
@@ -1039,18 +1064,31 @@ onUnmounted(() => {
             </div>
         </Dialog>
 
-        <!-- TODO: Translation texts -->
+        <!-- TODO: Translation texts, MOVE createBoard.invalidColumnSelection to common.invalidColumnSelection -->
         <!-- Dialog for Column editing -->
         <Dialog :open="isColumnEditDialogOpen" @close="setIsColumnEditDialogOpen" class="relative z-50">
             <!-- The backdrop, rendered as a fixed sibling to the panel container -->
             <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
             <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
-                <DialogPanel class="rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
-                    <!-- <DialogTitle as="h3"
-                        class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200 select-none">
-                        Edit Columns
-                    </DialogTitle> -->
-                    <CategoryEditor :columns="mergedColumns" @columns-update="onColumnsUpdate"></CategoryEditor>
+                <DialogPanel
+                    class="w-full max-w-[356px] min-w-[240px] rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
+                    <CategoryEditor :categories="mergedCategories" @category-text-update="handleCategoryTextUpdate"
+                        @category-toggle="handleCategoryToggle" @categories-reorder="handleCategoriesReorder">
+                    </CategoryEditor>
+                    <p v-show="!isCategorySelectionValid"
+                        class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">
+                        {{
+                            t('createBoard.invalidColumnSelection') }}
+                    </p>
+                    <p v-show="hasCardsInDisabledCategories"
+                        class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">
+                        Cannot disable column(s) with cards</p>
+                    <button type="button"
+                        class="px-4 py-2 mt-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white hover:border-transparent disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 select-none focus:outline-none focus:ring-0"
+                        :disabled="hasCardsInDisabledCategories || !isCategorySelectionValid"
+                        @click="saveCategoryChanges">
+                        Save
+                    </button>
                 </DialogPanel>
             </div>
         </Dialog>
@@ -1186,8 +1224,9 @@ onUnmounted(() => {
                 class="flex flex-1 flex-col md:flex-row h-full min-h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
                 <Category v-for="column in columns" :key="column.id" :column="column" :width="columnWidthClass"
                     :button-highlight="newCardCategory == column.id"
-                    :anonymous-button-highlight="newAnonymousCardCategory == column.id" :class="{ 'cursor-pointer': isOwner}"
-                    @add-card="add(column.id, false)" @add-anonymous-card="add(column.id, true)" @click="openColumnEditDialog">
+                    :anonymous-button-highlight="newAnonymousCardCategory == column.id" :editable="isOwner"
+                    :locked="isLocked" @add-card="add(column.id, false)" @add-anonymous-card="add(column.id, true)"
+                    @category-click="openColumnEditDialog">
                     <NewCard v-if="newCardCategory == column.id" :category="column.id" :by="user" :nickname="nickname"
                         :board="board" @added="onAdded" @invalidContent="onInvalidContent" @discard="onDiscard" />
                     <NewAnonymousCard v-if="newAnonymousCardCategory == column.id" :category="column.id" :by="user"

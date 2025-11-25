@@ -1,4 +1,4 @@
-export interface ColumnDefinition {
+export interface CategoryDefinition {
     id: string;
     text: string;
     enabled: boolean;

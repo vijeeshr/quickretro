@@ -9,7 +9,9 @@ interface Props {
     // buttonText?: string,
     width?: string,
     buttonHighlight: boolean,
-    anonymousButtonHighlight: boolean
+    anonymousButtonHighlight: boolean,
+    editable: boolean,
+    locked: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -20,7 +22,7 @@ const props = withDefaults(defineProps<Props>(), {
     anonymousButtonHighlight: false
 })
 
-defineEmits(['addCard', 'addAnonymousCard'])
+const emit = defineEmits(['addCard', 'addAnonymousCard', 'categoryClick'])
 
 const { t } = useI18n()
 
@@ -28,6 +30,12 @@ const displayText = computed(() => {
     if (props.column.isDefault) return t(`dashboard.columns.${props.column.id}`)
     return props.column.text
 })
+
+const onCategoryClick = () => {
+    if (!props.locked) {
+        emit('categoryClick')
+    }
+}
 
 // const emit = defineEmits(['inFocus'])
 // function buttonClick() {
@@ -47,8 +55,14 @@ const displayText = computed(() => {
                     `text-${column.color}-600`,
                     `dark:bg-${column.color}-800`,
                     `dark:border-${column.color}-700`,
-                    `dark:text-${column.color}-100`
-                ]">{{ displayText }}</div>
+                    `dark:text-${column.color}-100`,
+                    props.editable && !props.locked && [
+                        'cursor-pointer',
+                        `hover:bg-${column.color}-400`,
+                        `hover:text-white`,
+                        `dark:hover:bg-${column.color}-600`,
+                    ]
+                ]" @click="onCategoryClick">{{ displayText }}</div>
             <button
                 class="rounded-lg border font-bold bg-gray-50 dark:bg-white/30 hover:bg-gray-200 dark:hover:bg-white/40 select-none p-1 shadow-md"
                 :class="{ 'border-sky-400 dark:border-white text-sky-400 hover:text-sky-600 dark:text-white': buttonHighlight, 'border-gray-300 dark:border-white/20 text-gray-600 hover:text-gray-700 dark:text-white': !buttonHighlight }"
