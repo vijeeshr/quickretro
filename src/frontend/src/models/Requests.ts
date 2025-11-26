@@ -70,6 +70,12 @@ export interface TimerEvent {
     stop: boolean
 }
 
+export interface ColumnsChangeEvent {
+    by: string
+    grp: string
+    columns: BoardColumn[]
+}
+
 export interface RegisterResponse {
     typ: 'reg'
     boardName: string
@@ -143,8 +149,13 @@ export interface TimerResponse {
     expiresInSeconds: number
 }
 
+export interface ColumnsChangeResponse {
+    typ: 'colreset'
+    columns: BoardColumn[]
+}
+
 export type SocketResponse = RegisterResponse | MaskResponse | LockResponse | MessageResponse |
-    LikeMessageResponse | DeleteMessageResponse | DeleteAllResponse | CategoryChangeResponse | UserClosingResponse | TimerResponse
+    LikeMessageResponse | DeleteMessageResponse | DeleteAllResponse | CategoryChangeResponse | UserClosingResponse | TimerResponse | ColumnsChangeResponse
 
 export function toSocketResponse(json: any): SocketResponse | null {
 
@@ -170,6 +181,8 @@ export function toSocketResponse(json: any): SocketResponse | null {
                 return json as UserClosingResponse
             case 'timer':
                 return json as TimerResponse
+            case 'colreset':
+                return json as ColumnsChangeResponse
             // const data: MaskResponse = json
             // return data
 

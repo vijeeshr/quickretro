@@ -77,3 +77,8 @@ type TimerResponse struct {
 	Type             string `json:"typ"`
 	ExpiresInSeconds uint16 `json:"expiresInSeconds"`
 }
+
+type ColumnsChangeResponse struct {
+	Type         string         `json:"typ"`
+	BoardColumns []*BoardColumn `json:"columns"` // Using same BoardColumn struct that is used for request and redis store. Todo - refactor later.
+}

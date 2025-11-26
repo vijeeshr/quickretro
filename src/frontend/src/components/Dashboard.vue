@@ -6,7 +6,7 @@ import Category from './Category.vue';
 import NewAnonymousCard from './NewAnonymousCard.vue';
 import NewCard from './NewCard.vue';
 import { useRoute } from 'vue-router';
-import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent, CategoryChangeEvent, CategoryChangeResponse, DeleteAllEvent } from '../models/Requests';
+import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent, CategoryChangeEvent, CategoryChangeResponse, DeleteAllEvent, ColumnsChangeEvent, ColumnsChangeResponse } from '../models/Requests';
 import { OnlineUser } from '../models/OnlineUser';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
@@ -280,12 +280,23 @@ const onTimerStop = () => {
 }
 
 const saveCategoryChanges = () => {
-    if (isLocked.value) {
-        logMessage('Locked! Cannot change categories.')
-        return
-    }
-    if (hasCardsInDisabledCategories || !isCategorySelectionValid) return
+    // if (isLocked.value) {
+    //     logMessage('Locked! Cannot change categories.')
+    //     return
+    // }
+    // if (hasCardsInDisabledCategories || !isCategorySelectionValid) return
 
+    // TODO: PAYLOAD SIZE VALIDATION ?
+
+    const enabledCols: BoardColumn[] = mergedCategories.value.filter(c => c.enabled === true)
+        .map(c => ({
+            id: c.id,
+            text: c.text.trim() || t(`dashboard.columns.${c.id}`),
+            isDefault: c.text === '' || c.text === t(`dashboard.columns.${c.id}`),
+            color: c.color,
+            pos: c.pos
+        }))
+    dispatchEvent<ColumnsChangeEvent>("colreset", { by: user, grp: board, columns: enabledCols })
 }
 
 // const getRGBizedColor = (color: string): [number, number, number] => {
@@ -755,6 +766,12 @@ const onTimerResponse = (response: TimerResponse) => {
     }
 }
 
+const onColumnsChangeResponse = (response: ColumnsChangeResponse) => {
+    columns.value = response.columns
+        .slice()
+        .sort((a, b) => a.pos - b.pos)
+}
+
 // For Edit Categories feature
 const mergedCategories = ref<CategoryDefinition[]>([])
 
@@ -884,6 +901,9 @@ const socketOnMessage = (event: MessageEvent<any>) => {
                 break
             case "timer":
                 onTimerResponse(response)
+                break
+            case "colreset":
+                onColumnsChangeResponse(response)
                 break
         }
     }
