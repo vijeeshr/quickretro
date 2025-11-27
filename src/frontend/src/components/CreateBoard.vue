@@ -24,10 +24,7 @@ const isTurnstileVerified = ref(false)
 const isSubmitting = ref(false)
 const turnstileRef = ref<{ reset: () => void }>()
 const categories = ref<CategoryDefinition[]>([...defaultCategories])
-
-const isCategorySelectionValid = computed(() => {
-    return categories.value.some(c => c.enabled === true)
-})
+const isCategorySelectionValid = ref(true)
 
 const handleCategoryTextUpdate = (update: { id: string, text: string }) => {
     const cat = categories.value.find(c => c.id === update.id)
@@ -159,12 +156,9 @@ onMounted(() => {
                             </li>
                         </ul> -->
                         <CategoryEditor :categories="categories" @category-text-update="handleCategoryTextUpdate"
-                            @category-toggle="handleCategoryToggle" @categories-reorder="handleCategoriesReorder">
+                            @category-toggle="handleCategoryToggle" @categories-reorder="handleCategoriesReorder"
+                            @valid="(val: boolean) => isCategorySelectionValid = val">
                         </CategoryEditor>
-                        <p v-show="!isCategorySelectionValid"
-                            class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">{{
-                                t('createBoard.invalidColumnSelection') }}
-                        </p>
                     </div>
                     <div class="flex w-full gap-2">
                         <button type="submit"

@@ -680,9 +680,15 @@ type ColumnsChangeEvent struct {
 
 func (p *ColumnsChangeEvent) Handle(i *Event, h *Hub) {
 	// validate
-	if len(p.Columns) == 0 {
-		slog.Warn("No columns passed in ColumnsChangeEvent", "board", p.Group)
+	if len(p.Columns) == 0 || len(p.Columns) > 5 {
+		slog.Warn("Invalid columns data passed in ColumnsChangeEvent", "board", p.Group)
 		return
+	}
+	for _, col := range p.Columns {
+		if len([]rune(col.Text)) > config.Server.MaxCategoryTextLength {
+			slog.Warn("Columns text length exceeds limit in create board request payload", "len", len([]rune(col.Text)), "col", col.Id)
+			return
+		}
 	}
 	b, ok := h.redis.GetBoard(p.Group)
 	if !ok {

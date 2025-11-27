@@ -13,6 +13,9 @@ allowed_origins = [
     "https://demo.quickretro.app"
 ]
 turnstile_site_verify_url = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+# Maximum number of characters allowed for each category name
+# For the front-end validation, keep the same value in (src/frontend/.env [VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES])
+max_category_text_length = 80
 
 [websocket]
 # Maximum message size (in bytes) allowed from peer for the websocket connection

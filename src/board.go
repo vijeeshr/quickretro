@@ -124,10 +124,18 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 	// 	w.WriteHeader(http.StatusBadRequest)
 	// 	return
 	// }
-	if len(createReq.Columns) == 0 {
-		slog.Error("Columns missing in create board request payload")
-		http.Error(w, "Columns missing", http.StatusBadRequest)
+	if len(createReq.Columns) == 0 || len(createReq.Columns) > 5 {
+		slog.Error("Invalid Columns data in create board request payload")
+		http.Error(w, "Invalid columns data", http.StatusBadRequest)
 		return
+	}
+
+	for _, col := range createReq.Columns {
+		if len([]rune(col.Text)) > config.Server.MaxCategoryTextLength {
+			slog.Error("Columns text length exceeds limit in create board request payload", "len", len([]rune(col.Text)), "col", col.Id)
+			http.Error(w, "Column text exceeds limit", http.StatusBadRequest)
+			return
+		}
 	}
 
 	// Start creation

@@ -8,13 +8,20 @@ const props = defineProps<{ categories: CategoryDefinition[] }>()
 const emit = defineEmits([
     'category-text-update',
     'category-toggle',
-    'categories-reorder'
+    'categories-reorder',
+    'valid'
 ])
+
+const MAX_CATEGORY_TEXT_LENGTH: number = Number(import.meta.env.VITE_MAX_CATEGORY_TEXT_LENGTH)
 
 const { t } = useI18n()
 
 const localCategories = computed(() => {
     return props.categories.map(col => ({ ...col }))
+})
+
+const isCategorySelectionValid = computed(() => {
+    return localCategories.value.some(c => c.enabled === true)
 })
 
 const dragSourceIndex = ref<number | null>(null) // Drag state
@@ -49,11 +56,15 @@ const toggleCategory = (id: string) => {
             id: id,
             enabled: !cat.enabled
         })
+        emit('valid', isCategorySelectionValid)
     }
 }
 
 const updateCategoryText = (id: string, event: Event) => {
-    const value = (event.target as HTMLInputElement)?.value ?? ""
+    let value = (event.target as HTMLInputElement)?.value ?? ""
+    if (value.length > MAX_CATEGORY_TEXT_LENGTH) {
+        value = value.slice(0, MAX_CATEGORY_TEXT_LENGTH)
+    }
     emit('category-text-update', {
         id: id,
         text: value
@@ -91,11 +102,14 @@ const updateCategoryText = (id: string, event: Event) => {
             </button>
 
             <!-- Text Input -->
-            <input type="text" :id="cat.id" :value="cat.text" @input="updateCategoryText(cat.id, $event)"
-                :placeholder="t(`dashboard.columns.${cat.id}`)" class="w-full rounded-md focus:outline-none focus:border
+            <input type="text" :id="cat.id" :value="cat.text" :maxlength="MAX_CATEGORY_TEXT_LENGTH"
+                @input="updateCategoryText(cat.id, $event)" :placeholder="t(`dashboard.columns.${cat.id}`)" class="w-full rounded-md focus:outline-none focus:border
                        focus:border-gray-200 focus:ring-gray-200
                        dark:text-slate-200 dark:bg-gray-900
                        dark:focus:border-gray-800 dark:focus:ring-gray-800" />
         </li>
     </ul>
+    <p v-show="!isCategorySelectionValid" class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">{{
+        t('createBoard.invalidColumnSelection') }}
+    </p>
 </template>

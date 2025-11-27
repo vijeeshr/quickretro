@@ -15,7 +15,7 @@ import { LikeMessage } from '../models/LikeMessage';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import CountdownTimer from './CountdownTimer.vue';
 import TimerPanel from './TimerPanel.vue';
-import { formatDate, logMessage } from '../utils';
+import { areBoardColumnsVisuallySame, exceedsEventRequestMaxSize, formatDate, logMessage } from '../utils';
 import { useToast } from 'vue-toast-notification';
 // import 'vue-toast-notification/dist/theme-sugar.css';
 // import 'vue-toast-notification/dist/theme-bootstrap.css';
@@ -296,6 +296,17 @@ const saveCategoryChanges = () => {
             color: c.color,
             pos: c.pos
         }))
+
+    if (areBoardColumnsVisuallySame(enabledCols, columns.value)) {
+        logMessage('Columns unchanged. Not dispatching.')
+        return
+    }
+    if (exceedsEventRequestMaxSize<ColumnsChangeEvent>("colreset", { by: user, grp: board, columns: enabledCols })) {
+        // TODO: Create new key to have a different message
+        toast.error(t('common.contentOverloadError'))
+        return
+    }
+
     dispatchEvent<ColumnsChangeEvent>("colreset", { by: user, grp: board, columns: enabledCols })
 }
 
@@ -774,10 +785,7 @@ const onColumnsChangeResponse = (response: ColumnsChangeResponse) => {
 
 // For Edit Categories feature
 const mergedCategories = ref<CategoryDefinition[]>([])
-
-const isCategorySelectionValid = computed(() => {
-    return mergedCategories.value.some(c => c.enabled === true)
-})
+const isCategorySelectionValid = ref(true)
 
 const hasCardsInDisabledCategories = computed(() => {
     // Collect disabled category IDs
@@ -1093,13 +1101,9 @@ onUnmounted(() => {
                 <DialogPanel
                     class="w-full max-w-[356px] min-w-[240px] rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
                     <CategoryEditor :categories="mergedCategories" @category-text-update="handleCategoryTextUpdate"
-                        @category-toggle="handleCategoryToggle" @categories-reorder="handleCategoriesReorder">
+                        @category-toggle="handleCategoryToggle" @categories-reorder="handleCategoriesReorder"
+                        @valid="(val: boolean) => isCategorySelectionValid = val">
                     </CategoryEditor>
-                    <p v-show="!isCategorySelectionValid"
-                        class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">
-                        {{
-                            t('createBoard.invalidColumnSelection') }}
-                    </p>
                     <p v-show="hasCardsInDisabledCategories"
                         class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">
                         Cannot disable column(s) with cards</p>
