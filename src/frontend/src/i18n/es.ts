@@ -13,7 +13,8 @@ export default {
             lightTheme: 'Activar tema claro'
         },
         contentOverloadError: 'Contenido excede el límite permitido.',
-        contentStrippingError: 'Contenido excede el límite permitido. El texto adicional ha sido eliminado.'
+        contentStrippingError: 'Contenido excede el límite permitido. El texto adicional ha sido eliminado.',
+        invalidColumnSelection: 'Por favor selecciona columna(s)'
     },
     join: {
         label: 'Unirse como invitado',
@@ -26,8 +27,6 @@ export default {
         namePlaceholder: '¡Escribe el nombre del tablero aquí!',
         nameRequired: 'Por favor ingresa el nombre del tablero',
         teamNamePlaceholder: '¡Escribe el nombre del equipo aquí!',
-        invalidColumnSelection: 'Por favor selecciona columna(s)',
-        colOnePlaceholder: 'Bien',
         button: 'Crear',
         buttonProgress: 'Creando..',
         captchaInfo: 'Por favor, complete el CAPTCHA para continuar',
@@ -80,7 +79,9 @@ export default {
             col02: 'Desafíos',
             col03: 'Acciones',
             col04: 'Agradecimientos',
-            col05: 'Mejoras'
+            col05: 'Mejoras',
+            cannotDisable: "No se puede desactivar la(s) columna(s) que tienen tarjetas",
+            update: "Actualizar"            
         },
         printFooter: 'Creado con',
         offline: 'Sin conexión.',

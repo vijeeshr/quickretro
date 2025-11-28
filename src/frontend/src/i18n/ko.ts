@@ -13,7 +13,8 @@ export default {
             lightTheme: '라이트 모드 켜기'
         },
         contentOverloadError: '허용된 내용 초과',
-        contentStrippingError: '초과된 텍스트가 삭제되었습니다'
+        contentStrippingError: '초과된 텍스트가 삭제되었습니다',
+        invalidColumnSelection: '열을 선택해 주세요'
     },
     join: {
         label: '게스트로 참여',
@@ -26,8 +27,6 @@ export default {
         namePlaceholder: '보드 이름 입력!',
         nameRequired: '보드 이름을 입력해 주세요',
         teamNamePlaceholder: '팀 이름 입력!',
-        invalidColumnSelection: '열을 선택해 주세요',
-        colOnePlaceholder: '좋음',
         button: '생성',
 		buttonProgress: '생성 중..',
         captchaInfo: '계속하려면 CAPTCHA를 완료하세요',
@@ -80,7 +79,9 @@ export default {
             col02: '어려운 점',
             col03: '액션 항목',
             col04: '감사한 점',
-            col05: '개선점'
+            col05: '개선점',
+            cannotDisable: "카드가 있는 열은 비활성화할 수 없습니다",
+            update: "업데이트"
         },
         printFooter: '생성 도구',
         offline: '오프라인 상태',

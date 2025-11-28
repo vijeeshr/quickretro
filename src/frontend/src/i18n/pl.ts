@@ -13,7 +13,8 @@ export default {
             lightTheme: 'Włącz tryb jasny'
         },
         contentOverloadError: 'Treść przekracza dozwolony limit.',
-        contentStrippingError: 'Treść przekracza dozwolony limit. Nadmiarowy tekst został obcięty z końca.'
+        contentStrippingError: 'Treść przekracza dozwolony limit. Nadmiarowy tekst został obcięty z końca.',
+        invalidColumnSelection: 'Proszę wybrać kolumnę/kolumny'
     },
     join: {
         label: 'Dołącz jako gość',
@@ -26,8 +27,6 @@ export default {
         namePlaceholder: 'Wpisz nazwę tablicy!',
         nameRequired: 'Proszę podać nazwę tablicy',
         teamNamePlaceholder: 'Wpisz nazwę zespołu!',
-        invalidColumnSelection: 'Proszę wybrać kolumnę/kolumny',
-        colOnePlaceholder: 'Dobrze',
         button: 'Utwórz',
         buttonProgress: 'Tworzenie...',
         captchaInfo: 'Proszę ukończyć CAPTCHA, aby kontynuować',
@@ -80,7 +79,9 @@ export default {
             col02: 'Wyzwania',
             col03: 'Działania do podjęcia',
             col04: 'Docenienia',
-            col05: 'Ulepszenia'
+            col05: 'Ulepszenia',
+            cannotDisable: "Nie można wyłączyć kolumny z przypisanymi kartami",
+            update: "Aktualizuj"
         },
         printFooter: 'Stworzone za pomocą',
         offline: 'Wygląda na to, że jesteś offline.',

@@ -1092,7 +1092,6 @@ onUnmounted(() => {
             </div>
         </Dialog>
 
-        <!-- TODO: Translation texts, MOVE createBoard.invalidColumnSelection to common.invalidColumnSelection -->
         <!-- Dialog for Column editing -->
         <Dialog :open="isColumnEditDialogOpen" @close="setIsColumnEditDialogOpen" class="relative z-50">
             <!-- The backdrop, rendered as a fixed sibling to the panel container -->
@@ -1106,12 +1105,12 @@ onUnmounted(() => {
                     </CategoryEditor>
                     <p v-show="hasCardsInDisabledCategories"
                         class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">
-                        Cannot disable column(s) with cards</p>
+                        {{ t('dashboard.columns.cannotDisable') }}</p>
                     <button type="button"
                         class="px-4 py-2 mt-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white hover:border-transparent disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 select-none focus:outline-none focus:ring-0"
                         :disabled="hasCardsInDisabledCategories || !isCategorySelectionValid"
                         @click="saveCategoryChanges">
-                        Save
+                        {{ t('dashboard.columns.update')}}
                     </button>
                 </DialogPanel>
             </div>

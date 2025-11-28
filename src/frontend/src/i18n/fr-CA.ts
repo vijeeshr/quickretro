@@ -13,7 +13,8 @@ export default {
             lightTheme: 'Activer le mode clair'
         },
         contentOverloadError: 'Contenu dépasse la limite permise.',
-        contentStrippingError: 'Texte excédentaire supprimé.'
+        contentStrippingError: 'Texte excédentaire supprimé.',
+        invalidColumnSelection: 'Veuillez sélectionner des colonnes'
     },
     join: {
         label: 'Joindre comme invité',
@@ -26,8 +27,6 @@ export default {
         namePlaceholder: 'Nom du tableau ici !',
         nameRequired: 'Veuillez entrer le nom du tableau',
         teamNamePlaceholder: 'Nom de l\'équipe ici !',
-        invalidColumnSelection: 'Veuillez sélectionner des colonnes',
-        colOnePlaceholder: 'Bon',
         button: 'Créer',
         buttonProgress: 'Création en cours..',
         captchaInfo: 'Veuillez compléter le CAPTCHA',
@@ -80,7 +79,9 @@ export default {
             col02: 'Défis',
             col03: 'Actions',
             col04: 'Reconnaissance',
-            col05: 'Améliorations'
+            col05: 'Améliorations',
+            cannotDisable: "Impossible de désactiver la colonne puisqu’elle contient des cartes",
+            update: "Mettre à jour"
         },
         printFooter: 'Créé avec',
         offline: 'Hors ligne.',

@@ -13,7 +13,8 @@ export default {
             lightTheme: 'Licht thema inschakelen'
         },
         contentOverloadError: 'Inhoud overschrijdt limiet.',
-        contentStrippingError: 'Extra tekst verwijderd.'
+        contentStrippingError: 'Extra tekst verwijderd.',
+        invalidColumnSelection: 'Selecteer kolom(en)'
     },
     join: {
         label: 'Als gast deelnemen',
@@ -26,8 +27,6 @@ export default {
         namePlaceholder: 'Bordnaam hier invullen!',
         nameRequired: 'Voer bordnaam in',
         teamNamePlaceholder: 'Teamnaam hier invullen!',
-        invalidColumnSelection: 'Selecteer kolom(en)',
-        colOnePlaceholder: 'Goed',
         button: 'Aanmaken',
         buttonProgress: 'Aanmaken..',
         captchaInfo: 'Voltooi de CAPTCHA om door te gaan',
@@ -80,7 +79,9 @@ export default {
             col02: 'Uitdagingen',
             col03: 'Actiepunten',
             col04: 'Waardering',
-            col05: 'Verbeterpunten'
+            col05: 'Verbeterpunten',
+            cannotDisable: "Kolommen met kaarten kunnen niet worden uitgeschakeld",
+            update: "Bijwerken"
         },
         printFooter: 'Gemaakt met',
         offline: 'Offline.',

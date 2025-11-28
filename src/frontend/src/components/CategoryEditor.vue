@@ -110,6 +110,6 @@ const updateCategoryText = (id: string, event: Event) => {
         </li>
     </ul>
     <p v-show="!isCategorySelectionValid" class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">{{
-        t('createBoard.invalidColumnSelection') }}
+        t('common.invalidColumnSelection') }}
     </p>
 </template>

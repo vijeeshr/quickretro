@@ -13,7 +13,8 @@ export default {
             lightTheme: 'Turn on light theme'
         },
         contentOverloadError: 'Content more than allowed limit.',
-        contentStrippingError: 'Content more than allowed limit. Extra text is stripped from the end.'
+        contentStrippingError: 'Content more than allowed limit. Extra text is stripped from the end.',
+        invalidColumnSelection: 'Please select column(s)'
     },
     join: {
         label: 'Join as guest',
@@ -26,8 +27,6 @@ export default {
         namePlaceholder: 'Type board name here!',
         nameRequired: 'Please enter board name',
         teamNamePlaceholder: 'Type team name here!',
-        invalidColumnSelection: 'Please select column(s)',
-        colOnePlaceholder: 'Good',
         button: 'Create',
         buttonProgress: 'Creating..',
         captchaInfo: 'Please complete the CAPTCHA to continue',
@@ -80,7 +79,9 @@ export default {
             col02: 'Challenges',
             col03: 'Action Items',
             col04: 'Appreciations',
-            col05: 'Improvements'
+            col05: 'Improvements',
+            cannotDisable: 'Cannot disable column(s) with cards',
+            update: 'Update'
         },
         printFooter: 'Created with',
         offline: 'You seem to be offline.',

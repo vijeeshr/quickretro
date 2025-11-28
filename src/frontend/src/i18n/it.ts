@@ -13,7 +13,8 @@ export default {
             lightTheme: 'Attiva tema chiaro'
         },
         contentOverloadError: 'Contenuto oltre il limite consentito.',
-        contentStrippingError: 'Testo in eccesso rimosso.'
+        contentStrippingError: 'Testo in eccesso rimosso.',
+        invalidColumnSelection: 'Seleziona colonna(e)'
     },
     join: {
         label: 'Partecipa come ospite',
@@ -26,8 +27,6 @@ export default {
         namePlaceholder: 'Nome della bacheca qui!',
         nameRequired: 'Inserisci il nome della bacheca',
         teamNamePlaceholder: 'Nome del team qui!',
-        invalidColumnSelection: 'Seleziona colonna(e)',
-        colOnePlaceholder: 'Buono',
         button: 'Crea',
         buttonProgress: 'Creazione..',
         captchaInfo: 'Completa il CAPTCHA per continuare',
@@ -80,7 +79,9 @@ export default {
             col02: 'Sfide',
             col03: 'Azioni',
             col04: 'Apprezzamenti',
-            col05: 'Miglioramenti'
+            col05: 'Miglioramenti',
+            cannotDisable: "Impossibile disattivare le colonne che contengono schede",
+            update: "Aggiorna"
         },
         printFooter: 'Creato con',
         offline: 'Disconnesso.',
