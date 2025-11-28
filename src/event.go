@@ -36,6 +36,8 @@ func (e *Event) Handle(h *Hub) {
 		payload.(*CategoryChangeEvent).Handle(e, h)
 	case "timer":
 		payload.(*TimerEvent).Handle(e, h)
+	case "colreset":
+		payload.(*ColumnsChangeEvent).Handle(e, h)
 	}
 }
 
@@ -65,6 +67,8 @@ func (e *Event) Broadcast(m *Message, h *Hub) {
 		payload.(*CategoryChangeEvent).Broadcast(h)
 	case "timer":
 		payload.(*TimerEvent).Broadcast(h)
+	case "colreset":
+		payload.(*ColumnsChangeEvent).Broadcast(h)
 	case "closing":
 		payload.(*UserClosingEvent).Broadcast(h)
 	}
@@ -73,16 +77,17 @@ func (e *Event) Broadcast(m *Message, h *Hub) {
 func (e *Event) ParsePayload() interface{} {
 	// Todo: Check allocations.
 	payloadMap := map[string]interface{}{
-		"mask":    &MaskEvent{},
-		"lock":    &LockEvent{},
-		"reg":     &RegisterEvent{},
-		"msg":     &MessageEvent{},
-		"like":    &LikeMessageEvent{},
-		"del":     &DeleteMessageEvent{},
-		"delall":  &DeleteAllEvent{},
-		"catchng": &CategoryChangeEvent{},
-		"timer":   &TimerEvent{},
-		"closing": &UserClosingEvent{},
+		"mask":     &MaskEvent{},
+		"lock":     &LockEvent{},
+		"reg":      &RegisterEvent{},
+		"msg":      &MessageEvent{},
+		"like":     &LikeMessageEvent{},
+		"del":      &DeleteMessageEvent{},
+		"delall":   &DeleteAllEvent{},
+		"catchng":  &CategoryChangeEvent{},
+		"timer":    &TimerEvent{},
+		"colreset": &ColumnsChangeEvent{},
+		"closing":  &UserClosingEvent{},
 	}
 	payload, ok := payloadMap[e.Type]
 	if !ok {

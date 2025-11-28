@@ -1,3 +1,4 @@
+import { BoardColumn } from "../models/BoardColumn"
 import { EventRequest, SaveMessageEvent } from "../models/Requests"
 
 export const logMessage = (...args: any[]): void => {
@@ -127,4 +128,36 @@ export const assertMessageContentValidation = (event: Event, user: string, nickn
 export interface MessageContentValidationResult {
     isValid: boolean
     isTrimmed: boolean
+}
+
+export const areBoardColumnsVisuallySame = (a: BoardColumn[], b: BoardColumn[]): boolean => {
+    if (a.length !== b.length) return false
+    // Sorting both arrays and then skipping "pos" field comparison.
+    // This takes care of use-case where -
+    //      a: A1 B2 E5 (fields C & D are disabled)
+    //      b: A1 B2 E3 (fields C & D are disabled)
+    // needs to be treated as "visually" same arrays. For UI, the visual display order of both arrays (with enabled items) are same. 
+    const sortedA = [...a].sort((x, y) => x.pos - y.pos)
+    const sortedB = [...b].sort((x, y) => x.pos - y.pos)
+
+    return sortedA.every((col, i) => {
+        const other = sortedB[i]
+        return (
+            col.id === other.id &&
+            col.text === other.text &&
+            col.isDefault === other.isDefault &&
+            col.color === other.color
+            // col.pos === other.pos
+        )
+    })
+}
+
+export const exceedsEventRequestMaxSize = <T>(eventType: string, payload: T) => {
+    const event: EventRequest<T> = {
+        typ: eventType,
+        pyl: payload
+    }
+    const payloadBytes = getByteLength(JSON.stringify(event))
+    const maxAllowedBytes = Number(import.meta.env.VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES)
+    return payloadBytes > maxAllowedBytes
 }

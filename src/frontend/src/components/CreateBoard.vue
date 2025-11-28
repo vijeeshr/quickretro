@@ -4,10 +4,13 @@ import { useRouter } from 'vue-router';
 import { CreateBoardRequest, createBoard } from '../api'
 import DarkModeToggle from './DarkModeToggle.vue';
 import { BoardColumn } from '../models/BoardColumn';
+import { CategoryDefinition } from "../models/CategoryDefinition";
 import { useI18n } from 'vue-i18n';
 import LanguageSelector from './LanguageSelector.vue';
 import TurnstileWidget from './TurnstileWidget.vue';
 import { useToast } from 'vue-toast-notification';
+import CategoryEditor from './CategoryEditor.vue';
+import { defaultCategories } from '../constants/defaultCategories';
 
 const { t } = useI18n()
 const router = useRouter()
@@ -20,26 +23,24 @@ const turnstileToken = ref('')
 const isTurnstileVerified = ref(false)
 const isSubmitting = ref(false)
 const turnstileRef = ref<{ reset: () => void }>()
-const dragSourceIndex = ref<number | null>(null) // Drag state
+const categories = ref<CategoryDefinition[]>([...defaultCategories])
+const isCategorySelectionValid = ref(true)
 
-const columns = ref([
-    { id: "col01", text: "", color: "green", colorClass: "text-green-500", enabled: true, pos: 1 },
-    { id: "col02", text: "", color: "red", colorClass: "text-red-500", enabled: true, pos: 2 },
-    { id: "col03", text: "", color: "yellow", colorClass: "text-yellow-500", enabled: true, pos: 3 },
-    { id: "col04", text: "", color: "fuchsia", colorClass: "text-fuchsia-500", enabled: false, pos: 4 },
-    { id: "col05", text: "", color: "orange", colorClass: "text-orange-500", enabled: false, pos: 5 }
-])
-
-const toggleColumn = (column: string, enable: boolean) => {
-    let cat = columns.value.find(c => c.id === column)
+const handleCategoryTextUpdate = (update: { id: string, text: string }) => {
+    const cat = categories.value.find(c => c.id === update.id)
     if (cat) {
-        cat.enabled = enable
+        cat.text = update.text
     }
 }
-
-const isColumnSelectionValid = computed(() => {
-    return columns.value.some(c => c.enabled === true)
-})
+const handleCategoryToggle = (update: { id: string, enabled: boolean }) => {
+    const cat = categories.value.find(c => c.id === update.id)
+    if (cat) {
+        cat.enabled = update.enabled
+    }
+}
+const handleCategoriesReorder = (reorderedCategories: CategoryDefinition[]) => {
+    categories.value = reorderedCategories
+}
 
 const boardnameEntered = computed(() => {
     if (boardname.value && boardname.value.trim() !== '') return true
@@ -64,10 +65,10 @@ const create = async () => {
     // Todo: Throttle this.
     if (isTurnstileEnabled.value && !isTurnstileVerified.value) return
 
-    const selectedColumns: BoardColumn[] = columns.value.filter(c => c.enabled === true)
+    const selectedColumns: BoardColumn[] = categories.value.filter(c => c.enabled === true)
         .map(c => ({
             id: c.id,
-            text: c.text || t(`dashboard.columns.${c.id}`),
+            text: c.text.trim() || t(`dashboard.columns.${c.id}`),
             isDefault: c.text === '' || c.text === t(`dashboard.columns.${c.id}`),
             color: c.color,
             pos: c.pos
@@ -91,24 +92,6 @@ const create = async () => {
     } finally {
         isSubmitting.value = false
     }
-}
-
-const onDragStart = (index: number) => {
-    dragSourceIndex.value = index
-}
-// Fired when dragging over another item
-const onDragOver = (event: DragEvent) => {
-    event.preventDefault() // allow dropping
-}
-const onDrop = (targetIndex: number) => {
-    if (dragSourceIndex.value === null || dragSourceIndex.value === targetIndex) return
-    // Move item in array
-    const moved = columns.value.splice(dragSourceIndex.value, 1)[0]
-    columns.value.splice(targetIndex, 0, moved)
-    // Reset drag index
-    dragSourceIndex.value = null
-    // Update position numbers (for saving order later)
-    columns.value.forEach((c, i) => (c.pos = i + 1))
 }
 
 onMounted(() => {
@@ -142,7 +125,7 @@ onMounted(() => {
                         </div>
                     </div>
                     <div>
-                        <ul class="space-y-2 text-sm">
+                        <!-- <ul class="space-y-2 text-sm">
                             <li v-for="(column, index) in columns" :key="column.id" class="flex space-x-1"
                                 draggable="true" @dragstart="onDragStart(index)" @dragover="onDragOver"
                                 @drop="onDrop(index)">
@@ -171,16 +154,16 @@ onMounted(() => {
                                     :placeholder="t(`dashboard.columns.${column.id}`)"
                                     class="w-full rounded-md focus:outline-none focus:border focus:border-gray-200 focus:ring-gray-200 dark:text-slate-200 dark:bg-gray-900 dark:focus:border-gray-800 dark:focus:ring-gray-800" />
                             </li>
-                        </ul>
-                        <p v-show="!isColumnSelectionValid"
-                            class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">{{
-                                t('createBoard.invalidColumnSelection') }}
-                        </p>
+                        </ul> -->
+                        <CategoryEditor :categories="categories" @category-text-update="handleCategoryTextUpdate"
+                            @category-toggle="handleCategoryToggle" @categories-reorder="handleCategoriesReorder"
+                            @valid="(val: boolean) => isCategorySelectionValid = val">
+                        </CategoryEditor>
                     </div>
                     <div class="flex w-full gap-2">
                         <button type="submit"
                             class="flex justify-center px-4 py-2 text-sm w-[90%] shadow-md bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2 dark:focus:ring-2 dark:focus:ring-offset-0 select-none"
-                            :disabled="!boardnameEntered || !isColumnSelectionValid || (isTurnstileEnabled && !isTurnstileVerified)"
+                            :disabled="!boardnameEntered || !isCategorySelectionValid || (isTurnstileEnabled && !isTurnstileVerified)"
                             @click="create">
                             {{ isSubmitting ? t('createBoard.buttonProgress') : t('createBoard.button') }}
                         </button>

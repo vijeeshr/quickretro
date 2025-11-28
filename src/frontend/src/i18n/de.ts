@@ -13,7 +13,8 @@ export default {
             lightTheme: 'Helles Design aktivieren'
         },
         contentOverloadError: 'Inhalt überschreitet Limit.',
-        contentStrippingError: 'Inhalt zu lang. Überschüssiger Text wurde entfernt.'
+        contentStrippingError: 'Inhalt zu lang. Überschüssiger Text wurde entfernt.',
+        invalidColumnSelection: 'Bitte Spalte(n) auswählen'
     },
     join: {
         label: 'Als Gast beitreten',
@@ -26,8 +27,6 @@ export default {
         namePlaceholder: 'Boardnamen hier eingeben!',
         nameRequired: 'Bitte Boardnamen eingeben',
         teamNamePlaceholder: 'Teamnamen hier eingeben!',
-        invalidColumnSelection: 'Bitte Spalte(n) auswählen',
-        colOnePlaceholder: 'Gut',
         button: 'Erstellen',
         buttonProgress: 'Wird erstellt..',
         captchaInfo: 'Bitte lösen Sie das CAPTCHA, um fortzufahren',
@@ -80,7 +79,9 @@ export default {
             col02: 'Herausforderungen',
             col03: 'Aktionspunkte',
             col04: 'Dankbarkeiten',
-            col05: 'Verbesserungen'
+            col05: 'Verbesserungen',
+            cannotDisable: "Spalte(n) mit Karten können nicht deaktiviert werden",
+            update: "Aktualisieren"
         },
         printFooter: 'Erstellt mit',
         offline: 'Offline.',

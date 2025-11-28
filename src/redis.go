@@ -130,6 +130,126 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 	return true
 }
 
+func (c *RedisConnector) HasMessagesForColumnsMarkedForRemoval(boardId string, oldCols []*BoardColumn, newCols []*BoardColumn) (bool, error) {
+	// Compare oldCols vs newCols to find colIds that existed before but no longer exist.
+	oldMap := make(map[string]struct{}, len(oldCols))
+	newMap := make(map[string]struct{}, len(newCols))
+	for _, c := range oldCols {
+		oldMap[c.Id] = struct{}{}
+	}
+	for _, c := range newCols {
+		newMap[c.Id] = struct{}{}
+	}
+
+	var missingIds []string // missingIds are ids of columns marked for removal
+	for oldId := range oldMap {
+		if _, stillExists := newMap[oldId]; !stillExists {
+			missingIds = append(missingIds, oldId)
+		}
+	}
+
+	if len(missingIds) == 0 {
+		return false, nil
+	}
+
+	// Fetch messages
+	messages, ok := c.GetMessages(boardId)
+	if !ok {
+		return false, fmt.Errorf("unable to fetch messages for board %s", boardId)
+	}
+
+	// Convert list to a set for quick lookup
+	disableSet := make(map[string]struct{}, len(missingIds))
+	for _, id := range missingIds {
+		disableSet[id] = struct{}{}
+	}
+
+	// Check messages: any message belonging to a disabled column?
+	for _, m := range messages {
+		if _, exists := disableSet[m.Category]; exists {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (c *RedisConnector) ResetBoardColumns(b *Board, oldCols []*BoardColumn, newCols []*BoardColumn) bool {
+	boardColsKey := fmt.Sprintf("board:col:%s", b.Id)
+	autoDeleteTime := time.Unix(b.AutoDeleteAtUtc, 0).UTC()
+
+	// Convert to map for quick lookup
+	oldMap := make(map[string]*BoardColumn, len(oldCols))
+	newMap := make(map[string]*BoardColumn, len(newCols))
+	for _, c := range oldCols {
+		oldMap[c.Id] = c
+	}
+	for _, c := range newCols {
+		newMap[c.Id] = c
+	}
+
+	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+
+		// DELETE columns that no longer exist
+		for oldId := range oldMap {
+			if _, stillExists := newMap[oldId]; !stillExists {
+				colKey := fmt.Sprintf("board:col:%s:%s", b.Id, oldId)
+				pipe.Del(c.ctx, colKey)
+			}
+		}
+
+		// UPSERT (create or deep-update) columns
+		for _, newCol := range newCols {
+
+			oldCol, existed := oldMap[newCol.Id]
+			colKey := fmt.Sprintf("board:col:%s:%s", b.Id, newCol.Id)
+
+			// If didn’t exist → full create
+			if !existed {
+				pipe.HSet(c.ctx, colKey, "id", newCol.Id)
+				pipe.HSet(c.ctx, colKey, "text", newCol.Text)
+				pipe.HSet(c.ctx, colKey, "isDefault", newCol.IsDefault)
+				pipe.HSet(c.ctx, colKey, "color", newCol.Color)
+				pipe.HSet(c.ctx, colKey, "pos", newCol.Position)
+				pipe.ExpireAt(c.ctx, colKey, autoDeleteTime)
+				continue
+			}
+
+			// Deep diff: Only update changed fields
+			if oldCol.Text != newCol.Text {
+				pipe.HSet(c.ctx, colKey, "text", newCol.Text)
+			}
+			if oldCol.Color != newCol.Color {
+				pipe.HSet(c.ctx, colKey, "color", newCol.Color)
+			}
+			if oldCol.IsDefault != newCol.IsDefault {
+				pipe.HSet(c.ctx, colKey, "isDefault", newCol.IsDefault)
+			}
+			if oldCol.Position != newCol.Position {
+				pipe.HSet(c.ctx, colKey, "pos", newCol.Position)
+			}
+
+			// Note: TTL is preserved automatically unless created new
+		}
+
+		// Rebuild the column ID set
+		pipe.Del(c.ctx, boardColsKey)
+		for _, col := range newCols {
+			pipe.SAdd(c.ctx, boardColsKey, col.Id)
+		}
+		pipe.ExpireAt(c.ctx, boardColsKey, autoDeleteTime)
+
+		return nil
+	})
+
+	if err != nil {
+		slog.Error("Failed to deep diff reset columns", "details", err, "board", b.Id)
+		return false
+	}
+
+	return true
+}
+
 func (c *RedisConnector) UpdateMasking(b *Board, mask bool) bool {
 	// Todo: Deduplicate with UpdateBoardLock() & UpdateTimer()
 	key := fmt.Sprintf("board:%s", b.Id)

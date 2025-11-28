@@ -13,7 +13,8 @@ export default {
             lightTheme: 'Светлая тема'
         },
         contentOverloadError: 'Превышен лимит содержимого',
-        contentStrippingError: 'Лишний текст удалён'
+        contentStrippingError: 'Лишний текст удалён',
+        invalidColumnSelection: 'Выберите столбцы'
     },
     join: {
         label: 'Войти как гость',
@@ -26,8 +27,6 @@ export default {
         namePlaceholder: 'Название доски здесь!',
         nameRequired: 'Введите название доски',
         teamNamePlaceholder: 'Название команды здесь!',
-        invalidColumnSelection: 'Выберите столбцы',
-        colOnePlaceholder: 'Хорошо',
         button: 'Создать',
 		buttonProgress: 'Создание..',
         captchaInfo: 'Пройдите CAPTCHA для продолжения',
@@ -80,7 +79,9 @@ export default {
             col02: 'Сложности',
             col03: 'Действия',
             col04: 'Благодарности',
-            col05: 'Улучшения'
+            col05: 'Улучшения',
+            cannotDisable: "Нельзя отключить колонку, в которой есть карточки",
+            update: "Обновить"
         },
         printFooter: 'Создано с',
         offline: 'Офлайн',

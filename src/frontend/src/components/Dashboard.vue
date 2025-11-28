@@ -6,7 +6,7 @@ import Category from './Category.vue';
 import NewAnonymousCard from './NewAnonymousCard.vue';
 import NewCard from './NewCard.vue';
 import { useRoute } from 'vue-router';
-import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent, CategoryChangeEvent, CategoryChangeResponse, DeleteAllEvent } from '../models/Requests';
+import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent, CategoryChangeEvent, CategoryChangeResponse, DeleteAllEvent, ColumnsChangeEvent, ColumnsChangeResponse } from '../models/Requests';
 import { OnlineUser } from '../models/OnlineUser';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
@@ -15,7 +15,7 @@ import { LikeMessage } from '../models/LikeMessage';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import CountdownTimer from './CountdownTimer.vue';
 import TimerPanel from './TimerPanel.vue';
-import { formatDate, logMessage } from '../utils';
+import { areBoardColumnsVisuallySame, exceedsEventRequestMaxSize, formatDate, logMessage } from '../utils';
 import { useToast } from 'vue-toast-notification';
 // import 'vue-toast-notification/dist/theme-sugar.css';
 // import 'vue-toast-notification/dist/theme-bootstrap.css';
@@ -25,6 +25,9 @@ import { BoardColumn } from '../models/BoardColumn';
 import { CategoryChangeMessage } from '../models/CategoryChangeMessage';
 import { useI18n } from 'vue-i18n';
 import { useLanguage } from '../composables/useLanguage';
+import CategoryEditor from './CategoryEditor.vue';
+import { CategoryDefinition } from '../models/CategoryDefinition';
+import { defaultCategories } from '../constants/defaultCategories';
 
 const { locale, setLocale, languageOptions } = useLanguage()
 const { t } = useI18n()
@@ -79,6 +82,11 @@ const setIsDeleteAllDialogOpen = (value: boolean) => {
 const isLanguageDialogOpen = ref(false)
 const setIsLanguageDialogOpen = (value: boolean) => {
     isLanguageDialogOpen.value = value
+}
+
+const isColumnEditDialogOpen = ref(false)
+const setIsColumnEditDialogOpen = (value: boolean) => {
+    isColumnEditDialogOpen.value = value
 }
 
 const toast = useToast()
@@ -269,6 +277,29 @@ const onTimerStart = (expiryDurationInSeconds: number) => {
 const onTimerStop = () => {
     dispatchEvent<TimerEvent>("timer", { by: user, grp: board, expiryDurationInSeconds: 0, stop: true }) // "expiryDurationInSeconds" is ignored
     setIsTimerDialogOpen(false)
+}
+
+const saveCategoryChanges = () => {
+    const enabledCols: BoardColumn[] = mergedCategories.value.filter(c => c.enabled === true)
+        .map(c => ({
+            id: c.id,
+            text: c.text.trim() || t(`dashboard.columns.${c.id}`),
+            isDefault: c.text === '' || c.text === t(`dashboard.columns.${c.id}`),
+            color: c.color,
+            pos: c.pos
+        }))
+
+    if (areBoardColumnsVisuallySame(enabledCols, columns.value)) {
+        logMessage('Columns unchanged. Not dispatching.')
+        return
+    }
+    
+    if (exceedsEventRequestMaxSize<ColumnsChangeEvent>("colreset", { by: user, grp: board, columns: enabledCols })) {
+        toast.error(t('common.contentOverloadError'))
+        return
+    }
+
+    dispatchEvent<ColumnsChangeEvent>("colreset", { by: user, grp: board, columns: enabledCols })
 }
 
 // const getRGBizedColor = (color: string): [number, number, number] => {
@@ -559,6 +590,12 @@ const timerSettings = () => {
     }
 }
 
+const openColumnEditDialog = () => {
+    if (!isOwner) return
+    mergeCategories()
+    isColumnEditDialogOpen.value = true
+}
+
 const onRegisterResponse = (response: RegisterResponse) => {
     timerExpiresInSeconds.value = response.timerExpiresInSeconds // This always gets set. Todo: find a better way to sync timer.
     boardExpiryLocalTime.value = formatDate(response.boardExpiryUtcSeconds)
@@ -732,6 +769,75 @@ const onTimerResponse = (response: TimerResponse) => {
     }
 }
 
+const onColumnsChangeResponse = (response: ColumnsChangeResponse) => {
+    columns.value = response.columns
+        .slice()
+        .sort((a, b) => a.pos - b.pos)
+}
+
+// For Edit Categories feature
+const mergedCategories = ref<CategoryDefinition[]>([])
+const isCategorySelectionValid = ref(true)
+
+const hasCardsInDisabledCategories = computed(() => {
+    // Collect disabled category IDs
+    const disabledCatIds = mergedCategories.value
+        .filter(cat => !cat.enabled)
+        .map(cat => cat.id)
+    if (disabledCatIds.length === 0) return false
+
+    // Check if any card belongs to any disabled category
+    return cards.value.some(card => disabledCatIds.includes(card.cat))
+})
+
+const mergeCategories = () => {
+    const defaultCats: CategoryDefinition[] = [...defaultCategories]
+
+    const map = new Map<string, BoardColumn>(columns.value.map(c => [c.id, c]))
+
+    const merged = defaultCats
+        .map((d) => {
+            const override = map.get(d.id)
+            return {
+                id: d.id,
+                color: d.color,
+                colorClass: d.colorClass,
+                text: override?.isDefault ? d.text : override?.text ?? d.text, // override?.text ?? d.text,
+                enabled: override !== undefined ? true : false, // override is present means, the column has been defined
+                pos: override?.pos ?? defaultCats.length
+            }
+        })
+
+    merged.sort((a, b) => {
+        // sort by "enabled==true" first, then by "pos"
+        if (a.enabled !== b.enabled) {
+            return a.enabled ? -1 : 1; // enabled=true first
+        }
+        return a.pos - b.pos;
+    })
+
+    mergedCategories.value = merged.map((col, i) => ({
+        ...col,
+        pos: i + 1
+    }))
+}
+
+const handleCategoryTextUpdate = (update: { id: string, text: string }) => {
+    const cat = mergedCategories.value.find(c => c.id === update.id)
+    if (cat) {
+        cat.text = update.text
+    }
+}
+const handleCategoryToggle = (update: { id: string, enabled: boolean }) => {
+    const cat = mergedCategories.value.find(c => c.id === update.id)
+    if (cat) {
+        cat.enabled = update.enabled
+    }
+}
+const handleCategoriesReorder = (reorderedCategories: CategoryDefinition[]) => {
+    mergedCategories.value = reorderedCategories
+}
+
 const dispatchEvent = <T>(eventType: string, payload: T) => {
     const event: EventRequest<T> = {
         typ: eventType,
@@ -795,6 +901,9 @@ const socketOnMessage = (event: MessageEvent<any>) => {
                 break
             case "timer":
                 onTimerResponse(response)
+                break
+            case "colreset":
+                onColumnsChangeResponse(response)
                 break
         }
     }
@@ -975,6 +1084,30 @@ onUnmounted(() => {
             </div>
         </Dialog>
 
+        <!-- Dialog for Column editing -->
+        <Dialog :open="isColumnEditDialogOpen" @close="setIsColumnEditDialogOpen" class="relative z-50">
+            <!-- The backdrop, rendered as a fixed sibling to the panel container -->
+            <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
+            <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
+                <DialogPanel
+                    class="w-full max-w-[356px] min-w-[240px] rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
+                    <CategoryEditor :categories="mergedCategories" @category-text-update="handleCategoryTextUpdate"
+                        @category-toggle="handleCategoryToggle" @categories-reorder="handleCategoriesReorder"
+                        @valid="(val: boolean) => isCategorySelectionValid = val">
+                    </CategoryEditor>
+                    <p v-show="hasCardsInDisabledCategories"
+                        class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">
+                        {{ t('dashboard.columns.cannotDisable') }}</p>
+                    <button type="button"
+                        class="px-4 py-2 mt-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white hover:border-transparent disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 select-none focus:outline-none focus:ring-0"
+                        :disabled="hasCardsInDisabledCategories || !isCategorySelectionValid"
+                        @click="saveCategoryChanges">
+                        {{ t('dashboard.columns.update')}}
+                    </button>
+                </DialogPanel>
+            </div>
+        </Dialog>
+
         <!-- Left Sidebar -->
         <div class="w-16 p-3">
             <!-- Timer -->
@@ -1094,8 +1227,9 @@ onUnmounted(() => {
                 class="flex flex-1 flex-col md:flex-row h-full min-h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
                 <Category v-for="column in columns" :key="column.id" :column="column" :width="columnWidthClass"
                     :button-highlight="newCardCategory == column.id"
-                    :anonymous-button-highlight="newAnonymousCardCategory == column.id"
-                    @add-card="add(column.id, false)" @add-anonymous-card="add(column.id, true)">
+                    :anonymous-button-highlight="newAnonymousCardCategory == column.id" :editable="isOwner"
+                    :locked="isLocked" @add-card="add(column.id, false)" @add-anonymous-card="add(column.id, true)"
+                    @category-click="openColumnEditDialog">
                     <NewCard v-if="newCardCategory == column.id" :category="column.id" :by="user" :nickname="nickname"
                         :board="board" @added="onAdded" @invalidContent="onInvalidContent" @discard="onDiscard" />
                     <NewAnonymousCard v-if="newAnonymousCardCategory == column.id" :category="column.id" :by="user"

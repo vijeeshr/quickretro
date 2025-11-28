@@ -13,7 +13,8 @@ export default {
             lightTheme: 'ライトテーマ'
         },
         contentOverloadError: 'コンテンツ制限超過',
-        contentStrippingError: '末尾のテキストが削除されました'
+        contentStrippingError: '末尾のテキストが削除されました',
+        invalidColumnSelection: '列を選択してください'
     },
     join: {
         label: 'ゲスト参加',
@@ -26,8 +27,6 @@ export default {
         namePlaceholder: 'ボード名を入力！',
         nameRequired: 'ボード名を入力してください',
         teamNamePlaceholder: 'チーム名を入力！',
-        invalidColumnSelection: '列を選択してください',
-        colOnePlaceholder: '良い',
         button: '作成',
 		buttonProgress: '作成中..',
         captchaInfo: 'CAPTCHAを完了してください',
@@ -80,7 +79,9 @@ export default {
             col02: '課題',
             col03: 'アクション項目',
             col04: '感謝',
-            col05: '改善点'
+            col05: '改善点',
+            cannotDisable: "カードがある列は無効にできません",
+            update: "更新"
         },
         printFooter: '作成者',
         offline: 'オフライン',

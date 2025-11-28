@@ -13,7 +13,8 @@ export default {
             lightTheme: '启用浅色主题'
         },
         contentOverloadError: '内容超过允许限制',
-        contentStrippingError: '内容超出限制，多余文字已被删除'
+        contentStrippingError: '内容超出限制，多余文字已被删除',
+        invalidColumnSelection: '请选择列'
     },
     join: {
         label: '以访客加入',
@@ -27,7 +28,6 @@ export default {
         nameRequired: '请输入看板名称',
         teamNamePlaceholder: '输入团队名称！',
         invalidColumnSelection: '请选择列',
-        colOnePlaceholder: '好',
         button: '创建',
 		buttonProgress: '创建中..',
         captchaInfo: '请完成验证码以继续',
@@ -80,7 +80,9 @@ export default {
             col02: '挑战',
             col03: '行动计划',
             col04: '感谢',
-            col05: '改进建议'
+            col05: '改进建议',
+            cannotDisable: "无法禁用包含卡片的列",
+            update: "更新"
         },
         printFooter: '创建于',
         offline: '离线状态',

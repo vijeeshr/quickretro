@@ -13,7 +13,8 @@ export default {
             lightTheme: 'Ativar tema claro'
         },
         contentOverloadError: 'Conteúdo excede o limite permitido.',
-        contentStrippingError: 'Texto adicional foi removido do final.'
+        contentStrippingError: 'Texto adicional foi removido do final.',
+        invalidColumnSelection: 'Selecione pelo menos uma coluna'
     },
     join: {
         label: 'Entrar como visitante',
@@ -26,8 +27,6 @@ export default {
         namePlaceholder: 'Digite o nome do quadro aqui!',
         nameRequired: 'Por favor, digite o nome do quadro',
         teamNamePlaceholder: 'Digite o nome do time aqui!',
-        invalidColumnSelection: 'Selecione pelo menos uma coluna',
-        colOnePlaceholder: 'Bom',
         button: 'Criar',
         buttonProgress: 'Criando..',
         captchaInfo: 'Complete o CAPTCHA para prosseguir',
@@ -80,7 +79,9 @@ export default {
             col02: 'Desafios',
             col03: 'Ações',
             col04: 'Agradecimentos',
-            col05: 'Melhorias'
+            col05: 'Melhorias',
+            cannotDisable: "Não é possível desativar coluna(s) que possuem cartões",
+            update: "Atualizar"
         },
         printFooter: 'Criado com',
         offline: 'Você parece estar offline.',

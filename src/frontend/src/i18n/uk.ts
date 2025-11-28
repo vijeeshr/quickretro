@@ -13,7 +13,8 @@ export default {
             lightTheme: 'Увімкнути світлу тему'
         },
         contentOverloadError: 'Перевищено допустимий обсяг контенту.',
-        contentStrippingError: 'Текст було скорочено через перевищення ліміту.'
+        contentStrippingError: 'Текст було скорочено через перевищення ліміту.',
+        invalidColumnSelection: 'Оберіть колонку(и)'
     },
     join: {
         label: 'Приєднатися як гість',
@@ -26,8 +27,6 @@ export default {
         namePlaceholder: 'Введіть назву дошки тут!',
         nameRequired: 'Будь ласка, введіть назву дошки',
         teamNamePlaceholder: 'Введіть назву команди тут!',
-        invalidColumnSelection: 'Оберіть колонку(и)',
-        colOnePlaceholder: 'Добре',
         button: 'Створити',
 		buttonProgress: 'Створення..',
         captchaInfo: 'Будь ласка, пройдіть CAPTCHA',
@@ -80,7 +79,9 @@ export default {
             col02: 'Складності',
             col03: 'Завдання',
             col04: 'Подяки',
-            col05: 'Покращення'
+            col05: 'Покращення',
+            cannotDisable: "Неможливо вимкнути стовпчик, у якому є картки",
+            update: "Оновити"
         },
         printFooter: 'Створено за допомогою',
         offline: 'Відсутнє інтернет-зʼєднання.',

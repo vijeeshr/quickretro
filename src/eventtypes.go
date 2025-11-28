@@ -670,6 +670,79 @@ func (i *TimerEvent) Broadcast(h *Hub) {
 	}
 }
 
+type ColumnsChangeEvent struct {
+	By      string         `json:"by"`
+	Group   string         `json:"grp"`
+	Columns []*BoardColumn `json:"columns"`
+	// Only columns to add/update are sent. Columns to disable aren't sent explicitly.
+	// Using same BoardColumn struct that is used for request and redis store. Todo - refactor later.
+}
+
+func (p *ColumnsChangeEvent) Handle(i *Event, h *Hub) {
+	// validate
+	if len(p.Columns) == 0 || len(p.Columns) > 5 {
+		slog.Warn("Invalid columns data passed in ColumnsChangeEvent", "board", p.Group)
+		return
+	}
+	for _, col := range p.Columns {
+		if len([]rune(col.Text)) > config.Server.MaxCategoryTextLength {
+			slog.Warn("Columns text length exceeds limit in create board request payload", "len", len([]rune(col.Text)), "col", col.Id)
+			return
+		}
+	}
+	b, ok := h.redis.GetBoard(p.Group)
+	if !ok {
+		slog.Warn("Cannot find board when handling ColumnsChangeEvent", "board", p.Group)
+		return
+	}
+	if b.Lock {
+		slog.Warn("Cannot change columns in read-only board", "board", p.Group)
+		return
+	}
+	if b.Owner != p.By {
+		slog.Warn("Non-owner cannot execute ColumnsChangeEvent", "board", p.Group, "user", p.By)
+		return
+	}
+	// Prevent deleting a column with associated messages
+	cols, ok := h.redis.GetBoardColumns(b.Id)
+	if !ok {
+		slog.Warn("Cannot get columns when handling ColumnsChangeEvent", "board", p.Group)
+		return
+	}
+	hasMessages, err := h.redis.HasMessagesForColumnsMarkedForRemoval(b.Id, cols, p.Columns)
+	if err != nil {
+		slog.Error(err.Error(), "board", p.Group)
+		return
+	}
+	if hasMessages {
+		slog.Warn("Cannot reset columns with attached messages in ColumnsChangeEvent", "board", p.Group)
+		return
+	}
+
+	// execute
+	if done := h.redis.ResetBoardColumns(b, cols, p.Columns); !done {
+		return
+	}
+
+	// Publish to Redis (for broadcasting)
+	// *Message is nil as this is not a message related update.
+	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
+}
+func (i *ColumnsChangeEvent) Broadcast(h *Hub) {
+	// Transform to Outgoing format
+	// We can trust the "i" *ColumnsChangeEvent payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
+	response := &ColumnsChangeResponse{Type: "colreset", BoardColumns: i.Columns}
+
+	clients := h.clients[i.Group]
+	for client := range clients {
+		select {
+		case client.send <- response:
+		default:
+			client.hub.unregister <- client
+		}
+	}
+}
+
 // Helper struct from Broadcasting
 type BroadcastArgs struct {
 	Event   *Event

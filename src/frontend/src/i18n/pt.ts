@@ -13,7 +13,8 @@ export default {
             lightTheme: 'Ativar tema claro'
         },
         contentOverloadError: 'Conteúdo excede o limite.',
-        contentStrippingError: 'Texto extra removido do final.'
+        contentStrippingError: 'Texto extra removido do final.',
+        invalidColumnSelection: 'Selecione coluna(s)'
     },
     join: {
         label: 'Entrar como convidado',
@@ -26,8 +27,6 @@ export default {
         namePlaceholder: 'Nome do quadro aqui!',
         nameRequired: 'Digite o nome do quadro',
         teamNamePlaceholder: 'Nome do time aqui!',
-        invalidColumnSelection: 'Selecione coluna(s)',
-        colOnePlaceholder: 'Bom',
         button: 'Criar',
         buttonProgress: 'Criando..',
         captchaInfo: 'Complete o CAPTCHA para continuar',
@@ -80,7 +79,9 @@ export default {
             col02: 'Desafios',
             col03: 'Ações',
             col04: 'Agradecimentos',
-            col05: 'Melhorias'
+            col05: 'Melhorias',
+            cannotDisable: "Não é possível desativar coluna(s) que têm cartões",
+            update: "Atualizar"
         },
         printFooter: 'Criado com',
         offline: 'Offline.',
