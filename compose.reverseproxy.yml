@@ -2,6 +2,9 @@
 
 # Cold start
 #   docker compose -f compose.reverseproxy.yml up
+#   To force a rebuild without cache:
+#     docker compose -f compose.reverseproxy.yml build --no-cache
+#     docker compose -f compose.reverseproxy.yml up      
 
 # Restart services.
 # Containers are NOT deleted, just STOPPED and STARTED. No data is lost.

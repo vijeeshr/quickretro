@@ -5,7 +5,7 @@ WORKDIR /app
 COPY src/go.mod src/go.sum ./
 RUN go mod download
 # COPY src/ .
-COPY src/*.go .
+COPY src/*.go ./
 COPY src/frontend/dist frontend/dist
 COPY src/config.toml .
 RUN CGO_ENABLED=0 GOOS=linux go build -o retroapp .

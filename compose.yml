@@ -2,6 +2,9 @@
 
 # Run docker compose.
 #   docker compose up
+#   To force a rebuild without cache:
+#     docker compose build --no-cache
+#     docker compose up  
 # To stop and remove compose created items
 #   docker compose down --rmi "all" --volumes
 
