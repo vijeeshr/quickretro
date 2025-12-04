@@ -25,10 +25,10 @@ import (
 )
 
 type RedisConnector struct {
+	ctx        context.Context
 	client     *redis.Client
 	subscriber *redis.PubSub
 	timeToLive time.Duration
-	ctx        context.Context
 }
 
 func NewRedisConnector(ctx context.Context, timeToLive time.Duration) *RedisConnector {

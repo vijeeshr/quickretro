@@ -42,9 +42,9 @@ type Board struct {
 type BoardColumn struct {
 	Id        string `redis:"id" json:"id"`
 	Text      string `redis:"text" json:"text"`
-	IsDefault bool   `redis:"isDefault" json:"isDefault"`
 	Color     string `redis:"color" json:"color"`
 	Position  int    `redis:"pos" json:"pos"`
+	IsDefault bool   `redis:"isDefault" json:"isDefault"`
 }
 
 func (b BoardColumn) String() string {
@@ -55,8 +55,8 @@ type CreateBoardReq struct {
 	Name                string         `json:"name"`
 	Team                string         `json:"team"`
 	Owner               string         `json:"owner"`
-	Columns             []*BoardColumn `json:"columns"`
 	CfTurnstileResponse string         `json:"cfTurnstileResponse"`
+	Columns             []*BoardColumn `json:"columns"`
 }
 
 type CreateBoardRes struct {

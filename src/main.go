@@ -18,24 +18,24 @@ import (
 var frontendFiles embed.FS
 
 type Config struct {
+	Data struct {
+		AutoDeleteDuration string `toml:"auto_delete_duration"`
+	} `toml:"data"`
 	Server struct {
-		AllowedOrigins         []string `toml:"allowed_origins"`
 		TurnstileSiteVerifyUrl string   `toml:"turnstile_site_verify_url"`
+		AllowedOrigins         []string `toml:"allowed_origins"`
 		MaxCategoryTextLength  int      `toml:"max_category_text_length"`
 	} `toml:"server"`
 	Websocket struct {
 		MaxMessageSize int64 `toml:"max_message_size_bytes"`
 	} `toml:"websocket"`
-	Data struct {
-		AutoDeleteDuration string `toml:"auto_delete_duration"`
-	} `toml:"data"`
 }
 
 type EnvironmentConfig struct {
 	RedisConnStr       string
-	TurnstileEnabled   bool
 	TurnstileSiteKey   string
 	TurnstileSecretKey string
+	TurnstileEnabled   bool
 }
 
 var config Config

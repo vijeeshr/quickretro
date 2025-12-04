@@ -7,20 +7,20 @@ type UserDetails struct {
 
 type RegisterResponse struct {
 	Type                      string            `json:"typ"`
-	Mine                      bool              `json:"mine"`
 	BoardName                 string            `json:"boardName"`
 	BoardTeam                 string            `json:"boardTeam"`
-	BoardColumns              []*BoardColumn    `json:"columns"` // Using same BoardColumn struct that is used for request and redis store. Todo - refactor later.
 	BoardStatus               string            `json:"boardStatus"`
-	BoardMasking              bool              `json:"boardMasking"`
-	BoardLock                 bool              `json:"boardLock"`
-	IsBoardOwner              bool              `json:"isBoardOwner"`
+	BoardColumns              []*BoardColumn    `json:"columns"` // Using same BoardColumn struct that is used for request and redis store. Todo - refactor later.
 	Users                     []UserDetails     `json:"users"`
 	Messages                  []MessageResponse `json:"messages"`              // Todo: Change to *MessageResponse
 	Comments                  []MessageResponse `json:"comments"`              // Todo: Change to *MessageResponse
-	TimerExpiresInSeconds     uint16            `json:"timerExpiresInSeconds"` // uint16 since we are restricting timer to max 1 hour (3600 seconds)
 	BoardExpiryTimeUtcSeconds int64             `json:"boardExpiryUtcSeconds"` // Unix Timestamp Seconds
+	TimerExpiresInSeconds     uint16            `json:"timerExpiresInSeconds"` // uint16 since we are restricting timer to max 1 hour (3600 seconds)
 	NotifyNewBoardExpiry      bool              `json:"notifyNewBoardExpiry"`
+	Mine                      bool              `json:"mine"`
+	BoardMasking              bool              `json:"boardMasking"`
+	BoardLock                 bool              `json:"boardLock"`
+	IsBoardOwner              bool              `json:"isBoardOwner"`
 }
 
 type UserClosingResponse struct {
@@ -41,6 +41,7 @@ type LockResponse struct {
 type MessageResponse struct {
 	Type       string `json:"typ"`
 	Id         string `json:"id"`
+	ParentId   string `json:"pid"`
 	ByNickname string `json:"nickname"`
 	Content    string `json:"msg"`
 	Category   string `json:"cat"`
@@ -48,7 +49,6 @@ type MessageResponse struct {
 	Liked      bool   `json:"liked"` // True if receiving user has liked this message.
 	Mine       bool   `json:"mine"`
 	Anonymous  bool   `json:"anon"`
-	ParentId   string `json:"pid"`
 }
 
 type LikeMessageResponse struct {

@@ -14,8 +14,8 @@ import (
 )
 
 type malformedRequest struct {
-	status int
 	msg    string
+	status int
 }
 
 func (mr *malformedRequest) Error() string {

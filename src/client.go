@@ -47,11 +47,11 @@ var upgrader = websocket.Upgrader{
 }
 
 type Client struct {
-	id    string // This is the user uuid
-	group string // This can be a board/room
+	hub   *Hub
 	conn  *websocket.Conn
 	send  chan interface{}
-	hub   *Hub
+	id    string // This is the user uuid
+	group string // This can be a board/room
 }
 
 func (c *Client) read() {

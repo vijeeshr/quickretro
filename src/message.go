@@ -8,8 +8,8 @@ type Message struct {
 	Group      string `redis:"group"`
 	Content    string `redis:"content"`
 	Category   string `redis:"category"`
-	Anonymous  bool   `redis:"anon"`
 	ParentId   string `redis:"pid"` // For top-level "Message" this will be empty. For a message treated as "Comment", it will be the parent MessageId.
+	Anonymous  bool   `redis:"anon"`
 }
 
 func (m *MessageEvent) ToMessage() *Message {
