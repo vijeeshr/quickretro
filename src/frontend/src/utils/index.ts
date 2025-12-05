@@ -75,7 +75,7 @@ export const assertMessageContentValidation = (event: Event, user: string, nickn
     // emptyMessagePayload allows us to compute bytes available for the message content
     const emptyMessagePayload: EventRequest<SaveMessageEvent> = {
         typ: 'msg',
-        pyl: { id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', by: user, nickname: nickname, grp: board, msg: '', cat: category, anon: false, pid: '' }
+        pyl: { id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', byxid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', by: user, nickname: nickname, grp: board, msg: '', cat: category, anon: false, pid: '' }
     }
     // Comment payload will have pid populated. Message payload will have pid as empty.
     if (isComment) {

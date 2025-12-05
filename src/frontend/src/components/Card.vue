@@ -262,10 +262,10 @@ const validate = (event: Event) => {
             </div>
 
             <Avatar v-if="!card.anon" :name="card.nickname" class="ml-auto w-6 h-6 cursor-pointer"
-                @click="emit('avatarClicked', card.nickname)" />
+                @click="emit('avatarClicked', { byxid: card.byxid, nickname: card.nickname })" />
             <div v-else
                 class="inline-flex items-center justify-center overflow-hidden rounded-full bg-gray-300 dark:bg-white/30 text-gray-600 dark:text-white ml-auto w-6 h-6 cursor-pointer"
-                :title="t('common.anonymous')" @click="emit('avatarClicked', card.nickname)">
+                :title="t('common.anonymous')" @click="emit('avatarClicked', { byxid: card.byxid, nickname: card.nickname })">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
                     <path d="M14 18a2 2 0 0 0-4 0" />
