@@ -43,13 +43,13 @@ const board = Array.isArray(route.params.board)
     : route.params.board
 // Todo: Find a way of passing this from route..meta?
 const user = localStorage.getItem("user") || ''
-const externalId = localStorage.getItem("xid") || ''
+const xid = localStorage.getItem("xid") || ''
 const nickname = localStorage.getItem("nickname") || ''
 const isConnected = ref(false)
 const boardName = ref('')
 const shareLink = `${window.location.href}`
 const isSpotlightOn = ref(false)
-const spotlightFor = ref('')
+const spotlightFor = ref<{ byxid: string; nickname: string } | null>(null)
 const boardExpiryLocalTime = ref('')
 let socket: WebSocket
 
@@ -126,38 +126,52 @@ const add = (category: string, anonymous: boolean) => {
     }
 }
 
-// Todo: Card counts by name isn't ideal. It will be incorrect when two users have the exact same nickname.
-const cardCountsByName = computed(() => {
-    const counts: Record<string, number> = {}
+interface UserCardStats {
+    count: number
+    nickname: string
+}
+
+const cardsStats = computed<Record<string, UserCardStats>>(() => {
+    const result: Record<string, UserCardStats> = {}
     for (const card of cards.value) {
-        counts[card.nickname] = (counts[card.nickname] || 0) + 1
+        if (!result[card.byxid]) {
+            result[card.byxid] = { count: 0, nickname: card.nickname }
+        }
+        result[card.byxid].count += 1
     }
-    return counts
+    return result
 })
 
-const onlineUsersCardsCount = computed(() => {
+const onlineUsersCardsStats = computed(() => {
     return onlineUsers.value.map(user => ({
         nickname: user.nickname,
-        cardsCount: cardCountsByName.value[user.nickname] || 0
+        cardsCount: cardsStats.value[user.xid]?.count || 0
     }))
 })
 
-const usersWithCards = computed(() => Object.keys(cardCountsByName.value))
+const usersWithCards = computed(() => {
+    return Object.entries(cardsStats.value).map(([byxid, info]) => ({
+        byxid,
+        nickname: info.nickname
+    }))
+})
 
 const nextSpotlight = () => {
-    if (usersWithCards.value.length === 0) return
-    let currentIndex = usersWithCards.value.indexOf(spotlightFor.value)
+    const users = usersWithCards.value
+    if (users.length === 0) return
+    const currentIndex = users.findIndex(u => u.byxid === spotlightFor.value?.byxid)
     // If spotlightFor is not in the list (currentIndex = -1), start from the first item
-    const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % usersWithCards.value.length
-    spotlightFor.value = usersWithCards.value[nextIndex]
+    const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % users.length
+    spotlightFor.value = users[nextIndex]
 }
 
 const prevSpotlight = () => {
-    if (usersWithCards.value.length === 0) return
-    let currentIndex = usersWithCards.value.indexOf(spotlightFor.value)
+    const users = usersWithCards.value
+    if (users.length === 0) return
+    const currentIndex = users.findIndex(u => u.byxid === spotlightFor.value?.byxid)
     // If spotlightFor is not in the list, start from the last item
-    const prevIndex = currentIndex === -1 ? usersWithCards.value.length - 1 : (currentIndex - 1 + usersWithCards.value.length) % usersWithCards.value.length
-    spotlightFor.value = usersWithCards.value[prevIndex]
+    const prevIndex = currentIndex === -1 ? users.length - 1 : (currentIndex - 1 + users.length) % users.length
+    spotlightFor.value = users[prevIndex]
 }
 
 const columnWidthClass = computed(() => {
@@ -183,11 +197,11 @@ const openSpotlight = () => {
 
 const closeSpotlight = () => {
     isSpotlightOn.value = false
-    spotlightFor.value = ''
+    spotlightFor.value = null
 }
 
-const showSpotlightFor = (name: string) => {
-    spotlightFor.value = name
+const showSpotlightFor = (user: { byxid: string; nickname: string }) => {
+    spotlightFor.value = user
     isSpotlightOn.value = true
 }
 
@@ -208,13 +222,14 @@ const onAdded = (card: DraftMessage) => {
     logMessage('newcontent received:', card)
     clearNewCards()
     const nicknameToSend = card.anon === true ? '' : nickname
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nicknameToSend, grp: board, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
+    const xidToSend = card.anon === true ? '' : xid
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, byxid: xidToSend, nickname: nicknameToSend, grp: board, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
 }
 
 const onCommentAdded = (comment: DraftMessage) => {
     logMessage('newcontent received:', comment)
     // Todo: clear the comment field..maybe in the Card component?
-    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, nickname: nickname, grp: board, msg: comment.msg, cat: comment.cat, anon: comment.anon, pid: comment.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, byxid: xid, nickname: nickname, grp: board, msg: comment.msg, cat: comment.cat, anon: comment.anon, pid: comment.pid })
 }
 
 const onInvalidContent = (errorMessage: string) => {
@@ -231,12 +246,12 @@ const onDiscard = () => {
 
 const onUpdated = (card: DraftMessage) => {
     logMessage('Updated content received:', card)
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, nickname: nickname, grp: board, msg: card.msg, cat: card.cat, anon: false, pid: card.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, byxid: xid, nickname: nickname, grp: board, msg: card.msg, cat: card.cat, anon: false, pid: card.pid })
 }
 
 const onCommentUpdated = (comment: DraftMessage) => {
     logMessage('Updated content received:', comment)
-    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, nickname: nickname, grp: board, msg: comment.msg, cat: comment.cat, anon: false, pid: comment.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, byxid: xid, nickname: nickname, grp: board, msg: comment.msg, cat: comment.cat, anon: false, pid: comment.pid })
 }
 
 const onDeleted = (cardId: string) => {
@@ -293,7 +308,7 @@ const saveCategoryChanges = () => {
         logMessage('Columns unchanged. Not dispatching.')
         return
     }
-    
+
     if (exceedsEventRequestMaxSize<ColumnsChangeEvent>("colreset", { by: user, grp: board, columns: enabledCols })) {
         toast.error(t('common.contentOverloadError'))
         return
@@ -591,7 +606,7 @@ const timerSettings = () => {
 }
 
 const openColumnEditDialog = () => {
-    if (!isOwner) return
+    if (!isOwner.value) return
     mergeCategories()
     isColumnEditDialogOpen.value = true
 }
@@ -693,10 +708,11 @@ const onDeleteMessageResponse = (response: DeleteMessageResponse) => {
         cards.value.splice(messageIndex, 1)
         // Re-adjust spotlight
         if (isSpotlightOn.value) {
-            if (usersWithCards.value.length === 0) {
-                closeSpotlight();
-            } else if (!usersWithCards.value.includes(spotlightFor.value)) {
-                nextSpotlight();
+            const users = usersWithCards.value
+            if (users.length === 0) {
+                closeSpotlight()
+            } else if (!users.some(u => u.byxid === spotlightFor.value?.byxid)) {
+                nextSpotlight()
             }
         }
         return // Just return no need to proceed further
@@ -854,7 +870,7 @@ const dispatchEvent = <T>(eventType: string, payload: T) => {
 const socketOnOpen = (event: Event) => {
     logMessage("[open] Connection established", event)
     isConnected.value = true
-    dispatchEvent<RegisterEvent>("reg", { by: user, nickname: nickname, xid: externalId, grp: board })
+    dispatchEvent<RegisterEvent>("reg", { by: user, nickname: nickname, xid: xid, grp: board })
 }
 const socketOnClose = (event: CloseEvent) => {
     isConnected.value = false
@@ -965,7 +981,8 @@ onUnmounted(() => {
                     <path d="m15 18-6-6 6-6" />
                 </svg>
             </button>
-            <Avatar v-if="spotlightFor !== ''" class="min-w-32" :name="spotlightFor" view-type="Badge" />
+            <Avatar v-if="spotlightFor?.byxid !== '' && spotlightFor?.nickname !== ''" class="min-w-32"
+                :name="spotlightFor?.nickname" view-type="Badge" />
             <div v-else
                 class="min-w-32 inline-flex items-center justify-center overflow-hidden rounded-md px-3 py-1 bg-gray-300">
                 <span class="font-medium text-xs cursor-default text-gray-600 select-none">{{ t('common.anonymous')
@@ -1102,7 +1119,7 @@ onUnmounted(() => {
                         class="px-4 py-2 mt-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white hover:border-transparent disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 select-none focus:outline-none focus:ring-0"
                         :disabled="hasCardsInDisabledCategories || !isCategorySelectionValid"
                         @click="saveCategoryChanges">
-                        {{ t('dashboard.columns.update')}}
+                        {{ t('dashboard.columns.update') }}
                     </button>
                 </DialogPanel>
             </div>
@@ -1244,8 +1261,8 @@ onUnmounted(() => {
                         @comment-updated="onCommentUpdated" @comment-deleted="onCommentDeleted"
                         @comment-discard="notifyForLostMessages" @comment-invalid-content="onCommentInvalidContent"
                         :class="{
-                            'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none': isSpotlightOn && usersWithCards.length > 0 && card.nickname !== spotlightFor,
-                            'bg-black dark:bg-black border border-gray-200 z-[51]': isSpotlightOn && usersWithCards.length > 0 && card.nickname === spotlightFor,
+                            'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none': isSpotlightOn && usersWithCards.length > 0 && card.byxid !== spotlightFor?.byxid,
+                            'bg-black dark:bg-black border border-gray-200 z-[51]': isSpotlightOn && usersWithCards.length > 0 && card.byxid === spotlightFor?.byxid,
                         }" />
                 </Category>
             </div>
@@ -1254,7 +1271,7 @@ onUnmounted(() => {
 
         <!-- Right Sidebar -->
         <div class="w-16 p-4">
-            <div v-for="user in onlineUsersCardsCount" class="relative w-8 h-8 ml-auto mx-auto mb-4">
+            <div v-for="user in onlineUsersCardsStats" class="relative w-8 h-8 ml-auto mx-auto mb-4">
                 <Avatar :name="user.nickname" class="w-8 h-8" />
                 <span v-if="user.cardsCount > 0"
                     class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none">

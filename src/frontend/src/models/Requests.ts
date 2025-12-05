@@ -28,6 +28,7 @@ export interface LockEvent {
 export interface SaveMessageEvent {
     id: string
     by: string
+    byxid: string
     nickname: string
     grp: string
     msg: string
@@ -112,6 +113,7 @@ export interface LockResponse {
 export interface MessageResponse {
     typ: 'msg'
     id: string
+    byxid: string
     nickname: string
     msg: string
     cat: string

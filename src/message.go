@@ -4,6 +4,7 @@ package main
 type Message struct {
 	Id         string `redis:"id"`
 	By         string `redis:"by"`
+	ByXid      string `redis:"byxid"`
 	ByNickname string `redis:"nickname"`
 	Group      string `redis:"group"`
 	Content    string `redis:"content"`
@@ -14,13 +15,14 @@ type Message struct {
 
 func (m *MessageEvent) ToMessage() *Message {
 	return &Message{
-		Id: m.Id, By: m.By, ByNickname: m.ByNickname, Group: m.Group, Content: m.Content, Category: m.Category, Anonymous: m.Anonymous, ParentId: m.ParentId}
+		Id: m.Id, By: m.By, ByXid: m.ByXid, ByNickname: m.ByNickname, Group: m.Group, Content: m.Content, Category: m.Category, Anonymous: m.Anonymous, ParentId: m.ParentId}
 }
 
 func (m *Message) NewMessageResponse() MessageResponse {
 	return MessageResponse{
 		Type:       "msg",
 		Id:         m.Id,
+		ByXid:      m.ByXid,
 		ByNickname: m.ByNickname,
 		Content:    m.Content,
 		Category:   m.Category,

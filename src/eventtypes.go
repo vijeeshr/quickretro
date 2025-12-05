@@ -287,6 +287,7 @@ func (i *LockEvent) Broadcast(h *Hub) {
 type MessageEvent struct {
 	Id         string `json:"id"`
 	By         string `json:"by"`
+	ByXid      string `json:"byxid"`
 	ByNickname string `json:"nickname"`
 	Group      string `json:"grp"`
 	Content    string `json:"msg"`

@@ -42,6 +42,7 @@ type MessageResponse struct {
 	Type       string `json:"typ"`
 	Id         string `json:"id"`
 	ParentId   string `json:"pid"`
+	ByXid      string `json:"byxid"`
 	ByNickname string `json:"nickname"`
 	Content    string `json:"msg"`
 	Category   string `json:"cat"`

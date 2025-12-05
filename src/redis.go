@@ -631,6 +631,7 @@ func (c *RedisConnector) Save(msg *Message, modes ...SaveMode) bool {
 		// Always save the message/comment to the Hash
 		pipe.HSet(c.ctx, key, "id", msg.Id)
 		pipe.HSet(c.ctx, key, "by", msg.By)
+		pipe.HSet(c.ctx, key, "byxid", msg.ByXid)
 		pipe.HSet(c.ctx, key, "nickname", msg.ByNickname)
 		pipe.HSet(c.ctx, key, "group", msg.Group)
 		pipe.HSet(c.ctx, key, "content", msg.Content)
