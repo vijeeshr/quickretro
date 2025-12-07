@@ -149,7 +149,7 @@ export default defineConfig({
     ],
 
     footer: {
-      message: 'Released under the MIT License',
+      message: 'Released under the AGPL-3.0 license',
       copyright: 'Copyright © 2024-present QuickRetro™'
     }
 
