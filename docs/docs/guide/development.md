@@ -5,8 +5,8 @@ outline: deep
 This guide is intended to help you get started with running the application locally, and making changes to it.
 
 ## Prerequisites
-- Go <Badge type="tip" text="1.24.2" /> or higher
-- Node.js version <Badge type="tip" text="20.10.0" /> or higher
+- Go (project targets) <Badge type="tip" text="v1.25.4" />. Can also work on versions above <Badge type="tip" text="v1.21.6" />
+- Node.js version <Badge type="tip" text="24.11.1" />
 - Docker
 - Redis is used as the datastore and for pubsub
 - A text editor, preferably VS Code, and a CLI

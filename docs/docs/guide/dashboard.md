@@ -28,6 +28,18 @@ Use the Share button <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox
 You can also share the url directly from the browser address-bar.
 :::
 
+## Customize Columns
+
+Available from <Badge type="tip" text="v1.6.0" />
+
+<img src="/dashboard_edit_columns.png" class="shadow-img" alt="Dashboard Edit Columns" width="312" loading="lazy">
+
+Board owners/creators can click the column header to change the column names, disable/enable or re-order columns.
+
+::: info NOTE
+Only available for Board owner
+:::
+
 ## Add / Update a message
 
 ::: danger BEHAVIOR CHANGE

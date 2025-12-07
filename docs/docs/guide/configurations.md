@@ -44,6 +44,33 @@ Commenting it out will stop the validation from being run everytime.\
 It is not recommended to comment out this config, unless its causing issues for users.
 :::
 
+## Max Category Text Length
+Available from <Badge type="tip" text="v1.6.0" />  
+
+You can change the max number of characters allowed for each column name. Default is 80.
+
+In the <code>src/config.toml</code> file, update the value for <code>max_category_text_length</code>
+```toml{4}
+[server]
+# Maximum number of characters allowed for each category name
+# For the front-end validation, keep the same value in (src/frontend/.env [VITE_MAX_CATEGORY_TEXT_LENGTH])
+max_category_text_length = 80
+```
+
+This setting is defined separately for the backend and frontend. For the frontend, this is defined in <code>src/frontend/.env</code>.\
+Update the value for <code>VITE_MAX_CATEGORY_TEXT_LENGTH</code>
+```ini{3}
+# Maximum number of characters allowed for each category name
+# It is recommended to keep the same value as what's allowed in backend server (defined in src/config.toml [server].max_category_text_length).
+VITE_MAX_CATEGORY_TEXT_LENGTH=80
+```
+::: danger IMPORTANT
+Ensure the config values are same for both frontend and backend. 
+
+Changing this also impacts the value defined in previous [Websocket Max Message Size](configurations#websocket-max-message-size) section.
+Ensure that whatever value is set, **the websocket message/payload size doesn't exceed from what has been defined in previous section.**
+:::
+
 ## Allowed Origins
 Update the <code>allowed_origins</code> config setting in <code>src/config.toml</code> to add some degree of protection to the websocket connection.\
 You will typically update this setting when [self-hosting](self-hosting).
