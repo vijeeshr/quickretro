@@ -81,7 +81,8 @@ export default {
             col04: 'Appreciations',
             col05: 'Improvements',
             cannotDisable: 'Cannot disable column(s) with cards',
-            update: 'Update'
+            update: 'Update',
+            discardNewMessages: 'Your draft was discarded because the column was disabled.'
         },
         printFooter: 'Created with',
         offline: 'You seem to be offline.',

@@ -81,7 +81,8 @@ export default {
             col04: 'Docenienia',
             col05: 'Ulepszenia',
             cannotDisable: "Nie można wyłączyć kolumny z przypisanymi kartami",
-            update: "Aktualizuj"
+            update: "Aktualizuj",
+            discardNewMessages: 'Twój szkic został odrzucony, ponieważ kolumna została wyłączona.'
         },
         printFooter: 'Stworzone za pomocą',
         offline: 'Wygląda na to, że jesteś offline.',

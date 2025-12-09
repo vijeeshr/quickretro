@@ -81,7 +81,8 @@ export default {
             col04: 'Waardering',
             col05: 'Verbeterpunten',
             cannotDisable: "Kolommen met kaarten kunnen niet worden uitgeschakeld",
-            update: "Bijwerken"
+            update: "Bijwerken",
+            discardNewMessages: 'Je concept is verwijderd omdat de kolom is uitgeschakeld.'
         },
         printFooter: 'Gemaakt met',
         offline: 'Offline.',

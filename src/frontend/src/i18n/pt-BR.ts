@@ -81,7 +81,8 @@ export default {
             col04: 'Agradecimentos',
             col05: 'Melhorias',
             cannotDisable: "Não é possível desativar coluna(s) que possuem cartões",
-            update: "Atualizar"
+            update: "Atualizar",
+            discardNewMessages: 'Seu rascunho foi descartado porque a coluna foi desativada.'
         },
         printFooter: 'Criado com',
         offline: 'Você parece estar offline.',

@@ -81,7 +81,8 @@ export default {
             col04: '감사한 점',
             col05: '개선점',
             cannotDisable: "카드가 있는 열은 비활성화할 수 없습니다",
-            update: "업데이트"
+            update: "업데이트",
+            discardNewMessages: '열이 비활성화되어 임시 작성 내용이 삭제되었습니다.'
         },
         printFooter: '생성 도구',
         offline: '오프라인 상태',

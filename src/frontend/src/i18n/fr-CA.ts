@@ -81,7 +81,8 @@ export default {
             col04: 'Reconnaissance',
             col05: 'Améliorations',
             cannotDisable: "Impossible de désactiver la colonne puisqu’elle contient des cartes",
-            update: "Mettre à jour"
+            update: "Mettre à jour",
+            discardNewMessages: 'Votre brouillon a été supprimé parce que la colonne a été désactivée.'
         },
         printFooter: 'Créé avec',
         offline: 'Hors ligne.',

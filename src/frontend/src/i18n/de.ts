@@ -81,7 +81,8 @@ export default {
             col04: 'Dankbarkeiten',
             col05: 'Verbesserungen',
             cannotDisable: "Spalte(n) mit Karten können nicht deaktiviert werden",
-            update: "Aktualisieren"
+            update: "Aktualisieren",
+            discardNewMessages: 'Dein Entwurf wurde verworfen, weil die Spalte deaktiviert wurde.'
         },
         printFooter: 'Erstellt mit',
         offline: 'Offline.',

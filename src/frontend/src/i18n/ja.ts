@@ -81,7 +81,8 @@ export default {
             col04: '感謝',
             col05: '改善点',
             cannotDisable: "カードがある列は無効にできません",
-            update: "更新"
+            update: "更新",
+            discardNewMessages: '列が無効化されたため、下書きは破棄されました。'
         },
         printFooter: '作成者',
         offline: 'オフライン',

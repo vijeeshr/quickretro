@@ -81,7 +81,8 @@ export default {
             col04: 'Agradecimientos',
             col05: 'Mejoras',
             cannotDisable: "No se puede desactivar la(s) columna(s) que tienen tarjetas",
-            update: "Actualizar"            
+            update: "Actualizar",
+            discardNewMessages: 'Tu borrador se ha descartado porque la columna fue deshabilitada.'    
         },
         printFooter: 'Creado con',
         offline: 'Sin conexión.',

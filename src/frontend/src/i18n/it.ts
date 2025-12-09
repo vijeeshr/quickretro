@@ -81,7 +81,8 @@ export default {
             col04: 'Apprezzamenti',
             col05: 'Miglioramenti',
             cannotDisable: "Impossibile disattivare le colonne che contengono schede",
-            update: "Aggiorna"
+            update: "Aggiorna",
+            discardNewMessages: 'La tua bozza è stata eliminata perché la colonna è stata disabilitata.'
         },
         printFooter: 'Creato con',
         offline: 'Disconnesso.',

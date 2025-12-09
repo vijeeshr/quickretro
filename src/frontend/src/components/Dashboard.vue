@@ -205,8 +205,21 @@ const showSpotlightFor = (user: { byxid: string; nickname: string }) => {
     isSpotlightOn.value = true
 }
 
-const notifyForLostMessages = () => {
-    toast.error(t('dashboard.lock.discardChanges'))
+const notifyForLostMessages = ({
+    dueToLock = false,
+    dueToColumnChange = false
+}: {
+    dueToLock?: boolean
+    dueToColumnChange?: boolean
+} = {}) => {
+
+    if (dueToLock) {
+        toast.error(t('dashboard.lock.discardChanges'))
+    }
+
+    if (dueToColumnChange) {
+        toast.error(t('dashboard.columns.discardNewMessages'))
+    }
 }
 
 const newCardCreationInProgress = computed(() => {
@@ -670,7 +683,7 @@ const onLockResponse = (response: LockResponse) => {
         // Board lock received when the user is adding new messages.
         // The message will be forcefully discarded.
         clearNewCards()
-        notifyForLostMessages()
+        notifyForLostMessages({ dueToLock: true })
     }
 }
 
@@ -786,6 +799,27 @@ const onTimerResponse = (response: TimerResponse) => {
 }
 
 const onColumnsChangeResponse = (response: ColumnsChangeResponse) => {
+    // User is creating a new card or new anonymous card in a column, and that column is being disabled.
+    // The message will be forcefully discarded.
+    if (newCardCreationInProgress.value) {
+        // Determine the category of the new card (only one is set at a time)
+        const activeCategory =
+            newCardCategory.value.trim() !== ''
+                ? newCardCategory.value.trim()
+                : newAnonymousCardCategory.value.trim() !== ''
+                    ? newAnonymousCardCategory.value.trim()
+                    : ''
+
+        if (activeCategory !== '') {
+            const columnStillExists = response.columns.some(col => col.id === activeCategory)
+            // If the column the user was typing in has been disabled/removed, clear the draft content and notify the user
+            if (!columnStillExists) {
+                clearNewCards()
+                notifyForLostMessages({ dueToColumnChange: true })
+            }
+        }
+    }
+
     columns.value = response.columns
         .slice()
         .sort((a, b) => a.pos - b.pos)
@@ -1257,10 +1291,10 @@ onUnmounted(() => {
                         :can-manage="isOwner" :key="card.id" :categories="columns" :locked="isLocked"
                         @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" @category-changed="onCategoryChanged"
                         @invalidContent="onInvalidContent" @avatar-clicked="showSpotlightFor"
-                        @discard="notifyForLostMessages" @comment-added="onCommentAdded"
+                        @discard="notifyForLostMessages({ dueToLock: true })" @comment-added="onCommentAdded"
                         @comment-updated="onCommentUpdated" @comment-deleted="onCommentDeleted"
-                        @comment-discard="notifyForLostMessages" @comment-invalid-content="onCommentInvalidContent"
-                        :class="{
+                        @comment-discard="notifyForLostMessages({ dueToLock: true })"
+                        @comment-invalid-content="onCommentInvalidContent" :class="{
                             'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none': isSpotlightOn && usersWithCards.length > 0 && card.byxid !== spotlightFor?.byxid,
                             'bg-black dark:bg-black border border-gray-200 z-[51]': isSpotlightOn && usersWithCards.length > 0 && card.byxid === spotlightFor?.byxid,
                         }" />

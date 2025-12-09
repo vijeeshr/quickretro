@@ -82,7 +82,8 @@ export default {
             col04: '感谢',
             col05: '改进建议',
             cannotDisable: "无法禁用包含卡片的列",
-            update: "更新"
+            update: "更新",
+            discardNewMessages: '您的草稿已被丢弃，因为该列已被禁用。'
         },
         printFooter: '创建于',
         offline: '离线状态',
