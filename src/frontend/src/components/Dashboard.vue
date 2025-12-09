@@ -234,6 +234,13 @@ const clearNewCards = () => {
 const onAdded = (card: DraftMessage) => {
     logMessage('newcontent received:', card)
     clearNewCards()
+    // Only dispatch if the new card's category is an active column
+    // This handles the edge-case where the User is typing a new card in a column, and the column is disabled by board owner. The new content is ignored.
+    const cardIsInActiveColumn = columns.value.some(col => col.id === card.cat)
+    if (!cardIsInActiveColumn) {
+        logMessage('newcontent ignored:', card)
+        return
+    }
     const nicknameToSend = card.anon === true ? '' : nickname
     const xidToSend = card.anon === true ? '' : xid
     dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, byxid: xidToSend, nickname: nicknameToSend, grp: board, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
@@ -799,8 +806,13 @@ const onTimerResponse = (response: TimerResponse) => {
 }
 
 const onColumnsChangeResponse = (response: ColumnsChangeResponse) => {
+    
+    columns.value = response.columns
+        .slice()
+        .sort((a, b) => a.pos - b.pos)
+
     // User is creating a new card or new anonymous card in a column, and that column is being disabled.
-    // The message will be forcefully discarded.
+    // The message will be discarded.
     if (newCardCreationInProgress.value) {
         // Determine the category of the new card (only one is set at a time)
         const activeCategory =
@@ -812,17 +824,13 @@ const onColumnsChangeResponse = (response: ColumnsChangeResponse) => {
 
         if (activeCategory !== '') {
             const columnStillExists = response.columns.some(col => col.id === activeCategory)
-            // If the column the user was typing in has been disabled/removed, clear the draft content and notify the user
+            // If the column the user was typing in has been disabled/removed, notify the user
             if (!columnStillExists) {
-                clearNewCards()
+                clearNewCards() // This doesn't prevent dispatching the data to the server. That is done in onAdded().
                 notifyForLostMessages({ dueToColumnChange: true })
             }
         }
     }
-
-    columns.value = response.columns
-        .slice()
-        .sort((a, b) => a.pos - b.pos)
 }
 
 // For Edit Categories feature
