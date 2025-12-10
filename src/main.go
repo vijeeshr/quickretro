@@ -25,6 +25,7 @@ type Config struct {
 		TurnstileSiteVerifyUrl string   `toml:"turnstile_site_verify_url"`
 		AllowedOrigins         []string `toml:"allowed_origins"`
 		MaxCategoryTextLength  int      `toml:"max_category_text_length"`
+		MaxTextLength          int      `toml:"max_text_length"`
 	} `toml:"server"`
 	Websocket struct {
 		MaxMessageSize int64 `toml:"max_message_size_bytes"`

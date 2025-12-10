@@ -138,6 +138,18 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 		}
 	}
 
+	if len([]rune(createReq.Name)) > config.Server.MaxTextLength {
+		slog.Error("Board name exceeds limit in create board request payload")
+		http.Error(w, "Board name exceeds length limit", http.StatusBadRequest)
+		return
+	}
+
+	if len([]rune(createReq.Team)) > config.Server.MaxTextLength {
+		slog.Error("Team name exceeds limit in create board request payload")
+		http.Error(w, "Team name exceeds length limit", http.StatusBadRequest)
+		return
+	}
+
 	// Start creation
 	id := shortuuid.New()
 	board := &Board{Id: id, Name: createReq.Name, Team: createReq.Team, Owner: createReq.Owner, Status: InProgress, Lock: false, Mask: true}

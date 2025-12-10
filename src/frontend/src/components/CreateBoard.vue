@@ -12,6 +12,7 @@ import { useToast } from 'vue-toast-notification';
 import CategoryEditor from './CategoryEditor.vue';
 import { defaultCategories } from '../constants/defaultCategories';
 
+const MAX_TEXT_LENGTH: number = Number(import.meta.env.VITE_MAX_TEXT_LENGTH)
 const { t } = useI18n()
 const router = useRouter()
 const boardname = ref('')
@@ -109,7 +110,7 @@ onMounted(() => {
                 <div class="space-y-2 md:space-y-4 mt-4">
                     <div>
                         <div class="mt-1">
-                            <input v-model.trim="boardname" name="name" type="text"
+                            <input v-model.trim="boardname" name="name" type="text" :maxlength="MAX_TEXT_LENGTH"
                                 :placeholder="t('createBoard.namePlaceholder')" required autofocus
                                 class="px-2 py-2 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-sky-500 sm:text-sm dark:bg-slate-800 dark:text-slate-200" />
                         </div>
@@ -119,7 +120,7 @@ onMounted(() => {
                     </div>
                     <div>
                         <div class="mt-1">
-                            <input v-model.trim="team" name="team" type="text"
+                            <input v-model.trim="team" name="team" type="text" :maxlength="MAX_TEXT_LENGTH"
                                 :placeholder="t('createBoard.teamNamePlaceholder')"
                                 class="px-2 py-2 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-sky-500 sm:text-sm dark:bg-slate-800 dark:text-slate-200" />
                         </div>
