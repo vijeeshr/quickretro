@@ -99,13 +99,14 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 	}
 
 	// Prepare timer details
-	remainingTimeInSeconds := board.TimerExpiresAtUtc - time.Now().UTC().Unix()
-	if remainingTimeInSeconds <= 0 {
-		remainingTimeInSeconds = 0
+	nowUnix := time.Now().UTC().Unix()
+	remainingTimeInSeconds := int64(0)
+	if board.TimerExpiresAtUtc > nowUnix {
+		remainingTimeInSeconds = board.TimerExpiresAtUtc - nowUnix
 	}
 
 	// Prepare response
-	response := RegisterResponse{
+	baseResponse := RegisterResponse{
 		Type:                      "reg",
 		BoardName:                 board.Name,
 		BoardTeam:                 board.Team,
@@ -118,12 +119,15 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 		Comments:                  commentDetails,
 		TimerExpiresInSeconds:     uint16(remainingTimeInSeconds), // This shouldn't error out since we will restrict expiry to max 1 hour (3600 seconds) future time, when saving "board.TimerExpiresAtUtc".
 		BoardExpiryTimeUtcSeconds: board.AutoDeleteAtUtc,
-		NotifyNewBoardExpiry:      time.Now().UTC().Unix()-board.CreatedAtUtc < 10, // Prepare board expiry notification prompt for New board (less than 10 seconds)
+		NotifyNewBoardExpiry:      (nowUnix - board.CreatedAtUtc) < 10, // Prepare board expiry notification prompt for New board (less than 10 seconds)
 	}
 
 	clients := h.clients[i.Group]
 	for client := range clients {
-		// r := response              // shallow copy for each client
+		// Shallow copy.
+		// Copies the struct value. The fields/slices inside ([]MessageResponse, []UserDetails, []*BoardColumn) are NOT cloned deeply, they still point to the same underlying arrays.
+		// Ensure those fields/slices aren't mutated after being sent from here.
+		response := baseResponse
 		response.Mine = client.id == i.By // This is to identify if RegisterResponse is a result of a RegisterEvent initiated by same user. RegisterResponses are broadcasted to all.
 		response.IsBoardOwner = client.id == board.Owner
 		select {
@@ -139,6 +143,7 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 type UserClosingEvent struct {
 	By    string `json:"by"`
 	Group string `json:"grp"`
+	Xid   string `json:"xid"`
 }
 
 // UserClosingEvent is initiated from the clients Read() goroutine when its closing. Not from UI
@@ -147,10 +152,16 @@ func (p *UserClosingEvent) Handle(h *Hub) {
 	if p.By == "" || p.Group == "" {
 		return
 	}
-	// Update Redis
-	if ok := h.redis.RemoveUserPresence(p.Group, p.By); !ok {
+
+	// Execute
+	xidOfRemovedUser, removed := h.redis.RemoveUserPresence(p.Group, p.By)
+	// No need to broadcast if there is no xid
+	if !removed || xidOfRemovedUser == "" {
 		return
 	}
+
+	// Populate xid in the event before broadcasting
+	p.Xid = xidOfRemovedUser
 
 	// Publish to Redis (for broadcasting)
 
@@ -166,20 +177,7 @@ func (p *UserClosingEvent) Handle(h *Hub) {
 	h.redis.Publish(p.Group, &BroadcastArgs{Message: nil, Event: ev})
 }
 func (i *UserClosingEvent) Broadcast(h *Hub) {
-	// Duplication with UserClosingEvent Broadcast.
-	users, ok := h.redis.GetUsersPresence(i.Group)
-	if !ok {
-		return
-	}
-
-	res := make([]*UserDetails, 0)
-	for _, user := range users {
-		if user.Nickname == "" {
-			user.Nickname = "Anonymous" // This may not happen.
-		}
-		res = append(res, &UserDetails{Nickname: user.Nickname, Xid: user.Xid})
-	}
-	response := &UserClosingResponse{Type: "closing", Users: res}
+	response := &UserClosingResponse{Type: "closing", Xid: i.Xid}
 
 	clients := h.clients[i.Group]
 	for client := range clients {
@@ -357,17 +355,32 @@ func handleUpdate(existing, updated *Message, h *Hub) bool {
 }
 
 func (i *MessageEvent) Broadcast(m *Message, h *Hub) {
-	// Transform to Outgoing format
-	response := m.NewMessageResponse()
-	count := h.redis.GetLikesCount(m.Id)
-	response.Likes = strconv.FormatInt(count, 10)
-
+	// Transform to Outgoing format (static per broadcast)
+	base := m.NewMessageResponse()
+	likes := h.redis.GetLikesCount(m.Id)
+	base.Likes = strconv.FormatInt(likes, 10)
+	// Snapshot clients for this group
 	clients := h.clients[m.Group]
-	for client := range clients {
-		response.Mine = client.id == m.By
-		response.Liked = h.redis.HasLiked(m.Id, client.id) // Todo: This calls Redis SISMEMBER [O(1) as per doc] in a loop. Check for impact.
+	clientCount := len(clients)
+	// Collect all clientIds and clients
+	ids := make([]string, 0, clientCount)
+	clientList := make([]*Client, 0, clientCount)
+	for c := range clients {
+		ids = append(ids, c.id)
+		clientList = append(clientList, c)
+	}
+
+	// Bulk Redis query: SMISMEMBER
+	// Order of returned results corresponds to order of "ids" passed
+	likedList := h.redis.HasLiked(m.Id, ids)
+	for i, client := range clientList {
+		// Copy the base response
+		res := base
+		res.Mine = client.id == m.By
+		res.Liked = likedList[i]
+
 		select {
-		case client.send <- response:
+		case client.send <- res: // Todo: check implications of sending &res to channel and benchmark
 		default:
 			client.hub.unregister <- client
 		}
@@ -397,17 +410,32 @@ func (p *LikeMessageEvent) Handle(i *Event, h *Hub) {
 		h.redis.Publish(msg.Group, &BroadcastArgs{Message: msg, Event: i})
 	}
 }
-func (i *LikeMessageEvent) Broadcast(m *Message, h *Hub) {
-	// Transform to Outgoing format
-	response := m.NewLikeResponse()
-	count := h.redis.GetLikesCount(m.Id)
-	response.Likes = strconv.FormatInt(count, 10)
 
+func (i *LikeMessageEvent) Broadcast(m *Message, h *Hub) {
+	base := m.NewLikeResponse()
+	count := h.redis.GetLikesCount(m.Id)
+	base.Likes = strconv.FormatInt(count, 10)
+	// Snapshot clients for this group
 	clients := h.clients[m.Group]
-	for client := range clients {
-		response.Liked = h.redis.HasLiked(m.Id, client.id) // Todo: This calls Redis SISMEMBER [O(1) as per doc] in a loop. Check for impact.
+	clientCount := len(clients)
+	// Collect all clientIds and clients
+	ids := make([]string, 0, clientCount)
+	clientList := make([]*Client, 0, clientCount)
+	for c := range clients {
+		ids = append(ids, c.id)
+		clientList = append(clientList, c)
+	}
+
+	// Bulk Redis query: SMISMEMBER
+	// Order of returned results corresponds to order of "ids" passed
+	likedList := h.redis.HasLiked(m.Id, ids)
+	for i, client := range clientList {
+		// Copy the base response
+		resp := base
+		resp.Liked = likedList[i]
+
 		select {
-		case client.send <- response:
+		case client.send <- resp: // Todo: check implications of sending &res to channel and benchmark
 		default:
 			client.hub.unregister <- client
 		}

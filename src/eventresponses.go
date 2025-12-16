@@ -24,8 +24,8 @@ type RegisterResponse struct {
 }
 
 type UserClosingResponse struct {
-	Type  string         `json:"typ"`
-	Users []*UserDetails `json:"users"`
+	Type string `json:"typ"`
+	Xid  string `json:"xid"`
 }
 
 type MaskResponse struct {

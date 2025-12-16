@@ -83,7 +83,7 @@ func (c *Client) read() {
 				slog.Error("Unexpected close error when reading from socket", "details", err.Error(), "user", c.id)
 			}
 			if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
-				userClosingEvent := &UserClosingEvent{By: c.id, Group: c.group}
+				userClosingEvent := &UserClosingEvent{By: c.id, Group: c.group} // "xid" field will be populated from the event's handle(r)
 				userClosingEvent.Handle(c.hub)
 			}
 			break

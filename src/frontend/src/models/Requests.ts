@@ -97,7 +97,7 @@ export interface RegisterResponse {
 
 export interface UserClosingResponse {
     typ: 'closing'
-    users: OnlineUser[]
+    xid: string
 }
 
 export interface MaskResponse {

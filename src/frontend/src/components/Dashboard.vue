@@ -676,8 +676,7 @@ const onRegisterResponse = (response: RegisterResponse) => {
 }
 
 const onUserClosingResponse = (response: UserClosingResponse) => {
-    onlineUsers.value = []
-    onlineUsers.value.push(...response.users) // Todo: find a better way
+    onlineUsers.value = onlineUsers.value.filter(u => u.xid !== response.xid)
 }
 
 const onMaskResponse = (response: MaskResponse) => {
@@ -806,7 +805,7 @@ const onTimerResponse = (response: TimerResponse) => {
 }
 
 const onColumnsChangeResponse = (response: ColumnsChangeResponse) => {
-    
+
     columns.value = response.columns
         .slice()
         .sort((a, b) => a.pos - b.pos)

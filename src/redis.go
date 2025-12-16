@@ -421,22 +421,35 @@ func (c *RedisConnector) CommitUserPresence(boardId string, user *User, isPresen
 	return true
 }
 
-func (c *RedisConnector) RemoveUserPresence(boardId string, userId string) bool {
+func (c *RedisConnector) RemoveUserPresence(boardId string, userId string) (string, bool) {
 	userKey := fmt.Sprintf("board:user:%s:%s", boardId, userId)
 	boardUsersKey := fmt.Sprintf("board:users:%s", boardId)
 
+	var xidCmd *redis.StringCmd
+
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+		xidCmd = pipe.HGet(c.ctx, userKey, "xid")
 		pipe.Del(c.ctx, userKey)
 		pipe.SRem(c.ctx, boardUsersKey, userId)
 		return nil
 	})
 
 	if err != nil {
-		slog.Error("Failed removing user presence from Redis", "details", err.Error(), "boardId", boardId, "userId", userId)
-		return false
+		slog.Error("Failed removing user presence from Redis", "err", err, "boardId", boardId, "userId", userId)
+		return "", false
 	}
 
-	return true
+	xid, err := xidCmd.Result()
+	if err == redis.Nil {
+		// user existed? maybe not — treat as empty xid
+		return "", true
+	}
+	if err != nil {
+		slog.Warn("Failed reading xid while removing user presence", "err", err, "boardId", boardId, "userId", userId)
+		return "", true // presence removal still succeeded
+	}
+
+	return xid, true
 }
 
 func (c *RedisConnector) GetUsersPresence(boardId string) ([]*User, bool) {
@@ -560,13 +573,16 @@ func (c *RedisConnector) GetLikesCount(msgId string) int64 {
 	return count
 }
 
-func (c *RedisConnector) HasLiked(msgId string, by string) bool {
+func (c *RedisConnector) HasLiked(msgId string, users []string) []bool {
 	key := fmt.Sprintf("msg:likes:%s", msgId)
-	if liked, err := c.client.SIsMember(c.ctx, key, by).Result(); err != nil {
-		return false
-	} else {
-		return liked
+
+	results, err := c.client.SMIsMember(c.ctx, key, users).Result()
+	if err != nil {
+		// default to all false
+		return make([]bool, len(users))
 	}
+
+	return results // []bool matching the order of users
 }
 
 // Store helper - DTO
