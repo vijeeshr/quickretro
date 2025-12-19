@@ -452,6 +452,7 @@ func (c *RedisConnector) RemoveUserPresence(boardId string, userId string) (stri
 	return xid, true
 }
 
+// Deprecated: No longer used
 func (c *RedisConnector) GetUsersPresence(boardId string) ([]*User, bool) {
 	users := make([]*User, 0)
 
@@ -522,6 +523,7 @@ func (c *RedisConnector) GetMessages(boardId string) ([]*Message, bool) {
 	return c.GetMessagesByIds(messageIds, boardId)
 }
 
+// Deprecated: No longer used
 func (c *RedisConnector) GetComments(boardId string) ([]*Message, bool) {
 	key := fmt.Sprintf("board:cmts:%s", boardId)
 	commentIds, err := c.client.SMembers(c.ctx, key).Result()
@@ -888,6 +890,107 @@ func (c *RedisConnector) UpdateCategory(category string, msgId string, commentId
 		return false
 	}
 	return true
+}
+
+// Store helper - DTO
+type BoardAggregatedData struct {
+	Board    *Board
+	Columns  []*BoardColumn
+	Users    []*User
+	Messages []*Message
+	Comments []*Message
+}
+
+func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregatedData, bool) {
+	pipe := c.client.Pipeline()
+
+	boardCmd := pipe.HGetAll(c.ctx, fmt.Sprintf("board:%s", boardId))
+	colIdsCmd := pipe.SMembers(c.ctx, fmt.Sprintf("board:col:%s", boardId))
+	userIdsCmd := pipe.SMembers(c.ctx, fmt.Sprintf("board:users:%s", boardId))
+	msgIdsCmd := pipe.SMembers(c.ctx, fmt.Sprintf("board:msg:%s", boardId))
+	cmtIdsCmd := pipe.SMembers(c.ctx, fmt.Sprintf("board:cmts:%s", boardId))
+
+	if _, err := pipe.Exec(c.ctx); err != nil {
+		slog.Error("Failed to fetch board metadata pipeline", "err", err, "boardId", boardId)
+		return nil, false
+	}
+
+	var b Board
+	if err := boardCmd.Scan(&b); err != nil {
+		slog.Error("Failed to scan board", "err", err)
+		return nil, false
+	}
+	if b.Id == "" {
+		return nil, false // Board not found
+	}
+
+	colIds := colIdsCmd.Val()
+	userIds := userIdsCmd.Val()
+	msgIds := msgIdsCmd.Val()
+	cmtIds := cmtIdsCmd.Val()
+
+	pipe2 := c.client.Pipeline()
+
+	colCmds := make([]*redis.MapStringStringCmd, len(colIds))
+	for i, id := range colIds {
+		colCmds[i] = pipe2.HGetAll(c.ctx, fmt.Sprintf("board:col:%s:%s", boardId, id))
+	}
+
+	userCmds := make([]*redis.MapStringStringCmd, len(userIds))
+	for i, id := range userIds {
+		userCmds[i] = pipe2.HGetAll(c.ctx, fmt.Sprintf("board:user:%s:%s", boardId, id))
+	}
+
+	msgCmds := make([]*redis.MapStringStringCmd, len(msgIds))
+	for i, id := range msgIds {
+		msgCmds[i] = pipe2.HGetAll(c.ctx, fmt.Sprintf("msg:%s", id))
+	}
+
+	cmtCmds := make([]*redis.MapStringStringCmd, len(cmtIds))
+	for i, id := range cmtIds {
+		cmtCmds[i] = pipe2.HGetAll(c.ctx, fmt.Sprintf("msg:%s", id))
+	}
+
+	if _, err := pipe2.Exec(c.ctx); err != nil {
+		slog.Error("Failed to fetch board details pipeline", "err", err, "boardId", boardId)
+		// We might choose to return partial data or fail. Here we fail safe.
+		return nil, false
+	}
+
+	data := &BoardAggregatedData{
+		Board:    &b,
+		Columns:  make([]*BoardColumn, 0, len(colIds)),
+		Users:    make([]*User, 0, len(userIds)),
+		Messages: make([]*Message, 0, len(msgIds)),
+		Comments: make([]*Message, 0, len(cmtIds)),
+	}
+
+	for _, cmd := range colCmds {
+		var c BoardColumn
+		if err := cmd.Scan(&c); err == nil {
+			data.Columns = append(data.Columns, &c)
+		}
+	}
+	for _, cmd := range userCmds {
+		var u User
+		if err := cmd.Scan(&u); err == nil {
+			data.Users = append(data.Users, &u)
+		}
+	}
+	for _, cmd := range msgCmds {
+		var m Message
+		if err := cmd.Scan(&m); err == nil {
+			data.Messages = append(data.Messages, &m)
+		}
+	}
+	for _, cmd := range cmtCmds {
+		var m Message
+		if err := cmd.Scan(&m); err == nil {
+			data.Comments = append(data.Comments, &m)
+		}
+	}
+
+	return data, true
 }
 
 func (c *RedisConnector) Close() {

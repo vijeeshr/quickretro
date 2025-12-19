@@ -95,6 +95,12 @@ export interface RegisterResponse {
     notifyNewBoardExpiry: boolean
 }
 
+export interface UserJoiningResponse {
+    typ: 'joining'
+    nickname: string
+    xid: string
+}
+
 export interface UserClosingResponse {
     typ: 'closing'
     xid: string
@@ -157,7 +163,7 @@ export interface ColumnsChangeResponse {
 }
 
 export type SocketResponse = RegisterResponse | MaskResponse | LockResponse | MessageResponse |
-    LikeMessageResponse | DeleteMessageResponse | DeleteAllResponse | CategoryChangeResponse | UserClosingResponse | TimerResponse | ColumnsChangeResponse
+    LikeMessageResponse | DeleteMessageResponse | DeleteAllResponse | CategoryChangeResponse | UserJoiningResponse | UserClosingResponse | TimerResponse | ColumnsChangeResponse
 
 export function toSocketResponse(json: any): SocketResponse | null {
 
@@ -178,7 +184,9 @@ export function toSocketResponse(json: any): SocketResponse | null {
             case 'delall':
                 return json as DeleteAllResponse
             case 'catchng':
-                return json as CategoryChangeResponse                
+                return json as CategoryChangeResponse
+            case 'joining':
+                return json as UserJoiningResponse
             case 'closing':
                 return json as UserClosingResponse
             case 'timer':

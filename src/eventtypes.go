@@ -8,6 +8,9 @@ import (
 )
 
 type RegisterEvent struct {
+	// The broadcaster of RegisterEvent i.e. "Broadcast" method below sends two types of responses -
+	// RegisterResponse: Sent to the client who triggered the RegisterEvent, and
+	// UserJoiningResponse: Sent to all the other active clients in the board
 	By         string `json:"by"`
 	ByNickname string `json:"nickname"`
 	Xid        string `json:"xid"`
@@ -30,34 +33,42 @@ func (p *RegisterEvent) Handle(i *Event, h *Hub) {
 	h.redis.Publish(p.Group, &BroadcastArgs{Message: nil, Event: i})
 }
 func (i *RegisterEvent) Broadcast(h *Hub) {
-	// Todo: Can below calls be pipelined?
-	// Transform to Outgoing format
-	// Don't want to add another field in BroadcastArgs{}.
-	board, boardOk := h.redis.GetBoard(i.Group)
-	if !boardOk {
-		slog.Error("No board found in RegisterEvent broadcast", "board", i.Group)
+	// // Todo: Can below calls be pipelined?
+	// // Transform to Outgoing format
+	// // Don't want to add another field in BroadcastArgs{}.
+	// board, boardOk := h.redis.GetBoard(i.Group)
+	// if !boardOk {
+	// 	slog.Error("No board found in RegisterEvent broadcast", "board", i.Group)
+	// 	return
+	// }
+	// cols, colsOk := h.redis.GetBoardColumns(i.Group)
+	// if !colsOk {
+	// 	slog.Error("No board columns found in RegisterEvent broadcast", "board", i.Group)
+	// 	return
+	// }
+	// users, usersOk := h.redis.GetUsersPresence(i.Group)
+	// if !usersOk {
+	// 	slog.Error("Error when getting user presence in RegisterEvent broadcast", "board", i.Group)
+	// 	return
+	// }
+	// messages, messagesOk := h.redis.GetMessages(i.Group)
+	// if !messagesOk {
+	// 	slog.Error("Error getting messages in RegisterEvent broadcast", "board", i.Group)
+	// 	return
+	// }
+	// comments, commentsOk := h.redis.GetComments(i.Group)
+	// if !commentsOk {
+	// 	slog.Error("Error getting comments in RegisterEvent broadcast", "board", i.Group)
+	// 	return
+	// }
+
+	data, ok := h.redis.GetBoardAggregatedData(i.Group)
+	if !ok {
+		slog.Error("Failed to get board aggregated data", "board", i.Group)
 		return
 	}
-	cols, colsOk := h.redis.GetBoardColumns(i.Group)
-	if !colsOk {
-		slog.Error("No board columns found in RegisterEvent broadcast", "board", i.Group)
-		return
-	}
-	users, usersOk := h.redis.GetUsersPresence(i.Group)
-	if !usersOk {
-		slog.Error("Error when getting user presence in RegisterEvent broadcast", "board", i.Group)
-		return
-	}
-	messages, messagesOk := h.redis.GetMessages(i.Group)
-	if !messagesOk {
-		slog.Error("Error getting messages in RegisterEvent broadcast", "board", i.Group)
-		return
-	}
-	comments, commentsOk := h.redis.GetComments(i.Group)
-	if !commentsOk {
-		slog.Error("Error getting comments in RegisterEvent broadcast", "board", i.Group)
-		return
-	}
+
+	board, cols, users, messages, comments := data.Board, data.Columns, data.Users, data.Messages, data.Comments
 
 	// Prepare user details
 	// userDetails := make([]UserDetails, 0)
@@ -105,8 +116,9 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 		remainingTimeInSeconds = board.TimerExpiresAtUtc - nowUnix
 	}
 
-	// Prepare response
-	baseResponse := RegisterResponse{
+	// Prepare RegisterResponse
+	// RegisterResponse is only sent to client who is the initiator of RegEvent
+	regResponse := RegisterResponse{
 		Type:                      "reg",
 		BoardName:                 board.Name,
 		BoardTeam:                 board.Team,
@@ -120,22 +132,55 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 		TimerExpiresInSeconds:     uint16(remainingTimeInSeconds), // This shouldn't error out since we will restrict expiry to max 1 hour (3600 seconds) future time, when saving "board.TimerExpiresAtUtc".
 		BoardExpiryTimeUtcSeconds: board.AutoDeleteAtUtc,
 		NotifyNewBoardExpiry:      (nowUnix - board.CreatedAtUtc) < 10, // Prepare board expiry notification prompt for New board (less than 10 seconds)
+		// IsBoardOwner:              (i.By == board.Owner),               // TODO: Check if this can be compromised
+	}
+	// Prepare UserJoiningResponse
+	// UserJoiningResponse is sent to all other active clients (except initiator)
+	joinResp := UserJoiningResponse{
+		Type:     "joining",
+		Nickname: i.ByNickname,
+		Xid:      i.Xid,
 	}
 
 	clients := h.clients[i.Group]
+
 	for client := range clients {
-		// Shallow copy.
-		// Copies the struct value. The fields/slices inside ([]MessageResponse, []UserDetails, []*BoardColumn) are NOT cloned deeply, they still point to the same underlying arrays.
-		// Ensure those fields/slices aren't mutated after being sent from here.
-		response := baseResponse
-		response.Mine = client.id == i.By // This is to identify if RegisterResponse is a result of a RegisterEvent initiated by same user. RegisterResponses are broadcasted to all.
-		response.IsBoardOwner = client.id == board.Owner
+		// // Shallow copy.
+		// // Copies the struct value. The fields/slices inside ([]MessageResponse, []UserDetails, []*BoardColumn) are NOT cloned deeply, they still point to the same underlying arrays.
+		// // Ensure those fields/slices aren't mutated after being sent from here.
+		// response := regResponse
+		if client.id == i.By {
+			regResponse.IsBoardOwner = client.id == board.Owner // TODO: Check if this is safer than the above, i.By == board.Owner
+			select {
+			case client.send <- regResponse:
+			default:
+				client.hub.unregister <- client
+			}
+			continue
+		}
+
 		select {
-		case client.send <- response:
+		case client.send <- joinResp:
 		default:
 			client.hub.unregister <- client
 		}
 	}
+
+	// for client := range clients {
+	// 	var payload any
+
+	// 	if client.id == i.By {
+	// 		payload = regResponse
+	// 	} else {
+	// 		payload = joinResp
+	// 	}
+
+	// 	select {
+	// 	case client.send <- payload:
+	// 	default:
+	// 		client.hub.unregister <- client
+	// 	}
+	// }
 }
 
 // Todo: UserClosingEvent is not a clean implementation. Refactor.

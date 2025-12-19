@@ -17,10 +17,16 @@ type RegisterResponse struct {
 	BoardExpiryTimeUtcSeconds int64             `json:"boardExpiryUtcSeconds"` // Unix Timestamp Seconds
 	TimerExpiresInSeconds     uint16            `json:"timerExpiresInSeconds"` // uint16 since we are restricting timer to max 1 hour (3600 seconds)
 	NotifyNewBoardExpiry      bool              `json:"notifyNewBoardExpiry"`
-	Mine                      bool              `json:"mine"`
 	BoardMasking              bool              `json:"boardMasking"`
 	BoardLock                 bool              `json:"boardLock"`
 	IsBoardOwner              bool              `json:"isBoardOwner"`
+	// Mine                      bool              `json:"mine"`
+}
+
+type UserJoiningResponse struct {
+	Type     string `json:"typ"`
+	Nickname string `json:"nickname"`
+	Xid      string `json:"xid"`
 }
 
 type UserClosingResponse struct {

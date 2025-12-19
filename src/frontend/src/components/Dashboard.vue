@@ -6,7 +6,7 @@ import Category from './Category.vue';
 import NewAnonymousCard from './NewAnonymousCard.vue';
 import NewCard from './NewCard.vue';
 import { useRoute } from 'vue-router';
-import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent, CategoryChangeEvent, CategoryChangeResponse, DeleteAllEvent, ColumnsChangeEvent, ColumnsChangeResponse } from '../models/Requests';
+import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent, CategoryChangeEvent, CategoryChangeResponse, DeleteAllEvent, ColumnsChangeEvent, ColumnsChangeResponse, UserJoiningResponse } from '../models/Requests';
 import { OnlineUser } from '../models/OnlineUser';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
@@ -631,47 +631,82 @@ const openColumnEditDialog = () => {
     isColumnEditDialogOpen.value = true
 }
 
+// onRegisterResponse is only triggered for user who dispatches 'RegisterEvent'
 const onRegisterResponse = (response: RegisterResponse) => {
     timerExpiresInSeconds.value = response.timerExpiresInSeconds // This always gets set. Todo: find a better way to sync timer.
     boardExpiryLocalTime.value = formatDate(response.boardExpiryUtcSeconds)
     onlineUsers.value = []
     onlineUsers.value.push(...response.users) // Todo: find a better way
 
-    // response.mine == true means RegisterResponse is for the current User's RegisterEvent request.
-    // This prevents unnecessarily updating values/pushing messages in the ref for other users RegisterEvents. 
-    // RegisterEvent happens just once per user in the beginning i.e. when user loads/reloads the page.
-    if (response.mine) {
-        boardName.value = response.boardName
-        isOwner.value = response.isBoardOwner
-        isMasked.value = response.boardMasking
-        isLocked.value = response.boardLock
-        // columns.value = []
-        // columns.value.push(...response.columns) // Todo: find a better way
+    // // response.mine == true means RegisterResponse is for the current User's RegisterEvent request.
+    // // This prevents unnecessarily updating values/pushing messages in the ref for other users RegisterEvents. 
+    // // RegisterEvent happens just once per user in the beginning i.e. when user loads/reloads the page.
+    // if (response.mine) {
+    //     boardName.value = response.boardName
+    //     isOwner.value = response.isBoardOwner
+    //     isMasked.value = response.boardMasking
+    //     isLocked.value = response.boardLock
+    //     // columns.value = []
+    //     // columns.value.push(...response.columns) // Todo: find a better way
 
-        // const sortedColumns = response.columns
-        //     .slice() // create a shallow copy (to avoid mutating response.columns)
-        //     .sort((a, b) => a.pos - b.pos)
-        // columns.value.push(...sortedColumns)
-        columns.value = response.columns
-            .slice()
-            .sort((a, b) => a.pos - b.pos)
+    //     // const sortedColumns = response.columns
+    //     //     .slice() // create a shallow copy (to avoid mutating response.columns)
+    //     //     .sort((a, b) => a.pos - b.pos)
+    //     // columns.value.push(...sortedColumns)
+    //     columns.value = response.columns
+    //         .slice()
+    //         .sort((a, b) => a.pos - b.pos)
 
-        cards.value = []
-        cards.value.push(...response.messages)
+    //     cards.value = []
+    //     cards.value.push(...response.messages)
 
-        // Build Map: messageId → comments[]
-        const map = new Map<string, MessageResponse[]>()
-        response.comments.forEach(comment => {
-            if (!map.has(comment.pid)) map.set(comment.pid, [])
-            map.get(comment.pid)!.push(comment)
-        })
-        commentsMap.value = map
-    }
+    //     // Build Map: messageId → comments[]
+    //     const map = new Map<string, MessageResponse[]>()
+    //     response.comments.forEach(comment => {
+    //         if (!map.has(comment.pid)) map.set(comment.pid, [])
+    //         map.get(comment.pid)!.push(comment)
+    //     })
+    //     commentsMap.value = map
+    // }
+    boardName.value = response.boardName
+    isOwner.value = response.isBoardOwner
+    isMasked.value = response.boardMasking
+    isLocked.value = response.boardLock
+    columns.value = response.columns
+        .slice() // create a shallow copy (to avoid mutating response.columns)
+        .sort((a, b) => a.pos - b.pos)
+    cards.value = []
+    cards.value.push(...response.messages)
+
+    // Build Map: messageId → comments[]
+    const map = new Map<string, MessageResponse[]>()
+    response.comments.forEach(comment => {
+        if (!map.has(comment.pid)) map.set(comment.pid, [])
+        map.get(comment.pid)!.push(comment)
+    })
+    commentsMap.value = map
 
     // Show expiration notification for newly created board. Show only for board creator/owner
     if (response.isBoardOwner && response.notifyNewBoardExpiry) {
         const initialExpiryMsg = `${t('dashboard.autoDeleteScheduleBase', { date: boardExpiryLocalTime.value })}${t('dashboard.autoDeleteScheduleAddon')}`
         toast.warning(initialExpiryMsg, { pauseOnHover: false, duration: 10000 })
+    }
+}
+
+const onUserJoiningResponse = (response: UserJoiningResponse) => {
+    const idx = onlineUsers.value.findIndex(u => u.xid === response.xid)
+
+    if (idx === -1) {
+        // User not present, add
+        onlineUsers.value.push({
+            xid: response.xid,
+            nickname: response.nickname,
+        })
+    } else {
+        // User exists, update nickname only if changed
+        if (onlineUsers.value[idx].nickname !== response.nickname) {
+            onlineUsers.value[idx].nickname = response.nickname
+        }
     }
 }
 
@@ -931,6 +966,9 @@ const socketOnMessage = (event: MessageEvent<any>) => {
         switch (response.typ) {
             case "reg":
                 onRegisterResponse(response)
+                break
+            case "joining":
+                onUserJoiningResponse(response)
                 break
             case "closing":
                 onUserClosingResponse(response)
