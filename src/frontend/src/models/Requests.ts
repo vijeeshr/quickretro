@@ -123,7 +123,7 @@ export interface MessageResponse {
     nickname: string
     msg: string
     cat: string
-    likes: string
+    likes: number
     liked: boolean
     mine: boolean
     anon: boolean
@@ -133,7 +133,7 @@ export interface MessageResponse {
 export interface LikeMessageResponse {
     typ: 'like'
     id: string
-    likes: string
+    likes: number
     liked: boolean
 }
 

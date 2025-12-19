@@ -52,7 +52,7 @@ type MessageResponse struct {
 	ByNickname string `json:"nickname"`
 	Content    string `json:"msg"`
 	Category   string `json:"cat"`
-	Likes      string `json:"likes"`
+	Likes      int64  `json:"likes"`
 	Liked      bool   `json:"liked"` // True if receiving user has liked this message.
 	Mine       bool   `json:"mine"`
 	Anonymous  bool   `json:"anon"`
@@ -61,7 +61,7 @@ type MessageResponse struct {
 type LikeMessageResponse struct {
 	Type  string `json:"typ"`
 	Id    string `json:"id"`
-	Likes string `json:"likes"`
+	Likes int64  `json:"likes"`
 	Liked bool   `json:"liked"` // True if receiving user has liked this message.
 }
 

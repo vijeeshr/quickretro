@@ -142,11 +142,16 @@ const cardsStats = computed<Record<string, UserCardStats>>(() => {
     return result
 })
 
+const myCardsCount = computed(() => {
+    return cardsStats.value[xid]?.count ?? 0
+})
+
 const onlineUsersCardsStats = computed(() => {
     return onlineUsers.value.map(user => ({
         nickname: user.nickname,
-        cardsCount: cardsStats.value[user.xid]?.count || 0
-    }))
+        cardsCount: cardsStats.value[user.xid]?.count || 0,
+        xid: user.xid
+    })).filter(u => u.xid !== xid)
 })
 
 const usersWithCards = computed(() => {
@@ -1350,7 +1355,14 @@ onUnmounted(() => {
 
         <!-- Right Sidebar -->
         <div class="w-16 p-4">
-            <div v-for="user in onlineUsersCardsStats" class="relative w-8 h-8 ml-auto mx-auto mb-4">
+            <div class="relative w-8 h-8 ml-auto mx-auto mb-4">
+                <Avatar :name="nickname" class="w-8 h-8" />
+                <span v-if="myCardsCount > 0"
+                    class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none">
+                    {{ myCardsCount }}
+                </span>
+            </div>
+            <div v-for="user in onlineUsersCardsStats" :key="user.xid" class="relative w-8 h-8 ml-auto mx-auto mb-4">
                 <Avatar :name="user.nickname" class="w-8 h-8" />
                 <span v-if="user.cardsCount > 0"
                     class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none">

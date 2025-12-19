@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"log/slog"
-	"strconv"
 	"time"
 )
 
@@ -94,7 +93,7 @@ func (i *RegisterEvent) Broadcast(h *Hub) {
 		msgRes.Mine = m.By == i.By
 		if likesOk {
 			if info, ok := likesInfo[m.Id]; ok {
-				msgRes.Likes = strconv.FormatInt(info.Count, 10)
+				msgRes.Likes = info.Count
 				msgRes.Liked = info.Liked
 			}
 		}
@@ -402,8 +401,7 @@ func handleUpdate(existing, updated *Message, h *Hub) bool {
 func (i *MessageEvent) Broadcast(m *Message, h *Hub) {
 	// Transform to Outgoing format (static per broadcast)
 	base := m.NewMessageResponse()
-	likes := h.redis.GetLikesCount(m.Id)
-	base.Likes = strconv.FormatInt(likes, 10)
+	base.Likes = h.redis.GetLikesCount(m.Id)
 	// Snapshot clients for this group
 	clients := h.clients[m.Group]
 	clientCount := len(clients)
@@ -458,8 +456,7 @@ func (p *LikeMessageEvent) Handle(i *Event, h *Hub) {
 
 func (i *LikeMessageEvent) Broadcast(m *Message, h *Hub) {
 	base := m.NewLikeResponse()
-	count := h.redis.GetLikesCount(m.Id)
-	base.Likes = strconv.FormatInt(count, 10)
+	base.Likes = h.redis.GetLikesCount(m.Id)
 	// Snapshot clients for this group
 	clients := h.clients[m.Group]
 	clientCount := len(clients)

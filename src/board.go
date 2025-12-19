@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/lithammer/shortuuid/v4"
@@ -198,6 +197,7 @@ func verifyTurnstile(token, remoteIP string) (bool, error) {
 	return result.Success, nil
 }
 
+// Deprecated: No longer used
 // Returns board by id
 func HandleGetBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request) {
 
@@ -229,6 +229,7 @@ func HandleGetBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+// Deprecated: No longer used
 // Returns messages by board
 func HandleRefresh(red *RedisConnector, w http.ResponseWriter, r *http.Request) {
 	// Todo: Validate properly
@@ -265,7 +266,7 @@ func HandleRefresh(red *RedisConnector, w http.ResponseWriter, r *http.Request) 
 			msgRes.Mine = m.By == user
 			if likesOk {
 				if info, ok := likesInfo[m.Id]; ok {
-					msgRes.Likes = strconv.FormatInt(info.Count, 10)
+					msgRes.Likes = info.Count
 					msgRes.Liked = info.Liked
 				}
 			}

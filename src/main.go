@@ -91,13 +91,13 @@ func main() {
 		HandleCreateBoard(red, w, r)
 	}).Methods("POST") // Todo: Check origin in handler
 
-	router.HandleFunc("/api/board/{id}/user/{user}", func(w http.ResponseWriter, r *http.Request) {
-		HandleGetBoard(red, w, r)
-	}).Methods("GET") // Todo: Check origin in handler
+	// router.HandleFunc("/api/board/{id}/user/{user}", func(w http.ResponseWriter, r *http.Request) {
+	// 	HandleGetBoard(red, w, r)
+	// }).Methods("GET") // Todo: Check origin in handler
 
-	router.HandleFunc("/api/board/{id}/user/{user}/refresh", func(w http.ResponseWriter, r *http.Request) {
-		HandleRefresh(red, w, r)
-	}).Methods("GET") // Todo: Check origin in handler
+	// router.HandleFunc("/api/board/{id}/user/{user}/refresh", func(w http.ResponseWriter, r *http.Request) {
+	// 	HandleRefresh(red, w, r)
+	// }).Methods("GET") // Todo: Check origin in handler
 
 	router.HandleFunc("/ws/board/{board}/user/{user}/meet", func(w http.ResponseWriter, r *http.Request) {
 		handleWebSocket(hub, w, r)
