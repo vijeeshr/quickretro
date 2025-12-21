@@ -435,7 +435,15 @@ func (c *RedisConnector) RemoveUserPresence(boardId string, userId string) (stri
 	})
 
 	if err != nil {
-		slog.Error("Failed removing user presence from Redis", "err", err, "boardId", boardId, "userId", userId)
+		// With redis.Nil err, we can assume the userKey hash get in the pipeline didn't return it as it doesn't exist
+		// This use-case happens when DeleteAll is executed i.e when user manually deletes a board
+		// We will still return ("", false), as this helps the caller UserClosingEvent.Handle from doing unnecessary broadcasting of UserClosing responses
+		// to clients in a board that is being deleted
+		if err == redis.Nil {
+			slog.Debug("User presence cleanup skipped (already removed)", "boardId", boardId, "userId", userId)
+		} else {
+			slog.Error("Failed removing user presence from Redis", "err", err, "boardId", boardId, "userId", userId)
+		}
 		return "", false
 	}
 
