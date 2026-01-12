@@ -31,7 +31,7 @@ func (p *RegisterEvent) Handle(i *Event, h *Hub) {
 	// *Message is nil as this is not a message related update. Find a better way. Generics?
 	h.redis.Publish(p.Group, &BroadcastArgs{Message: nil, Event: i})
 }
-func (i *RegisterEvent) Broadcast(h *Hub) {
+func (i *RegisterEvent) Broadcast(m *Message, h *Hub) {
 	// // Todo: Can below calls be pipelined?
 	// // Transform to Outgoing format
 	// // Don't want to add another field in BroadcastArgs{}.
@@ -191,7 +191,7 @@ type UserClosingEvent struct {
 }
 
 // UserClosingEvent is initiated from the clients Read() goroutine when its closing. Not from UI
-func (p *UserClosingEvent) Handle(h *Hub) {
+func (p *UserClosingEvent) Handle(i *Event, h *Hub) {
 	// Validate
 	if p.By == "" || p.Group == "" {
 		return
@@ -220,7 +220,7 @@ func (p *UserClosingEvent) Handle(h *Hub) {
 
 	h.redis.Publish(p.Group, &BroadcastArgs{Message: nil, Event: ev})
 }
-func (i *UserClosingEvent) Broadcast(h *Hub) {
+func (i *UserClosingEvent) Broadcast(m *Message, h *Hub) {
 	response := &UserClosingResponse{Type: "closing", Xid: i.Xid}
 
 	clients := h.clients[i.Group]
@@ -266,7 +266,7 @@ func (p *MaskEvent) Handle(i *Event, h *Hub) {
 	// *Message is nil as this is not a message related update. Masking is a UI gimmick. Find a better way.
 	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
 }
-func (i *MaskEvent) Broadcast(h *Hub) {
+func (i *MaskEvent) Broadcast(m *Message, h *Hub) {
 	// Transform to Outgoing format
 	// We can trust the MaskEvent.Mask payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
 	response := &MaskResponse{Type: "mask", Mask: i.Mask}
@@ -311,7 +311,7 @@ func (p *LockEvent) Handle(i *Event, h *Hub) {
 	// *Message is nil as this is not a message related update. Locking is a UI gimmick. Find a better way.
 	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
 }
-func (i *LockEvent) Broadcast(h *Hub) {
+func (i *LockEvent) Broadcast(m *Message, h *Hub) {
 	// Transform to Outgoing format
 	// We can trust the LockEvent.Lock payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
 	response := &LockResponse{Type: "lock", Lock: i.Lock}
@@ -571,7 +571,7 @@ func (p *DeleteAllEvent) Handle(i *Event, h *Hub) {
 	// *Message is nil as this is not a message related update.
 	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
 }
-func (i *DeleteAllEvent) Broadcast(h *Hub) {
+func (i *DeleteAllEvent) Broadcast(m *Message, h *Hub) {
 	// Transform to Outgoing format
 	response := &DeleteAllResponse{Type: "delall"}
 
@@ -636,7 +636,7 @@ func (p *CategoryChangeEvent) Handle(i *Event, h *Hub) {
 		h.redis.Publish(msg.Group, &BroadcastArgs{Message: nil, Event: i})
 	}
 }
-func (i *CategoryChangeEvent) Broadcast(h *Hub) {
+func (i *CategoryChangeEvent) Broadcast(m *Message, h *Hub) {
 	// Transform to Outgoing format
 	// We can trust the "i" *CategoryChangeResponse payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
 	response := &CategoryChangeResponse{Type: "catchng", MessageId: i.MessageId, NewCategory: i.NewCategory}
@@ -713,7 +713,7 @@ func (p *TimerEvent) Handle(i *Event, h *Hub) {
 	// *Message is nil as this is not a message related update. Timer is a UI gimmick. Find a better way.
 	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
 }
-func (i *TimerEvent) Broadcast(h *Hub) {
+func (i *TimerEvent) Broadcast(m *Message, h *Hub) {
 	// Transform to Outgoing format
 	// redis.Getboard() is called twice in Handle and Broadcast. Let it be that way for now. Don't want to add another field in BroadcastArgs{}.
 	board, boardOk := h.redis.GetBoard(i.Group)
@@ -799,7 +799,7 @@ func (p *ColumnsChangeEvent) Handle(i *Event, h *Hub) {
 	// *Message is nil as this is not a message related update.
 	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
 }
-func (i *ColumnsChangeEvent) Broadcast(h *Hub) {
+func (i *ColumnsChangeEvent) Broadcast(m *Message, h *Hub) {
 	// Transform to Outgoing format
 	// We can trust the "i" *ColumnsChangeEvent payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
 	response := &ColumnsChangeResponse{Type: "colreset", BoardColumns: i.Columns}

@@ -78,13 +78,14 @@ func (c *Client) read() {
 		var event Event
 		err := c.conn.ReadJSON(&event)
 		if err != nil {
-			slog.Error("Error reading from socket", "details", err.Error(), "user", c.id)
+			slog.Error("Error reading from socket", "err", err, "user", c.id)
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
-				slog.Error("Unexpected close error when reading from socket", "details", err.Error(), "user", c.id)
+				slog.Error("Unexpected close error when reading from socket", "err", err, "user", c.id)
 			}
 			if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
+				// UserClosingEvent does not originate from UI
 				userClosingEvent := &UserClosingEvent{By: c.id, Group: c.group} // "xid" field will be populated from the event's handle(r)
-				userClosingEvent.Handle(c.hub)
+				userClosingEvent.Handle(nil, c.hub)
 			}
 			break
 		}
@@ -110,14 +111,14 @@ func (c *Client) write() {
 				return
 			}
 			if err := c.conn.WriteJSON(message); err != nil {
-				slog.Error("Error when writing to socket", "details", err.Error(), "user", c.id)
+				slog.Error("Error when writing to socket", "err", err, "user", c.id)
 				return // return or break?
 			}
 		case <-ticker.C:
 			// slog.Debug("Ping", "To", c.id)
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				slog.Error("Error writing PingMessage to socket", "details", err.Error(), "user", c.id)
+				slog.Error("Error writing PingMessage to socket", "err", err, "user", c.id)
 				return
 			}
 		}
@@ -145,7 +146,7 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	if !hub.redis.BoardExists(board) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			slog.Error("Board not found", "boardId", board)
+			slog.Error("Board not found", "board", board)
 			return
 		}
 		// Send close control frame with code + reason
@@ -155,11 +156,11 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	slog.Info("Initiating websocket connection", "board", board, "user", user)
+	slog.Info("Connecting", "board", board, "user", user)
 	// Upgrade http request to websocket
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		slog.Error("Error when upgrading to websocket", "details", err.Error())
+		slog.Error("Error when upgrading to websocket", "err", err)
 		return
 	}
 
