@@ -15,7 +15,7 @@ Ensure Go, Nodejs and Docker are installed.
 
 ### Build the Vue frontend
 ```sh
-cd .\src\frontend\
+cd ./src/frontend/
 ```
 Install packages and dependencies.  
 ```sh
