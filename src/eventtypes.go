@@ -363,6 +363,12 @@ func (p *MessageEvent) Handle(i *Event, h *Hub) {
 
 	// Publish to Redis (for broadcasting)
 	if saved {
+		// Other fields in the "p" payload may be tampered or different for an existing message.
+		// For an existing message that is saved/updated again, just update existing.Content from payload and send it for broadcasting
+		if exists {
+			existing.Content = msg.Content
+			msg = existing
+		}
 		h.redis.Publish(msg.Group, &BroadcastArgs{Message: msg, Event: i})
 	}
 }
