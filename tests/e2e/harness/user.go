@@ -3,6 +3,7 @@ package harness
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -111,7 +112,6 @@ func (u *TestUser) Register() error {
 }
 
 func (u *TestUser) SendMessage(id, content, category string) error {
-	// id := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), u.Id)
 	msg := MessageEvent{
 		Id:         id,
 		By:         u.Id,
@@ -123,17 +123,41 @@ func (u *TestUser) SendMessage(id, content, category string) error {
 		ParentId:   "",
 		Anonymous:  false,
 	}
-	// return id, u.SendEvent("msg", msg)
 	return u.SendEvent("msg", msg)
 }
 
-func (u *TestUser) LikeMessage(msgId string, like bool) error {
-	likeEv := LikeMessageEvent{
-		MessageId: msgId,
-		By:        u.Id,
-		Like:      like,
+func (u *TestUser) SendAnonymousMessage(id, content, category, xid, nickname string, anonymous bool) error {
+	msg := MessageEvent{
+		Id:         id,
+		By:         u.Id,
+		ByXid:      xid,
+		ByNickname: nickname,
+		Group:      u.Board,
+		Content:    content,
+		Category:   category,
+		ParentId:   "",
+		Anonymous:  anonymous,
 	}
-	return u.SendEvent("like", likeEv)
+	return u.SendEvent("msg", msg)
+}
+
+func (u *TestUser) DeleteMessage(msgId string) error {
+	delEv := DeleteMessageEvent{
+		MessageId:  msgId,
+		By:         u.Id,
+		Group:      u.Board,
+		CommentIds: []string{},
+	}
+	return u.SendEvent("del", delEv)
+}
+
+func (u *TestUser) Mask(mask bool) error {
+	maskEv := MaskEvent{
+		By:    u.Id,
+		Group: u.Board,
+		Mask:  mask,
+	}
+	return u.SendEvent("mask", maskEv)
 }
 
 func (u *TestUser) LockBoard(lock bool) error {
@@ -145,27 +169,38 @@ func (u *TestUser) LockBoard(lock bool) error {
 	return u.SendEvent("lock", lockEv)
 }
 
-func (u *TestUser) WaitForEvent(eventType string, timeout time.Duration) (*Event, error) {
-	deadline := time.Now().Add(timeout)
-	for {
-		timeLeft := time.Until(deadline)
-		if timeLeft <= 0 {
-			return nil, fmt.Errorf("timeout waiting for event %s", eventType)
-		}
-
-		select {
-		case event := <-u.Events:
-			if event.Type == eventType {
-				return &event, nil
-			}
-			// log.Printf("[User %s] Skipped event %s waiting for %s", u.Id, event.Type, eventType)
-		case <-time.After(timeLeft):
-			return nil, fmt.Errorf("timeout waiting for event %s", eventType)
-		}
+func (u *TestUser) LikeMessage(msgId string, like bool) error {
+	likeEv := LikeMessageEvent{
+		MessageId: msgId,
+		By:        u.Id,
+		Like:      like,
 	}
+	return u.SendEvent("like", likeEv)
 }
 
+// func (u *TestUser) WaitForEvent(eventType string, timeout time.Duration) (*Event, error) {
+// 	deadline := time.Now().Add(timeout)
+// 	for {
+// 		timeLeft := time.Until(deadline)
+// 		if timeLeft <= 0 {
+// 			return nil, fmt.Errorf("timeout waiting for event %s", eventType)
+// 		}
+
+// 		select {
+// 		case event := <-u.Events:
+// 			if event.Type == eventType {
+// 				return &event, nil
+// 			}
+// 			// log.Printf("[User %s] Skipped event %s waiting for %s", u.Id, event.Type, eventType)
+// 		case <-time.After(timeLeft):
+// 			return nil, fmt.Errorf("timeout waiting for event %s", eventType)
+// 		}
+// 	}
+// }
+
 func (u *TestUser) MustWaitForEvent(t *testing.T, eventType string, target any) {
+	t.Helper()
+
 	timeout := time.After(2 * time.Second)
 	for {
 		select {
@@ -180,6 +215,35 @@ func (u *TestUser) MustWaitForEvent(t *testing.T, eventType string, target any) 
 		case <-timeout:
 			t.Fatalf("Timed out waiting for event: %s", eventType)
 		}
+	}
+}
+
+var ErrUnexpectedEvent = errors.New("unexpected event received")
+
+func (u *TestUser) MustNotReceiveEvent(eventType string) error {
+	timeout := time.After(500 * time.Millisecond)
+	for {
+		select {
+		case ev := <-u.Events:
+			if ev.Type == eventType {
+				return fmt.Errorf("%w: type=%s payload=%s", ErrUnexpectedEvent, ev.Type, string(ev.Raw))
+				// t.Fatalf("unexpected event received: %s (payload=%s)", eventType, string(ev.Raw))
+			}
+			// Ignore other event types
+		case <-timeout:
+			return nil // Success: no matching event received
+		}
+	}
+}
+
+func (u *TestUser) MustNotReceiveAnyEvent() error {
+	timeout := time.After(500 * time.Millisecond)
+	select {
+	case ev := <-u.Events:
+		return fmt.Errorf("%w: type=%s payload=%s", ErrUnexpectedEvent, ev.Type, string(ev.Raw))
+		// t.Fatalf("unexpected event received: %s (payload=%s)", ev.Type, string(ev.Raw))
+	case <-timeout:
+		return nil // success
 	}
 }
 

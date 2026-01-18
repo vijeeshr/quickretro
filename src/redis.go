@@ -393,28 +393,22 @@ func (c *RedisConnector) GetBoardColumns(boardId string) ([]*BoardColumn, bool) 
 	return cols, true
 }
 
-func (c *RedisConnector) CommitUserPresence(boardId string, user *User, isPresent bool) bool {
+func (c *RedisConnector) CommitUserPresence(boardId string, user *User) bool {
 	userKey := fmt.Sprintf("board:user:%s:%s", boardId, user.Id)
 	boardUsersKey := fmt.Sprintf("board:users:%s", boardId)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-		if isPresent {
-			pipe.HSet(c.ctx, userKey, "id", user.Id)
-			pipe.HSet(c.ctx, userKey, "xid", user.Xid)
-			pipe.HSet(c.ctx, userKey, "nickname", user.Nickname)
-			pipe.SAdd(c.ctx, boardUsersKey, user.Id)
-			pipe.Expire(c.ctx, userKey, c.timeToLive)       // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
-			pipe.Expire(c.ctx, boardUsersKey, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
-			return nil
-		} else {
-			pipe.Del(c.ctx, userKey)
-			pipe.SRem(c.ctx, boardUsersKey, user.Id)
-			return nil
-		}
+		pipe.HSet(c.ctx, userKey, "id", user.Id)
+		pipe.HSet(c.ctx, userKey, "xid", user.Xid)
+		pipe.HSet(c.ctx, userKey, "nickname", user.Nickname)
+		pipe.SAdd(c.ctx, boardUsersKey, user.Id)
+		pipe.Expire(c.ctx, userKey, c.timeToLive)       // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
+		pipe.Expire(c.ctx, boardUsersKey, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
+		return nil
 	})
 
 	if err != nil {
-		slog.Error("Failed committing user presence to Redis", "details", err.Error(), "boardId", boardId, "user", user, "isPresent", isPresent)
+		slog.Error("Failed committing user presence to Redis", "details", err.Error(), "boardId", boardId, "user", user)
 		return false
 	}
 

@@ -18,12 +18,17 @@ type RegisterEvent struct {
 
 func (p *RegisterEvent) Handle(i *Event, h *Hub) {
 	// Validate
-	// We can be sure that the board exists. That check is done during handshake.
 	if p.By == "" || p.Xid == "" || p.Group == "" {
 		return
 	}
+	// Mostly the board should exist. That check is done during handshake.
+	// This is to prevent adding UserPresence data to redis on receipt of a tampered reg event payload with a non-existent board.
+	if !h.redis.BoardExists(p.Group) {
+		return
+	}
+
 	// Execute
-	if ok := h.redis.CommitUserPresence(p.Group, &User{Id: p.By, Xid: p.Xid, Nickname: p.ByNickname}, true); !ok {
+	if ok := h.redis.CommitUserPresence(p.Group, &User{Id: p.By, Xid: p.Xid, Nickname: p.ByNickname}); !ok {
 		return
 	}
 
@@ -375,6 +380,9 @@ func (p *MessageEvent) Handle(i *Event, h *Hub) {
 func handleNewMessageOrComment(msg *Message, h *Hub) bool {
 	// New message
 	if isMessage(msg) {
+		if msg.Anonymous {
+			msg.ByXid, msg.ByNickname = "", ""
+		}
 		return h.redis.Save(msg, AsNewMessage)
 	}
 

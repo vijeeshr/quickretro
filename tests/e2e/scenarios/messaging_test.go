@@ -1,6 +1,6 @@
 package scenarios
 
-// cd tests/functional
+// cd tests/e2e
 // go test -v ./scenarios/...
 // go test -v ./scenarios/locking_test.go ./scenarios/messaging_test.go
 
@@ -76,11 +76,15 @@ func TestMessagingFlow(t *testing.T) {
 	require.NoError(t, userB.Connect(BaseURL))
 	defer userB.Close()
 
+	// TODO: Add test to check connection failure to non existent board
+
 	t.Run("Registration: Alice registers", func(t *testing.T) {
 		require.NoError(t, userA.Register())
 
 		wantReg := harness.RegisterResponse{
 			Type:         "reg",
+			BoardMasking: true,
+			BoardLock:    false,
 			IsBoardOwner: true,
 		}
 		t.Run("Alice receives own reg event, shown as board owner", func(t *testing.T) {
@@ -123,9 +127,20 @@ func TestMessagingFlow(t *testing.T) {
 		userB.FlushEvents()
 	})
 
-	// Todo: Server validates if same msgId that is attached to a board is not "accidently" updated by another user from another board. Add test for that.
+	t.Run("Registration: Do NOT allow registration to non-existent board", func(t *testing.T) {
+		userA.Board = "nonexistent-board"
+		userB.Board = "nonexistent-board"
+		require.NoError(t, userB.Register())
 
-	t.Run("Message: Alice sends new message", func(t *testing.T) {
+		require.NoError(t, userB.MustNotReceiveAnyEvent())
+		require.NoError(t, userA.MustNotReceiveAnyEvent())
+
+		// reset objects back to original board
+		userA.Board = boardId
+		userB.Board = boardId
+	})
+
+	t.Run("Message: Create", func(t *testing.T) {
 		content := "Hello from Alice"
 		category := "col01"
 		msgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
@@ -166,7 +181,7 @@ func TestMessagingFlow(t *testing.T) {
 		userB.FlushEvents()
 	})
 
-	t.Run("Message: Alice edits message", func(t *testing.T) {
+	t.Run("Message: Update", func(t *testing.T) {
 		msgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
 
 		content := "Second message"
@@ -226,35 +241,249 @@ func TestMessagingFlow(t *testing.T) {
 		// Todo: Delete this message for idempotency?
 	})
 
-	/*
-		// 3. Register Users
-		err := userA.Register()
-		require.NoError(t, err)
-		regRespUserA, err := userA.WaitForEvent("reg", 2*time.Second) // A receives reg response
-		require.NoError(t, err)
-		_, err = userB.WaitForEvent("joining", 2*time.Second) // B receives joining response
-		require.NoError(t, err)
+	t.Run("Message: Delete", func(t *testing.T) {
+		content := "This message should be deleted"
+		category := "col03"
 
-		var r harness.RegisterResponse
-		err = json.Unmarshal(regRespUserA.Raw, &r)
-		require.NoError(t, err)
-		require.Equal(t, true, r.IsBoardOwner) // A should be board owner
+		t.Run("User deletes own message", func(t *testing.T) {
+			msgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
+			want := harness.DeleteMessageResponse{
+				Type: "del",
+				Id:   msgId,
+			}
+			// Create message
+			require.NoError(t, userB.SendMessage(msgId, content, category))
+			userA.FlushEvents()
+			userB.FlushEvents()
+			// Message creator deletes it
+			require.NoError(t, userB.DeleteMessage(msgId))
+
+			var got harness.DeleteMessageResponse
+			userA.MustWaitForEvent(t, "del", &got)
+			require.Equal(t, want, got)
+			userB.MustWaitForEvent(t, "del", &got)
+			require.Equal(t, want, got)
+		})
+
+		t.Run("Board owner deletes another user's message", func(t *testing.T) {
+			msgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
+			// Create message
+			require.NoError(t, userB.SendMessage(msgId, content, category))
+			userA.FlushEvents()
+			userB.FlushEvents()
+			// Board owner deletes it
+			require.NoError(t, userA.DeleteMessage(msgId))
+
+			var got harness.DeleteMessageResponse
+			userA.MustWaitForEvent(t, "del", &got)
+			require.Equal(t, msgId, got.Id)
+			userB.MustWaitForEvent(t, "del", &got)
+			require.Equal(t, msgId, got.Id)
+		})
+
+		t.Run("Guest user should NOT delete another user's message", func(t *testing.T) {
+			content = "Unauthorizd user attempted to delete this card, but failed :)"
+			msgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
+			// Create message
+			require.NoError(t, userA.SendMessage(msgId, content, category))
+			userA.FlushEvents()
+			userB.FlushEvents()
+			// Another user attempts to delete it
+			require.NoError(t, userB.DeleteMessage(msgId))
+
+			require.NoError(t, userA.MustNotReceiveEvent("del"))
+			require.NoError(t, userB.MustNotReceiveEvent("del"))
+			// require.NoError(t, userA.MustNotReceiveAnyEvent())
+			// require.NoError(t, userB.MustNotReceiveAnyEvent())
+		})
+	})
+
+	t.Run("Message: Anonymous", func(t *testing.T) {
+		msgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
+		category := "col02"
+
+		t.Run("New anonymous message is sent and received", func(t *testing.T) {
+			anonymous := true
+			emptyXid := ""
+			emptyNickname := ""
+			content := "Guess who am I?"
+			// Send
+			require.NoError(t, userA.SendAnonymousMessage(msgId, content, category, emptyXid, emptyNickname, anonymous))
+			// Bob receives it
+			var got harness.MessageResponse
+			userB.MustWaitForEvent(t, "msg", &got)
+			require.Empty(t, got.ByXid)
+			require.Empty(t, got.ByNickname)
+			require.True(t, got.Anonymous)
+			require.Equal(t, content, got.Content)
+
+			userA.FlushEvents()
+			userB.FlushEvents()
+		})
+
+		t.Run("Existing anonymous message must NOT be made non-anonymous later", func(t *testing.T) {
+			// Try updating xid, nickname, anonymous alongwith the content
+			anonymous := false
+			xid := "xid-" + userA.Id
+			nickname := userA.Nickname
+			updatedContent := "Guess who am I? Guess who again!!"
+			// Send
+			require.NoError(t, userA.SendAnonymousMessage(msgId, updatedContent, category, xid, nickname, anonymous))
+			// Bob receives it
+			var got harness.MessageResponse
+			userB.MustWaitForEvent(t, "msg", &got)
+			// xid, nickname, anonymous fields shouldn't be changed
+			require.Empty(t, got.ByXid)
+			require.Empty(t, got.ByNickname)
+			require.True(t, got.Anonymous)
+			require.Equal(t, updatedContent, got.Content) // content should be updated
+
+			userA.FlushEvents()
+			userB.FlushEvents()
+		})
+
+		t.Run("xid and nickname must be empty in response, even if passed with values in event request", func(t *testing.T) {
+			id := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
+			anonymous := true
+			xid := "xid-" + userA.Id
+			nickname := userA.Nickname
+			content := "Oops! Passed Xid and Nickname"
+			// Send
+			require.NoError(t, userA.SendAnonymousMessage(id, content, category, xid, nickname, anonymous))
+			// Bob receives it
+			var got harness.MessageResponse
+			userB.MustWaitForEvent(t, "msg", &got)
+			require.Empty(t, got.ByXid)
+			require.Empty(t, got.ByNickname)
+			require.True(t, got.Anonymous)
+			require.Equal(t, content, got.Content)
+
+			userA.FlushEvents()
+			userB.FlushEvents()
+		})
 
 		userA.FlushEvents()
 		userB.FlushEvents()
+	})
 
-		err = userB.Register()
-		require.NoError(t, err)
-		regRespUserB, err := userB.WaitForEvent("reg", 2*time.Second) // B receives reg response
-		require.NoError(t, err)
+	t.Run("Mask:", func(t *testing.T) {
 
-		err = json.Unmarshal(regRespUserB.Raw, &r)
-		require.NoError(t, err)
-		require.Equal(t, false, r.IsBoardOwner) // B should NOT be board owner
+		wantMasked := harness.MaskResponse{
+			Type: "mask",
+			Mask: true,
+		}
+		wantRevealed := harness.MaskResponse{
+			Type: "mask",
+			Mask: false,
+		}
 
-		userA.FlushEvents()
-		userB.FlushEvents()
-	*/
+		t.Run("Owner can Mask or Reveal messages", func(t *testing.T) {
+			var got harness.MaskResponse
+
+			// Owner reveals board
+			require.NoError(t, userA.Mask(false))
+			userB.MustWaitForEvent(t, "mask", &got)
+			require.Equal(t, wantRevealed, got)
+
+			// Attempt to reveal/Unmask an already revealed board is silently discarded
+			require.NoError(t, userA.Mask(false))
+			userB.MustNotReceiveEvent("mask")
+
+			// Owner masks board
+			require.NoError(t, userA.Mask(true))
+			userB.MustWaitForEvent(t, "mask", &got)
+			require.Equal(t, wantMasked, got)
+
+			// Attempt to mask an already masked board is silently discarded
+			require.NoError(t, userA.Mask(true))
+			userB.MustNotReceiveEvent("mask")
+
+			// Remove mask for further tests downstream
+			require.NoError(t, userA.Mask(false))
+
+			userA.FlushEvents()
+			userB.FlushEvents()
+		})
+
+		t.Run("Guest users cannot issue mask event", func(t *testing.T) {
+			require.NoError(t, userB.Mask(true))
+			userA.MustNotReceiveEvent("mask")
+		})
+
+	})
+
+	t.Run("Lock:", func(t *testing.T) {
+
+		wantLocked := harness.LockResponse{
+			Type: "lock",
+			Lock: true,
+		}
+		wantUnlocked := harness.LockResponse{
+			Type: "lock",
+			Lock: false,
+		}
+
+		t.Run("Owner can Lock or Unlock", func(t *testing.T) {
+			var got harness.LockResponse
+
+			// Owner locks board
+			require.NoError(t, userA.LockBoard(true))
+			userB.MustWaitForEvent(t, "lock", &got)
+			require.Equal(t, wantLocked, got)
+
+			// Attempt to lock an already locked board is silently discarded
+			require.NoError(t, userA.LockBoard(true))
+			userB.MustNotReceiveEvent("lock")
+
+			// Owner unlocks board
+			require.NoError(t, userA.LockBoard(false))
+			userB.MustWaitForEvent(t, "lock", &got)
+			require.Equal(t, wantUnlocked, got)
+
+			// Attempt to unlock an already unlocked board is silently discarded
+			require.NoError(t, userA.LockBoard(false))
+			userB.MustNotReceiveEvent("lock")
+
+			userA.FlushEvents()
+			userB.FlushEvents()
+		})
+
+		t.Run("Guest users cannot issue lock event", func(t *testing.T) {
+			require.NoError(t, userB.LockBoard(true))
+			userA.MustNotReceiveEvent("lock")
+		})
+
+	})
+
+	// Todo: Add tests
+
+	// Connection: User attempts to connect to non-existant board should fail
+	// Registration: Check count of messages/comments when user register later on in a board
+	// Message: Updating message in a different board should fail. (Server validates if same msgId that is attached to a board is not "accidently" updated by another user from another board. Add test for that.)
+	// Message: Sending message in non-existant board should fail
+	// Message: Updating message of another user should fail (Even for board owner)
+	// Message: Guest user deleting another user's message/comment should fail
+	// Message: Deleting a message, should delete associated comments. (Todo: How to figure that a comment is present, may be a "reg" response's GetBoardAggregrate should retun all comments. Start by not passing the associated commentIds[] in the main message's del request. Is this test valid? Orphaned comments are auto-deleted. How does the system process their presence.)
+	// Message: Creating/Editing/Deleting in a locked board should fail
+	// Comment: Create/Edit/Delete comment
+	// Comment: Board owner can delete another users comment
+	// Comment: Update/Deleting another user's comment should fail
+	// Comment: Send comment to a non-existant message should fail
+	// Comment: Associating comment of message1 to message2 should fail
+	// Comment: Sending/Deleting comment to locked board should fail
+	// CategoryChange: User can move message to another category. Any associated comment category must also be updated.
+	// CategoryChange: Owner can move any user's message
+	// CategoryChange: Moving message to non-existant/invalid or disabled category should fail
+	// CategoryChange: Moving category of another message in another board should fail
+	// CategoryChange: Moving category in a locked board should fail
+	// Like: Check like toggle
+	// Like: Liking and already likes message should fail
+	// Like: Toggling likes in a locked board should fail
+	// Timer: Only board owner can Start/Stop timer
+	// Timer: Guest user cannot Start/Stop timer
+	// ColumnEditing:
+	// BoardDeletion:
+	// UserLeaving:
 
 	// Check that A sees B joining
 	// Note: Due to concurrency, A may see B joining before or after A's reg response depending on timing,

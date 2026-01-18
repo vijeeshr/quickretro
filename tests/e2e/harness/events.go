@@ -9,28 +9,24 @@ type Event struct {
 	Raw     json.RawMessage `json:"-"`
 }
 
-// RegisterEvent payload
 type RegisterEvent struct {
 	By         string `json:"by"`
 	ByNickname string `json:"nickname"`
 	Xid        string `json:"xid"`
 	Group      string `json:"grp"`
 }
-
-// RegisterResponse payload
 type RegisterResponse struct {
 	Type         string `json:"typ"`
+	BoardMasking bool   `json:"boardMasking"`
+	BoardLock    bool   `json:"boardLock"`
 	IsBoardOwner bool   `json:"isBoardOwner"`
-	// Add other fields if needed for verification
 }
-
 type UserJoiningResponse struct {
 	Type     string `json:"typ"`
 	Nickname string `json:"nickname"`
 	Xid      string `json:"xid"`
 }
 
-// MessageEvent payload
 type MessageEvent struct {
 	Id         string `json:"id"`
 	By         string `json:"by"`
@@ -42,8 +38,6 @@ type MessageEvent struct {
 	ParentId   string `json:"pid"`
 	Anonymous  bool   `json:"anon"`
 }
-
-// MessageResponse payload (for receiving)
 type MessageResponse struct {
 	Type       string `json:"typ"`
 	Id         string `json:"id"`
@@ -58,18 +52,42 @@ type MessageResponse struct {
 	Anonymous  bool   `json:"anon"`
 }
 
+type DeleteMessageEvent struct {
+	MessageId  string   `json:"msgId"` // MessageId or CommentId
+	By         string   `json:"by"`
+	Group      string   `json:"grp"`
+	CommentIds []string `json:"commentIds"` // Only used when deleting a top-level message i.e. when MessageId represents a message and not a comment.
+}
+type DeleteMessageResponse struct {
+	Type string `json:"typ"`
+	Id   string `json:"id"`
+}
+
+type MaskEvent struct {
+	By    string `json:"by"`
+	Group string `json:"grp"`
+	Mask  bool   `json:"mask"`
+}
+type MaskResponse struct {
+	Type string `json:"typ"`
+	Mask bool   `json:"mask"`
+}
+
+type LockEvent struct {
+	By    string `json:"by"`
+	Group string `json:"grp"`
+	Lock  bool   `json:"lock"`
+}
+type LockResponse struct {
+	Type string `json:"typ"`
+	Lock bool   `json:"lock"`
+}
+
 // LikeMessageEvent payload
 type LikeMessageEvent struct {
 	MessageId string `json:"msgId"`
 	By        string `json:"by"`
 	Like      bool   `json:"like"`
-}
-
-// LockEvent payload
-type LockEvent struct {
-	By    string `json:"by"`
-	Group string `json:"grp"`
-	Lock  bool   `json:"lock"`
 }
 
 type BroadcastArgs struct {
