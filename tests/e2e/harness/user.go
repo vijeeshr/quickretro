@@ -19,7 +19,7 @@ type TestUser struct {
 	Nickname string
 	Board    string
 	Conn     *websocket.Conn
-	Events   chan Event
+	Received chan Event
 	Done     chan struct{}
 }
 
@@ -28,7 +28,7 @@ func NewUser(id, nickname, board string) *TestUser {
 		Id:       id,
 		Nickname: nickname,
 		Board:    board,
-		Events:   make(chan Event, 100),
+		Received: make(chan Event, 100),
 		Done:     make(chan struct{}),
 	}
 }
@@ -73,7 +73,7 @@ func (u *TestUser) Connect(baseUrl string) error {
 			}
 
 			// log.Printf("[User %s] Received event: Type=%s Payload=%s", u.Id, header.Type, string(p))
-			u.Events <- Event{
+			u.Received <- Event{
 				Type: header.Type,
 				Raw:  p,
 			}
@@ -141,12 +141,41 @@ func (u *TestUser) SendAnonymousMessage(id, content, category, xid, nickname str
 	return u.SendEvent("msg", msg)
 }
 
+func (u *TestUser) SendComment(id, content, category, ParentMessageId string) error {
+	msg := MessageEvent{
+		Id:         id,
+		By:         u.Id,
+		ByXid:      "xid-" + u.Id,
+		ByNickname: u.Nickname,
+		Group:      u.Board,
+		Content:    content,
+		Category:   category,
+		ParentId:   ParentMessageId,
+		Anonymous:  false,
+	}
+	return u.SendEvent("msg", msg)
+}
+
+// Delete message with no comments
 func (u *TestUser) DeleteMessage(msgId string) error {
+	return u.deleteMessage(msgId, nil)
+}
+
+// Delete message and its known comments
+func (u *TestUser) DeleteMessageWithComments(msgId string, commentIds ...string) error {
+	return u.deleteMessage(msgId, commentIds)
+}
+
+func (u *TestUser) DeleteComment(cmtId string) error {
+	return u.deleteMessage(cmtId, nil)
+}
+
+func (u *TestUser) deleteMessage(msgId string, commentIds []string) error {
 	delEv := DeleteMessageEvent{
 		MessageId:  msgId,
 		By:         u.Id,
 		Group:      u.Board,
-		CommentIds: []string{},
+		CommentIds: commentIds,
 	}
 	return u.SendEvent("del", delEv)
 }
@@ -167,6 +196,26 @@ func (u *TestUser) LockBoard(lock bool) error {
 		Lock:  lock,
 	}
 	return u.SendEvent("lock", lockEv)
+}
+
+func (u *TestUser) ChangeCategoryOfMessage(msgId, oldCategory, newCategory string) error {
+	return u.changeMessageCategory(msgId, oldCategory, newCategory, nil)
+}
+
+func (u *TestUser) ChangeCategoryOfMessageAndComments(msgId, oldCategory, newCategory string, commentIds ...string) error {
+	return u.changeMessageCategory(msgId, oldCategory, newCategory, commentIds)
+}
+
+func (u *TestUser) changeMessageCategory(msgId, oldCategory, newCategory string, commentIds []string) error {
+	changeCatEv := CategoryChangeEvent{
+		MessageId:   msgId,
+		By:          u.Id,
+		Group:       u.Board,
+		OldCategory: oldCategory,
+		NewCategory: newCategory,
+		CommentIds:  commentIds,
+	}
+	return u.SendEvent("catchng", changeCatEv)
 }
 
 func (u *TestUser) LikeMessage(msgId string, like bool) error {
@@ -204,7 +253,7 @@ func (u *TestUser) MustWaitForEvent(t *testing.T, eventType string, target any) 
 	timeout := time.After(2 * time.Second)
 	for {
 		select {
-		case ev := <-u.Events:
+		case ev := <-u.Received:
 			if ev.Type == eventType {
 				if target != nil {
 					err := json.Unmarshal(ev.Raw, target)
@@ -224,7 +273,7 @@ func (u *TestUser) MustNotReceiveEvent(eventType string) error {
 	timeout := time.After(500 * time.Millisecond)
 	for {
 		select {
-		case ev := <-u.Events:
+		case ev := <-u.Received:
 			if ev.Type == eventType {
 				return fmt.Errorf("%w: type=%s payload=%s", ErrUnexpectedEvent, ev.Type, string(ev.Raw))
 				// t.Fatalf("unexpected event received: %s (payload=%s)", eventType, string(ev.Raw))
@@ -239,7 +288,7 @@ func (u *TestUser) MustNotReceiveEvent(eventType string) error {
 func (u *TestUser) MustNotReceiveAnyEvent() error {
 	timeout := time.After(500 * time.Millisecond)
 	select {
-	case ev := <-u.Events:
+	case ev := <-u.Received:
 		return fmt.Errorf("%w: type=%s payload=%s", ErrUnexpectedEvent, ev.Type, string(ev.Raw))
 		// t.Fatalf("unexpected event received: %s (payload=%s)", ev.Type, string(ev.Raw))
 	case <-timeout:
@@ -250,7 +299,7 @@ func (u *TestUser) MustNotReceiveAnyEvent() error {
 func (u *TestUser) FlushEvents() {
 	for {
 		select {
-		case <-u.Events:
+		case <-u.Received:
 			continue
 		case <-time.After(50 * time.Millisecond): // Increase this if there is network latency
 			return

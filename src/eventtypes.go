@@ -398,6 +398,8 @@ func handleNewMessageOrComment(msg *Message, h *Hub) bool {
 		slog.Warn("Cannot attach a comment to another comment", "commentId", msg.Id, "parentId", msg.ParentId)
 		return false
 	}
+	// Ensure category is same as that of parent
+	msg.Category = parent.Category
 
 	return h.redis.Save(msg, AsNewComment)
 }

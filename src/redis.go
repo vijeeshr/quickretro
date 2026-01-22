@@ -41,7 +41,7 @@ func NewRedisConnector(ctx context.Context, timeToLive time.Duration) *RedisConn
 
 	opt, err := redis.ParseURL(envConfig.RedisConnStr)
 	if err != nil {
-		slog.Error("Cannot parsing Redis connection string", "details", err.Error())
+		slog.Error("Cannot parse Redis connection string", "err", err)
 	}
 
 	// Todo: Add auth and pull from config
@@ -56,7 +56,7 @@ func NewRedisConnector(ctx context.Context, timeToLive time.Duration) *RedisConn
 
 	_, err = rdb.Ping(ctx).Result()
 	if err != nil {
-		slog.Error("Cannot connect to Redis", "details", err.Error())
+		slog.Error("Cannot connect to Redis", "err", err)
 		os.Exit(1)
 	}
 
@@ -66,23 +66,23 @@ func NewRedisConnector(ctx context.Context, timeToLive time.Duration) *RedisConn
 
 func (c *RedisConnector) Subscribe(redisChannel ...string) {
 	if err := c.subscriber.Subscribe(c.ctx, redisChannel...); err != nil {
-		slog.Error("Unable to subscribe", "details", err.Error(), "channels", redisChannel)
+		slog.Error("Unable to subscribe", "err", err, "channels", redisChannel)
 	}
 }
 
 func (c *RedisConnector) Unsubscribe(redisChannel ...string) {
 	if err := c.subscriber.Unsubscribe(c.ctx, redisChannel...); err != nil {
-		slog.Error("Unable to Unsubscribe", "details", err.Error(), "channels", redisChannel)
+		slog.Error("Unable to Unsubscribe", "err", err, "channels", redisChannel)
 	}
 }
 
-func (c *RedisConnector) Publish(redisChannel string, payload interface{}) {
+func (c *RedisConnector) Publish(redisChannel string, payload any) {
 	payload, err := json.Marshal(payload)
 	if err != nil {
-		slog.Error("Marshal error when Publishing", "details", err.Error(), "channels", redisChannel, "payload", payload)
+		slog.Error("Marshal error when Publishing", "err", err, "channels", redisChannel, "payload", payload)
 	}
 	if err := c.client.Publish(c.ctx, redisChannel, payload).Err(); err != nil {
-		slog.Error("Error when Publishing", "details", err.Error(), "channels", redisChannel, "payload", payload)
+		slog.Error("Error when Publishing", "err", err, "channels", redisChannel, "payload", payload)
 	}
 }
 
@@ -123,7 +123,7 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 	})
 
 	if err != nil {
-		slog.Error("Failed to create board in Redis", "details", err.Error(), "board", b, "cols", cols)
+		slog.Error("Failed to create board in Redis", "err", err, "board", b, "cols", cols)
 		return false
 	}
 
@@ -243,7 +243,7 @@ func (c *RedisConnector) ResetBoardColumns(b *Board, oldCols []*BoardColumn, new
 	})
 
 	if err != nil {
-		slog.Error("Failed to deep diff reset columns", "details", err, "board", b.Id)
+		slog.Error("Failed to deep diff reset columns", "err", err, "board", b.Id)
 		return false
 	}
 
@@ -254,7 +254,7 @@ func (c *RedisConnector) UpdateMasking(b *Board, mask bool) bool {
 	// Todo: Deduplicate with UpdateBoardLock() & UpdateTimer()
 	key := fmt.Sprintf("board:%s", b.Id)
 	if _, err := c.client.HSet(c.ctx, key, "mask", mask).Result(); err != nil {
-		slog.Error("Failed to mask/unmask", "details", err.Error(), "board", b)
+		slog.Error("Failed to mask/unmask", "err", err, "board", b)
 		return false
 	}
 	return true
@@ -264,7 +264,7 @@ func (c *RedisConnector) UpdateBoardLock(b *Board, lock bool) bool {
 	// Todo: Deduplicate with UpdateMasking() & UpdateTimer()
 	key := fmt.Sprintf("board:%s", b.Id)
 	if _, err := c.client.HSet(c.ctx, key, "lock", lock).Result(); err != nil {
-		slog.Error("Failed to lock/unlock", "details", err.Error(), "board", b)
+		slog.Error("Failed to lock/unlock", "err", err, "board", b)
 		return false
 	}
 	return true
@@ -277,7 +277,7 @@ func (c *RedisConnector) UpdateTimer(b *Board, expiryDurationInSeconds uint16) b
 	expiryTime := time.Now().UTC().Add(duration).Unix()
 
 	if _, err := c.client.HSet(c.ctx, key, "timerExpiresAtUtc", expiryTime).Result(); err != nil {
-		slog.Error("Failed to update board timer", "details", err.Error(), "board", b)
+		slog.Error("Failed to update board timer", "err", err, "board", b)
 		return false
 	}
 	return true
@@ -291,7 +291,7 @@ func (c *RedisConnector) StopTimer(b *Board) bool {
 	expiryTime := time.Now().UTC().Unix() - 1
 
 	if _, err := c.client.HSet(c.ctx, key, "timerExpiresAtUtc", expiryTime).Result(); err != nil {
-		slog.Error("Failed to update board timer during a 'Stop'", "details", err.Error(), "board", b)
+		slog.Error("Failed to update board timer during a 'Stop'", "err", err, "board", b)
 		return false
 	}
 	return true
@@ -302,7 +302,7 @@ func (c *RedisConnector) BoardExists(boardId string) bool {
 
 	k, err := c.client.Exists(c.ctx, key).Result()
 	if err != nil {
-		slog.Error("Cannot find board in Redis", "details", err.Error(), "boardId", boardId)
+		slog.Error("Cannot find board in Redis", "err", err, "boardId", boardId)
 		return false
 	}
 	if k != 1 {
@@ -318,7 +318,7 @@ func (c *RedisConnector) GetBoard(boardId string) (*Board, bool) {
 	key := fmt.Sprintf("board:%s", boardId)
 
 	if err := c.client.HGetAll(c.ctx, key).Scan(&b); err != nil {
-		slog.Error("Failed to get board from Redis", "details", err.Error(), "boardId", boardId)
+		slog.Error("Failed to get board from Redis", "err", err, "boardId", boardId)
 		return nil, false
 	}
 	// Assuming Id as empty to decide the key doesn't exist. This is done to avoid an additional EXISTS call to Redis.
@@ -338,7 +338,7 @@ func (c *RedisConnector) IsBoardOwner(boardId string, userId string) bool {
 
 	owner, err := c.client.HGet(c.ctx, key, "owner").Result()
 	if err != nil {
-		slog.Error("Cannot find board in Redis", "details", err.Error(), "boardId", boardId)
+		slog.Error("Cannot find board in Redis", "err", err, "boardId", boardId)
 		return false
 	}
 
@@ -353,7 +353,7 @@ func (c *RedisConnector) IsBoardLocked(boardId string) bool {
 	key := fmt.Sprintf("board:%s", boardId)
 	isLocked, err := c.client.HGet(c.ctx, key, "lock").Result()
 	if err != nil {
-		slog.Error("Cannot find board in Redis", "details", err.Error(), "boardId", boardId)
+		slog.Error("Cannot find board in Redis", "err", err, "boardId", boardId)
 		return true
 	}
 
@@ -366,7 +366,7 @@ func (c *RedisConnector) GetBoardColumns(boardId string) ([]*BoardColumn, bool) 
 	key := fmt.Sprintf("board:col:%s", boardId)
 	colIds, err := c.client.SMembers(c.ctx, key).Result()
 	if err != nil {
-		slog.Error("Failed to get columns from Redis", "details", err.Error(), "boardId", boardId)
+		slog.Error("Failed to get columns from Redis", "err", err, "boardId", boardId)
 		return cols, false
 	}
 
@@ -384,7 +384,7 @@ func (c *RedisConnector) GetBoardColumns(boardId string) ([]*BoardColumn, bool) 
 	for _, cmd := range cmds {
 		var c BoardColumn
 		if err := cmd.(*redis.MapStringStringCmd).Scan(&c); err != nil {
-			slog.Error("Failed to get/map column definition from Redis", "details", err.Error(), "boardId", boardId)
+			slog.Error("Failed to get/map column definition from Redis", "err", err, "boardId", boardId)
 			continue
 		}
 		cols = append(cols, &c)
@@ -408,7 +408,7 @@ func (c *RedisConnector) CommitUserPresence(boardId string, user *User) bool {
 	})
 
 	if err != nil {
-		slog.Error("Failed committing user presence to Redis", "details", err.Error(), "boardId", boardId, "user", user)
+		slog.Error("Failed committing user presence to Redis", "err", err, "boardId", boardId, "user", user)
 		return false
 	}
 
@@ -461,7 +461,7 @@ func (c *RedisConnector) GetUsersPresence(boardId string) ([]*User, bool) {
 	key := fmt.Sprintf("board:users:%s", boardId)
 	userIds, err := c.client.SMembers(c.ctx, key).Result()
 	if err != nil {
-		slog.Error("Failed getting userIds from Redis", "details", err.Error(), "boardId", boardId)
+		slog.Error("Failed getting userIds from Redis", "err", err, "boardId", boardId)
 		return users, false
 	}
 
@@ -473,14 +473,14 @@ func (c *RedisConnector) GetUsersPresence(boardId string) ([]*User, bool) {
 		return nil
 	})
 	if err != nil {
-		slog.Error("Error in GetUsersPresence", "details", err.Error())
+		slog.Error("Error in GetUsersPresence", "err", err)
 		return users, false
 	}
 
 	for _, cmd := range cmds {
 		var u User
 		if err := cmd.(*redis.MapStringStringCmd).Scan(&u); err != nil {
-			slog.Error("Failed getting/mapping users from Redis", "details", err.Error(), "boardId", boardId)
+			slog.Error("Failed getting/mapping users from Redis", "err", err, "boardId", boardId)
 			continue
 		}
 		users = append(users, &u)
@@ -493,7 +493,7 @@ func (c *RedisConnector) GetPresentUserIds(boardId string) ([]string, bool) {
 	key := fmt.Sprintf("board:users:%s", boardId)
 	ids, err := c.client.SMembers(c.ctx, key).Result()
 	if err != nil {
-		slog.Error("Failed getting userIds from Redis", "details", err.Error(), "boardId", boardId)
+		slog.Error("Failed getting userIds from Redis", "err", err, "boardId", boardId)
 		return ids, false
 	}
 	return ids, true
@@ -504,7 +504,7 @@ func (c *RedisConnector) GetMessage(msgId string) (*Message, bool) {
 	key := fmt.Sprintf("msg:%s", msgId)
 
 	if err := c.client.HGetAll(c.ctx, key).Scan(&message); err != nil {
-		slog.Error("Failed getting/mapping message from Redis", "details", err.Error(), "msgId", msgId)
+		slog.Error("Failed getting/mapping message from Redis", "err", err, "msgId", msgId)
 		return nil, false
 	}
 	// Assuming Id as empty to decide the key doesn't exist. This is done to avoid an additional EXISTS call to Redis.
@@ -519,7 +519,7 @@ func (c *RedisConnector) GetMessages(boardId string) ([]*Message, bool) {
 	key := fmt.Sprintf("board:msg:%s", boardId)
 	messageIds, err := c.client.SMembers(c.ctx, key).Result()
 	if err != nil {
-		slog.Error("Failed getting messageIds from Redis", "details", err.Error(), "boardId", boardId)
+		slog.Error("Failed getting messageIds from Redis", "err", err, "boardId", boardId)
 		return make([]*Message, 0), false
 	}
 	return c.GetMessagesByIds(messageIds, boardId)
@@ -530,7 +530,7 @@ func (c *RedisConnector) GetComments(boardId string) ([]*Message, bool) {
 	key := fmt.Sprintf("board:cmts:%s", boardId)
 	commentIds, err := c.client.SMembers(c.ctx, key).Result()
 	if err != nil {
-		slog.Error("Failed getting commentIds from Redis", "details", err.Error(), "boardId", boardId)
+		slog.Error("Failed getting commentIds from Redis", "err", err, "boardId", boardId)
 		return make([]*Message, 0), false
 	}
 	return c.GetMessagesByIds(commentIds, boardId)
@@ -557,7 +557,7 @@ func (c *RedisConnector) GetMessagesByIds(ids []string, boardId string) ([]*Mess
 	for _, cmd := range cmds {
 		var m Message
 		if err := cmd.(*redis.MapStringStringCmd).Scan(&m); err != nil {
-			slog.Error("Failed getting/mapping message from Redis", "details", err.Error(), "boardId", boardId)
+			slog.Error("Failed getting/mapping message from Redis", "err", err, "boardId", boardId)
 			continue
 		}
 		messages = append(messages, &m)
@@ -571,7 +571,7 @@ func (c *RedisConnector) GetLikesCount(msgId string) int64 {
 
 	count, err := c.client.SCard(c.ctx, key).Result()
 	if err != nil {
-		slog.Error("Failed getting likes count from Redis", "details", err.Error(), "msgId", msgId)
+		slog.Error("Failed getting likes count from Redis", "err", err, "msgId", msgId)
 		return 0
 	}
 	return count
@@ -680,7 +680,7 @@ func (c *RedisConnector) Save(msg *Message, modes ...SaveMode) bool {
 	})
 
 	if err != nil {
-		slog.Error("Failed to completely save message/comment to Redis", "details", err.Error(), "payloads", msg, "modes", modes)
+		slog.Error("Failed to completely save message/comment to Redis", "err", err, "payloads", msg, "modes", modes)
 		return false
 	}
 
@@ -699,7 +699,7 @@ func (c *RedisConnector) Like(msgId string, by string, like bool) bool {
 		affected, err = c.client.SRem(c.ctx, key, by).Result()
 	}
 	if err != nil {
-		slog.Error("Error when liking/unliking", "details", err.Error(), "msgId", msgId, "by", by, "like", like)
+		slog.Error("Error when liking/unliking", "err", err, "msgId", msgId, "by", by, "like", like)
 		return false
 	}
 	if affected == 0 {
@@ -819,7 +819,7 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 	colsCmd := readPipe.SMembers(ctx, boardColsKey)
 
 	if _, err := readPipe.Exec(ctx); err != nil {
-		slog.Error("Redis SMEMBERS pipeline failed in DeleteAll", "boardId", boardId, "error", err)
+		slog.Error("Redis SMEMBERS pipeline failed in DeleteAll", "boardId", boardId, "err", err)
 		return false
 	}
 
@@ -867,7 +867,7 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 	})
 
 	if err != nil {
-		slog.Error("Error when deleting all board data from Redis", "boardId", boardId, "details", err.Error())
+		slog.Error("Error when deleting all board data from Redis", "boardId", boardId, "err", err)
 		return false
 	}
 
@@ -888,7 +888,7 @@ func (c *RedisConnector) UpdateCategory(category string, msgId string, commentId
 	})
 
 	if err != nil {
-		slog.Error("Failed to update category", "error", err.Error(), "category", category, "msgId", msgId, "commentIds", commentIds)
+		slog.Error("Failed to update category", "err", err, "category", category, "msgId", msgId, "commentIds", commentIds)
 		return false
 	}
 	return true

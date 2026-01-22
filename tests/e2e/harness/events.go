@@ -16,10 +16,25 @@ type RegisterEvent struct {
 	Group      string `json:"grp"`
 }
 type RegisterResponse struct {
-	Type         string `json:"typ"`
-	BoardMasking bool   `json:"boardMasking"`
-	BoardLock    bool   `json:"boardLock"`
-	IsBoardOwner bool   `json:"isBoardOwner"`
+	Type         string            `json:"typ"`
+	BoardColumns []*BoardColumn    `json:"columns"`
+	Users        []UserDetails     `json:"users"`
+	Messages     []MessageResponse `json:"messages"`
+	Comments     []MessageResponse `json:"comments"`
+	BoardMasking bool              `json:"boardMasking"`
+	BoardLock    bool              `json:"boardLock"`
+	IsBoardOwner bool              `json:"isBoardOwner"`
+}
+type BoardColumn struct {
+	Id        string `redis:"id" json:"id"`
+	Text      string `redis:"text" json:"text"`
+	Color     string `redis:"color" json:"color"`
+	Position  int    `redis:"pos" json:"pos"`
+	IsDefault bool   `redis:"isDefault" json:"isDefault"`
+}
+type UserDetails struct {
+	Nickname string `json:"nickname"`
+	Xid      string `json:"xid"`
 }
 type UserJoiningResponse struct {
 	Type     string `json:"typ"`
@@ -81,6 +96,20 @@ type LockEvent struct {
 type LockResponse struct {
 	Type string `json:"typ"`
 	Lock bool   `json:"lock"`
+}
+
+type CategoryChangeEvent struct {
+	MessageId   string   `json:"msgId"`
+	By          string   `json:"by"`
+	Group       string   `json:"grp"`
+	NewCategory string   `json:"newcat"`
+	OldCategory string   `json:"oldcat"`
+	CommentIds  []string `json:"commentIds"`
+}
+type CategoryChangeResponse struct {
+	Type        string `json:"typ"`
+	MessageId   string `json:"id"`
+	NewCategory string `json:"newcat"`
 }
 
 // LikeMessageEvent payload
