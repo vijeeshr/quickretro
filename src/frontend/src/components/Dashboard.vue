@@ -935,6 +935,10 @@ const handleCategoriesReorder = (reorderedCategories: CategoryDefinition[]) => {
     mergedCategories.value = reorderedCategories
 }
 
+const handleCategorySelectionValidity = (val: boolean) => {
+    isCategorySelectionValid.value = val
+}
+
 const dispatchEvent = <T>(eventType: string, payload: T) => {
     const event: EventRequest<T> = {
         typ: eventType,
@@ -1194,7 +1198,7 @@ onUnmounted(() => {
                     class="w-full max-w-[356px] min-w-[240px] rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl">
                     <CategoryEditor :categories="mergedCategories" @category-text-update="handleCategoryTextUpdate"
                         @category-toggle="handleCategoryToggle" @categories-reorder="handleCategoriesReorder"
-                        @valid="(val: boolean) => isCategorySelectionValid = val">
+                        @valid="handleCategorySelectionValidity">
                     </CategoryEditor>
                     <p v-show="hasCardsInDisabledCategories"
                         class="text-sm text-red-600 dark:text-red-300 mt-2 select-none">

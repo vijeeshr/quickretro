@@ -56,7 +56,7 @@ const toggleCategory = (id: string) => {
             id: id,
             enabled: !cat.enabled
         })
-        emit('valid', isCategorySelectionValid)
+        emit('valid', isCategorySelectionValid.value)
     }
 }
 

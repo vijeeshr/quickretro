@@ -43,6 +43,10 @@ const handleCategoriesReorder = (reorderedCategories: CategoryDefinition[]) => {
     categories.value = reorderedCategories
 }
 
+const handleCategorySelectionValidity = (val: boolean) => {
+    isCategorySelectionValid.value = val
+}
+
 const boardnameEntered = computed(() => {
     if (boardname.value && boardname.value.trim() !== '') return true
     return false
@@ -158,7 +162,7 @@ onMounted(() => {
                         </ul> -->
                         <CategoryEditor :categories="categories" @category-text-update="handleCategoryTextUpdate"
                             @category-toggle="handleCategoryToggle" @categories-reorder="handleCategoriesReorder"
-                            @valid="(val: boolean) => isCategorySelectionValid = val">
+                            @valid="handleCategorySelectionValidity">
                         </CategoryEditor>
                     </div>
                     <div class="flex w-full gap-2">
