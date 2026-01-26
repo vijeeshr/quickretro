@@ -360,6 +360,18 @@ func (c *RedisConnector) IsBoardLocked(boardId string) bool {
 	return isLocked == "1"
 }
 
+func (c *RedisConnector) IsBoardColumnActive(boardId, colId string) bool {
+	key := fmt.Sprintf("board:col:%s", boardId)
+
+	ok, err := c.client.SIsMember(c.ctx, key, colId).Result()
+	if err != nil {
+		slog.Error("Failed to check board column membership", "err", err, "board", boardId, "col", colId)
+		return false
+	}
+
+	return ok
+}
+
 func (c *RedisConnector) GetBoardColumns(boardId string) ([]*BoardColumn, bool) {
 	cols := make([]*BoardColumn, 0)
 

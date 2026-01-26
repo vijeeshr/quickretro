@@ -612,7 +612,13 @@ type CategoryChangeEvent struct {
 
 func (p *CategoryChangeEvent) Handle(i *Event, h *Hub) {
 	// Validate
-	if h.redis.IsBoardLocked(p.Group) {
+	b, ok := h.redis.GetBoard(p.Group)
+	if !ok {
+		slog.Warn("Cannot find board when handling CategoryChangeEvent", "board", p.Group)
+		return
+	}
+
+	if b.Lock {
 		slog.Warn("Cannot change message category in read-only board", "board", p.Group)
 		return
 	}
@@ -633,9 +639,14 @@ func (p *CategoryChangeEvent) Handle(i *Event, h *Hub) {
 		return
 	}
 
+	if !h.redis.IsBoardColumnActive(p.Group, p.NewCategory) {
+		slog.Warn("Cannot move message to invalid or inactive category", "board", p.Group, "msgId", p.MessageId, "newCategory", p.NewCategory)
+		return
+	}
+
 	// Validate before changing category; especially if the message being moved is of the user who created/owns it.
 	// Board owner can change category of any message.
-	isBoardOwner := h.redis.IsBoardOwner(p.Group, p.By)
+	isBoardOwner := b.Owner == p.By
 	canExecute := (msg.By == p.By || isBoardOwner)
 	if !canExecute {
 		slog.Warn("User not authorized to change category message/comment", "msgId", p.MessageId, "user", p.By)
@@ -688,46 +699,60 @@ func (p *TimerEvent) Handle(i *Event, h *Hub) {
 	}
 	// Validate for both
 	if b.Owner != p.By {
-		slog.Warn("Non-owner trying to update board when handling TimerEvent", "board", p.Group, "user", p.By)
+		slog.Warn("Non-owner trying to handle TimerEvent", "board", p.Group, "user", p.By)
 		return
 	}
 
+	nowUnix := time.Now().UTC().Unix()
+
+	// STOP TIMER
 	// Validate and Execute for "Stop"
 	// Avoid executing "Stop" unnecessarily.
 	// Since a "Stop" updates the board's "timerExpiresAtUtc" downsteam, its better to avoid running it when "timerExpiresAtUtc" is 0.
 	// "timerExpiresAtUtc" has its initial value of 0. A higher value means we can deduce that a timer has been set atleast once...
 	// ...This validation prevents us from loosing that capability to deduce.
-	if p.Stop && b.TimerExpiresAtUtc == 0 {
-		slog.Warn("Cannot stop a Timer that hasn't yet started", "board", p.Group)
-		return
-	}
-
-	// Execute Stop timer
 	if p.Stop {
+		if !timerIsRunning(b.TimerExpiresAtUtc, nowUnix) {
+			slog.Warn("Cannot stop timer that isn't running", "board", p.Group)
+			return
+		}
+
 		if updated := h.redis.StopTimer(b); !updated {
 			slog.Warn("Skipping. Unable to update timer during 'Stop' operation.")
 			return
 		}
+
+		// Publish to Redis (for broadcasting)
+		// *Message is nil as this is not a message related update. Timer is a UI gimmick. Find a better way.
+		h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
+		return
 	}
 
+	// START / UPDATE TIMER
 	// Validate and Execute for updating timer a.k.a "START"
+	if timerIsRunning(b.TimerExpiresAtUtc, nowUnix) {
+		slog.Warn("Cannot start Timer again. It is in running state", "board", p.Group)
+		return
+	}
+
 	// Duration check validation is only when the board owner is trying to set the timer. "Stop" is ignored here.
-	if !p.Stop && (p.ExpiryDurationInSeconds < 1 && p.ExpiryDurationInSeconds > 3600) {
-		slog.Warn("Invalid timer duration. Valid duration range is between 1 and 3600 seconds.")
+	if p.ExpiryDurationInSeconds < 1 || p.ExpiryDurationInSeconds > 3600 {
+		slog.Warn("Invalid timer duration. Valid duration range is between 1 to 3600 seconds.")
 		return
 	}
 
 	// Execute Update timer
-	if !p.Stop {
-		if updated := h.redis.UpdateTimer(b, p.ExpiryDurationInSeconds); !updated {
-			slog.Warn("Skipping. Unable to update timer information.")
-			return
-		}
+	if updated := h.redis.UpdateTimer(b, p.ExpiryDurationInSeconds); !updated {
+		slog.Warn("Skipping. Unable to update timer information.")
+		return
 	}
 
 	// Publish to Redis (for broadcasting)
 	// *Message is nil as this is not a message related update. Timer is a UI gimmick. Find a better way.
 	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
+}
+func timerIsRunning(expiresAt, now int64) bool {
+	return expiresAt > 0 && expiresAt > now
 }
 func (i *TimerEvent) Broadcast(m *Message, h *Hub) {
 	// Transform to Outgoing format
@@ -739,9 +764,14 @@ func (i *TimerEvent) Broadcast(m *Message, h *Hub) {
 	}
 
 	// Prepare timer details
-	remainingTimeInSeconds := board.TimerExpiresAtUtc - time.Now().UTC().Unix()
-	if remainingTimeInSeconds <= 0 {
-		remainingTimeInSeconds = 0
+	// remainingTimeInSeconds := board.TimerExpiresAtUtc - time.Now().UTC().Unix()
+	// if remainingTimeInSeconds <= 0 {
+	// 	remainingTimeInSeconds = 0
+	// }
+	nowUnix := time.Now().UTC().Unix()
+	remainingTimeInSeconds := int64(0)
+	if board.TimerExpiresAtUtc > nowUnix {
+		remainingTimeInSeconds = board.TimerExpiresAtUtc - nowUnix
 	}
 
 	// uint16: This shouldn't error out since we will restrict expiry to max 1 hour (3600 seconds) future time, when saving "board.TimerExpiresAtUtc".
