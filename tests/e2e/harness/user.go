@@ -33,6 +33,14 @@ func NewUser(id, nickname, board string) *TestUser {
 	}
 }
 
+// func (u *TestUser) NextMessageID() string {
+// 	return fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), u.Id)
+// }
+
+// func (u *TestUser) NextCommentID() string {
+// 	return fmt.Sprintf("cmt-%d-%s", time.Now().UnixNano(), u.Id)
+// }
+
 func (u *TestUser) Connect(baseUrl string) error {
 	url := fmt.Sprintf("%s/ws/board/%s/user/%s/meet", baseUrl, u.Board, u.Id)
 	// Convert http(s) to ws(s)
@@ -180,6 +188,14 @@ func (u *TestUser) deleteMessage(msgId string, commentIds []string) error {
 	return u.SendEvent("del", delEv)
 }
 
+func (u *TestUser) DeleteBoard() error {
+	delAllEv := DeleteAllEvent{
+		By:    u.Id,
+		Group: u.Board,
+	}
+	return u.SendEvent("delall", delAllEv)
+}
+
 func (u *TestUser) Mask(mask bool) error {
 	maskEv := MaskEvent{
 		By:    u.Id,
@@ -227,25 +243,34 @@ func (u *TestUser) LikeMessage(msgId string, like bool) error {
 	return u.SendEvent("like", likeEv)
 }
 
-// func (u *TestUser) WaitForEvent(eventType string, timeout time.Duration) (*Event, error) {
-// 	deadline := time.Now().Add(timeout)
-// 	for {
-// 		timeLeft := time.Until(deadline)
-// 		if timeLeft <= 0 {
-// 			return nil, fmt.Errorf("timeout waiting for event %s", eventType)
-// 		}
+func (u *TestUser) StartTimer(expiryDurationInSeconds uint16) error {
+	timerEv := TimerEvent{
+		By:                      u.Id,
+		Group:                   u.Board,
+		ExpiryDurationInSeconds: expiryDurationInSeconds,
+		Stop:                    false,
+	}
+	return u.SendEvent("timer", timerEv)
+}
 
-// 		select {
-// 		case event := <-u.Events:
-// 			if event.Type == eventType {
-// 				return &event, nil
-// 			}
-// 			// log.Printf("[User %s] Skipped event %s waiting for %s", u.Id, event.Type, eventType)
-// 		case <-time.After(timeLeft):
-// 			return nil, fmt.Errorf("timeout waiting for event %s", eventType)
-// 		}
-// 	}
-// }
+func (u *TestUser) StopTimer(expiryDurationInSeconds uint16) error {
+	timerEv := TimerEvent{
+		By:                      u.Id,
+		Group:                   u.Board,
+		ExpiryDurationInSeconds: expiryDurationInSeconds,
+		Stop:                    true,
+	}
+	return u.SendEvent("timer", timerEv)
+}
+
+func (u *TestUser) ChangeColumns(cols []*BoardColumn) error {
+	colChangeEv := ColumnsChangeEvent{
+		By:      u.Id,
+		Group:   u.Board,
+		Columns: cols,
+	}
+	return u.SendEvent("colreset", colChangeEv)
+}
 
 func (u *TestUser) MustWaitForEvent(t *testing.T, eventType string, target any) {
 	t.Helper()

@@ -408,7 +408,8 @@ func TestMessageLifecycle(t *testing.T) {
 		userB.FlushEvents()
 	})
 
-	// // TODO: Check this
+	// // TODO: Check this. Currently the message is created in non-existent (or existent but inactive) category...
+	// // ..Check for impact of adding another redis call to validate in a hot path.
 	// t.Run("New Message to non-existent category should fail", func(t *testing.T) {
 	// 	nonCatMsgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
 
@@ -656,6 +657,107 @@ func TestBoardControl(t *testing.T) {
 	})
 }
 
+func TestTimer(t *testing.T) {
+	_, userA, userB := harness.SetupTest(t, true)
+
+	t.Run("Owner can Start/Stop timer", func(t *testing.T) {
+		timerDurationToExpirySeconds := uint16(3600)
+		// Start
+		require.NoError(t, userA.StartTimer(timerDurationToExpirySeconds))
+		var got harness.TimerResponse
+		userB.MustWaitForEvent(t, "timer", &got)
+		require.Greater(t, got.ExpiresInSeconds, timerDurationToExpirySeconds-uint16(2)) // Flaky, or just use uint16(0)
+		userA.FlushEvents()
+		userB.FlushEvents()
+
+		t.Run("Timer info is also part of Reg response", func(t *testing.T) {
+			require.NoError(t, userB.Register())
+			var got harness.RegisterResponse
+			userB.MustWaitForEvent(t, "reg", &got)
+			require.Greater(t, got.TimerExpiresInSeconds, timerDurationToExpirySeconds-uint16(2)) // Flaky, or just use uint16(0)
+			userA.FlushEvents()
+			userB.FlushEvents()
+		})
+
+		// Stop
+		require.NoError(t, userA.StopTimer(uint16(0)))
+		userB.MustWaitForEvent(t, "timer", &got)
+		require.Equal(t, uint16(0), got.ExpiresInSeconds)
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Timer should NOT start with invalid range (valid range 1 - 3600 seconds)", func(t *testing.T) {
+		require.NoError(t, userA.StartTimer(3601))
+		require.NoError(t, userB.MustNotReceiveAnyEvent())
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Should NOT Stop non-running timer", func(t *testing.T) {
+		// Check if Timer is not running currently
+		require.NoError(t, userB.Register())
+		var regRes harness.RegisterResponse
+		userB.MustWaitForEvent(t, "reg", &regRes)
+		require.Equal(t, uint16(0), regRes.TimerExpiresInSeconds)
+		userA.FlushEvents()
+		userB.FlushEvents()
+
+		// Try to Stop a timer that isn't running
+		require.NoError(t, userA.StopTimer(uint16(0)))
+		// Assert
+		require.NoError(t, userB.MustNotReceiveAnyEvent())
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Should NOT Start running timer again", func(t *testing.T) {
+		// Check if Timer is not running currently
+		require.NoError(t, userB.Register())
+		var regRes harness.RegisterResponse
+		userB.MustWaitForEvent(t, "reg", &regRes)
+		require.Equal(t, uint16(0), regRes.TimerExpiresInSeconds)
+		userA.FlushEvents()
+		userB.FlushEvents()
+
+		// Start twice in succession
+		timerDurationToExpirySeconds1 := uint16(10)
+		require.NoError(t, userA.StartTimer(timerDurationToExpirySeconds1))
+		userA.FlushEvents()
+		userB.FlushEvents()
+		timerDurationToExpirySeconds2 := uint16(100)
+		require.NoError(t, userA.StartTimer(timerDurationToExpirySeconds2))
+
+		// Assert
+		require.NoError(t, userB.MustNotReceiveAnyEvent())
+
+		// Stop timer for further tests
+		require.NoError(t, userA.StopTimer(uint16(0)))
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Guest user cannot Start/Stop timer", func(t *testing.T) {
+		// Check if Timer is not running currently
+		require.NoError(t, userB.Register())
+		var regRes harness.RegisterResponse
+		userB.MustWaitForEvent(t, "reg", &regRes)
+		require.Equal(t, uint16(0), regRes.TimerExpiresInSeconds)
+		userA.FlushEvents()
+		userB.FlushEvents()
+
+		// Attempt to start Timer
+		require.NoError(t, userB.StartTimer(30))
+		require.NoError(t, userA.MustNotReceiveAnyEvent())
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	// Timer operations ignore board lock. So no tests for that.
+}
+
 func TestMessageCategoryChange(t *testing.T) {
 	_, userA, userB := harness.SetupTest(t, true)
 
@@ -769,38 +871,58 @@ func TestMessageCategoryChange(t *testing.T) {
 		userB.FlushEvents()
 	})
 
-	// // TODO: Implement after "ColumnEditing" tests are done
-	// t.Run("Should NOT move message to disabled/invalid category", func(t *testing.T) {
-	// })
+	t.Run("Should NOT move message to disabled/inactive category", func(t *testing.T) {
+		// Setup
+		// Alice creates message in col01
+		category := "col01"
+		rootMsgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
+		require.NoError(t, userA.SendMessage(rootMsgId, "Alice's Message", category))
+		userA.FlushEvents()
+		userB.FlushEvents()
+		// Disable col05
+		newCols := []*harness.BoardColumn{
+			{Id: "col01", Text: "What went well", Color: "green", Position: 1, IsDefault: true},
+			{Id: "col02", Text: "Challenges", Color: "red", Position: 2, IsDefault: true},
+			{Id: "col03", Text: "Action Items", Color: "yellow", Position: 3, IsDefault: true},
+			{Id: "col04", Text: "Appreciations", Color: "fuchsia", Position: 4, IsDefault: true},
+		}
+		require.NoError(t, userA.ChangeColumns(newCols))
+		var colChangeRes harness.ColumnsChangeResponse
+		userB.MustWaitForEvent(t, "colreset", &colChangeRes)
+		require.Equal(t, 4, len(colChangeRes.BoardColumns))
+		userA.FlushEvents()
+		userB.FlushEvents()
 
-	// // TODO: Check this. The message may not appear in UI due to non-existent category.
-	// t.Run("Should NOT move message to non-existent category", func(t *testing.T) {
-	// 	// Setup
-	// 	// User creates message
-	// 	category := "col01"
-	// 	rootMsgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
-	// 	require.NoError(t, userA.SendMessage(rootMsgId, "Alice's Message", category))
-	// 	userA.FlushEvents()
-	// 	userB.FlushEvents()
-	// 	// Act
-	// 	// Try to move to a category that doesn't exist
-	// 	nonExistentCategory := "col08"
-	// 	require.NoError(t, userA.ChangeCategoryOfMessage(rootMsgId, category, nonExistentCategory))
-	// 	// Assert
-	// 	require.NoError(t, userB.MustNotReceiveAnyEvent())
+		// Act
+		// Board owner (Alice) tries to move message to inactive col05
+		disabledCategory := "col05"
+		require.NoError(t, userA.ChangeCategoryOfMessage(rootMsgId, category, disabledCategory))
 
-	// 	// t.Run("Message got orphaned because of non-existent category", func(t *testing.T) {
-	// 	// 	// Find category of the attached comment by firing an event
-	// 	// 	require.NoError(t, userA.SendMessage(rootMsgId, "Alice's Message", nonExistentCategory))
-	// 	// 	// Assert
-	// 	// 	var got harness.MessageResponse
-	// 	// 	userA.MustWaitForEvent(t, "msg", &got)
-	// 	// 	require.Equal(t, nonExistentCategory, got.Category)
-	// 	// })
+		// Assert
+		require.NoError(t, userB.MustNotReceiveAnyEvent())
 
-	// 	userA.FlushEvents()
-	// 	userB.FlushEvents()
-	// })
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Should NOT move message to non-existent category", func(t *testing.T) {
+		// Setup
+		// User creates message
+		category := "col01"
+		rootMsgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
+		require.NoError(t, userA.SendMessage(rootMsgId, "Alice's Message", category))
+		userA.FlushEvents()
+		userB.FlushEvents()
+		// Act
+		// Try to move to a category that doesn't exist
+		nonExistentCategory := "col08"
+		require.NoError(t, userA.ChangeCategoryOfMessage(rootMsgId, category, nonExistentCategory))
+		// Assert
+		require.NoError(t, userB.MustNotReceiveAnyEvent())
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
 
 	t.Run("Should NOT change category in a locked board", func(t *testing.T) {
 		// Setup
@@ -835,33 +957,271 @@ func TestMessageCategoryChange(t *testing.T) {
 
 }
 
-// // Todo: Implement
-// func TestLikes(t *testing.T) {
-// 	_, userA, userB := harness.SetupTest(t, true)
+func TestLikes(t *testing.T) {
+	_, userA, userB := harness.SetupTest(t, true)
 
-// 	t.Run("Toggle like/unlike", func(t *testing.T) {
+	const (
+		liked    = true
+		notLiked = false
+	)
+	// Create a message to test likes
+	category := "col01"
+	rootMsgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userB.Id)
+	require.NoError(t, userB.SendMessage(rootMsgId, "Message from Bob to test likes", category))
+	userA.FlushEvents()
+	userB.FlushEvents()
 
-// 	})
+	t.Run("Toggle like/unlike", func(t *testing.T) {
+		// Bob likes a message
+		require.NoError(t, userB.LikeMessage(rootMsgId, liked))
 
-// 	t.Run("Liking an already liked message(and vice-versa) is silently skipped", func(t *testing.T) {
+		// Assert
+		var likeRes harness.LikeMessageResponse
+		userB.MustWaitForEvent(t, "like", &likeRes)
+		require.Equal(t, rootMsgId, likeRes.Id)
+		require.Equal(t, int64(1), likeRes.Likes)
+		require.Equal(t, liked, likeRes.Liked)
+		userA.MustWaitForEvent(t, "like", &likeRes)
+		require.Equal(t, notLiked, likeRes.Liked)
 
-// 	})
+		// Assert likes information in MessageResponse
+		require.NoError(t, userB.SendMessage(rootMsgId, "Message from Bob to test likes. Edited just in case.", category))
+		var msgRes harness.MessageResponse
+		userB.MustWaitForEvent(t, "msg", &msgRes)
+		require.Equal(t, int64(1), msgRes.Likes)
+		require.Equal(t, liked, msgRes.Liked)
+		userA.MustWaitForEvent(t, "msg", &msgRes)
+		require.Equal(t, notLiked, msgRes.Liked)
 
-// 	t.Run("Correct like count should be displayed in reg event response", func(t *testing.T) {
+		// Assert likes information in RegResponse
+		require.NoError(t, userB.Register())
+		var regRes harness.RegisterResponse
+		userB.MustWaitForEvent(t, "reg", &regRes)
+		require.Equal(t, int64(1), regRes.Messages[0].Likes)
+		require.Equal(t, liked, regRes.Messages[0].Liked)
+		userA.FlushEvents()
+		userB.FlushEvents()
+		require.NoError(t, userA.Register())
+		userA.MustWaitForEvent(t, "reg", &regRes)
+		require.Equal(t, notLiked, regRes.Messages[0].Liked)
+		userA.FlushEvents()
+		userB.FlushEvents()
 
-// 	})
+		// Bob Unlikes a message
+		require.NoError(t, userB.LikeMessage(rootMsgId, notLiked))
+		// Assert
+		userB.MustWaitForEvent(t, "like", &likeRes)
+		require.Equal(t, int64(0), likeRes.Likes)
+		require.Equal(t, notLiked, likeRes.Liked)
 
-// 	t.Run("Should NOT toggle likes in a locked board", func(t *testing.T) {
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
 
-// 	})
-// }
+	t.Run("Liking an already liked message(and vice-versa) is silently skipped", func(t *testing.T) {
+		// Bob likes a message, and tries to like same message again
+		require.NoError(t, userB.LikeMessage(rootMsgId, liked))
+		userA.FlushEvents()
+		userB.FlushEvents()
+		require.NoError(t, userB.LikeMessage(rootMsgId, liked))
+		// assert
+		require.NoError(t, userB.MustNotReceiveAnyEvent())
+
+		// Same for Unlike
+		require.NoError(t, userB.LikeMessage(rootMsgId, notLiked))
+		userA.FlushEvents()
+		userB.FlushEvents()
+		require.NoError(t, userB.LikeMessage(rootMsgId, notLiked))
+		// assert
+		require.NoError(t, userB.MustNotReceiveAnyEvent())
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	// Todo this needs to be fixed server side.
+	// t.Run("Should NOT toggle likes in a locked board", func(t *testing.T) {
+	// 	require.NoError(t, userA.LockBoard(true))
+	// 	userA.FlushEvents()
+	// 	userB.FlushEvents()
+
+	// 	require.NoError(t, userB.LikeMessage(rootMsgId, liked))
+	// 	require.NoError(t, userB.MustNotReceiveAnyEvent())
+
+	// 	userA.FlushEvents()
+	// 	userB.FlushEvents()
+	// })
+}
+
+func TestColumnEditing(t *testing.T) {
+	_, userA, userB := harness.SetupTest(t, true)
+
+	t.Run("Owner can update columns", func(t *testing.T) {
+		newCols := []*harness.BoardColumn{
+			{Id: "col01", Text: "Start", Color: "green", Position: 1, IsDefault: false},
+			{Id: "col02", Text: "Stop", Color: "red", Position: 2, IsDefault: false},
+			{Id: "col03", Text: "Continue", Color: "yellow", Position: 3, IsDefault: false},
+			{Id: "col04", Text: "Appreciations", Color: "fuchsia", Position: 4, IsDefault: false},
+		}
+
+		require.NoError(t, userA.ChangeColumns(newCols))
+
+		var got harness.ColumnsChangeResponse
+		userB.MustWaitForEvent(t, "colreset", &got)
+		require.Equal(t, 4, len(got.BoardColumns))
+		require.Equal(t, "Start", got.BoardColumns[0].Text)
+		userA.FlushEvents()
+		userB.FlushEvents()
+
+		// Reg response should also show above columns
+		require.NoError(t, userA.Register())
+
+		var regRes harness.RegisterResponse
+		userA.MustWaitForEvent(t, "reg", &regRes)
+		require.Equal(t, 4, len(regRes.BoardColumns))
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Change column order, remove col03, add col04", func(t *testing.T) {
+		newCols := []*harness.BoardColumn{
+			{Id: "col04", Text: "Appreciations", Color: "fuchsia", Position: 1, IsDefault: true},
+			{Id: "col02", Text: "Stop", Color: "red", Position: 2, IsDefault: false},
+			{Id: "col01", Text: "Start", Color: "green", Position: 3, IsDefault: false},
+		}
+
+		require.NoError(t, userA.ChangeColumns(newCols))
+
+		var got harness.ColumnsChangeResponse
+		userB.MustWaitForEvent(t, "colreset", &got)
+		require.Equal(t, 3, len(got.BoardColumns))
+		require.Equal(t, "Appreciations", got.BoardColumns[0].Text)
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Guest user cannot update columns", func(t *testing.T) {
+		newCols := []*harness.BoardColumn{
+			{Id: "col01", Text: "Hacked", Color: "green", Position: 1, IsDefault: false},
+		}
+		require.NoError(t, userB.ChangeColumns(newCols))
+		require.NoError(t, userA.MustNotReceiveEvent("colreset"))
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Cannot delete columns with existing messages", func(t *testing.T) {
+		// Current state has col04, col02, col01
+		// Add message to col01.
+		msgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
+		require.NoError(t, userA.SendMessage(msgId, "Protect this column", "col01"))
+		userA.FlushEvents() // Wait for own message
+		userB.FlushEvents()
+
+		// Try to set columns to only col04, col02 (effectively deleting col01)
+		newCols := []*harness.BoardColumn{
+			{Id: "col04", Text: "Appreciations", Color: "fuchsia", Position: 1, IsDefault: true},
+			{Id: "col02", Text: "Stop", Color: "red", Position: 2, IsDefault: false},
+		}
+
+		require.NoError(t, userA.ChangeColumns(newCols))
+		require.NoError(t, userB.MustNotReceiveEvent("colreset"))
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Column count validation", func(t *testing.T) {
+		// Too many columns (> 5)
+		newCols := []*harness.BoardColumn{
+			{Id: "c1", Text: "1", Color: "c", Position: 1},
+			{Id: "c2", Text: "2", Color: "c", Position: 2},
+			{Id: "c3", Text: "3", Color: "c", Position: 3},
+			{Id: "c4", Text: "4", Color: "c", Position: 4},
+			{Id: "c5", Text: "5", Color: "c", Position: 5},
+			{Id: "c6", Text: "6", Color: "c", Position: 6},
+		}
+		require.NoError(t, userA.ChangeColumns(newCols))
+		require.NoError(t, userB.MustNotReceiveEvent("colreset"))
+
+		// Empty columns
+		require.NoError(t, userA.ChangeColumns([]*harness.BoardColumn{}))
+		require.NoError(t, userB.MustNotReceiveEvent("colreset"))
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Column text length validation", func(t *testing.T) {
+		// Text > 80 chars
+		longText := "This text is definitely longer than eighty characters which is the limit for the column name text so it should fail"
+		require.True(t, len([]rune(longText)) > 80)
+		newCols := []*harness.BoardColumn{
+			{Id: "col01", Text: longText, Color: "green", Position: 1},
+		}
+		require.NoError(t, userA.ChangeColumns(newCols))
+		require.NoError(t, userB.MustNotReceiveEvent("colreset"))
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Cannot update columns in a locked board", func(t *testing.T) {
+		// Lock board
+		require.NoError(t, userA.LockBoard(true))
+		var lockResp harness.LockResponse
+		userB.MustWaitForEvent(t, "lock", &lockResp)
+		require.True(t, lockResp.Lock)
+		userA.FlushEvents()
+		userB.FlushEvents()
+
+		newCols := []*harness.BoardColumn{
+			{Id: "col02", Text: "Try Update", Color: "red", Position: 1},
+		}
+		require.NoError(t, userA.ChangeColumns(newCols))
+		require.NoError(t, userB.MustNotReceiveEvent("colreset"))
+
+		// Unlock for further tests
+		require.NoError(t, userA.LockBoard(false))
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+}
+
+func TestBoardDeletion(t *testing.T) {
+	_, userA, userB := harness.SetupTest(t, true)
+
+	t.Run("Guest user cannot delete board", func(t *testing.T) {
+		require.NoError(t, userB.DeleteBoard())
+		require.NoError(t, userA.MustNotReceiveEvent("delall"))
+	})
+
+	t.Run("Board owner can delete board", func(t *testing.T) {
+		require.NoError(t, userA.DeleteBoard())
+		var got harness.DeleteAllResponse
+		userB.MustWaitForEvent(t, "delall", &got)
+		userA.MustWaitForEvent(t, "delall", &got)
+	})
+}
+
+func TestUserLeaving(t *testing.T) {
+	_, userA, userB := harness.SetupTest(t, true)
+
+	t.Run("Other users receive closing event when a user leaves", func(t *testing.T) {
+		// Bob leaves
+		userB.Close()
+
+		var got harness.UserClosingResponse
+		userA.MustWaitForEvent(t, "closing", &got)
+		require.Equal(t, "xid-"+userB.Id, got.Xid)
+	})
+}
 
 // Todo: Add tests
 
 // Connection: User attempts to connect to non-existant board should fail
 // Message: Updating message in a different board should fail. (Server validates if same msgId that is attached to a board is not "accidently" updated by another user from another board. Add test for that.)
-// Timer: Only board owner can Start/Stop timer
-// Timer: Guest user cannot Start/Stop timer
-// ColumnEditing:
-// BoardDeletion:
-// UserLeaving:
