@@ -17,7 +17,9 @@ export const formatDate = (timestamp: number): string => {
 }
 
 // export const getByteLength = (text: string) => new Blob([text]).size
-export const getByteLength = (text: string): number => new TextEncoder().encode(text).length
+// export const getByteLength = (text: string): number => new TextEncoder().encode(text).length
+const encoder = new TextEncoder() // Cache the encoder. Check impact.
+export const getByteLength = (text: string): number => encoder.encode(text).length
 
 // Binary search to efficiently trim text to fit within the byte limit
 export const trimToMaxBytes = (text: string, maxBytes: number) => {
@@ -58,6 +60,34 @@ export const setCursorPosition = (element: HTMLElement, position: number): void 
     }
 }
 
+/**
+ * Calculates the overhead bytes of the JSON envelope.
+ * Call this only when props change, not on every input.
+*/
+export const calculateContentBudget = (user: string, nickname: string, board: string, category: string, isComment: boolean): number => {
+    const maxAllowedBytes = parseInt(import.meta.env.VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES, 10)
+    if (isNaN(maxAllowedBytes)) return 0
+
+    const emptyMessagePayload: EventRequest<SaveMessageEvent> = {
+        typ: 'msg',
+        pyl: {
+            id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+            byxid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+            by: user,
+            nickname: nickname,
+            grp: board,
+            msg: '',
+            cat: category,
+            anon: false,
+            pid: isComment ? 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' : ''
+        }
+    }
+
+    const emptyPayloadBytes = getByteLength(JSON.stringify(emptyMessagePayload))
+    // logMessage('calculateContentBudget.emptyPayloadBytes', emptyPayloadBytes)
+    return Math.max(0, maxAllowedBytes - emptyPayloadBytes)
+}
+
 export const canAssertMessageContentValidation = (): boolean => {
 
     const maxSizeConfig: string = import.meta.env.VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES
@@ -67,62 +97,43 @@ export const canAssertMessageContentValidation = (): boolean => {
         !isNaN(maxBytes) && maxBytes > 0
 }
 
-export const assertMessageContentValidation = (event: Event, user: string, nickname: string, board: string, category: string, isComment: boolean = false): MessageContentValidationResult => {
+export const assertMessageContentValidation = (event: Event, maxAvailableBytes: number): MessageContentValidationResult => {
 
-    let el = event.target as HTMLElement
-    let text = el.innerText.trim()
+    const el = event.target as HTMLElement
+    const text = el.innerText.trim()
     
-    // emptyMessagePayload allows us to compute bytes available for the message content
-    const emptyMessagePayload: EventRequest<SaveMessageEvent> = {
-        typ: 'msg',
-        pyl: { id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', byxid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', by: user, nickname: nickname, grp: board, msg: '', cat: category, anon: false, pid: '' }
-    }
-    // Comment payload will have pid populated. Message payload will have pid as empty.
-    if (isComment) {
-        emptyMessagePayload.pyl.pid = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
-    }
-    const emptyPayloadBytes: number = getByteLength(JSON.stringify(emptyMessagePayload))
-    const maxAllowedBytes: number = parseInt(import.meta.env.VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES, 10)
-    let maxAvailableBytesForContent: number = maxAllowedBytes > emptyPayloadBytes ? maxAllowedBytes - emptyPayloadBytes : 0
-  
-    const contentBytes: number = getByteLength(text)
-    // logMessage('emptyPayloadBytes', emptyPayloadBytes, 'maxAvailableBytesForContent', maxAvailableBytesForContent, 'contentBytes', contentBytes)
-    if (contentBytes > maxAvailableBytesForContent) {
-
-        // Get current cursor position
-        let selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0) // Check if selection exists
-        {
-            return {
-                isValid: false,
-                isTrimmed: false
-            }
-        }
-        const range = selection.getRangeAt(0);
-        const preCaretRange = range.cloneRange();
-        preCaretRange.selectNodeContents(el);
-        preCaretRange.setEnd(range.endContainer, range.endOffset);
-        const cursorPosition: number = preCaretRange.toString().length; // Get cursor position in characters
-    
-        // Trim the text
-        el.innerText = trimToMaxBytes(text, maxAvailableBytesForContent)
-  
-        // Restore cursor position
-        setCursorPosition(el, cursorPosition)
-  
-        // Explicitly clear selection to avoid holding references
-        // selection.removeAllRanges() // Todo: This somehow doesn't fire the toaster multiple times. Check it!
-
-        return {
-            isValid: false,
-            isTrimmed: true
+    // Fast exit
+    // Avoid calling TextEncoder in getByteLength when text length is larger than maxAvailableBytes
+    // The trimming needs to be done for larger text anyways
+    if (text.length <= maxAvailableBytes) {
+        const contentBytes: number = getByteLength(text)
+        // logMessage('maxAvailableBytes', maxAvailableBytes, 'contentBytes', contentBytes)
+        if (contentBytes <= maxAvailableBytes) {
+            return { isValid: true, isTrimmed: false }
         }
     }
 
-    return {
-        isValid: true,
-        isTrimmed: false
-    }
+    // If we are here, we might be over the limit
+    // Get current cursor position
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) return { isValid: false, isTrimmed: false } // Check if selection exists
+
+    const range = selection.getRangeAt(0)
+    const preCaretRange = range.cloneRange()
+    preCaretRange.selectNodeContents(el)
+    preCaretRange.setEnd(range.endContainer, range.endOffset)
+    const cursorPosition: number = preCaretRange.toString().length
+
+    // Perform the heavy trim
+    el.innerText = trimToMaxBytes(text, maxAvailableBytes)
+
+    // Restore cursor position
+    setCursorPosition(el, cursorPosition)
+
+    // Explicitly clear selection to avoid holding references
+    // selection.removeAllRanges() // Todo: This somehow doesn't fire the toaster multiple times. Check it!
+
+    return { isValid: false, isTrimmed: true }
 }
 
 export interface MessageContentValidationResult {
@@ -160,4 +171,37 @@ export const exceedsEventRequestMaxSize = <T>(eventType: string, payload: T) => 
     const payloadBytes = getByteLength(JSON.stringify(event))
     const maxAllowedBytes = Number(import.meta.env.VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES)
     return payloadBytes > maxAllowedBytes
+}
+
+/**
+ * Standard Trailing-Edge Debounce
+ * Delays execution until 'delay' ms after the last call.
+ */
+export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
+    
+    return function (this: any, ...args: Parameters<T>) {
+        if (timeoutId) clearTimeout(timeoutId)
+        timeoutId = setTimeout(() => {
+            fn.apply(this, args)
+        }, delay)
+    }
+}
+
+/**
+ * requestAnimationFrame Throttle
+ * Limits execution to once per browser paint (approx 60fps).
+ */
+export function throttleRAF<T extends (...args: any[]) => any>(fn: T) {
+    let ticking = false
+
+    return function(this: any, ...args: Parameters<T>) {
+        if (!ticking) {
+            requestAnimationFrame(() => {
+                fn.apply(this, args)
+                ticking = false
+            })
+            ticking = true
+        }
+    }
 }

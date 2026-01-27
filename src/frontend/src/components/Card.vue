@@ -4,13 +4,14 @@ import Avatar from './Avatar.vue';
 import { MessageResponse } from '../models/Requests';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
-import { assertMessageContentValidation, canAssertMessageContentValidation, logMessage, MessageContentValidationResult } from '../utils';
+import { logMessage } from '../utils';
 import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
 import { BoardColumn } from '../models/BoardColumn';
 import { CategoryChangeMessage } from '../models/CategoryChangeMessage';
 import { useI18n } from 'vue-i18n';
 import NewComment from './NewComment.vue';
 import Comment from './Comment.vue';
+import { useContentEditableLimiter } from '../composables/useContentEditableLimiter';
 
 // "currentUser", "currentUserNickname", "board", "card.cat" only used to calculate message size in bytes. "category" already passed with "card.cat".
 // Message size calc and trimming only done when editing.
@@ -152,18 +153,14 @@ const changeCategory = (newCategory: string, oldCategory: string) => {
     }
 }
 
-const validate = (event: Event) => {
-    // TODO: CHECK Message size validation since Message.Pid is introduced.
-    if (!editing.value && !props.card.mine) return
-    if (!canAssertMessageContentValidation()) return
-    const validationResult: MessageContentValidationResult = assertMessageContentValidation(event, props.currentUser, props.currentUserNickname, props.board, props.card.cat)
-    if (validationResult.isValid) return
-
-    let errorMessage: string = t('common.contentOverloadError')
-    if (validationResult.isTrimmed) errorMessage = t('common.contentStrippingError')
-
-    emit('invalidContent', errorMessage)
-}
+const { onInput } = useContentEditableLimiter({
+    user: () => props.currentUser,
+    nickname: () => props.currentUserNickname,
+    board: () => props.board,
+    category: () => props.card.cat,
+    isComment: false,
+    onInvalid: (msg) => emit('invalidContent', msg)
+})
 </script>
 
 <template>
@@ -175,7 +172,7 @@ const validate = (event: Event) => {
             <article class="min-h-4 text-center break-words focus:outline-none"
                 :class="[editing ? 'cursor-auto' : card.mine && !locked ? 'cursor-pointer' : 'cursor-default']"
                 :contenteditable="editing && card.mine && !(locked && editing)" @click="edit" @blur="save"
-                @keydown.enter="saveOnEnter" @input="validate">{{
+                @keydown.enter="saveOnEnter" @input="onInput">{{
                     content }}</article>
         </div>
 

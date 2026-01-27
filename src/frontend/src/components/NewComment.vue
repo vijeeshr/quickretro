@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import { assertMessageContentValidation, canAssertMessageContentValidation, logMessage, MessageContentValidationResult } from '../utils'
+import { logMessage } from '../utils'
 import { DraftMessage } from '../models/DraftMessage';
+import { useContentEditableLimiter } from '../composables/useContentEditableLimiter';
 
-const { t } = useI18n()
 const props = defineProps<{ parentId: string, category: string, locked: boolean, by: string, nickname: string, board: string }>()
 const emit = defineEmits(['added', 'invalidContent'])
 
@@ -46,26 +45,24 @@ const addOnEnter = (event: KeyboardEvent) => {
     }
 }
 
-const validate = (event: Event) => {
-    if (!canAssertMessageContentValidation()) return
-    const validationResult: MessageContentValidationResult = assertMessageContentValidation(event, props.by, props.nickname, props.board, props.category, true)
-    if (validationResult.isValid) return
-
-    let errorMessage: string = t('common.contentOverloadError')
-    if (validationResult.isTrimmed) errorMessage = t('common.contentStrippingError')
-
-    emit('invalidContent', errorMessage)
-}
+const { onInput } = useContentEditableLimiter({
+    user: () => props.by,
+    nickname: () => props.nickname,
+    board: () => props.board,
+    category: () => props.category,
+    isComment: true,
+    onInvalid: (msg) => emit('invalidContent', msg)
+})
 
 const vFocus = {
-  mounted: (el: HTMLElement) => {
-    el.focus()
-  }
+    mounted: (el: HTMLElement) => {
+        el.focus()
+    }
 }
 </script>
 
 <template>
-    <article
-        v-focus class="w-full mt-2 border dark:border-gray-400 rounded-lg p-2 text-sm resize-none text-gray-500 dark:text-white min-h-[3.5rem] break-words focus:outline-none cursor-auto focus:border-sky-400 dark:focus:border-white"
-        :contenteditable="!locked" @blur="add" @keydown.enter="addOnEnter" @input="validate"></article>
+    <article v-focus
+        class="w-full mt-2 border dark:border-gray-400 rounded-lg p-2 text-sm resize-none text-gray-500 dark:text-white min-h-[3.5rem] break-words focus:outline-none cursor-auto focus:border-sky-400 dark:focus:border-white"
+        :contenteditable="!locked" @blur="add" @keydown.enter="addOnEnter" @input="onInput"></article>
 </template>

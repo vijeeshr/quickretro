@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue';
 import { MessageResponse } from '../models/Requests'
-import { assertMessageContentValidation, canAssertMessageContentValidation, logMessage, MessageContentValidationResult } from '../utils';
+import { logMessage } from '../utils';
 import { DraftMessage } from '../models/DraftMessage';
-import { useI18n } from 'vue-i18n';
+import { useContentEditableLimiter } from '../composables/useContentEditableLimiter';
 
 // "currentUser", "currentUserNickname", "board", "comment.cat" only used to calculate message size in bytes. "category" already passed with "comment.cat".
 // Message size calc and trimming only done when editing.
@@ -19,8 +19,6 @@ interface Props {
 }
 const props = defineProps<Props>()
 const emit = defineEmits(['updated', 'deleted', 'invalidContent', 'discard'])
-
-const { t } = useI18n()
 
 const editing = ref(false)
 
@@ -95,17 +93,14 @@ const saveOnEnter = (event: KeyboardEvent) => {
     }
 }
 
-const validate = (event: Event) => {
-    if (!editing.value && !props.comment.mine) return
-    if (!canAssertMessageContentValidation()) return
-    const validationResult: MessageContentValidationResult = assertMessageContentValidation(event, props.currentUser, props.currentUserNickname, props.board, props.comment.cat, true)
-    if (validationResult.isValid) return
-
-    let errorMessage: string = t('common.contentOverloadError')
-    if (validationResult.isTrimmed) errorMessage = t('common.contentStrippingError')
-
-    emit('invalidContent', errorMessage)
-}
+const { onInput } = useContentEditableLimiter({
+    user: () => props.currentUser,
+    nickname: () => props.currentUserNickname,
+    board: () => props.board,
+    category: () => props.comment.cat,
+    isComment: true,
+    onInvalid: (msg) => emit('invalidContent', msg)
+})
 
 const remove = () => {
     if (props.locked) {
@@ -116,7 +111,6 @@ const remove = () => {
         emit('deleted', props.comment.id)
     }
 }
-
 </script>
 
 <template>
@@ -132,7 +126,7 @@ const remove = () => {
                     ? 'cursor-pointer'
                     : 'cursor-default'
         ]" :contenteditable="editing && comment.mine && !(locked && editing)" @click="edit" @blur="save"
-            @keydown.enter="saveOnEnter" @input="validate">
+            @keydown.enter="saveOnEnter" @input="onInput">
             {{ content }}</article>
         <div class="flex" v-if="manageable">
             <!-- Delete comment button -->
