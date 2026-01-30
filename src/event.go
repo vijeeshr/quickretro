@@ -35,6 +35,7 @@ var registry = map[string]eventFactory{
 	"timer":    makeFactory[TimerEvent](),
 	"colreset": makeFactory[ColumnsChangeEvent](),
 	"closing":  makeFactory[UserClosingEvent](),
+	"t":        makeFactory[TypedEvent](),
 }
 
 func makeFactory[T any, PT interface {

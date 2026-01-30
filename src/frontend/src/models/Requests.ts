@@ -57,6 +57,10 @@ export interface ColumnsChangeEvent {
     columns: BoardColumn[]
 }
 
+export interface TypedEvent {
+    xid: string
+}
+
 export interface RegisterResponse {
     typ: 'reg'
     boardName: string
@@ -142,8 +146,13 @@ export interface ColumnsChangeResponse {
     columns: BoardColumn[]
 }
 
+export interface TypedResponse {
+    typ: 't'
+    xid: string
+}
+
 export type SocketResponse = RegisterResponse | MaskResponse | LockResponse | MessageResponse |
-    LikeMessageResponse | DeleteMessageResponse | DeleteAllResponse | CategoryChangeResponse | UserJoiningResponse | UserClosingResponse | TimerResponse | ColumnsChangeResponse
+    LikeMessageResponse | DeleteMessageResponse | DeleteAllResponse | CategoryChangeResponse | UserJoiningResponse | UserClosingResponse | TimerResponse | ColumnsChangeResponse | TypedResponse
 
 export function toSocketResponse(json: any): SocketResponse | null {
 
@@ -173,6 +182,8 @@ export function toSocketResponse(json: any): SocketResponse | null {
                 return json as TimerResponse
             case 'colreset':
                 return json as ColumnsChangeResponse
+            case 't':
+                return json as TypedResponse
             // const data: MaskResponse = json
             // return data
 

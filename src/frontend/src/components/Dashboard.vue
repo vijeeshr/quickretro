@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue';
 import Avatar from './Avatar.vue';
 import Card from './Card.vue';
 import Category from './Category.vue';
 import NewAnonymousCard from './NewAnonymousCard.vue';
 import NewCard from './NewCard.vue';
 import { useRoute } from 'vue-router';
-import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent, CategoryChangeEvent, CategoryChangeResponse, DeleteAllEvent, ColumnsChangeEvent, ColumnsChangeResponse, UserJoiningResponse } from '../models/Requests';
+import { EventRequest, MaskEvent, MaskResponse, RegisterEvent, RegisterResponse, MessageResponse, UserClosingResponse, toSocketResponse, SaveMessageEvent, DeleteMessageEvent, DeleteMessageResponse, LikeMessageEvent, LikeMessageResponse, LockEvent, LockResponse, TimerResponse, TimerEvent, CategoryChangeEvent, CategoryChangeResponse, DeleteAllEvent, ColumnsChangeEvent, ColumnsChangeResponse, UserJoiningResponse, TypedEvent, TypedResponse } from '../models/Requests';
 import { OnlineUser } from '../models/OnlineUser';
 import { DraftMessage } from '../models/DraftMessage';
 import { LikeMessage } from '../models/LikeMessage';
@@ -263,6 +263,10 @@ const onInvalidContent = (errorMessage: string) => {
 
 const onCommentInvalidContent = (errorMessage: string) => {
     toast.error(errorMessage)
+}
+
+const onTyping = () => {
+    dispatchEvent<TypedEvent>("t", { xid: xid })
 }
 
 const onDiscard = () => {
@@ -874,6 +878,33 @@ const onColumnsChangeResponse = (response: ColumnsChangeResponse) => {
     }
 }
 
+// Create a Set to track typing XIDs
+const typingUsers = ref<Set<string>>(new Set())
+// Track timeouts so we can reset them if the user keeps typing
+const typingTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
+
+const onTypingResponse = (response: TypedResponse) => {
+    const xid = String(response.xid)
+
+    if (!onlineUsersCardsStats.value.some(u => u.xid === xid)) return
+
+    // Add to the active typing set
+    typingUsers.value.add(xid)
+
+    // Clear any existing timeout for this specific user
+    if (typingTimeouts.has(xid)) {
+        clearTimeout(typingTimeouts.get(xid)!)
+    }
+
+    // Set a timeout to remove the indicator after 2-3 seconds of inactivity
+    const timeout = setTimeout(() => {
+        typingUsers.value.delete(xid)
+        typingTimeouts.delete(xid)
+    }, 2500)
+
+    typingTimeouts.set(xid, timeout)
+}
+
 // For Edit Categories feature
 const mergedCategories = ref<CategoryDefinition[]>([])
 const isCategorySelectionValid = ref(true)
@@ -1011,6 +1042,9 @@ const socketOnMessage = (event: MessageEvent<any>) => {
             case "colreset":
                 onColumnsChangeResponse(response)
                 break
+            case "t":
+                onTypingResponse(response)
+                break
         }
     }
 }
@@ -1046,6 +1080,12 @@ onMounted(() => {
     document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener("offline", handleConnectivity)
     // window.addEventListener("online", handleConnectivity)
+})
+
+onBeforeUnmount(() => {
+    // Object.values(typingTimeouts).forEach(clearTimeout)
+    typingTimeouts.forEach(timeout => clearTimeout(timeout))
+    typingTimeouts.clear()
 })
 
 onUnmounted(() => {
@@ -1349,7 +1389,7 @@ onUnmounted(() => {
                         @comment-added="onCommentAdded" @comment-updated="onCommentUpdated"
                         @comment-deleted="onCommentDeleted"
                         @comment-discard="notifyForLostMessages({ dueToLock: true })"
-                        @comment-invalid-content="onCommentInvalidContent" :class="{
+                        @comment-invalid-content="onCommentInvalidContent" @typing="onTyping" :class="{
                             'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none': isSpotlightOn && usersWithCards.length > 0 && card.byxid !== spotlightFor?.byxid,
                             'bg-black dark:bg-black border border-gray-200 z-[51]': isSpotlightOn && usersWithCards.length > 0 && card.byxid === spotlightFor?.byxid,
                         }" />
@@ -1368,7 +1408,7 @@ onUnmounted(() => {
                 </span>
             </div>
             <div v-for="user in onlineUsersCardsStats" :key="user.xid" class="relative w-8 h-8 ml-auto mx-auto mb-4">
-                <Avatar :name="user.nickname" class="w-8 h-8" />
+                <Avatar :name="user.nickname" :is-typing="typingUsers.has(user.xid)" class="w-8 h-8" />
                 <span v-if="user.cardsCount > 0"
                     class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none">
                     {{ user.cardsCount }}
