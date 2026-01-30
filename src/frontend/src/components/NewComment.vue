@@ -3,7 +3,7 @@ import { logMessage } from '../utils'
 import { DraftMessage } from '../models/DraftMessage';
 import { useContentEditableLimiter } from '../composables/useContentEditableLimiter';
 
-const props = defineProps<{ parentId: string, category: string, locked: boolean, by: string, nickname: string, board: string }>()
+const props = defineProps<{ parentId: string, category: string, locked: boolean, nickname: string }>()
 const emit = defineEmits(['added', 'invalidContent'])
 
 
@@ -46,10 +46,9 @@ const addOnEnter = (event: KeyboardEvent) => {
 }
 
 const { onInput } = useContentEditableLimiter({
-    user: () => props.by,
     nickname: () => props.nickname,
-    board: () => props.board,
     category: () => props.category,
+    anon: () => false,
     isComment: true,
     onInvalid: (msg) => emit('invalidContent', msg)
 })

@@ -10,10 +10,8 @@ type Event struct {
 }
 
 type RegisterEvent struct {
-	By         string `json:"by"`
 	ByNickname string `json:"nickname"`
 	Xid        string `json:"xid"`
-	Group      string `json:"grp"`
 }
 type RegisterResponse struct {
 	Type                      string            `json:"typ"`
@@ -51,10 +49,8 @@ type UserClosingResponse struct {
 
 type MessageEvent struct {
 	Id         string `json:"id"`
-	By         string `json:"by"`
 	ByXid      string `json:"byxid"`
 	ByNickname string `json:"nickname"`
-	Group      string `json:"grp"`
 	Content    string `json:"msg"`
 	Category   string `json:"cat"`
 	ParentId   string `json:"pid"`
@@ -75,9 +71,7 @@ type MessageResponse struct {
 }
 
 type DeleteMessageEvent struct {
-	MessageId  string   `json:"msgId"` // MessageId or CommentId
-	By         string   `json:"by"`
-	Group      string   `json:"grp"`
+	MessageId  string   `json:"msgId"`      // MessageId or CommentId
 	CommentIds []string `json:"commentIds"` // Only used when deleting a top-level message i.e. when MessageId represents a message and not a comment.
 }
 type DeleteMessageResponse struct {
@@ -85,17 +79,13 @@ type DeleteMessageResponse struct {
 }
 
 type DeleteAllEvent struct {
-	By    string `json:"by"`
-	Group string `json:"grp"`
 }
 type DeleteAllResponse struct {
 	Type string `json:"typ"`
 }
 
 type MaskEvent struct {
-	By    string `json:"by"`
-	Group string `json:"grp"`
-	Mask  bool   `json:"mask"`
+	Mask bool `json:"mask"`
 }
 type MaskResponse struct {
 	Type string `json:"typ"`
@@ -103,9 +93,7 @@ type MaskResponse struct {
 }
 
 type LockEvent struct {
-	By    string `json:"by"`
-	Group string `json:"grp"`
-	Lock  bool   `json:"lock"`
+	Lock bool `json:"lock"`
 }
 type LockResponse struct {
 	Type string `json:"typ"`
@@ -114,8 +102,6 @@ type LockResponse struct {
 
 type CategoryChangeEvent struct {
 	MessageId   string   `json:"msgId"`
-	By          string   `json:"by"`
-	Group       string   `json:"grp"`
 	NewCategory string   `json:"newcat"`
 	OldCategory string   `json:"oldcat"`
 	CommentIds  []string `json:"commentIds"`
@@ -128,7 +114,6 @@ type CategoryChangeResponse struct {
 
 type LikeMessageEvent struct {
 	MessageId string `json:"msgId"`
-	By        string `json:"by"`
 	Like      bool   `json:"like"`
 }
 type LikeMessageResponse struct {
@@ -139,8 +124,6 @@ type LikeMessageResponse struct {
 }
 
 type TimerEvent struct {
-	By                      string `json:"by"`
-	Group                   string `json:"grp"`
 	ExpiryDurationInSeconds uint16 `json:"expiryDurationInSeconds"`
 	Stop                    bool   `json:"stop"`
 }
@@ -150,8 +133,6 @@ type TimerResponse struct {
 }
 
 type ColumnsChangeEvent struct {
-	By      string         `json:"by"`
-	Group   string         `json:"grp"`
 	Columns []*BoardColumn `json:"columns"`
 	// Only columns to add/update are sent. Columns to disable aren't sent explicitly.
 }

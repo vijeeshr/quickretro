@@ -3,21 +3,20 @@ import { assertMessageContentValidation, calculateContentBudget, canAssertMessag
 import { useI18n } from 'vue-i18n'
 
 interface UseLimiterOptions {
-  user: () => string
   nickname: () => string
-  board: () => string
   category: () => string
+  anon: () => boolean
   isComment?: boolean
   onInvalid: (msg: string) => void
 }
 
 export function useContentEditableLimiter(opts: UseLimiterOptions) {
-  const { user, nickname, board, category, isComment = false, onInvalid } = opts
+  const { nickname, category, anon, isComment = false, onInvalid } = opts
   const { t } = useI18n()
   
   // Precomputed byte budget: Only re-calculates if props change, not when the user types
   const contentByteBudget = computed(() =>
-    calculateContentBudget(user(), nickname(), board(), category(), isComment)
+    calculateContentBudget(nickname(), category(), anon(), isComment)
   )
 
   // Wait 500ms after the user stops hitting the limit to fire the toast.

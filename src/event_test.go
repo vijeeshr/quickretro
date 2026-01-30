@@ -22,7 +22,7 @@ func (m *mockHandler) Handle(e *Event, h *Hub) {
 	m.handleCalled = true
 }
 
-func (m *mockHandler) Broadcast(_ *Message, _ *Hub) {
+func (m *mockHandler) Broadcast(_ *Event, _ *Message, _ *Hub) {
 	m.broadcastCalled = true
 	if m.panicOnBroadcast {
 		panic("boom")
@@ -46,8 +46,6 @@ func TestGetHandler_ValidType(t *testing.T) {
 	event := &Event{
 		Type: "msg",
 		Payload: marshalPayload(t, MessageEvent{
-			By:      "u1",
-			Group:   "g1",
 			Content: "hello",
 		}),
 	}
@@ -229,8 +227,6 @@ func TestFactory_ReturnsNewInstanceEachTime(t *testing.T) {
 	event1 := &Event{
 		Type: "msg",
 		Payload: marshalPayload(t, MessageEvent{
-			By:      "u1",
-			Group:   "g1",
 			Content: "one",
 		}),
 	}
@@ -238,8 +234,6 @@ func TestFactory_ReturnsNewInstanceEachTime(t *testing.T) {
 	event2 := &Event{
 		Type: "msg",
 		Payload: marshalPayload(t, MessageEvent{
-			By:      "u2",
-			Group:   "g2",
 			Content: "two",
 		}),
 	}

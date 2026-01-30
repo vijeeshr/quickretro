@@ -64,7 +64,7 @@ export const setCursorPosition = (element: HTMLElement, position: number): void 
  * Calculates the overhead bytes of the JSON envelope.
  * Call this only when props change, not on every input.
 */
-export const calculateContentBudget = (user: string, nickname: string, board: string, category: string, isComment: boolean): number => {
+export const calculateContentBudget = (nickname: string, category: string, anon: boolean, isComment: boolean): number => {
     const maxAllowedBytes = parseInt(import.meta.env.VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES, 10)
     if (isNaN(maxAllowedBytes)) return 0
 
@@ -72,10 +72,8 @@ export const calculateContentBudget = (user: string, nickname: string, board: st
         typ: 'msg',
         pyl: {
             id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-            byxid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-            by: user,
-            nickname: nickname,
-            grp: board,
+            byxid: !anon ? 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' : '',
+            nickname: !anon ? nickname : '',
             msg: '',
             cat: category,
             anon: false,
@@ -84,7 +82,7 @@ export const calculateContentBudget = (user: string, nickname: string, board: st
     }
 
     const emptyPayloadBytes = getByteLength(JSON.stringify(emptyMessagePayload))
-    // logMessage('calculateContentBudget.emptyPayloadBytes', emptyPayloadBytes)
+    // logMessage('calculateContentBudget.emptyPayloadBytes', emptyPayloadBytes, 'emptyPyl', JSON.stringify(emptyMessagePayload))
     return Math.max(0, maxAllowedBytes - emptyPayloadBytes)
 }
 

@@ -7,30 +7,22 @@ export interface EventRequest<T> {
 }
 
 export interface RegisterEvent {
-    by: string
     nickname: string
     xid: string
-    grp: string
 }
 
 export interface MaskEvent {
-    by: string
-    grp: string
     mask: boolean
 }
 
 export interface LockEvent {
-    by: string
-    grp: string
     lock: boolean
 }
 
 export interface SaveMessageEvent {
     id: string
-    by: string
     byxid: string
     nickname: string
-    grp: string
     msg: string
     cat: string
     anon: boolean
@@ -39,41 +31,29 @@ export interface SaveMessageEvent {
 
 export interface LikeMessageEvent {
     msgId: string
-    by: string
     like: boolean
 }
 
 export interface DeleteMessageEvent {
     msgId: string
-    by: string
-    grp: string
     commentIds: string[]
 }
 
-export interface DeleteAllEvent {
-    by: string
-    grp: string
-}
+export interface DeleteAllEvent {}
 
 export interface CategoryChangeEvent {
     msgId: string
     commentIds: string[]
-    by: string
-    grp: string
     newcat: string
     oldcat: string
 }
 
 export interface TimerEvent {
-    by: string
-    grp: string
     expiryDurationInSeconds: number
     stop: boolean
 }
 
 export interface ColumnsChangeEvent {
-    by: string
-    grp: string
     columns: BoardColumn[]
 }
 

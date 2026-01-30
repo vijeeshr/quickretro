@@ -5,7 +5,7 @@ import { logMessage } from '../utils';
 import { DraftMessage } from '../models/DraftMessage';
 import { useContentEditableLimiter } from '../composables/useContentEditableLimiter';
 
-// "currentUser", "currentUserNickname", "board", "comment.cat" only used to calculate message size in bytes. "category" already passed with "comment.cat".
+// "currentUserNickname", "comment.cat" only used to calculate message size in bytes. "category" already passed with "comment.cat".
 // Message size calc and trimming only done when editing.
 // Only a message's content and category are actually updated in the backend
 interface Props {
@@ -13,9 +13,7 @@ interface Props {
     mask: boolean
     canManage: boolean
     locked: boolean
-    currentUser: string // Only used for message size calc
     currentUserNickname: string // Only used for message size calc
-    board: string // Only used for message size calc
 }
 const props = defineProps<Props>()
 const emit = defineEmits(['updated', 'deleted', 'invalidContent', 'discard'])
@@ -94,10 +92,9 @@ const saveOnEnter = (event: KeyboardEvent) => {
 }
 
 const { onInput } = useContentEditableLimiter({
-    user: () => props.currentUser,
     nickname: () => props.currentUserNickname,
-    board: () => props.board,
     category: () => props.comment.cat,
+    anon: () => props.comment.anon,
     isComment: true,
     onInvalid: (msg) => emit('invalidContent', msg)
 })

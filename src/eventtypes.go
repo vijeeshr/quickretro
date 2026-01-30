@@ -10,65 +10,35 @@ type RegisterEvent struct {
 	// The broadcaster of RegisterEvent i.e. "Broadcast" method below sends two types of responses -
 	// RegisterResponse: Sent to the client who triggered the RegisterEvent, and
 	// UserJoiningResponse: Sent to all the other active clients in the board
-	By         string `json:"by"`
 	ByNickname string `json:"nickname"`
 	Xid        string `json:"xid"`
-	Group      string `json:"grp"`
 }
 
-func (p *RegisterEvent) Handle(i *Event, h *Hub) {
+func (p *RegisterEvent) Handle(e *Event, h *Hub) {
 	// Validate
-	if p.By == "" || p.Xid == "" || p.Group == "" {
+	if p.ByNickname == "" || p.Xid == "" {
 		return
 	}
 	// Mostly the board should exist. That check is done during handshake.
-	// This is to prevent adding UserPresence data to redis on receipt of a tampered reg event payload with a non-existent board.
-	if !h.redis.BoardExists(p.Group) {
+	// This is to prevent adding UserPresence data to redis on receipt of a reg event payload with a non-existent board.
+	// TODO: Check if this is needed?
+	if !h.redis.BoardExists(e.Group) {
 		return
 	}
 
 	// Execute
-	if ok := h.redis.CommitUserPresence(p.Group, &User{Id: p.By, Xid: p.Xid, Nickname: p.ByNickname}); !ok {
+	if ok := h.redis.CommitUserPresence(e.Group, &User{Id: e.By, Xid: p.Xid, Nickname: p.ByNickname}); !ok {
 		return
 	}
 
 	// Publish to Redis (for broadcasting)
 	// *Message is nil as this is not a message related update. Find a better way. Generics?
-	h.redis.Publish(p.Group, &BroadcastArgs{Message: nil, Event: i})
+	h.redis.Publish(e.Group, &BroadcastArgs{Message: nil, Event: e})
 }
-func (i *RegisterEvent) Broadcast(m *Message, h *Hub) {
-	// // Todo: Can below calls be pipelined?
-	// // Transform to Outgoing format
-	// // Don't want to add another field in BroadcastArgs{}.
-	// board, boardOk := h.redis.GetBoard(i.Group)
-	// if !boardOk {
-	// 	slog.Error("No board found in RegisterEvent broadcast", "board", i.Group)
-	// 	return
-	// }
-	// cols, colsOk := h.redis.GetBoardColumns(i.Group)
-	// if !colsOk {
-	// 	slog.Error("No board columns found in RegisterEvent broadcast", "board", i.Group)
-	// 	return
-	// }
-	// users, usersOk := h.redis.GetUsersPresence(i.Group)
-	// if !usersOk {
-	// 	slog.Error("Error when getting user presence in RegisterEvent broadcast", "board", i.Group)
-	// 	return
-	// }
-	// messages, messagesOk := h.redis.GetMessages(i.Group)
-	// if !messagesOk {
-	// 	slog.Error("Error getting messages in RegisterEvent broadcast", "board", i.Group)
-	// 	return
-	// }
-	// comments, commentsOk := h.redis.GetComments(i.Group)
-	// if !commentsOk {
-	// 	slog.Error("Error getting comments in RegisterEvent broadcast", "board", i.Group)
-	// 	return
-	// }
-
-	data, ok := h.redis.GetBoardAggregatedData(i.Group)
+func (p *RegisterEvent) Broadcast(e *Event, m *Message, h *Hub) {
+	data, ok := h.redis.GetBoardAggregatedData(e.Group)
 	if !ok {
-		slog.Error("Failed to get board aggregated data", "board", i.Group)
+		slog.Error("Failed to get board aggregated data", "board", e.Group)
 		return
 	}
 
@@ -89,13 +59,13 @@ func (i *RegisterEvent) Broadcast(m *Message, h *Hub) {
 	for in, m := range messages {
 		ids[in] = m.Id
 	}
-	likesInfo, likesOk := h.redis.GetLikesInfo(i.By, ids...)
+	likesInfo, likesOk := h.redis.GetLikesInfo(e.By, ids...)
 	if !likesOk {
 		slog.Warn("Failed to fetch likes info")
 	}
 	for in, m := range messages {
 		msgRes := m.NewMessageResponse()
-		msgRes.Mine = m.By == i.By
+		msgRes.Mine = m.By == e.By
 		if likesOk {
 			if info, ok := likesInfo[m.Id]; ok {
 				msgRes.Likes = info.Count
@@ -109,7 +79,7 @@ func (i *RegisterEvent) Broadcast(m *Message, h *Hub) {
 	commentDetails := make([]MessageResponse, len(comments))
 	for in, c := range comments {
 		cmtRes := c.NewMessageResponse()
-		cmtRes.Mine = c.By == i.By
+		cmtRes.Mine = c.By == e.By
 		commentDetails[in] = cmtRes
 	}
 
@@ -136,25 +106,24 @@ func (i *RegisterEvent) Broadcast(m *Message, h *Hub) {
 		TimerExpiresInSeconds:     uint16(remainingTimeInSeconds), // This shouldn't error out since we will restrict expiry to max 1 hour (3600 seconds) future time, when saving "board.TimerExpiresAtUtc".
 		BoardExpiryTimeUtcSeconds: board.AutoDeleteAtUtc,
 		NotifyNewBoardExpiry:      (nowUnix - board.CreatedAtUtc) < 10, // Prepare board expiry notification prompt for New board (less than 10 seconds)
-		// IsBoardOwner:              (i.By == board.Owner),               // TODO: Check if this can be compromised
 	}
 	// Prepare UserJoiningResponse
 	// UserJoiningResponse is sent to all other active clients (except initiator)
 	joinResp := UserJoiningResponse{
 		Type:     "joining",
-		Nickname: i.ByNickname,
-		Xid:      i.Xid,
+		Nickname: p.ByNickname,
+		Xid:      p.Xid,
 	}
 
-	clients := h.clients[i.Group]
+	clients := h.clients[e.Group]
 
 	for client := range clients {
 		// // Shallow copy.
 		// // Copies the struct value. The fields/slices inside ([]MessageResponse, []UserDetails, []*BoardColumn) are NOT cloned deeply, they still point to the same underlying arrays.
 		// // Ensure those fields/slices aren't mutated after being sent from here.
 		// response := regResponse
-		if client.id == i.By {
-			regResponse.IsBoardOwner = client.id == board.Owner // TODO: Check if this is safer than the above, i.By == board.Owner
+		if client.id == e.By {
+			regResponse.IsBoardOwner = client.id == board.Owner
 			select {
 			case client.send <- regResponse:
 			default:
@@ -196,7 +165,7 @@ type UserClosingEvent struct {
 }
 
 // UserClosingEvent is initiated from the clients Read() goroutine when its closing. Not from UI
-func (p *UserClosingEvent) Handle(i *Event, h *Hub) {
+func (p *UserClosingEvent) Handle(_ *Event, h *Hub) {
 	// Validate
 	if p.By == "" || p.Group == "" {
 		return
@@ -225,13 +194,13 @@ func (p *UserClosingEvent) Handle(i *Event, h *Hub) {
 
 	h.redis.Publish(p.Group, &BroadcastArgs{Message: nil, Event: ev})
 }
-func (i *UserClosingEvent) Broadcast(m *Message, h *Hub) {
-	response := &UserClosingResponse{Type: "closing", Xid: i.Xid}
+func (p *UserClosingEvent) Broadcast(_ *Event, m *Message, h *Hub) {
+	response := &UserClosingResponse{Type: "closing", Xid: p.Xid}
 
-	clients := h.clients[i.Group]
+	clients := h.clients[p.Group]
 	for client := range clients {
 		// skip sending to the client that is closing
-		if client.id != i.By {
+		if client.id != p.By {
 			select {
 			case client.send <- response:
 			default:
@@ -242,20 +211,18 @@ func (i *UserClosingEvent) Broadcast(m *Message, h *Hub) {
 }
 
 type MaskEvent struct {
-	By    string `json:"by"`
-	Group string `json:"grp"`
-	Mask  bool   `json:"mask"`
+	Mask bool `json:"mask"`
 }
 
-func (p *MaskEvent) Handle(i *Event, h *Hub) {
+func (p *MaskEvent) Handle(e *Event, h *Hub) {
 	// Validate
-	b, ok := h.redis.GetBoard(p.Group)
+	b, ok := h.redis.GetBoard(e.Group)
 	if !ok {
-		slog.Warn("Cannot find board when handling MaskEvent", "board", p.Group)
+		slog.Warn("Cannot find board when handling MaskEvent", "board", e.Group)
 		return
 	}
-	if b.Owner != p.By {
-		slog.Warn("Non-owner trying to update board when handling MaskEvent", "board", p.Group, "user", p.By)
+	if b.Owner != e.By {
+		slog.Warn("Non-owner trying to update board when handling MaskEvent", "board", e.Group, "user", e.By)
 		return
 	}
 	if b.Mask == p.Mask {
@@ -269,14 +236,14 @@ func (p *MaskEvent) Handle(i *Event, h *Hub) {
 	}
 	// Publish to Redis (for broadcasting)
 	// *Message is nil as this is not a message related update. Masking is a UI gimmick. Find a better way.
-	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
+	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: e})
 }
-func (i *MaskEvent) Broadcast(m *Message, h *Hub) {
+func (p *MaskEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	// Transform to Outgoing format
 	// We can trust the MaskEvent.Mask payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
-	response := &MaskResponse{Type: "mask", Mask: i.Mask}
+	response := &MaskResponse{Type: "mask", Mask: p.Mask}
 
-	clients := h.clients[i.Group]
+	clients := h.clients[e.Group]
 	for client := range clients {
 		select {
 		case client.send <- response:
@@ -287,20 +254,18 @@ func (i *MaskEvent) Broadcast(m *Message, h *Hub) {
 }
 
 type LockEvent struct {
-	By    string `json:"by"`
-	Group string `json:"grp"`
-	Lock  bool   `json:"lock"`
+	Lock bool `json:"lock"`
 }
 
-func (p *LockEvent) Handle(i *Event, h *Hub) {
+func (p *LockEvent) Handle(e *Event, h *Hub) {
 	// validate
-	b, ok := h.redis.GetBoard(p.Group)
+	b, ok := h.redis.GetBoard(e.Group)
 	if !ok {
-		slog.Warn("Cannot find board when handling LockEvent", "board", p.Group)
+		slog.Warn("Cannot find board when handling LockEvent", "board", e.Group)
 		return
 	}
-	if b.Owner != p.By {
-		slog.Warn("Non-owner trying to update board when handling LockEvent", "board", p.Group, "user", p.By)
+	if b.Owner != e.By {
+		slog.Warn("Non-owner trying to update board when handling LockEvent", "board", e.Group, "user", e.By)
 		return
 	}
 	if b.Lock == p.Lock {
@@ -314,14 +279,14 @@ func (p *LockEvent) Handle(i *Event, h *Hub) {
 	}
 	// Publish to Redis (for broadcasting)
 	// *Message is nil as this is not a message related update. Locking is a UI gimmick. Find a better way.
-	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
+	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: e})
 }
-func (i *LockEvent) Broadcast(m *Message, h *Hub) {
+func (p *LockEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	// Transform to Outgoing format
 	// We can trust the LockEvent.Lock payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
-	response := &LockResponse{Type: "lock", Lock: i.Lock}
+	response := &LockResponse{Type: "lock", Lock: p.Lock}
 
-	clients := h.clients[i.Group]
+	clients := h.clients[e.Group]
 	for client := range clients {
 		select {
 		case client.send <- response:
@@ -333,24 +298,22 @@ func (i *LockEvent) Broadcast(m *Message, h *Hub) {
 
 type MessageEvent struct {
 	Id         string `json:"id"`
-	By         string `json:"by"`
 	ByXid      string `json:"byxid"`
 	ByNickname string `json:"nickname"`
-	Group      string `json:"grp"`
 	Content    string `json:"msg"`
 	Category   string `json:"cat"`
 	ParentId   string `json:"pid"`
 	Anonymous  bool   `json:"anon"`
 }
 
-func (p *MessageEvent) Handle(i *Event, h *Hub) {
+func (p *MessageEvent) Handle(e *Event, h *Hub) {
 	// Validate
-	if h.redis.IsBoardLocked(p.Group) {
-		slog.Warn("Cannot save message in read-only board", "board", p.Group)
+	if h.redis.IsBoardLocked(e.Group) {
+		slog.Warn("Cannot save message in read-only board", "board", e.Group)
 		return
 	}
 
-	msg := p.ToMessage() // From payload
+	msg := p.ToMessage(e.By, e.Group)
 
 	existing, exists := h.redis.GetMessage(msg.Id)
 	saved := false
@@ -374,7 +337,7 @@ func (p *MessageEvent) Handle(i *Event, h *Hub) {
 			existing.Content = msg.Content
 			msg = existing
 		}
-		h.redis.Publish(msg.Group, &BroadcastArgs{Message: msg, Event: i})
+		h.redis.Publish(msg.Group, &BroadcastArgs{Message: msg, Event: e})
 	}
 }
 func handleNewMessageOrComment(msg *Message, h *Hub) bool {
@@ -414,7 +377,7 @@ func handleUpdate(existing, updated *Message, h *Hub) bool {
 	return h.redis.Save(existing)
 }
 
-func (i *MessageEvent) Broadcast(m *Message, h *Hub) {
+func (p *MessageEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	// Transform to Outgoing format (static per broadcast)
 	base := m.NewMessageResponse()
 	base.Likes = h.redis.GetLikesCount(m.Id)
@@ -448,11 +411,10 @@ func (i *MessageEvent) Broadcast(m *Message, h *Hub) {
 
 type LikeMessageEvent struct {
 	MessageId string `json:"msgId"`
-	By        string `json:"by"`
 	Like      bool   `json:"like"`
 }
 
-func (p *LikeMessageEvent) Handle(i *Event, h *Hub) {
+func (p *LikeMessageEvent) Handle(e *Event, h *Hub) {
 	// Validate
 	msg, exists := h.redis.GetMessage(p.MessageId) // Todo: Check if fetching a message is needed for a like. Can avoid extra calls. Also BroadcastArgs.Message may not be needed here if removed.
 	if !exists {
@@ -460,17 +422,16 @@ func (p *LikeMessageEvent) Handle(i *Event, h *Hub) {
 		return
 	}
 	// Execute
-	liked := h.redis.Like(p.MessageId, p.By, p.Like)
+	liked := h.redis.Like(p.MessageId, e.By, p.Like)
 	if !liked {
 		return
 	}
 	// Publish to Redis (for broadcasting)
 	if liked {
-		h.redis.Publish(msg.Group, &BroadcastArgs{Message: msg, Event: i})
+		h.redis.Publish(msg.Group, &BroadcastArgs{Message: msg, Event: e})
 	}
 }
-
-func (i *LikeMessageEvent) Broadcast(m *Message, h *Hub) {
+func (p *LikeMessageEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	base := m.NewLikeResponse()
 	base.Likes = h.redis.GetLikesCount(m.Id)
 	// Snapshot clients for this group
@@ -501,17 +462,15 @@ func (i *LikeMessageEvent) Broadcast(m *Message, h *Hub) {
 }
 
 type DeleteMessageEvent struct {
-	MessageId  string   `json:"msgId"` // MessageId or CommentId
-	By         string   `json:"by"`
-	Group      string   `json:"grp"`
+	MessageId  string   `json:"msgId"`      // MessageId or CommentId
 	CommentIds []string `json:"commentIds"` // Only used when deleting a top-level message i.e. when MessageId represents a message and not a comment.
 }
 
-func (p *DeleteMessageEvent) Handle(i *Event, h *Hub) {
+func (p *DeleteMessageEvent) Handle(e *Event, h *Hub) {
 
 	// Validate
-	if h.redis.IsBoardLocked(p.Group) {
-		slog.Warn("Cannot delete data in read-only board", "board", p.Group)
+	if h.redis.IsBoardLocked(e.Group) {
+		slog.Warn("Cannot delete data in read-only board", "board", e.Group)
 		return
 	}
 
@@ -521,15 +480,15 @@ func (p *DeleteMessageEvent) Handle(i *Event, h *Hub) {
 		return
 	}
 
-	if msg.Id != p.MessageId || msg.Group != p.Group {
-		slog.Warn("Mismatched message/group in delete event", "msgId", p.MessageId, "group", p.Group)
+	if msg.Id != p.MessageId || msg.Group != e.Group {
+		slog.Warn("Mismatched message/group in delete event", "msgId", p.MessageId, "group", e.Group)
 		return
 	}
 
-	isBoardOwner := h.redis.IsBoardOwner(p.Group, p.By)
-	canExecute := (msg.By == p.By || isBoardOwner)
+	isBoardOwner := h.redis.IsBoardOwner(e.Group, e.By)
+	canExecute := (msg.By == e.By || isBoardOwner)
 	if !canExecute {
-		slog.Warn("User not authorized to delete message/comment", "msgId", msg.Id, "user", p.By)
+		slog.Warn("User not authorized to delete message/comment", "msgId", msg.Id, "user", e.By)
 		return
 	}
 
@@ -544,10 +503,10 @@ func (p *DeleteMessageEvent) Handle(i *Event, h *Hub) {
 
 	// Publish: to Redis (for broadcasting)
 	if deleted {
-		h.redis.Publish(msg.Group, &BroadcastArgs{Message: msg, Event: i}) // Todo: Similar to "Like", BroadcastArgs.Message may not be needed here.
+		h.redis.Publish(msg.Group, &BroadcastArgs{Message: msg, Event: e}) // Todo: Similar to "Like", BroadcastArgs.Message may not be needed here.
 	}
 }
-func (i *DeleteMessageEvent) Broadcast(m *Message, h *Hub) {
+func (p *DeleteMessageEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	// Transform to Outgoing format
 	response := m.NewDeleteResponse()
 
@@ -561,37 +520,34 @@ func (i *DeleteMessageEvent) Broadcast(m *Message, h *Hub) {
 	}
 }
 
-type DeleteAllEvent struct {
-	By    string `json:"by"`
-	Group string `json:"grp"`
-}
+type DeleteAllEvent struct{}
 
-func (p *DeleteAllEvent) Handle(i *Event, h *Hub) {
+func (p *DeleteAllEvent) Handle(e *Event, h *Hub) {
 	// Update Redis
-	b, ok := h.redis.GetBoard(p.Group)
+	b, ok := h.redis.GetBoard(e.Group)
 	if !ok {
-		slog.Warn("Cannot find board when handling DeleteAllEvent", "board", p.Group)
+		slog.Warn("Cannot find board when handling DeleteAllEvent", "board", e.Group)
 		return
 	}
 	// validate
-	if b.Owner != p.By {
-		slog.Warn("Non-owner cannot execute DeleteAllEvent", "board", p.Group, "user", p.By)
+	if b.Owner != e.By {
+		slog.Warn("Non-owner cannot execute DeleteAllEvent", "board", e.Group, "user", e.By)
 		return
 	}
 	// Delete
 	if deleted := h.redis.DeleteAll(b.Id); !deleted {
-		slog.Warn("Could not delete all related data for board.", "board", p.Group)
+		slog.Warn("Could not delete all related data for board.", "board", e.Group)
 		return
 	}
 	// Publish to Redis (for broadcasting)
 	// *Message is nil as this is not a message related update.
-	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
+	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: e})
 }
-func (i *DeleteAllEvent) Broadcast(m *Message, h *Hub) {
+func (p *DeleteAllEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	// Transform to Outgoing format
 	response := &DeleteAllResponse{Type: "delall"}
 
-	clients := h.clients[i.Group]
+	clients := h.clients[e.Group]
 	for client := range clients {
 		select {
 		case client.send <- response:
@@ -603,23 +559,21 @@ func (i *DeleteAllEvent) Broadcast(m *Message, h *Hub) {
 
 type CategoryChangeEvent struct {
 	MessageId   string   `json:"msgId"`
-	By          string   `json:"by"`
-	Group       string   `json:"grp"`
 	NewCategory string   `json:"newcat"`
 	OldCategory string   `json:"oldcat"`
 	CommentIds  []string `json:"commentIds"`
 }
 
-func (p *CategoryChangeEvent) Handle(i *Event, h *Hub) {
+func (p *CategoryChangeEvent) Handle(e *Event, h *Hub) {
 	// Validate
-	b, ok := h.redis.GetBoard(p.Group)
+	b, ok := h.redis.GetBoard(e.Group)
 	if !ok {
-		slog.Warn("Cannot find board when handling CategoryChangeEvent", "board", p.Group)
+		slog.Warn("Cannot find board when handling CategoryChangeEvent", "board", e.Group)
 		return
 	}
 
 	if b.Lock {
-		slog.Warn("Cannot change message category in read-only board", "board", p.Group)
+		slog.Warn("Cannot change message category in read-only board", "board", e.Group)
 		return
 	}
 
@@ -629,8 +583,8 @@ func (p *CategoryChangeEvent) Handle(i *Event, h *Hub) {
 		return
 	}
 
-	if msg.Id != p.MessageId || msg.Group != p.Group {
-		slog.Warn("Mismatched message/group in CategoryChangeEvent handle", "msgId", p.MessageId, "group", p.Group)
+	if msg.Id != p.MessageId || msg.Group != e.Group {
+		slog.Warn("Mismatched message/group in CategoryChangeEvent handle", "msgId", p.MessageId, "group", e.Group)
 		return
 	}
 
@@ -639,17 +593,17 @@ func (p *CategoryChangeEvent) Handle(i *Event, h *Hub) {
 		return
 	}
 
-	if !h.redis.IsBoardColumnActive(p.Group, p.NewCategory) {
-		slog.Warn("Cannot move message to invalid or inactive category", "board", p.Group, "msgId", p.MessageId, "newCategory", p.NewCategory)
+	if !h.redis.IsBoardColumnActive(e.Group, p.NewCategory) {
+		slog.Warn("Cannot move message to invalid or inactive category", "board", e.Group, "msgId", p.MessageId, "newCategory", p.NewCategory)
 		return
 	}
 
 	// Validate before changing category; especially if the message being moved is of the user who created/owns it.
 	// Board owner can change category of any message.
-	isBoardOwner := b.Owner == p.By
-	canExecute := (msg.By == p.By || isBoardOwner)
+	isBoardOwner := b.Owner == e.By
+	canExecute := (msg.By == e.By || isBoardOwner)
 	if !canExecute {
-		slog.Warn("User not authorized to change category message/comment", "msgId", p.MessageId, "user", p.By)
+		slog.Warn("User not authorized to change category message/comment", "msgId", p.MessageId, "user", e.By)
 		return
 	}
 
@@ -660,15 +614,15 @@ func (p *CategoryChangeEvent) Handle(i *Event, h *Hub) {
 	// Publish to Redis (for broadcasting)
 	// *Message is nil as all message details need not be broadcasted. Event details should be enough.
 	if updated {
-		h.redis.Publish(msg.Group, &BroadcastArgs{Message: nil, Event: i})
+		h.redis.Publish(msg.Group, &BroadcastArgs{Message: nil, Event: e})
 	}
 }
-func (i *CategoryChangeEvent) Broadcast(m *Message, h *Hub) {
+func (p *CategoryChangeEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	// Transform to Outgoing format
-	// We can trust the "i" *CategoryChangeResponse payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
-	response := &CategoryChangeResponse{Type: "catchng", MessageId: i.MessageId, NewCategory: i.NewCategory}
+	// We can trust the "p" *CategoryChangeResponse payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
+	response := &CategoryChangeResponse{Type: "catchng", MessageId: p.MessageId, NewCategory: p.NewCategory}
 
-	clients := h.clients[i.Group]
+	clients := h.clients[e.Group]
 	for client := range clients {
 		select {
 		case client.send <- response:
@@ -679,27 +633,25 @@ func (i *CategoryChangeEvent) Broadcast(m *Message, h *Hub) {
 }
 
 type TimerEvent struct {
-	By                      string `json:"by"`
-	Group                   string `json:"grp"`
 	ExpiryDurationInSeconds uint16 `json:"expiryDurationInSeconds"`
 	Stop                    bool   `json:"stop"`
 }
 
-func (p *TimerEvent) Handle(i *Event, h *Hub) {
+func (p *TimerEvent) Handle(e *Event, h *Hub) {
 	// The TimerEventHandle handles 2 things separately
 	// 	"Stop" - Is used to Stop the timer. When this is true, "ExpiryDurationInSeconds" passed in payload is ignored.
 	// 	"ExpiryDurationInSeconds" - Is used to convey the "Start" of a timer.
 	// Both are mutually exclusive mostly
 
 	// Validate
-	b, ok := h.redis.GetBoard(p.Group)
+	b, ok := h.redis.GetBoard(e.Group)
 	if !ok {
-		slog.Warn("Cannot find board when handling TimerEvent", "board", p.Group)
+		slog.Warn("Cannot find board when handling TimerEvent", "board", e.Group)
 		return
 	}
 	// Validate for both
-	if b.Owner != p.By {
-		slog.Warn("Non-owner trying to handle TimerEvent", "board", p.Group, "user", p.By)
+	if b.Owner != e.By {
+		slog.Warn("Non-owner trying to handle TimerEvent", "board", e.Group, "user", e.By)
 		return
 	}
 
@@ -713,7 +665,7 @@ func (p *TimerEvent) Handle(i *Event, h *Hub) {
 	// ...This validation prevents us from loosing that capability to deduce.
 	if p.Stop {
 		if !timerIsRunning(b.TimerExpiresAtUtc, nowUnix) {
-			slog.Warn("Cannot stop timer that isn't running", "board", p.Group)
+			slog.Warn("Cannot stop timer that isn't running", "board", e.Group)
 			return
 		}
 
@@ -724,14 +676,14 @@ func (p *TimerEvent) Handle(i *Event, h *Hub) {
 
 		// Publish to Redis (for broadcasting)
 		// *Message is nil as this is not a message related update. Timer is a UI gimmick. Find a better way.
-		h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
+		h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: e})
 		return
 	}
 
 	// START / UPDATE TIMER
 	// Validate and Execute for updating timer a.k.a "START"
 	if timerIsRunning(b.TimerExpiresAtUtc, nowUnix) {
-		slog.Warn("Cannot start Timer again. It is in running state", "board", p.Group)
+		slog.Warn("Cannot start Timer again. It is in running state", "board", e.Group)
 		return
 	}
 
@@ -749,17 +701,17 @@ func (p *TimerEvent) Handle(i *Event, h *Hub) {
 
 	// Publish to Redis (for broadcasting)
 	// *Message is nil as this is not a message related update. Timer is a UI gimmick. Find a better way.
-	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
+	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: e})
 }
 func timerIsRunning(expiresAt, now int64) bool {
 	return expiresAt > 0 && expiresAt > now
 }
-func (i *TimerEvent) Broadcast(m *Message, h *Hub) {
+func (p *TimerEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	// Transform to Outgoing format
 	// redis.Getboard() is called twice in Handle and Broadcast. Let it be that way for now. Don't want to add another field in BroadcastArgs{}.
-	board, boardOk := h.redis.GetBoard(i.Group)
+	board, boardOk := h.redis.GetBoard(e.Group)
 	if !boardOk {
-		slog.Warn("Cannot find board when broadcasting TimerEvent", "board", i.Group)
+		slog.Warn("Cannot find board when broadcasting TimerEvent", "board", e.Group)
 		return
 	}
 
@@ -777,7 +729,7 @@ func (i *TimerEvent) Broadcast(m *Message, h *Hub) {
 	// uint16: This shouldn't error out since we will restrict expiry to max 1 hour (3600 seconds) future time, when saving "board.TimerExpiresAtUtc".
 	response := &TimerResponse{Type: "timer", ExpiresInSeconds: uint16(remainingTimeInSeconds)}
 
-	clients := h.clients[i.Group]
+	clients := h.clients[e.Group]
 	for client := range clients {
 		select {
 		case client.send <- response:
@@ -788,17 +740,15 @@ func (i *TimerEvent) Broadcast(m *Message, h *Hub) {
 }
 
 type ColumnsChangeEvent struct {
-	By      string         `json:"by"`
-	Group   string         `json:"grp"`
 	Columns []*BoardColumn `json:"columns"`
 	// Only columns to add/update are sent. Columns to disable aren't sent explicitly.
 	// Using same BoardColumn struct that is used for request and redis store. Todo - refactor later.
 }
 
-func (p *ColumnsChangeEvent) Handle(i *Event, h *Hub) {
+func (p *ColumnsChangeEvent) Handle(e *Event, h *Hub) {
 	// validate
 	if len(p.Columns) == 0 || len(p.Columns) > 5 {
-		slog.Warn("Invalid columns data passed in ColumnsChangeEvent", "board", p.Group)
+		slog.Warn("Invalid columns data passed in ColumnsChangeEvent", "board", e.Group)
 		return
 	}
 	for _, col := range p.Columns {
@@ -807,32 +757,32 @@ func (p *ColumnsChangeEvent) Handle(i *Event, h *Hub) {
 			return
 		}
 	}
-	b, ok := h.redis.GetBoard(p.Group)
+	b, ok := h.redis.GetBoard(e.Group)
 	if !ok {
-		slog.Warn("Cannot find board when handling ColumnsChangeEvent", "board", p.Group)
+		slog.Warn("Cannot find board when handling ColumnsChangeEvent", "board", e.Group)
 		return
 	}
 	if b.Lock {
-		slog.Warn("Cannot change columns in read-only board", "board", p.Group)
+		slog.Warn("Cannot change columns in read-only board", "board", e.Group)
 		return
 	}
-	if b.Owner != p.By {
-		slog.Warn("Non-owner cannot execute ColumnsChangeEvent", "board", p.Group, "user", p.By)
+	if b.Owner != e.By {
+		slog.Warn("Non-owner cannot execute ColumnsChangeEvent", "board", e.Group, "user", e.By)
 		return
 	}
 	// Prevent deleting a column with associated messages
 	cols, ok := h.redis.GetBoardColumns(b.Id)
 	if !ok {
-		slog.Warn("Cannot get columns when handling ColumnsChangeEvent", "board", p.Group)
+		slog.Warn("Cannot get columns when handling ColumnsChangeEvent", "board", e.Group)
 		return
 	}
 	hasMessages, err := h.redis.HasMessagesForColumnsMarkedForRemoval(b.Id, cols, p.Columns)
 	if err != nil {
-		slog.Error(err.Error(), "board", p.Group)
+		slog.Error(err.Error(), "board", e.Group)
 		return
 	}
 	if hasMessages {
-		slog.Warn("Cannot reset columns with attached messages in ColumnsChangeEvent", "board", p.Group)
+		slog.Warn("Cannot reset columns with attached messages in ColumnsChangeEvent", "board", e.Group)
 		return
 	}
 
@@ -843,14 +793,14 @@ func (p *ColumnsChangeEvent) Handle(i *Event, h *Hub) {
 
 	// Publish to Redis (for broadcasting)
 	// *Message is nil as this is not a message related update.
-	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: i})
+	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: e})
 }
-func (i *ColumnsChangeEvent) Broadcast(m *Message, h *Hub) {
+func (p *ColumnsChangeEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	// Transform to Outgoing format
 	// We can trust the "i" *ColumnsChangeEvent payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
-	response := &ColumnsChangeResponse{Type: "colreset", BoardColumns: i.Columns}
+	response := &ColumnsChangeResponse{Type: "colreset", BoardColumns: p.Columns}
 
-	clients := h.clients[i.Group]
+	clients := h.clients[e.Group]
 	for client := range clients {
 		select {
 		case client.send <- response:

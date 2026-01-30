@@ -10,11 +10,15 @@ import (
 type Event struct {
 	Type    string          `json:"typ"` // Values can be one of "reg", "msg", "del", "delall", "like", "mask", "timer", "catchng". "closing" is not initiated from UI.
 	Payload json.RawMessage `json:"pyl"`
+	// "Group", "By" are ignored when sent from client. Each client's read goroutine overwrites them all the time.
+	// This is intended for allowing json marshalling/unmarshalling for redis pubsub. With `json:"-"` those fields will loose values during pubsub.
+	Group string `json:"grp"`
+	By    string `json:"by"`
 }
 
 type EventHandler interface {
 	Handle(e *Event, h *Hub)
-	Broadcast(m *Message, h *Hub)
+	Broadcast(e *Event, m *Message, h *Hub)
 }
 
 type eventFactory func(data json.RawMessage) (EventHandler, error)
@@ -84,7 +88,7 @@ func (e *Event) Broadcast(m *Message, h *Hub) {
 		slog.Error("Broadcast failed", "type", e.Type, "err", err)
 		return
 	}
-	handler.Broadcast(m, h)
+	handler.Broadcast(e, m, h)
 }
 
 // // Handle event

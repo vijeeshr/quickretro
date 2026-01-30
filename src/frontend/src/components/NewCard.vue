@@ -1,11 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { DraftMessage } from '../models/DraftMessage';
 import { useContentEditableLimiter } from '../composables/useContentEditableLimiter';
+import { MessageMode } from '../models/MessageMode';
 
-const props = defineProps<{ category: string, by: string, nickname: string, board: string }>()
+const props = withDefaults(defineProps<{
+  category: string
+  nickname: string
+  mode?: MessageMode
+}>(), {
+  mode: 'regular'
+})
+
 const emit = defineEmits(['added', 'invalidContent', 'discard'])
 
+const isAnon = computed(() => props.mode === 'anonymous')
 const editing = ref(true)
 
 const add = (event: Event) => {
@@ -25,7 +34,7 @@ const add = (event: Event) => {
       id: crypto.randomUUID(),
       msg: msg,
       cat: props.category,
-      anon: false,
+      anon: isAnon.value,
       pid: ''
     }
 
@@ -41,10 +50,9 @@ const addOnEnter = (event: KeyboardEvent) => {
 }
 
 const { onInput } = useContentEditableLimiter({
-  user: () => props.by,
   nickname: () => props.nickname,
-  board: () => props.board,
   category: () => props.category,
+  anon: () => isAnon.value,
   isComment: false,
   onInvalid: (msg) => emit('invalidContent', msg)
 })

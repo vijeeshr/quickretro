@@ -248,13 +248,13 @@ const onAdded = (card: DraftMessage) => {
     }
     const nicknameToSend = card.anon === true ? '' : nickname
     const xidToSend = card.anon === true ? '' : xid
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, byxid: xidToSend, nickname: nicknameToSend, grp: board, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, byxid: xidToSend, nickname: nicknameToSend, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
 }
 
 const onCommentAdded = (comment: DraftMessage) => {
     logMessage('newcontent received:', comment)
     // Todo: clear the comment field..maybe in the Card component?
-    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, byxid: xid, nickname: nickname, grp: board, msg: comment.msg, cat: comment.cat, anon: comment.anon, pid: comment.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, byxid: xid, nickname: nickname, msg: comment.msg, cat: comment.cat, anon: comment.anon, pid: comment.pid })
 }
 
 const onInvalidContent = (errorMessage: string) => {
@@ -271,51 +271,53 @@ const onDiscard = () => {
 
 const onUpdated = (card: DraftMessage) => {
     logMessage('Updated content received:', card)
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, by: user, byxid: xid, nickname: nickname, grp: board, msg: card.msg, cat: card.cat, anon: false, pid: card.pid })
+    const nicknameToSend = card.anon === true ? '' : nickname
+    const xidToSend = card.anon === true ? '' : xid
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, byxid: xidToSend, nickname: nicknameToSend, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
 }
 
 const onCommentUpdated = (comment: DraftMessage) => {
     logMessage('Updated content received:', comment)
-    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, by: user, byxid: xid, nickname: nickname, grp: board, msg: comment.msg, cat: comment.cat, anon: false, pid: comment.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, byxid: xid, nickname: nickname, msg: comment.msg, cat: comment.cat, anon: false, pid: comment.pid })
 }
 
 const onDeleted = (cardId: string) => {
     const commentIds = getCommentIds(cardId)
-    dispatchEvent<DeleteMessageEvent>("del", { msgId: cardId, by: user, grp: board, commentIds: commentIds })
+    dispatchEvent<DeleteMessageEvent>("del", { msgId: cardId, commentIds: commentIds })
 }
 
 const onCommentDeleted = (commendId: string) => {
-    dispatchEvent<DeleteMessageEvent>("del", { msgId: commendId, by: user, grp: board, commentIds: [] })
+    dispatchEvent<DeleteMessageEvent>("del", { msgId: commendId, commentIds: [] })
 }
 
 const onLiked = (likeMessage: LikeMessage) => {
-    dispatchEvent<LikeMessageEvent>("like", { msgId: likeMessage.msgId, by: user, like: likeMessage.like })
+    dispatchEvent<LikeMessageEvent>("like", { msgId: likeMessage.msgId, like: likeMessage.like })
 }
 
 const onCategoryChanged = (pyl: CategoryChangeMessage) => {
     const commentIds = getCommentIds(pyl.msgId)
-    dispatchEvent<CategoryChangeEvent>("catchng", { msgId: pyl.msgId, commentIds: commentIds, by: user, grp: board, newcat: pyl.newCategoryId, oldcat: pyl.oldCategoryId })
+    dispatchEvent<CategoryChangeEvent>("catchng", { msgId: pyl.msgId, commentIds: commentIds, newcat: pyl.newCategoryId, oldcat: pyl.oldCategoryId })
 }
 
 const mask = () => {
-    dispatchEvent<MaskEvent>("mask", { by: user, grp: board, mask: !isMasked.value })
+    dispatchEvent<MaskEvent>("mask", { mask: !isMasked.value })
 }
 
 const lock = () => {
-    dispatchEvent<LockEvent>("lock", { by: user, grp: board, lock: !isLocked.value })
+    dispatchEvent<LockEvent>("lock", { lock: !isLocked.value })
 }
 
 const deleteAll = () => {
-    dispatchEvent<DeleteAllEvent>("delall", { by: user, grp: board })
+    dispatchEvent<DeleteAllEvent>("delall", {})
 }
 
 const onTimerStart = (expiryDurationInSeconds: number) => {
-    dispatchEvent<TimerEvent>("timer", { by: user, grp: board, expiryDurationInSeconds: expiryDurationInSeconds, stop: false }) // "stop" is ignored
+    dispatchEvent<TimerEvent>("timer", { expiryDurationInSeconds: expiryDurationInSeconds, stop: false }) // "stop" is ignored
     setIsTimerDialogOpen(false)
 }
 
 const onTimerStop = () => {
-    dispatchEvent<TimerEvent>("timer", { by: user, grp: board, expiryDurationInSeconds: 0, stop: true }) // "expiryDurationInSeconds" is ignored
+    dispatchEvent<TimerEvent>("timer", { expiryDurationInSeconds: 0, stop: true }) // "expiryDurationInSeconds" is ignored
     setIsTimerDialogOpen(false)
 }
 
@@ -334,12 +336,12 @@ const saveCategoryChanges = () => {
         return
     }
 
-    if (exceedsEventRequestMaxSize<ColumnsChangeEvent>("colreset", { by: user, grp: board, columns: enabledCols })) {
+    if (exceedsEventRequestMaxSize<ColumnsChangeEvent>("colreset", { columns: enabledCols })) {
         toast.error(t('common.contentOverloadError'))
         return
     }
 
-    dispatchEvent<ColumnsChangeEvent>("colreset", { by: user, grp: board, columns: enabledCols })
+    dispatchEvent<ColumnsChangeEvent>("colreset", { columns: enabledCols })
 }
 
 // const getRGBizedColor = (color: string): [number, number, number] => {
@@ -955,7 +957,7 @@ const dispatchEvent = <T>(eventType: string, payload: T) => {
 const socketOnOpen = (event: Event) => {
     logMessage("[open] Connection established", event)
     isConnected.value = true
-    dispatchEvent<RegisterEvent>("reg", { by: user, nickname: nickname, xid: xid, grp: board })
+    dispatchEvent<RegisterEvent>("reg", { nickname: nickname, xid: xid })
 }
 const socketOnClose = (event: CloseEvent) => {
     isConnected.value = false
@@ -1335,18 +1337,17 @@ onUnmounted(() => {
                     :anonymous-button-highlight="newAnonymousCardCategory == column.id" :editable="isOwner"
                     :locked="isLocked" @add-card="add(column.id, false)" @add-anonymous-card="add(column.id, true)"
                     @category-click="openColumnEditDialog">
-                    <NewCard v-if="newCardCategory == column.id" :category="column.id" :by="user" :nickname="nickname"
-                        :board="board" @added="onAdded" @invalidContent="onInvalidContent" @discard="onDiscard" />
-                    <NewAnonymousCard v-if="newAnonymousCardCategory == column.id" :category="column.id" :by="user"
-                        nickname="" :board="board" @added="onAdded" @invalidContent="onInvalidContent"
-                        @discard="onDiscard" />
+                    <NewCard v-if="newCardCategory == column.id" :category="column.id" :nickname="nickname"
+                        @added="onAdded" @invalidContent="onInvalidContent" @discard="onDiscard" />
+                    <NewAnonymousCard v-if="newAnonymousCardCategory == column.id" :category="column.id" nickname=""
+                        @added="onAdded" @invalidContent="onInvalidContent" @discard="onDiscard" />
                     <Card v-for="card in filterCards(column.id)" :card="card" :comments="filterComments(card.id)"
-                        :current-user="user" :current-user-nickname="nickname" :board="board" :mask="isMasked"
-                        :can-manage="isOwner" :key="card.id" :categories="columns" :locked="isLocked"
-                        @updated="onUpdated" @deleted="onDeleted" @liked="onLiked" @category-changed="onCategoryChanged"
-                        @invalidContent="onInvalidContent" @avatar-clicked="showSpotlightFor"
-                        @discard="notifyForLostMessages({ dueToLock: true })" @comment-added="onCommentAdded"
-                        @comment-updated="onCommentUpdated" @comment-deleted="onCommentDeleted"
+                        :current-user-nickname="nickname" :mask="isMasked" :can-manage="isOwner" :key="card.id"
+                        :categories="columns" :locked="isLocked" @updated="onUpdated" @deleted="onDeleted"
+                        @liked="onLiked" @category-changed="onCategoryChanged" @invalidContent="onInvalidContent"
+                        @avatar-clicked="showSpotlightFor" @discard="notifyForLostMessages({ dueToLock: true })"
+                        @comment-added="onCommentAdded" @comment-updated="onCommentUpdated"
+                        @comment-deleted="onCommentDeleted"
                         @comment-discard="notifyForLostMessages({ dueToLock: true })"
                         @comment-invalid-content="onCommentInvalidContent" :class="{
                             'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none': isSpotlightOn && usersWithCards.length > 0 && card.byxid !== spotlightFor?.byxid,

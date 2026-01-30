@@ -13,7 +13,7 @@ import NewComment from './NewComment.vue';
 import Comment from './Comment.vue';
 import { useContentEditableLimiter } from '../composables/useContentEditableLimiter';
 
-// "currentUser", "currentUserNickname", "board", "card.cat" only used to calculate message size in bytes. "category" already passed with "card.cat".
+// "currentUserNickname", "card.cat" only used to calculate message size in bytes. "category" already passed with "card.cat".
 // Message size calc and trimming only done when editing.
 // Only a message's content and category are actually updated in the backend
 interface Props {
@@ -22,9 +22,7 @@ interface Props {
     mask: boolean
     canManage: boolean
     locked: boolean
-    currentUser: string // Only used for message size calc
     currentUserNickname: string // Only used for message size calc
-    board: string // Only used for message size calc
     categories: BoardColumn[]
 }
 const props = defineProps<Props>()
@@ -154,10 +152,9 @@ const changeCategory = (newCategory: string, oldCategory: string) => {
 }
 
 const { onInput } = useContentEditableLimiter({
-    user: () => props.currentUser,
     nickname: () => props.currentUserNickname,
-    board: () => props.board,
     category: () => props.card.cat,
+    anon: () => props.card.anon,
     isComment: false,
     onInvalid: (msg) => emit('invalidContent', msg)
 })
@@ -280,15 +277,15 @@ const { onInput } = useContentEditableLimiter({
         <!-- Comments panel -->
         <div v-if="showComments" class="border-t border-gray-200 mt-2 pt-2 space-y-2">
 
-            <NewComment :parent-id="props.card.id" :category="props.card.cat" :locked="locked" :by="props.currentUser"
-                :nickname="props.currentUserNickname" :board="props.board" @added="emit('comment-added', $event)"
+            <NewComment :parent-id="props.card.id" :category="props.card.cat" :locked="locked"
+                :nickname="props.currentUserNickname" @added="emit('comment-added', $event)"
                 @invalid-content="emit('comment-invalidContent', $event)"></NewComment>
 
             <template v-if="comments?.length">
                 <Comment v-for="comment in comments" :key="comment.id" :comment="comment" :mask="mask"
-                    :current-user="currentUser" :current-user-nickname="currentUserNickname" :board="board"
-                    :can-manage="props.canManage" :locked="locked" @updated="emit('comment-updated', $event)"
-                    @deleted="emit('comment-deleted', $event)" @discard="emit('comment-discard', $event)"
+                    :current-user-nickname="currentUserNickname" :can-manage="props.canManage" :locked="locked"
+                    @updated="emit('comment-updated', $event)" @deleted="emit('comment-deleted', $event)"
+                    @discard="emit('comment-discard', $event)"
                     @invalid-content="emit('comment-invalidContent', $event)" />
             </template>
 

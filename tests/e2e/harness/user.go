@@ -111,10 +111,8 @@ func (u *TestUser) SendEvent(typ string, payload interface{}) error {
 
 func (u *TestUser) Register() error {
 	reg := RegisterEvent{
-		By:         u.Id,
 		ByNickname: u.Nickname,
 		Xid:        "xid-" + u.Id, // Mock XID
-		Group:      u.Board,
 	}
 	return u.SendEvent("reg", reg)
 }
@@ -122,10 +120,8 @@ func (u *TestUser) Register() error {
 func (u *TestUser) SendMessage(id, content, category string) error {
 	msg := MessageEvent{
 		Id:         id,
-		By:         u.Id,
 		ByXid:      "xid-" + u.Id,
 		ByNickname: u.Nickname,
-		Group:      u.Board,
 		Content:    content,
 		Category:   category,
 		ParentId:   "",
@@ -137,10 +133,8 @@ func (u *TestUser) SendMessage(id, content, category string) error {
 func (u *TestUser) SendAnonymousMessage(id, content, category, xid, nickname string, anonymous bool) error {
 	msg := MessageEvent{
 		Id:         id,
-		By:         u.Id,
 		ByXid:      xid,
 		ByNickname: nickname,
-		Group:      u.Board,
 		Content:    content,
 		Category:   category,
 		ParentId:   "",
@@ -152,10 +146,8 @@ func (u *TestUser) SendAnonymousMessage(id, content, category, xid, nickname str
 func (u *TestUser) SendComment(id, content, category, ParentMessageId string) error {
 	msg := MessageEvent{
 		Id:         id,
-		By:         u.Id,
 		ByXid:      "xid-" + u.Id,
 		ByNickname: u.Nickname,
-		Group:      u.Board,
 		Content:    content,
 		Category:   category,
 		ParentId:   ParentMessageId,
@@ -181,35 +173,26 @@ func (u *TestUser) DeleteComment(cmtId string) error {
 func (u *TestUser) deleteMessage(msgId string, commentIds []string) error {
 	delEv := DeleteMessageEvent{
 		MessageId:  msgId,
-		By:         u.Id,
-		Group:      u.Board,
 		CommentIds: commentIds,
 	}
 	return u.SendEvent("del", delEv)
 }
 
 func (u *TestUser) DeleteBoard() error {
-	delAllEv := DeleteAllEvent{
-		By:    u.Id,
-		Group: u.Board,
-	}
+	delAllEv := DeleteAllEvent{}
 	return u.SendEvent("delall", delAllEv)
 }
 
 func (u *TestUser) Mask(mask bool) error {
 	maskEv := MaskEvent{
-		By:    u.Id,
-		Group: u.Board,
-		Mask:  mask,
+		Mask: mask,
 	}
 	return u.SendEvent("mask", maskEv)
 }
 
 func (u *TestUser) LockBoard(lock bool) error {
 	lockEv := LockEvent{
-		By:    u.Id,
-		Group: u.Board,
-		Lock:  lock,
+		Lock: lock,
 	}
 	return u.SendEvent("lock", lockEv)
 }
@@ -225,8 +208,6 @@ func (u *TestUser) ChangeCategoryOfMessageAndComments(msgId, oldCategory, newCat
 func (u *TestUser) changeMessageCategory(msgId, oldCategory, newCategory string, commentIds []string) error {
 	changeCatEv := CategoryChangeEvent{
 		MessageId:   msgId,
-		By:          u.Id,
-		Group:       u.Board,
 		OldCategory: oldCategory,
 		NewCategory: newCategory,
 		CommentIds:  commentIds,
@@ -237,7 +218,6 @@ func (u *TestUser) changeMessageCategory(msgId, oldCategory, newCategory string,
 func (u *TestUser) LikeMessage(msgId string, like bool) error {
 	likeEv := LikeMessageEvent{
 		MessageId: msgId,
-		By:        u.Id,
 		Like:      like,
 	}
 	return u.SendEvent("like", likeEv)
@@ -245,8 +225,6 @@ func (u *TestUser) LikeMessage(msgId string, like bool) error {
 
 func (u *TestUser) StartTimer(expiryDurationInSeconds uint16) error {
 	timerEv := TimerEvent{
-		By:                      u.Id,
-		Group:                   u.Board,
 		ExpiryDurationInSeconds: expiryDurationInSeconds,
 		Stop:                    false,
 	}
@@ -255,8 +233,6 @@ func (u *TestUser) StartTimer(expiryDurationInSeconds uint16) error {
 
 func (u *TestUser) StopTimer(expiryDurationInSeconds uint16) error {
 	timerEv := TimerEvent{
-		By:                      u.Id,
-		Group:                   u.Board,
 		ExpiryDurationInSeconds: expiryDurationInSeconds,
 		Stop:                    true,
 	}
@@ -265,8 +241,6 @@ func (u *TestUser) StopTimer(expiryDurationInSeconds uint16) error {
 
 func (u *TestUser) ChangeColumns(cols []*BoardColumn) error {
 	colChangeEv := ColumnsChangeEvent{
-		By:      u.Id,
-		Group:   u.Board,
 		Columns: cols,
 	}
 	return u.SendEvent("colreset", colChangeEv)

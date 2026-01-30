@@ -90,6 +90,10 @@ func (c *Client) read() {
 			break
 		}
 
+		// Always overwrite client-sent group/by (never trust UI)
+		event.Group = c.group
+		event.By = c.id
+
 		event.Handle(c.hub)
 	}
 }

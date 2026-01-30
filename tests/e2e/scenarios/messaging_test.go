@@ -148,17 +148,18 @@ func TestRegistration(t *testing.T) {
 		userB.FlushEvents()
 	})
 
-	// Negative Test: Registration to non-existent board
-	t.Run("Do NOT allow registration to non-existent board", func(t *testing.T) {
-		originalBoard := userA.Board
-		userA.Board = "nonexistent-board"
+	// TODO: Check after deleting board
+	// // Negative Test: Registration to non-existent board
+	// t.Run("Do NOT allow registration to non-existent board", func(t *testing.T) {
+	// 	originalBoard := userA.Board
+	// 	userA.Board = "nonexistent-board"
 
-		require.NoError(t, userA.Register())
+	// 	require.NoError(t, userA.Register())
 
-		require.NoError(t, userA.MustNotReceiveAnyEvent())
+	// 	require.NoError(t, userA.MustNotReceiveAnyEvent())
 
-		userA.Board = originalBoard // Restore
-	})
+	// 	userA.Board = originalBoard // Restore
+	// })
 }
 
 func TestMessageLifecycle(t *testing.T) {
@@ -196,18 +197,19 @@ func TestMessageLifecycle(t *testing.T) {
 		require.True(t, got.Mine)
 	})
 
-	t.Run("New message to non-existent board should fail", func(t *testing.T) {
-		originalBoard := userA.Board
-		userA.Board = "nonexistent-board"
+	// TODO: Check after deleting board
+	// t.Run("New message to non-existent board should fail", func(t *testing.T) {
+	// 	originalBoard := userA.Board
+	// 	userA.Board = "nonexistent-board"
 
-		require.NoError(t, userA.SendMessage(msgId, content, category))
-		require.NoError(t, userA.MustNotReceiveAnyEvent())
+	// 	require.NoError(t, userA.SendMessage(msgId, content, category))
+	// 	require.NoError(t, userA.MustNotReceiveAnyEvent())
 
-		userA.Board = originalBoard
+	// 	userA.Board = originalBoard
 
-		userA.FlushEvents()
-		userB.FlushEvents()
-	})
+	// 	userA.FlushEvents()
+	// 	userB.FlushEvents()
+	// })
 
 	t.Run("Edit existing message", func(t *testing.T) {
 		content = "First message is edited"
@@ -1205,6 +1207,40 @@ func TestBoardDeletion(t *testing.T) {
 		var got harness.DeleteAllResponse
 		userB.MustWaitForEvent(t, "delall", &got)
 		userA.MustWaitForEvent(t, "delall", &got)
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	// Negative Test: Registration to non-existent board
+	t.Run("Do NOT allow registration to non-existent(deleted) board", func(t *testing.T) {
+		// originalBoard := userA.Board
+		// userA.Board = "nonexistent-board"
+
+		require.NoError(t, userA.Register())
+
+		require.NoError(t, userA.MustNotReceiveAnyEvent())
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+		// userA.Board = originalBoard // Restore
+	})
+
+	t.Run("New message to non-existent(deleted) board should fail", func(t *testing.T) {
+		content := "First message"
+		category := "col01"
+		msgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
+
+		// originalBoard := userA.Board
+		userA.Board = "nonexistent-board"
+
+		require.NoError(t, userA.SendMessage(msgId, content, category))
+		require.NoError(t, userA.MustNotReceiveAnyEvent())
+
+		// userA.Board = originalBoard
+
+		userA.FlushEvents()
+		userB.FlushEvents()
 	})
 }
 

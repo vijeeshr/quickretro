@@ -77,12 +77,12 @@ func (c *RedisConnector) Unsubscribe(redisChannel ...string) {
 }
 
 func (c *RedisConnector) Publish(redisChannel string, payload any) {
-	payload, err := json.Marshal(payload)
+	data, err := json.Marshal(payload)
 	if err != nil {
-		slog.Error("Marshal error when Publishing", "err", err, "channels", redisChannel, "payload", payload)
+		slog.Error("Marshal error on publish", "err", err, "channel", redisChannel)
 	}
-	if err := c.client.Publish(c.ctx, redisChannel, payload).Err(); err != nil {
-		slog.Error("Error when Publishing", "err", err, "channels", redisChannel, "payload", payload)
+	if err := c.client.Publish(c.ctx, redisChannel, data).Err(); err != nil {
+		slog.Error("Publish error", "err", err, "channel", redisChannel)
 	}
 }
 
