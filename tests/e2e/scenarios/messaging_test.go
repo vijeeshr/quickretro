@@ -440,7 +440,7 @@ func TestAnonymousMessaging(t *testing.T) {
 	t.Run("New anonymous message is sent and received", func(t *testing.T) {
 		anonymous := true
 		content := "Guess who am I?"
-		require.NoError(t, userA.SendAnonymousMessage(msgId, content, category, "", "", anonymous))
+		require.NoError(t, userA.SendAnonymousMessage(msgId, content, category, "", anonymous))
 
 		var got harness.MessageResponse
 		userB.MustWaitForEvent(t, "msg", &got)
@@ -454,11 +454,10 @@ func TestAnonymousMessaging(t *testing.T) {
 
 	t.Run("Existing anonymous message must NOT be made non-anonymous later", func(t *testing.T) {
 		anonymous := false // TRYING to change it to false
-		xid := "xid-" + userA.Id
 		nickname := userA.Nickname
 		updatedContent := "Revealing myself?"
 
-		require.NoError(t, userA.SendAnonymousMessage(msgId, updatedContent, category, xid, nickname, anonymous))
+		require.NoError(t, userA.SendAnonymousMessage(msgId, updatedContent, category, nickname, anonymous))
 
 		var got harness.MessageResponse
 		userB.MustWaitForEvent(t, "msg", &got)

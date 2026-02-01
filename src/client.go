@@ -51,6 +51,7 @@ type Client struct {
 	conn  *websocket.Conn
 	send  chan interface{}
 	id    string // This is the user uuid
+	xid   string // The is the externally exposed uuid of the user
 	group string // This can be a board/room
 }
 
@@ -84,15 +85,16 @@ func (c *Client) read() {
 			}
 			if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
 				// UserClosingEvent does not originate from UI
-				userClosingEvent := &UserClosingEvent{By: c.id, Group: c.group} // "xid" field will be populated from the event's handle(r)
+				userClosingEvent := &UserClosingEvent{By: c.id, Group: c.group, Xid: c.xid}
 				userClosingEvent.Handle(nil, c.hub)
 			}
 			break
 		}
 
-		// Always overwrite client-sent group/by (never trust UI)
+		// Always overwrite client-sent group/by/xid (never trust UI)
 		event.Group = c.group
 		event.By = c.id
+		event.Xid = c.xid
 
 		event.Handle(c.hub)
 	}
@@ -141,6 +143,11 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	xid := r.URL.Query().Get("xid")
+	if xid == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	// if !hub.redis.BoardExists(board) {
 	// 	w.WriteHeader(http.StatusNotFound)
 	// 	return
@@ -169,7 +176,7 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Represent the websocket connection as a "Client".
-	client := &Client{id: user, group: board, conn: conn, send: make(chan interface{}, 256), hub: hub}
+	client := &Client{id: user, xid: xid, group: board, conn: conn, send: make(chan interface{}, 256), hub: hub}
 
 	// Register the connection/client with the Hub
 	client.hub.register <- client

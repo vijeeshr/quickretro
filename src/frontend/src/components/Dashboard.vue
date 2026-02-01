@@ -247,14 +247,13 @@ const onAdded = (card: DraftMessage) => {
         return
     }
     const nicknameToSend = card.anon === true ? '' : nickname
-    const xidToSend = card.anon === true ? '' : xid
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, byxid: xidToSend, nickname: nicknameToSend, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, nickname: nicknameToSend, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
 }
 
 const onCommentAdded = (comment: DraftMessage) => {
     logMessage('newcontent received:', comment)
     // Todo: clear the comment field..maybe in the Card component?
-    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, byxid: xid, nickname: nickname, msg: comment.msg, cat: comment.cat, anon: comment.anon, pid: comment.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, nickname: nickname, msg: comment.msg, cat: comment.cat, anon: comment.anon, pid: comment.pid })
 }
 
 const onInvalidContent = (errorMessage: string) => {
@@ -272,13 +271,12 @@ const onDiscard = () => {
 const onUpdated = (card: DraftMessage) => {
     logMessage('Updated content received:', card)
     const nicknameToSend = card.anon === true ? '' : nickname
-    const xidToSend = card.anon === true ? '' : xid
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, byxid: xidToSend, nickname: nicknameToSend, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, nickname: nicknameToSend, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
 }
 
 const onCommentUpdated = (comment: DraftMessage) => {
     logMessage('Updated content received:', comment)
-    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, byxid: xid, nickname: nickname, msg: comment.msg, cat: comment.cat, anon: false, pid: comment.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, nickname: nickname, msg: comment.msg, cat: comment.cat, anon: false, pid: comment.pid })
 }
 
 const onDeleted = (cardId: string) => {
@@ -957,7 +955,7 @@ const dispatchEvent = <T>(eventType: string, payload: T) => {
 const socketOnOpen = (event: Event) => {
     logMessage("[open] Connection established", event)
     isConnected.value = true
-    dispatchEvent<RegisterEvent>("reg", { nickname: nickname, xid: xid })
+    dispatchEvent<RegisterEvent>("reg", { nickname: nickname })
 }
 const socketOnClose = (event: CloseEvent) => {
     isConnected.value = false
@@ -1037,7 +1035,7 @@ const handleConnectivity = () => {
 
 onMounted(() => {
     const websocketProtocol = import.meta.env.VITE_WS_PROTOCOL || 'wss'
-    socket = new WebSocket(`${websocketProtocol}://${document.location.host}/ws/board/${board}/user/${user}/meet`)
+    socket = new WebSocket(`${websocketProtocol}://${document.location.host}/ws/board/${board}/user/${user}/meet?xid=${xid}`)
     socket.onopen = socketOnOpen
     socket.onclose = socketOnClose
     socket.onerror = socketOnError

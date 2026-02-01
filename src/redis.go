@@ -427,43 +427,31 @@ func (c *RedisConnector) CommitUserPresence(boardId string, user *User) bool {
 	return true
 }
 
-func (c *RedisConnector) RemoveUserPresence(boardId string, userId string) (string, bool) {
+func (c *RedisConnector) RemoveUserPresence(boardId string, userId string) bool {
 	userKey := fmt.Sprintf("board:user:%s:%s", boardId, userId)
 	boardUsersKey := fmt.Sprintf("board:users:%s", boardId)
 
-	var xidCmd *redis.StringCmd
-
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-		xidCmd = pipe.HGet(c.ctx, userKey, "xid")
 		pipe.Del(c.ctx, userKey)
 		pipe.SRem(c.ctx, boardUsersKey, userId)
 		return nil
 	})
 
 	if err != nil {
+		// Todo: Recheck this logic. userKey hash get for xid is now removed from the pipeline.
 		// With redis.Nil err, we can assume the userKey hash get in the pipeline didn't return it as it doesn't exist
 		// This use-case happens when DeleteAll is executed i.e when user manually deletes a board
-		// We will still return ("", false), as this helps the caller UserClosingEvent.Handle from doing unnecessary broadcasting of UserClosing responses
+		// We will still return false, as this helps the caller UserClosingEvent.Handle from doing unnecessary broadcasting of UserClosing responses
 		// to clients in a board that is being deleted
 		if err == redis.Nil {
 			slog.Debug("User presence cleanup skipped (already removed)", "boardId", boardId, "userId", userId)
 		} else {
 			slog.Error("Failed removing user presence from Redis", "err", err, "boardId", boardId, "userId", userId)
 		}
-		return "", false
+		return false
 	}
 
-	xid, err := xidCmd.Result()
-	if err == redis.Nil {
-		// user existed? maybe not — treat as empty xid
-		return "", true
-	}
-	if err != nil {
-		slog.Warn("Failed reading xid while removing user presence", "err", err, "boardId", boardId, "userId", userId)
-		return "", true // presence removal still succeeded
-	}
-
-	return xid, true
+	return true
 }
 
 // Deprecated: No longer used

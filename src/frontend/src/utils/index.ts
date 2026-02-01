@@ -72,7 +72,6 @@ export const calculateContentBudget = (nickname: string, category: string, anon:
         typ: 'msg',
         pyl: {
             id: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-            byxid: !anon ? 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' : '',
             nickname: !anon ? nickname : '',
             msg: '',
             cat: category,

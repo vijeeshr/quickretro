@@ -8,7 +8,6 @@ export interface EventRequest<T> {
 
 export interface RegisterEvent {
     nickname: string
-    xid: string
 }
 
 export interface MaskEvent {
@@ -21,7 +20,6 @@ export interface LockEvent {
 
 export interface SaveMessageEvent {
     id: string
-    byxid: string
     nickname: string
     msg: string
     cat: string
