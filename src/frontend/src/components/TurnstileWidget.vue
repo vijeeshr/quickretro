@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n';
+import { TURNSTILE_ENABLED } from '../utils/appConfig';
 
 interface Props {
     sitekey: string
@@ -16,7 +17,7 @@ const emit = defineEmits<{
 }>()
 
 const { locale } = useI18n()
-const isEnabled = ref(window.APP_CONFIG?.turnstileEnabled || false)
+const isEnabled = ref(TURNSTILE_ENABLED)
 const widgetId = ref<string | null>(null)
 
 const reset = () => {

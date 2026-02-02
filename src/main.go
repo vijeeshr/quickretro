@@ -18,18 +18,21 @@ import (
 var frontendFiles embed.FS
 
 type Config struct {
-	Data struct {
-		AutoDeleteDuration string `toml:"auto_delete_duration"`
-	} `toml:"data"`
 	Server struct {
 		TurnstileSiteVerifyUrl string   `toml:"turnstile_site_verify_url"`
 		AllowedOrigins         []string `toml:"allowed_origins"`
-		MaxCategoryTextLength  int      `toml:"max_category_text_length"`
-		MaxTextLength          int      `toml:"max_text_length"`
 	} `toml:"server"`
+	Data struct {
+		AutoDeleteDuration    string `toml:"auto_delete_duration"`
+		MaxCategoryTextLength int    `toml:"max_category_text_length"`
+		MaxTextLength         int    `toml:"max_text_length"`
+	} `toml:"data"`
 	Websocket struct {
-		MaxMessageSize int64 `toml:"max_message_size_bytes"`
+		MaxMessageSizeBytes int64 `toml:"max_message_size_bytes"`
 	} `toml:"websocket"`
+	Frontend struct {
+		ContentEditableInvalidDebounceMs uint16 `toml:"content_editable_invalid_debounce_ms"`
+	} `toml:"frontend"`
 }
 
 type EnvironmentConfig struct {
@@ -112,11 +115,27 @@ func main() {
 		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
 		w.Header().Set("Pragma", "no-cache")
 		w.Header().Set("Expires", "0")
-		turnstileEnabled := os.Getenv("TURNSTILE_ENABLED") == "true"
-		turnstileSiteKey := os.Getenv("TURNSTILE_SITE_KEY")
-		js := fmt.Sprintf(`window.APP_CONFIG = { turnstileEnabled: %t, turnstileSiteKey: "%s" };`, turnstileEnabled, turnstileSiteKey)
-		w.Write([]byte(js))
+
+		turnstileEnabled := envConfig.TurnstileEnabled
+		turnstileSiteKey := envConfig.TurnstileSiteKey
+
+		js := fmt.Sprintf(`window.APP_CONFIG = {
+		turnstile:{enabled:%t,siteKey:"%s"},
+		data:{maxCategoryTextLength:%d,maxTextLength:%d},
+		websocket:{maxMessageSizeBytes:%d},
+		frontend:{contentEditableInvalidDebounceMs:%d}
+		};`,
+			turnstileEnabled,
+			turnstileSiteKey,
+			config.Data.MaxCategoryTextLength,
+			config.Data.MaxTextLength,
+			config.Websocket.MaxMessageSizeBytes,
+			config.Frontend.ContentEditableInvalidDebounceMs,
+		)
+
+		_, _ = w.Write([]byte(js))
 	}).Methods("GET")
+
 	router.HandleFunc("/create", frontendIndexHandler).Methods("GET")
 	router.HandleFunc("/board/{id}/join", frontendIndexHandler).Methods("GET")
 	router.HandleFunc("/board/{id}/", frontendIndexHandler).Methods("GET")

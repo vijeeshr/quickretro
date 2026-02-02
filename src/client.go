@@ -66,7 +66,7 @@ func (c *Client) read() {
 			c.hub.redis.Unsubscribe(c.group)
 		}
 	}()
-	c.conn.SetReadLimit(config.Websocket.MaxMessageSize)
+	c.conn.SetReadLimit(config.Websocket.MaxMessageSizeBytes)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error {
 		// slog.Debug("Pong", "from", c.id)

@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { CategoryDefinition } from "../models/CategoryDefinition"
+import { MAX_CATEGORY_TEXT_LENGTH } from "../utils/appConfig"
 
 const props = defineProps<{ categories: CategoryDefinition[] }>()
 
@@ -11,8 +12,6 @@ const emit = defineEmits([
     'categories-reorder',
     'valid'
 ])
-
-const MAX_CATEGORY_TEXT_LENGTH: number = Number(import.meta.env.VITE_MAX_CATEGORY_TEXT_LENGTH)
 
 const { t } = useI18n()
 

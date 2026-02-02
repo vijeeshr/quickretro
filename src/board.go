@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"unicode/utf8"
 
 	"github.com/gorilla/mux"
 	"github.com/lithammer/shortuuid/v4"
@@ -130,20 +131,21 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 	}
 
 	for _, col := range createReq.Columns {
-		if len([]rune(col.Text)) > config.Server.MaxCategoryTextLength {
-			slog.Error("Columns text length exceeds limit in create board request payload", "len", len([]rune(col.Text)), "col", col.Id)
+		textLen := utf8.RuneCountInString(col.Text)
+		if textLen > config.Data.MaxCategoryTextLength {
+			slog.Error("Columns text length exceeds limit in create board request payload", "len", textLen, "col", col.Id)
 			http.Error(w, "Column text exceeds limit", http.StatusBadRequest)
 			return
 		}
 	}
 
-	if len([]rune(createReq.Name)) > config.Server.MaxTextLength {
+	if utf8.RuneCountInString(createReq.Name) > config.Data.MaxTextLength {
 		slog.Error("Board name exceeds limit in create board request payload")
 		http.Error(w, "Board name exceeds length limit", http.StatusBadRequest)
 		return
 	}
 
-	if len([]rune(createReq.Team)) > config.Server.MaxTextLength {
+	if utf8.RuneCountInString(createReq.Team) > config.Data.MaxTextLength {
 		slog.Error("Team name exceeds limit in create board request payload")
 		http.Error(w, "Team name exceeds length limit", http.StatusBadRequest)
 		return

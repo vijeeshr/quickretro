@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"time"
+	"unicode/utf8"
 )
 
 type RegisterEvent struct {
@@ -746,8 +747,9 @@ func (p *ColumnsChangeEvent) Handle(e *Event, h *Hub) {
 		return
 	}
 	for _, col := range p.Columns {
-		if len([]rune(col.Text)) > config.Server.MaxCategoryTextLength {
-			slog.Warn("Columns text length exceeds limit in create board request payload", "len", len([]rune(col.Text)), "col", col.Id)
+		textLen := utf8.RuneCountInString(col.Text)
+		if textLen > config.Data.MaxCategoryTextLength {
+			slog.Warn("Columns text length exceeds limit in create board request payload", "len", textLen, "col", col.Id)
 			return
 		}
 	}

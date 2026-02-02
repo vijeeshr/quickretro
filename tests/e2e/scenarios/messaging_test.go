@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/stretchr/testify/require"
 )
@@ -1159,7 +1160,7 @@ func TestColumnEditing(t *testing.T) {
 	t.Run("Column text length validation", func(t *testing.T) {
 		// Text > 80 chars
 		longText := "This text is definitely longer than eighty characters which is the limit for the column name text so it should fail"
-		require.True(t, len([]rune(longText)) > 80)
+		require.True(t, utf8.RuneCountInString(longText) > 80)
 		newCols := []*harness.BoardColumn{
 			{Id: "col01", Text: longText, Color: "green", Position: 1},
 		}

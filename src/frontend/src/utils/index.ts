@@ -1,5 +1,6 @@
 import { BoardColumn } from "../models/BoardColumn"
 import { EventRequest, SaveMessageEvent } from "../models/Requests"
+import { MAX_WEBSOCKET_MESSAGE_SIZE_BYTES } from "./appConfig"
 
 export const logMessage = (...args: any[]): void => {
     const showConsoleLogs = import.meta.env.VITE_SHOW_CONSOLE_LOGS === 'true'
@@ -65,9 +66,6 @@ export const setCursorPosition = (element: HTMLElement, position: number): void 
  * Call this only when props change, not on every input.
 */
 export const calculateContentBudget = (nickname: string, category: string, anon: boolean, isComment: boolean): number => {
-    const maxAllowedBytes = parseInt(import.meta.env.VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES, 10)
-    if (isNaN(maxAllowedBytes)) return 0
-
     const emptyMessagePayload: EventRequest<SaveMessageEvent> = {
         typ: 'msg',
         pyl: {
@@ -82,16 +80,7 @@ export const calculateContentBudget = (nickname: string, category: string, anon:
 
     const emptyPayloadBytes = getByteLength(JSON.stringify(emptyMessagePayload))
     // logMessage('calculateContentBudget.emptyPayloadBytes', emptyPayloadBytes, 'emptyPyl', JSON.stringify(emptyMessagePayload))
-    return Math.max(0, maxAllowedBytes - emptyPayloadBytes)
-}
-
-export const canAssertMessageContentValidation = (): boolean => {
-
-    const maxSizeConfig: string = import.meta.env.VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES
-    const maxBytes: number = parseInt(maxSizeConfig, 10)
-
-    return maxSizeConfig !== undefined && maxSizeConfig !== null && maxSizeConfig !== '' && 
-        !isNaN(maxBytes) && maxBytes > 0
+    return Math.max(0, MAX_WEBSOCKET_MESSAGE_SIZE_BYTES - emptyPayloadBytes)
 }
 
 export const assertMessageContentValidation = (event: Event, maxAvailableBytes: number): MessageContentValidationResult => {
@@ -166,8 +155,7 @@ export const exceedsEventRequestMaxSize = <T>(eventType: string, payload: T) => 
         pyl: payload
     }
     const payloadBytes = getByteLength(JSON.stringify(event))
-    const maxAllowedBytes = Number(import.meta.env.VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES)
-    return payloadBytes > maxAllowedBytes
+    return payloadBytes > MAX_WEBSOCKET_MESSAGE_SIZE_BYTES
 }
 
 /**
