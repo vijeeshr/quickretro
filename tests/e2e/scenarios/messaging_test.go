@@ -3,9 +3,9 @@ package scenarios
 import (
 	"e2e_tests/harness"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
-	"unicode/utf8"
 
 	"github.com/stretchr/testify/require"
 )
@@ -1157,12 +1157,24 @@ func TestColumnEditing(t *testing.T) {
 		userB.FlushEvents()
 	})
 
-	t.Run("Column text length validation", func(t *testing.T) {
-		// Text > 80 chars
-		longText := "This text is definitely longer than eighty characters which is the limit for the column name text so it should fail"
-		require.True(t, utf8.RuneCountInString(longText) > 80)
+	t.Run("Column text, id, color length validation", func(t *testing.T) {
+		// Text > limit
 		newCols := []*harness.BoardColumn{
-			{Id: "col01", Text: longText, Color: "green", Position: 1},
+			{Id: "col01", Text: strings.Repeat("a", harness.MaxCategoryTextLength+1), Color: "green", Position: 1},
+		}
+		require.NoError(t, userA.ChangeColumns(newCols))
+		require.NoError(t, userB.MustNotReceiveEvent("colreset"))
+
+		// Id > limit
+		newCols = []*harness.BoardColumn{
+			{Id: strings.Repeat("a", harness.MaxColumnIdSizeBytes+1), Text: "What went well", Color: "green", Position: 1},
+		}
+		require.NoError(t, userA.ChangeColumns(newCols))
+		require.NoError(t, userB.MustNotReceiveEvent("colreset"))
+
+		// Color > limit
+		newCols = []*harness.BoardColumn{
+			{Id: "col01", Text: "What went well", Color: strings.Repeat("a", harness.MaxColorSizeBytes+1), Position: 1},
 		}
 		require.NoError(t, userA.ChangeColumns(newCols))
 		require.NoError(t, userB.MustNotReceiveEvent("colreset"))

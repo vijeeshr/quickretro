@@ -132,9 +132,9 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 
 	for _, col := range createReq.Columns {
 		textLen := utf8.RuneCountInString(col.Text)
-		if textLen > config.Data.MaxCategoryTextLength {
-			slog.Error("Columns text length exceeds limit in create board request payload", "len", textLen, "col", col.Id)
-			http.Error(w, "Column text exceeds limit", http.StatusBadRequest)
+		if len(col.Id) > MaxColumnIdSizeBytes || len(col.Color) > MaxColorSizeBytes || textLen > config.Data.MaxCategoryTextLength {
+			slog.Error("Column info exceeds limit in create board request payload", "col", col.Id, "len", textLen, "len-color", len(col.Color))
+			http.Error(w, "Column info exceeds limit", http.StatusBadRequest)
 			return
 		}
 	}
@@ -148,6 +148,13 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 	if utf8.RuneCountInString(createReq.Team) > config.Data.MaxTextLength {
 		slog.Error("Team name exceeds limit in create board request payload")
 		http.Error(w, "Team name exceeds length limit", http.StatusBadRequest)
+		return
+	}
+
+	// Owner is userId(UUIDv4) with 36 bytes
+	if len(createReq.Owner) > MaxIdSizeBytes {
+		slog.Error("OwnerId exceeds limit in create board request payload")
+		http.Error(w, "OwnerId exceeds length limit", http.StatusBadRequest)
 		return
 	}
 

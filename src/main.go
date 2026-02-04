@@ -17,6 +17,13 @@ import (
 //go:embed all:frontend/dist/*
 var frontendFiles embed.FS
 
+// Constants for input validation
+const (
+	MaxIdSizeBytes       int = 36 // (UUIDs, shortUUIDs). These are ASCII-only, machine-generated values used to validate inputs for BoardId, UserId, Xid
+	MaxColumnIdSizeBytes int = 5
+	MaxColorSizeBytes    int = 24
+)
+
 type Config struct {
 	Server struct {
 		TurnstileSiteVerifyUrl string   `toml:"turnstile_site_verify_url"`

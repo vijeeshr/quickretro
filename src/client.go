@@ -134,17 +134,17 @@ func (c *Client) write() {
 func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	// Grab values from request. Validate etc
 	board, ok := mux.Vars(r)["board"]
-	if !ok || board == "" {
+	if !ok || board == "" || len(board) > MaxIdSizeBytes {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	user, ok := mux.Vars(r)["user"]
-	if !ok || user == "" {
+	if !ok || user == "" || len(user) > MaxIdSizeBytes {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	xid := r.URL.Query().Get("xid")
-	if xid == "" {
+	if xid == "" || len(xid) > MaxIdSizeBytes {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

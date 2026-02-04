@@ -748,8 +748,8 @@ func (p *ColumnsChangeEvent) Handle(e *Event, h *Hub) {
 	}
 	for _, col := range p.Columns {
 		textLen := utf8.RuneCountInString(col.Text)
-		if textLen > config.Data.MaxCategoryTextLength {
-			slog.Warn("Columns text length exceeds limit in create board request payload", "len", textLen, "col", col.Id)
+		if len(col.Id) > MaxColumnIdSizeBytes || len(col.Color) > MaxColorSizeBytes || textLen > config.Data.MaxCategoryTextLength {
+			slog.Warn("Columns info exceeds limit in ColumnsChangeEvent", "col", col.Id, "len", textLen, "len-color", len(col.Color))
 			return
 		}
 	}
