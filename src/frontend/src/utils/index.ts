@@ -1,10 +1,10 @@
+import { env } from "../env"
 import { BoardColumn } from "../models/BoardColumn"
 import { EventRequest, SaveMessageEvent } from "../models/Requests"
 import { MAX_WEBSOCKET_MESSAGE_SIZE_BYTES } from "./appConfig"
 
 export const logMessage = (...args: any[]): void => {
-    const showConsoleLogs = import.meta.env.VITE_SHOW_CONSOLE_LOGS === 'true'
-    if (showConsoleLogs) {
+    if (env.showConsoleLogs) {
         console.log(...args)
     }
 }

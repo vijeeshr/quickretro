@@ -28,6 +28,7 @@ import { useLanguage } from '../composables/useLanguage';
 import CategoryEditor from './CategoryEditor.vue';
 import { CategoryDefinition } from '../models/CategoryDefinition';
 import { defaultCategories } from '../constants/defaultCategories';
+import { env } from '../env';
 
 const { locale, setLocale, languageOptions } = useLanguage()
 const { t } = useI18n()
@@ -1034,8 +1035,7 @@ const handleConnectivity = () => {
 }
 
 onMounted(() => {
-    const websocketProtocol = import.meta.env.VITE_WS_PROTOCOL || 'wss'
-    socket = new WebSocket(`${websocketProtocol}://${document.location.host}/ws/board/${board}/user/${user}/meet?xid=${xid}`)
+    socket = new WebSocket(`${env.wsProtocol}://${document.location.host}/ws/board/${board}/user/${user}/meet?xid=${xid}`)
     socket.onopen = socketOnOpen
     socket.onclose = socketOnClose
     socket.onerror = socketOnError

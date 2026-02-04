@@ -43,6 +43,7 @@ type Config struct {
 }
 
 type EnvironmentConfig struct {
+	Port               string
 	RedisConnStr       string
 	TurnstileSiteKey   string
 	TurnstileSecretKey string
@@ -150,8 +151,8 @@ func main() {
 	router.HandleFunc("/", frontendIndexHandler).Methods("GET")
 
 	//err := http.ListenAndServe(":8080", nil)
-	logger.Info("Server listening on port 8080")
-	if err := http.ListenAndServe(":8080", router); err != nil {
+	logger.Info("Server listening on port " + envConfig.Port)
+	if err := http.ListenAndServe(":"+envConfig.Port, router); err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
@@ -198,6 +199,7 @@ func LoadEnvironmentConfig() EnvironmentConfig {
 	// https://developers.cloudflare.com/turnstile/troubleshooting/testing/
 
 	return EnvironmentConfig{
+		Port:               getEnv("PORT", "8080"),
 		RedisConnStr:       getEnv("REDIS_CONNSTR", "redis://localhost:6379/0"),
 		TurnstileEnabled:   getEnv("TURNSTILE_ENABLED", "false") == "true",
 		TurnstileSiteKey:   getEnv("TURNSTILE_SITE_KEY", "1x00000000000000000000AA"),
