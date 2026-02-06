@@ -175,6 +175,8 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	slog.Info("Created", "board", board.Id, "owner", board.Owner)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(data)

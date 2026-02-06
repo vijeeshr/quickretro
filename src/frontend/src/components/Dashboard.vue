@@ -48,7 +48,7 @@ const xid = localStorage.getItem("xid") || ''
 const nickname = localStorage.getItem("nickname") || ''
 const isConnected = ref(false)
 const boardName = ref('')
-const shareLink = `${window.location.href}`
+const shareLink = `${window.location.href}/join`
 const isSpotlightOn = ref(false)
 const spotlightFor = ref<{ byxid: string; nickname: string } | null>(null)
 const boardExpiryLocalTime = ref('')
@@ -1053,6 +1053,9 @@ onUnmounted(() => {
     // if (socket && (!socket.CLOSED || !socket.CLOSING)) {
     //     socket.close(1001)
     // }
+    if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+        socket.close(1000)
+    }
 })
 
 </script>

@@ -489,6 +489,7 @@ func (c *RedisConnector) GetUsersPresence(boardId string) ([]*User, bool) {
 	return users, true
 }
 
+// Deprecated: No longer used
 func (c *RedisConnector) GetPresentUserIds(boardId string) ([]string, bool) {
 	key := fmt.Sprintf("board:users:%s", boardId)
 	ids, err := c.client.SMembers(c.ctx, key).Result()

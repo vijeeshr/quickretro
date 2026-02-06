@@ -59,12 +59,6 @@ func (c *Client) read() {
 	defer func() {
 		c.hub.unregister <- c
 		c.conn.Close()
-		// Cleanup subscription if there are no users left in the board
-		presentUsers, ok := c.hub.redis.GetPresentUserIds(c.group)
-		if ok && len(presentUsers) == 0 {
-			slog.Info("No users left in board. Unsubscribing.", "board", c.group)
-			c.hub.redis.Unsubscribe(c.group)
-		}
 	}()
 	c.conn.SetReadLimit(config.Websocket.MaxMessageSizeBytes)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -79,15 +73,7 @@ func (c *Client) read() {
 		var event Event
 		err := c.conn.ReadJSON(&event)
 		if err != nil {
-			slog.Error("Error reading from socket", "err", err, "user", c.id)
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
-				slog.Error("Unexpected close error when reading from socket", "err", err, "user", c.id)
-			}
-			if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
-				// UserClosingEvent does not originate from UI
-				userClosingEvent := &UserClosingEvent{By: c.id, Group: c.group, Xid: c.xid}
-				userClosingEvent.Handle(nil, c.hub)
-			}
+			slog.Error("Disconnecting", "err", err, "user", c.id)
 			break
 		}
 

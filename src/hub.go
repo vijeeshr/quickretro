@@ -32,14 +32,24 @@ func (hub *Hub) run() {
 			hub.clients[client.group][client] = true // Insert or Update
 			// hub.clients[client] = true
 		case client := <-hub.unregister:
-			// Delete the client and close the client's sending channel
-			// Also delete the group/board/room when there are no clients attached to it.
-			if _, ok := hub.clients[client.group]; ok {
-				delete(hub.clients[client.group], client)
-				close(client.send)
-				// Delete group/board/room if no clients exist
-				if len(hub.clients[client.group]) == 0 {
-					delete(hub.clients, client.group)
+			if connections, ok := hub.clients[client.group]; ok {
+				if _, exists := connections[client]; exists {
+					// Remove the client and close their channel
+					delete(connections, client)
+					close(client.send)
+
+					// Broadcast departure
+					// We do this here so it's guaranteed to fire exactly once per disconnect
+					hub.broadcastUserLeft(client)
+
+					// Cleanup group if empty
+					// len(connections) works here because connections points to the same underlying memory as the map(a reference type) stored in the hub.clients registry
+					// delete(connections, client) modified the actual map. Because connections and hub.clients[client.group] point to the same thing, the change is "live."
+					if len(connections) == 0 {
+						delete(hub.clients, client.group)
+						hub.redis.Unsubscribe(client.group)
+						slog.Info("Board empty. Unsubscribed from Redis.", "group", client.group)
+					}
 				}
 			}
 		case broadcast := <-hub.redis.subscriber.Channel():
@@ -50,4 +60,16 @@ func (hub *Hub) run() {
 			args.Event.Broadcast(args.Message, hub)
 		}
 	}
+}
+
+func (hub *Hub) broadcastUserLeft(c *Client) {
+	userClosingEvent := &UserClosingEvent{
+		By:    c.id,
+		Group: c.group,
+		Xid:   c.xid,
+	}
+	// We call Handle(nil, ...) because usually Handle(c, ...)
+	// is for events coming FROM a specific client.
+	// Here, the client is already gone.
+	userClosingEvent.Handle(nil, hub)
 }
