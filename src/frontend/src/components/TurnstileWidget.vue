@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n';
+import { TURNSTILE_ENABLED } from '../utils/appConfig';
+import { env } from '../env';
 
 interface Props {
     sitekey: string
@@ -16,7 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const { locale } = useI18n()
-const isEnabled = ref(window.APP_CONFIG?.turnstileEnabled || false)
+const isEnabled = ref(TURNSTILE_ENABLED)
 const widgetId = ref<string | null>(null)
 
 const reset = () => {
@@ -67,7 +69,7 @@ onMounted(() => {
     // if (!isEnabled.value) return
 
     // const script = document.createElement('script')
-    // script.src = import.meta.env.VITE_TURNSTILE_SCRIPT_URL
+    // script.src = env.turnstileScriptUrl
     // script.async = true
     // script.defer = true
     // script.onload = () => {
@@ -91,7 +93,7 @@ onMounted(() => {
     if (!isEnabled.value) return
 
     const script = document.createElement('script')
-    script.src = import.meta.env.VITE_TURNSTILE_SCRIPT_URL
+    script.src = env.turnstileScriptUrl
     script.async = true
     script.defer = true
     script.onerror = () => {
@@ -115,7 +117,7 @@ onUnmounted(() => {
         widgetId.value = null
     }
     const scripts = document.head.querySelectorAll(
-        `script[src="${import.meta.env.VITE_TURNSTILE_SCRIPT_URL}"]`
+        `script[src="${env.turnstileScriptUrl}"]`
     )
     scripts.forEach(script => script.remove())
 })

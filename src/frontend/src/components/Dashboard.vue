@@ -28,6 +28,7 @@ import { useLanguage } from '../composables/useLanguage';
 import CategoryEditor from './CategoryEditor.vue';
 import { CategoryDefinition } from '../models/CategoryDefinition';
 import { defaultCategories } from '../constants/defaultCategories';
+import { env } from '../env';
 
 const { locale, setLocale, languageOptions } = useLanguage()
 const { t } = useI18n()
@@ -47,7 +48,7 @@ const xid = localStorage.getItem("xid") || ''
 const nickname = localStorage.getItem("nickname") || ''
 const isConnected = ref(false)
 const boardName = ref('')
-const shareLink = `${window.location.href}`
+const shareLink = `${window.location.href}/join`
 const isSpotlightOn = ref(false)
 const spotlightFor = ref<{ byxid: string; nickname: string } | null>(null)
 const boardExpiryLocalTime = ref('')
@@ -247,14 +248,13 @@ const onAdded = (card: DraftMessage) => {
         return
     }
     const nicknameToSend = card.anon === true ? '' : nickname
-    const xidToSend = card.anon === true ? '' : xid
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, byxid: xidToSend, nickname: nicknameToSend, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, nickname: nicknameToSend, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
 }
 
 const onCommentAdded = (comment: DraftMessage) => {
     logMessage('newcontent received:', comment)
     // Todo: clear the comment field..maybe in the Card component?
-    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, byxid: xid, nickname: nickname, msg: comment.msg, cat: comment.cat, anon: comment.anon, pid: comment.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, nickname: nickname, msg: comment.msg, cat: comment.cat, anon: comment.anon, pid: comment.pid })
 }
 
 const onInvalidContent = (errorMessage: string) => {
@@ -276,13 +276,12 @@ const onDiscard = () => {
 const onUpdated = (card: DraftMessage) => {
     logMessage('Updated content received:', card)
     const nicknameToSend = card.anon === true ? '' : nickname
-    const xidToSend = card.anon === true ? '' : xid
-    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, byxid: xidToSend, nickname: nicknameToSend, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: card.id, nickname: nicknameToSend, msg: card.msg, cat: card.cat, anon: card.anon, pid: card.pid })
 }
 
 const onCommentUpdated = (comment: DraftMessage) => {
     logMessage('Updated content received:', comment)
-    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, byxid: xid, nickname: nickname, msg: comment.msg, cat: comment.cat, anon: false, pid: comment.pid })
+    dispatchEvent<SaveMessageEvent>("msg", { id: comment.id, nickname: nickname, msg: comment.msg, cat: comment.cat, anon: false, pid: comment.pid })
 }
 
 const onDeleted = (cardId: string) => {
@@ -988,7 +987,7 @@ const dispatchEvent = <T>(eventType: string, payload: T) => {
 const socketOnOpen = (event: Event) => {
     logMessage("[open] Connection established", event)
     isConnected.value = true
-    dispatchEvent<RegisterEvent>("reg", { nickname: nickname, xid: xid })
+    dispatchEvent<RegisterEvent>("reg", { nickname: nickname })
 }
 const socketOnClose = (event: CloseEvent) => {
     isConnected.value = false
@@ -1070,8 +1069,7 @@ const handleConnectivity = () => {
 }
 
 onMounted(() => {
-    const websocketProtocol = import.meta.env.VITE_WS_PROTOCOL || 'wss'
-    socket = new WebSocket(`${websocketProtocol}://${document.location.host}/ws/board/${board}/user/${user}/meet`)
+    socket = new WebSocket(`${env.wsProtocol}://${document.location.host}/ws/board/${board}/user/${user}/meet?xid=${xid}`)
     socket.onopen = socketOnOpen
     socket.onclose = socketOnClose
     socket.onerror = socketOnError
@@ -1095,6 +1093,9 @@ onUnmounted(() => {
     // if (socket && (!socket.CLOSED || !socket.CLOSING)) {
     //     socket.close(1001)
     // }
+    if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+        socket.close(1000)
+    }
 })
 
 </script>

@@ -3,6 +3,7 @@ package scenarios
 import (
 	"e2e_tests/harness"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -440,7 +441,7 @@ func TestAnonymousMessaging(t *testing.T) {
 	t.Run("New anonymous message is sent and received", func(t *testing.T) {
 		anonymous := true
 		content := "Guess who am I?"
-		require.NoError(t, userA.SendAnonymousMessage(msgId, content, category, "", "", anonymous))
+		require.NoError(t, userA.SendAnonymousMessage(msgId, content, category, "", anonymous))
 
 		var got harness.MessageResponse
 		userB.MustWaitForEvent(t, "msg", &got)
@@ -454,11 +455,10 @@ func TestAnonymousMessaging(t *testing.T) {
 
 	t.Run("Existing anonymous message must NOT be made non-anonymous later", func(t *testing.T) {
 		anonymous := false // TRYING to change it to false
-		xid := "xid-" + userA.Id
 		nickname := userA.Nickname
 		updatedContent := "Revealing myself?"
 
-		require.NoError(t, userA.SendAnonymousMessage(msgId, updatedContent, category, xid, nickname, anonymous))
+		require.NoError(t, userA.SendAnonymousMessage(msgId, updatedContent, category, nickname, anonymous))
 
 		var got harness.MessageResponse
 		userB.MustWaitForEvent(t, "msg", &got)
@@ -1157,12 +1157,24 @@ func TestColumnEditing(t *testing.T) {
 		userB.FlushEvents()
 	})
 
-	t.Run("Column text length validation", func(t *testing.T) {
-		// Text > 80 chars
-		longText := "This text is definitely longer than eighty characters which is the limit for the column name text so it should fail"
-		require.True(t, len([]rune(longText)) > 80)
+	t.Run("Column text, id, color length validation", func(t *testing.T) {
+		// Text > limit
 		newCols := []*harness.BoardColumn{
-			{Id: "col01", Text: longText, Color: "green", Position: 1},
+			{Id: "col01", Text: strings.Repeat("a", harness.MaxCategoryTextLength+1), Color: "green", Position: 1},
+		}
+		require.NoError(t, userA.ChangeColumns(newCols))
+		require.NoError(t, userB.MustNotReceiveEvent("colreset"))
+
+		// Id > limit
+		newCols = []*harness.BoardColumn{
+			{Id: strings.Repeat("a", harness.MaxColumnIdSizeBytes+1), Text: "What went well", Color: "green", Position: 1},
+		}
+		require.NoError(t, userA.ChangeColumns(newCols))
+		require.NoError(t, userB.MustNotReceiveEvent("colreset"))
+
+		// Color > limit
+		newCols = []*harness.BoardColumn{
+			{Id: "col01", Text: "What went well", Color: strings.Repeat("a", harness.MaxColorSizeBytes+1), Position: 1},
 		}
 		require.NoError(t, userA.ChangeColumns(newCols))
 		require.NoError(t, userB.MustNotReceiveEvent("colreset"))

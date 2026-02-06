@@ -4,27 +4,38 @@ declare namespace Turnstile {
         callback?: (token: string) => void
         'error-callback'?: () => void
         'expired-callback'?: () => void
-        theme?: 'auto' | 'light' | 'dark',
+        theme?: 'auto' | 'light' | 'dark'
         size?: 'normal' | 'flexible' | 'compact'
         language?: string
     }
 
     function remove(widgetId: string): void
-
     function reset(widgetId: string): void
-
     function render(
         container: string | HTMLElement,
         params: RenderParameters
     ): string
 }
 
-declare interface App_Config {
-    turnstileEnabled: boolean
-    turnstileSiteKey: string
+// Runtime config injected by backend via /config.js
+declare interface AppConfig {
+    turnstile: {
+        enabled: boolean
+        siteKey: string
+    }
+    websocket: {
+        maxMessageSizeBytes: number
+    }
+    data: {
+        maxCategoryTextLength: number
+        maxTextLength: number
+    }
+    frontend: {
+        contentEditableInvalidDebounceMs: number
+    }
 }
-  
+
 declare interface Window {
-    APP_CONFIG?: typeof App_Config
+    APP_CONFIG?: AppConfig
     turnstile: typeof Turnstile
 }

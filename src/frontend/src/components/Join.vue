@@ -5,8 +5,8 @@ import DarkModeToggle from './DarkModeToggle.vue';
 import Avatar from './Avatar.vue';
 import { useI18n } from 'vue-i18n';
 import LanguageSelector from './LanguageSelector.vue';
+import { MAX_TEXT_LENGTH } from '../utils/appConfig';
 
-const MAX_TEXT_LENGTH: number = Number(import.meta.env.VITE_MAX_TEXT_LENGTH)
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()

@@ -11,7 +11,6 @@ type Event struct {
 
 type RegisterEvent struct {
 	ByNickname string `json:"nickname"`
-	Xid        string `json:"xid"`
 }
 type RegisterResponse struct {
 	Type                      string            `json:"typ"`
@@ -49,7 +48,6 @@ type UserClosingResponse struct {
 
 type MessageEvent struct {
 	Id         string `json:"id"`
-	ByXid      string `json:"byxid"`
 	ByNickname string `json:"nickname"`
 	Content    string `json:"msg"`
 	Category   string `json:"cat"`

@@ -51,6 +51,7 @@ type Client struct {
 	conn  *websocket.Conn
 	send  chan interface{}
 	id    string // This is the user uuid
+	xid   string // The is the externally exposed uuid of the user
 	group string // This can be a board/room
 }
 
@@ -58,14 +59,8 @@ func (c *Client) read() {
 	defer func() {
 		c.hub.unregister <- c
 		c.conn.Close()
-		// Cleanup subscription if there are no users left in the board
-		presentUsers, ok := c.hub.redis.GetPresentUserIds(c.group)
-		if ok && len(presentUsers) == 0 {
-			slog.Info("No users left in board. Unsubscribing.", "board", c.group)
-			c.hub.redis.Unsubscribe(c.group)
-		}
 	}()
-	c.conn.SetReadLimit(config.Websocket.MaxMessageSize)
+	c.conn.SetReadLimit(config.Websocket.MaxMessageSizeBytes)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error {
 		// slog.Debug("Pong", "from", c.id)
@@ -78,21 +73,14 @@ func (c *Client) read() {
 		var event Event
 		err := c.conn.ReadJSON(&event)
 		if err != nil {
-			slog.Error("Error reading from socket", "err", err, "user", c.id)
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
-				slog.Error("Unexpected close error when reading from socket", "err", err, "user", c.id)
-			}
-			if websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
-				// UserClosingEvent does not originate from UI
-				userClosingEvent := &UserClosingEvent{By: c.id, Group: c.group} // "xid" field will be populated from the event's handle(r)
-				userClosingEvent.Handle(nil, c.hub)
-			}
+			slog.Error("Disconnecting", "err", err, "user", c.id)
 			break
 		}
 
-		// Always overwrite client-sent group/by (never trust UI)
+		// Always overwrite client-sent group/by/xid (never trust UI)
 		event.Group = c.group
 		event.By = c.id
+		event.Xid = c.xid
 
 		event.Handle(c.hub)
 	}
@@ -132,12 +120,17 @@ func (c *Client) write() {
 func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	// Grab values from request. Validate etc
 	board, ok := mux.Vars(r)["board"]
-	if !ok || board == "" {
+	if !ok || board == "" || len(board) > MaxIdSizeBytes {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	user, ok := mux.Vars(r)["user"]
-	if !ok || user == "" {
+	if !ok || user == "" || len(user) > MaxIdSizeBytes {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	xid := r.URL.Query().Get("xid")
+	if xid == "" || len(xid) > MaxIdSizeBytes {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -169,7 +162,7 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Represent the websocket connection as a "Client".
-	client := &Client{id: user, group: board, conn: conn, send: make(chan interface{}, 256), hub: hub}
+	client := &Client{id: user, xid: xid, group: board, conn: conn, send: make(chan interface{}, 256), hub: hub}
 
 	// Register the connection/client with the Hub
 	client.hub.register <- client

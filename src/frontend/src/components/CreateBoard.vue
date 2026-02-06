@@ -11,15 +11,15 @@ import TurnstileWidget from './TurnstileWidget.vue';
 import { useToast } from 'vue-toast-notification';
 import CategoryEditor from './CategoryEditor.vue';
 import { defaultCategories } from '../constants/defaultCategories';
+import { MAX_TEXT_LENGTH, TURNSTILE_ENABLED, TURNSTILE_SITEKEY } from '../utils/appConfig';
 
-const MAX_TEXT_LENGTH: number = Number(import.meta.env.VITE_MAX_TEXT_LENGTH)
 const { t } = useI18n()
 const router = useRouter()
 const boardname = ref('')
 const team = ref('')
 const isDark = ref(localStorage.getItem("theme") === "dark")
-const isTurnstileEnabled = ref(window.APP_CONFIG?.turnstileEnabled || false)
-const turnstileSiteKey = ref(window.APP_CONFIG?.turnstileSiteKey || '')
+const isTurnstileEnabled = ref(TURNSTILE_ENABLED)
+const turnstileSiteKey = ref(TURNSTILE_SITEKEY)
 const turnstileToken = ref('')
 const isTurnstileVerified = ref(false)
 const isSubmitting = ref(false)

@@ -10,7 +10,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const BaseURL = "http://localhost:8080" // https://localhost
+const BaseURL string = "http://localhost:8080" // https://localhost
+
+// Constants from source (mirrored here for validaiton)
+const (
+	MaxIdSizeBytes        int = 36
+	MaxColumnIdSizeBytes  int = 5
+	MaxColorSizeBytes     int = 24
+	MaxCategoryTextLength int = 80
+	MaxTextLength         int = 80
+)
 
 func CreateBoard(t *testing.T, ownerId string) string {
 	payload := map[string]any{

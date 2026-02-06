@@ -16,6 +16,7 @@ import (
 
 type TestUser struct {
 	Id       string
+	Xid      string
 	Nickname string
 	Board    string
 	Conn     *websocket.Conn
@@ -26,6 +27,7 @@ type TestUser struct {
 func NewUser(id, nickname, board string) *TestUser {
 	return &TestUser{
 		Id:       id,
+		Xid:      "xid-" + id,
 		Nickname: nickname,
 		Board:    board,
 		Received: make(chan Event, 100),
@@ -42,7 +44,7 @@ func NewUser(id, nickname, board string) *TestUser {
 // }
 
 func (u *TestUser) Connect(baseUrl string) error {
-	url := fmt.Sprintf("%s/ws/board/%s/user/%s/meet", baseUrl, u.Board, u.Id)
+	url := fmt.Sprintf("%s/ws/board/%s/user/%s/meet?xid=%s", baseUrl, u.Board, u.Id, u.Xid)
 	// Convert http(s) to ws(s)
 	if len(url) > 4 && url[:5] == "https" {
 		url = "wss" + url[5:]
@@ -112,7 +114,6 @@ func (u *TestUser) SendEvent(typ string, payload interface{}) error {
 func (u *TestUser) Register() error {
 	reg := RegisterEvent{
 		ByNickname: u.Nickname,
-		Xid:        "xid-" + u.Id, // Mock XID
 	}
 	return u.SendEvent("reg", reg)
 }
@@ -120,7 +121,6 @@ func (u *TestUser) Register() error {
 func (u *TestUser) SendMessage(id, content, category string) error {
 	msg := MessageEvent{
 		Id:         id,
-		ByXid:      "xid-" + u.Id,
 		ByNickname: u.Nickname,
 		Content:    content,
 		Category:   category,
@@ -130,10 +130,9 @@ func (u *TestUser) SendMessage(id, content, category string) error {
 	return u.SendEvent("msg", msg)
 }
 
-func (u *TestUser) SendAnonymousMessage(id, content, category, xid, nickname string, anonymous bool) error {
+func (u *TestUser) SendAnonymousMessage(id, content, category, nickname string, anonymous bool) error {
 	msg := MessageEvent{
 		Id:         id,
-		ByXid:      xid,
 		ByNickname: nickname,
 		Content:    content,
 		Category:   category,
@@ -146,7 +145,6 @@ func (u *TestUser) SendAnonymousMessage(id, content, category, xid, nickname str
 func (u *TestUser) SendComment(id, content, category, ParentMessageId string) error {
 	msg := MessageEvent{
 		Id:         id,
-		ByXid:      "xid-" + u.Id,
 		ByNickname: u.Nickname,
 		Content:    content,
 		Category:   category,

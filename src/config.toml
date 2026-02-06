@@ -13,20 +13,21 @@ allowed_origins = [
     "https://demo.quickretro.app"
 ]
 turnstile_site_verify_url = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
-# Maximum number of characters allowed for each category name
-# For the front-end validation, keep the same value in (src/frontend/.env [VITE_MAX_CATEGORY_TEXT_LENGTH])
-max_category_text_length = 80
-# Maximum number of characters allowed for board name, team name
-# For the front-end validation, keep the same value in (src/frontend/.env [VITE_MAX_TEXT_LENGTH])
-max_text_length = 80
-
-[websocket]
-# Maximum message size (in bytes) allowed from peer for the websocket connection
-# For the front-end validation, keep the same value in (src/frontend/.env [VITE_MAX_WEBSOCKET_MESSAGE_SIZE_BYTES])
-max_message_size_bytes = 1024
 
 [data]
 # Format: <number><unit>
 # Units: s=seconds, m=minutes, h=hours, d=days
 # Examples: "50s" for 50 seconds, "5m" for 5 minutes, "2h" for 2 hours, "7d" for 7 days
 auto_delete_duration = "2d"
+# Maximum number of characters allowed for each category name (also used by frontend)
+max_category_text_length = 80
+# Maximum number of characters allowed for board name, team name, nickname (also used by frontend)
+max_text_length = 80
+
+[websocket]
+# Maximum message size (in bytes) allowed from peer for the websocket connection (also used by frontend)
+max_message_size_bytes = 1024
+
+[frontend]
+# Delay (in milliseconds) before showing "message size limit reached" notification for cards/comments
+content_editable_invalid_debounce_ms = 500

@@ -1,6 +1,7 @@
 import { computed } from 'vue'
-import { assertMessageContentValidation, calculateContentBudget, canAssertMessageContentValidation, debounce, throttleRAF, MessageContentValidationResult } from '../utils'
+import { assertMessageContentValidation, calculateContentBudget, debounce, throttleRAF, MessageContentValidationResult } from '../utils'
 import { useI18n } from 'vue-i18n'
+import { CONTENT_EDITABLE_INVALID_DEBOUNCE_MS } from '../utils/appConfig'
 
 interface UseLimiterOptions {
   nickname: () => string
@@ -19,15 +20,13 @@ export function useContentEditableLimiter(opts: UseLimiterOptions) {
     calculateContentBudget(nickname(), category(), anon(), isComment)
   )
 
-  // Wait 500ms after the user stops hitting the limit to fire the toast.
+  // Wait *ms after the user stops hitting the limit to fire the toast
   const debouncedEmitInvalid = debounce((msg: string) => {
     onInvalid(msg)
-  }, 500)
+  }, CONTENT_EDITABLE_INVALID_DEBOUNCE_MS)
 
   // Handle the physical trimming at 60fps approx
   const validate = throttleRAF((event: Event) => {
-    if (!canAssertMessageContentValidation()) return
-
     // Pass the pre-calculated budget
     const validationResult: MessageContentValidationResult = assertMessageContentValidation(event, contentByteBudget.value)
     if (validationResult.isValid) return

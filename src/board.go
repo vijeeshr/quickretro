@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"unicode/utf8"
 
 	"github.com/gorilla/mux"
 	"github.com/lithammer/shortuuid/v4"
@@ -130,22 +131,30 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 	}
 
 	for _, col := range createReq.Columns {
-		if len([]rune(col.Text)) > config.Server.MaxCategoryTextLength {
-			slog.Error("Columns text length exceeds limit in create board request payload", "len", len([]rune(col.Text)), "col", col.Id)
-			http.Error(w, "Column text exceeds limit", http.StatusBadRequest)
+		textLen := utf8.RuneCountInString(col.Text)
+		if len(col.Id) > MaxColumnIdSizeBytes || len(col.Color) > MaxColorSizeBytes || textLen > config.Data.MaxCategoryTextLength {
+			slog.Error("Column info exceeds limit in create board request payload", "col", col.Id, "len", textLen, "len-color", len(col.Color))
+			http.Error(w, "Column info exceeds limit", http.StatusBadRequest)
 			return
 		}
 	}
 
-	if len([]rune(createReq.Name)) > config.Server.MaxTextLength {
+	if utf8.RuneCountInString(createReq.Name) > config.Data.MaxTextLength {
 		slog.Error("Board name exceeds limit in create board request payload")
 		http.Error(w, "Board name exceeds length limit", http.StatusBadRequest)
 		return
 	}
 
-	if len([]rune(createReq.Team)) > config.Server.MaxTextLength {
+	if utf8.RuneCountInString(createReq.Team) > config.Data.MaxTextLength {
 		slog.Error("Team name exceeds limit in create board request payload")
 		http.Error(w, "Team name exceeds length limit", http.StatusBadRequest)
+		return
+	}
+
+	// Owner is userId(UUIDv4) with 36 bytes
+	if len(createReq.Owner) > MaxIdSizeBytes {
+		slog.Error("OwnerId exceeds limit in create board request payload")
+		http.Error(w, "OwnerId exceeds length limit", http.StatusBadRequest)
 		return
 	}
 
@@ -165,6 +174,8 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+
+	slog.Info("Created", "board", board.Id, "owner", board.Owner)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

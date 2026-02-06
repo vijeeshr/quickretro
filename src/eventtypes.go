@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"time"
+	"unicode/utf8"
 )
 
 type RegisterEvent struct {
@@ -11,12 +12,11 @@ type RegisterEvent struct {
 	// RegisterResponse: Sent to the client who triggered the RegisterEvent, and
 	// UserJoiningResponse: Sent to all the other active clients in the board
 	ByNickname string `json:"nickname"`
-	Xid        string `json:"xid"`
 }
 
 func (p *RegisterEvent) Handle(e *Event, h *Hub) {
 	// Validate
-	if p.ByNickname == "" || p.Xid == "" {
+	if p.ByNickname == "" {
 		return
 	}
 	// Mostly the board should exist. That check is done during handshake.
@@ -27,7 +27,7 @@ func (p *RegisterEvent) Handle(e *Event, h *Hub) {
 	}
 
 	// Execute
-	if ok := h.redis.CommitUserPresence(e.Group, &User{Id: e.By, Xid: p.Xid, Nickname: p.ByNickname}); !ok {
+	if ok := h.redis.CommitUserPresence(e.Group, &User{Id: e.By, Xid: e.Xid, Nickname: p.ByNickname}); !ok {
 		return
 	}
 
@@ -112,7 +112,7 @@ func (p *RegisterEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	joinResp := UserJoiningResponse{
 		Type:     "joining",
 		Nickname: p.ByNickname,
-		Xid:      p.Xid,
+		Xid:      e.Xid,
 	}
 
 	clients := h.clients[e.Group]
@@ -172,21 +172,17 @@ func (p *UserClosingEvent) Handle(_ *Event, h *Hub) {
 	}
 
 	// Execute
-	xidOfRemovedUser, removed := h.redis.RemoveUserPresence(p.Group, p.By)
-	// No need to broadcast if there is no xid
-	if !removed || xidOfRemovedUser == "" {
+	removed := h.redis.RemoveUserPresence(p.Group, p.By)
+	if !removed {
 		return
 	}
-
-	// Populate xid in the event before broadcasting
-	p.Xid = xidOfRemovedUser
 
 	// Publish to Redis (for broadcasting)
 
 	// Bad hack start -
 	jsonifiedEvent, err := json.Marshal(p)
 	if err != nil {
-		slog.Error("Error marshalling UserClosingEvent", "details", err.Error(), "payload", p)
+		slog.Error("Error marshalling UserClosingEvent", "err", err, "payload", p)
 		return
 	}
 	var ev = &Event{Type: "closing", Payload: json.RawMessage(jsonifiedEvent)}
@@ -298,7 +294,6 @@ func (p *LockEvent) Broadcast(e *Event, m *Message, h *Hub) {
 
 type MessageEvent struct {
 	Id         string `json:"id"`
-	ByXid      string `json:"byxid"`
 	ByNickname string `json:"nickname"`
 	Content    string `json:"msg"`
 	Category   string `json:"cat"`
@@ -313,7 +308,7 @@ func (p *MessageEvent) Handle(e *Event, h *Hub) {
 		return
 	}
 
-	msg := p.ToMessage(e.By, e.Group)
+	msg := p.ToMessage(e.By, e.Xid, e.Group)
 
 	existing, exists := h.redis.GetMessage(msg.Id)
 	saved := false
@@ -752,8 +747,9 @@ func (p *ColumnsChangeEvent) Handle(e *Event, h *Hub) {
 		return
 	}
 	for _, col := range p.Columns {
-		if len([]rune(col.Text)) > config.Server.MaxCategoryTextLength {
-			slog.Warn("Columns text length exceeds limit in create board request payload", "len", len([]rune(col.Text)), "col", col.Id)
+		textLen := utf8.RuneCountInString(col.Text)
+		if len(col.Id) > MaxColumnIdSizeBytes || len(col.Color) > MaxColorSizeBytes || textLen > config.Data.MaxCategoryTextLength {
+			slog.Warn("Columns info exceeds limit in ColumnsChangeEvent", "col", col.Id, "len", textLen, "len-color", len(col.Color))
 			return
 		}
 	}

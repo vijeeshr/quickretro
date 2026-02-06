@@ -13,9 +13,9 @@ type Message struct {
 	Anonymous  bool   `redis:"anon"`
 }
 
-func (p *MessageEvent) ToMessage(by, group string) *Message {
+func (p *MessageEvent) ToMessage(by, xid, group string) *Message {
 	return &Message{
-		Id: p.Id, By: by, ByXid: p.ByXid, ByNickname: p.ByNickname, Group: group, Content: p.Content, Category: p.Category, Anonymous: p.Anonymous, ParentId: p.ParentId}
+		Id: p.Id, By: by, ByXid: xid, ByNickname: p.ByNickname, Group: group, Content: p.Content, Category: p.Category, Anonymous: p.Anonymous, ParentId: p.ParentId}
 }
 
 func (m *Message) NewMessageResponse() MessageResponse {
