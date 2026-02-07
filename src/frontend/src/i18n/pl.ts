@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: 'Treść przekracza dozwolony limit.',
         contentStrippingError: 'Treść przekracza dozwolony limit. Nadmiarowy tekst został obcięty z końca.',
-        invalidColumnSelection: 'Proszę wybrać kolumnę/kolumny'
+        invalidColumnSelection: 'Proszę wybrać kolumnę/kolumny',
+        typing: '{name} pisze'
     },
     join: {
         label: 'Dołącz jako gość',

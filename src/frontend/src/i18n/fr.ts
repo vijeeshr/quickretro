@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: 'Contenu dépasse la limite.',
         contentStrippingError: 'Contenu trop long. Texte excédentaire supprimé.',
-        invalidColumnSelection: 'Veuillez sélectionner des colonnes'
+        invalidColumnSelection: 'Veuillez sélectionner des colonnes',
+        typing: '{name} est en train d’écrire'
     },
     join: {
         label: 'Rejoindre en invité',

@@ -55,9 +55,7 @@ export interface ColumnsChangeEvent {
     columns: BoardColumn[]
 }
 
-export interface TypedEvent {
-    xid: string
-}
+export interface TypedEvent {}
 
 export interface RegisterResponse {
     typ: 'reg'

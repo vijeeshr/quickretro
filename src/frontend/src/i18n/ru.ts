@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: 'Превышен лимит содержимого',
         contentStrippingError: 'Лишний текст удалён',
-        invalidColumnSelection: 'Выберите столбцы'
+        invalidColumnSelection: 'Выберите столбцы',
+        typing: '{name} печатает'
     },
     join: {
         label: 'Войти как гость',

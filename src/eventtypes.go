@@ -806,17 +806,19 @@ func (p *ColumnsChangeEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	}
 }
 
-type TypedEvent struct {
-	Xid string `json:"xid"`
-}
+type TypedEvent struct{}
 
 func (p *TypedEvent) Handle(e *Event, h *Hub) {
+	if !config.TypingActivityConfig.Enabled {
+		return
+	}
+
 	// Publish to Redis (for broadcasting)
 	// *Message is nil as this is not a message related update.
 	h.redis.Publish(e.Group, &BroadcastArgs{Message: nil, Event: e})
 }
 func (p *TypedEvent) Broadcast(e *Event, m *Message, h *Hub) {
-	response := &TypedResponse{Type: "t", Xid: p.Xid}
+	response := &TypedResponse{Type: "t", Xid: e.Xid}
 
 	clients := h.clients[e.Group]
 	for client := range clients {

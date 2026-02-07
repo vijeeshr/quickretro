@@ -4,6 +4,7 @@ import { MessageResponse } from '../models/Requests'
 import { logMessage } from '../utils';
 import { DraftMessage } from '../models/DraftMessage';
 import { useContentEditableLimiter } from '../composables/useContentEditableLimiter';
+import { useTypingTrigger } from '../composables/useTypingTrigger';
 
 // "currentUserNickname", "comment.cat" only used to calculate message size in bytes. "category" already passed with "comment.cat".
 // Message size calc and trimming only done when editing.
@@ -16,7 +17,7 @@ interface Props {
     currentUserNickname: string // Only used for message size calc
 }
 const props = defineProps<Props>()
-const emit = defineEmits(['updated', 'deleted', 'invalidContent', 'discard'])
+const emit = defineEmits(['updated', 'deleted', 'invalidContent', 'discard', 'typing'])
 
 const editing = ref(false)
 
@@ -108,6 +109,13 @@ const remove = () => {
         emit('deleted', props.comment.id)
     }
 }
+
+const { triggerTyping } = useTypingTrigger(emit)
+
+const onKeyDown = (event: KeyboardEvent) => {
+    // Trigger the throttled typing event
+    triggerTyping(event)
+}
 </script>
 
 <template>
@@ -123,7 +131,7 @@ const remove = () => {
                     ? 'cursor-pointer'
                     : 'cursor-default'
         ]" :contenteditable="editing && comment.mine && !(locked && editing)" @click="edit" @blur="save"
-            @keydown.enter="saveOnEnter" @input="onInput">
+            @keydown.enter="saveOnEnter" @keydown="onKeyDown" @input="onInput">
             {{ content }}</article>
         <div class="flex" v-if="manageable">
             <!-- Delete comment button -->

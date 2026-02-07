@@ -40,6 +40,11 @@ type Config struct {
 	Frontend struct {
 		ContentEditableInvalidDebounceMs uint16 `toml:"content_editable_invalid_debounce_ms"`
 	} `toml:"frontend"`
+	TypingActivityConfig struct {
+		EmitThrottleMs   int  `toml:"emit_throttle_ms"`
+		DisplayTimeoutMs int  `toml:"display_timeout_ms"`
+		Enabled          bool `toml:"enabled"`
+	} `toml:"typing_activity"`
 }
 
 type EnvironmentConfig struct {
@@ -131,7 +136,8 @@ func main() {
 		turnstile:{enabled:%t,siteKey:"%s"},
 		data:{maxCategoryTextLength:%d,maxTextLength:%d},
 		websocket:{maxMessageSizeBytes:%d},
-		frontend:{contentEditableInvalidDebounceMs:%d}
+		frontend:{contentEditableInvalidDebounceMs:%d},
+		typingActivity:{enabled:%t,emitThrottleMs:%d,displayTimeoutMs:%d}
 		};`,
 			turnstileEnabled,
 			turnstileSiteKey,
@@ -139,6 +145,9 @@ func main() {
 			config.Data.MaxTextLength,
 			config.Websocket.MaxMessageSizeBytes,
 			config.Frontend.ContentEditableInvalidDebounceMs,
+			config.TypingActivityConfig.Enabled,
+			config.TypingActivityConfig.EmitThrottleMs,
+			config.TypingActivityConfig.DisplayTimeoutMs,
 		)
 
 		_, _ = w.Write([]byte(js))

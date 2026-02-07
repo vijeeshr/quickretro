@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: 'Conteúdo excede o limite.',
         contentStrippingError: 'Texto extra removido do final.',
-        invalidColumnSelection: 'Selecione coluna(s)'
+        invalidColumnSelection: 'Selecione coluna(s)',
+        typing: '{name} está a escrever'
     },
     join: {
         label: 'Entrar como convidado',

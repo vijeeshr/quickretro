@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: 'コンテンツ制限超過',
         contentStrippingError: '末尾のテキストが削除されました',
-        invalidColumnSelection: '列を選択してください'
+        invalidColumnSelection: '列を選択してください',
+        typing: '{name} が入力中'
     },
     join: {
         label: 'ゲスト参加',

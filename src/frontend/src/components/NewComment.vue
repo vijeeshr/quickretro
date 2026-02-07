@@ -2,9 +2,10 @@
 import { logMessage } from '../utils'
 import { DraftMessage } from '../models/DraftMessage';
 import { useContentEditableLimiter } from '../composables/useContentEditableLimiter';
+import { useTypingTrigger } from '../composables/useTypingTrigger';
 
 const props = defineProps<{ parentId: string, category: string, locked: boolean, nickname: string }>()
-const emit = defineEmits(['added', 'invalidContent'])
+const emit = defineEmits(['added', 'invalidContent', 'typing'])
 
 
 const add = (event: Event) => {
@@ -53,6 +54,13 @@ const { onInput } = useContentEditableLimiter({
     onInvalid: (msg) => emit('invalidContent', msg)
 })
 
+const { triggerTyping } = useTypingTrigger(emit)
+
+const onKeyDown = (event: KeyboardEvent) => {
+    // Trigger the throttled typing event
+    triggerTyping(event)
+}
+
 const vFocus = {
     mounted: (el: HTMLElement) => {
         el.focus()
@@ -63,5 +71,6 @@ const vFocus = {
 <template>
     <article v-focus
         class="w-full mt-2 border dark:border-gray-400 rounded-lg p-2 text-sm resize-none text-gray-500 dark:text-white min-h-[3.5rem] break-words focus:outline-none cursor-auto focus:border-sky-400 dark:focus:border-white"
-        :contenteditable="!locked" @blur="add" @keydown.enter="addOnEnter" @input="onInput"></article>
+        :contenteditable="!locked" @blur="add" @keydown.enter="addOnEnter" @keydown="onKeyDown" @input="onInput">
+    </article>
 </template>

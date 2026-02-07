@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: 'Conteúdo excede o limite permitido.',
         contentStrippingError: 'Texto adicional foi removido do final.',
-        invalidColumnSelection: 'Selecione pelo menos uma coluna'
+        invalidColumnSelection: 'Selecione pelo menos uma coluna',
+        typing: '{name} está digitando'
     },
     join: {
         label: 'Entrar como visitante',

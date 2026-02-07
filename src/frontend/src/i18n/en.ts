@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: 'Content more than allowed limit.',
         contentStrippingError: 'Content more than allowed limit. Extra text is stripped from the end.',
-        invalidColumnSelection: 'Please select column(s)'
+        invalidColumnSelection: 'Please select column(s)',
+        typing: '{name} is typing'
     },
     join: {
         label: 'Join as guest',

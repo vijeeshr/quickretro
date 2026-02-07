@@ -143,3 +143,10 @@ type BroadcastArgs struct {
 	Event Event `json:"event"`
 	// Message *Message `json:"message,omitempty"` // simplified
 }
+
+type TypedEvent struct{}
+
+type TypedResponse struct {
+	Type string `json:"typ"`
+	Xid  string `json:"xid"`
+}

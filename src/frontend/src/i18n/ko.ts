@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: '허용된 내용 초과',
         contentStrippingError: '초과된 텍스트가 삭제되었습니다',
-        invalidColumnSelection: '열을 선택해 주세요'
+        invalidColumnSelection: '열을 선택해 주세요',
+        typing: '{name}님이 입력 중입니다'
     },
     join: {
         label: '게스트로 참여',

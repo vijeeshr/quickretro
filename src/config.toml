@@ -31,3 +31,19 @@ max_message_size_bytes = 1024
 [frontend]
 # Delay (in milliseconds) before showing "message size limit reached" notification for cards/comments
 content_editable_invalid_debounce_ms = 500
+
+# ---------------------------------------------------------------------------------------------------
+# Typing Activity Notifications
+# Controls the real-time "user is typing" activity indicator shown on avatars during a retro session.
+# ---------------------------------------------------------------------------------------------------
+[typing_activity]
+# Enable or disable typing activity notifications globally (also used by frontend)
+enabled = true
+# Minimum time (in milliseconds) between consecutive "typing" events emitted by the same client. (only used by frontend)
+# This acts as a throttle to:
+# - Reduce WebSocket noise
+# - Prevent excessive broadcasts while a user is actively typing for a long time
+emit_throttle_ms = 3000
+# Time (in milliseconds) after which the typing indicator is automatically cleared if no new typing event is received. (only used by frontend)
+# This controls how long the activity ring stays visible on the user's avatar after they stop typing.
+display_timeout_ms = 2500
