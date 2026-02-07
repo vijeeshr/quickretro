@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: 'Contenido excede el límite permitido.',
         contentStrippingError: 'Contenido excede el límite permitido. El texto adicional ha sido eliminado.',
-        invalidColumnSelection: 'Por favor selecciona columna(s)'
+        invalidColumnSelection: 'Por favor selecciona columna(s)',
+        typing: '{name} está escribiendo'
     },
     join: {
         label: 'Unirse como invitado',

@@ -2,13 +2,15 @@
 import { computed } from 'vue'
 
 interface Props {
-    name?: string;
-    viewType?: 'Default' | 'Badge';
+    name?: string
+    viewType?: 'Default' | 'Badge'
+    showTitle?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
     name: 'Anonymous',
-    viewType: 'Default'
+    viewType: 'Default',
+    showTitle: true
 })
 
 const avatarText = computed(() => {
@@ -39,7 +41,7 @@ const avatarColor = computed(() => {
 
 <template>
     <div class="inline-flex items-center justify-center overflow-hidden"
-        :class="viewType === 'Badge' ? 'rounded-md px-3 py-1' : 'rounded-full'" :title="name"
+        :class="viewType === 'Badge' ? 'rounded-md px-3 py-1' : 'rounded-full'" :title="showTitle ? name : undefined"
         :style="{ backgroundColor: avatarColor }">
         <span class="font-medium text-xs text-white select-none">{{ avatarText }}</span>
     </div>

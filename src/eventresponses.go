@@ -89,3 +89,8 @@ type ColumnsChangeResponse struct {
 	Type         string         `json:"typ"`
 	BoardColumns []*BoardColumn `json:"columns"` // Using same BoardColumn struct that is used for request and redis store. Todo - refactor later.
 }
+
+type TypedResponse struct {
+	Type string `json:"typ"`
+	Xid  string `json:"xid"`
+}

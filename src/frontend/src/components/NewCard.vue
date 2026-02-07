@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { DraftMessage } from '../models/DraftMessage';
 import { useContentEditableLimiter } from '../composables/useContentEditableLimiter';
 import { MessageMode } from '../models/MessageMode';
+import { useTypingTrigger } from '../composables/useTypingTrigger';
 
 const props = withDefaults(defineProps<{
   category: string
@@ -12,7 +13,7 @@ const props = withDefaults(defineProps<{
   mode: 'regular'
 })
 
-const emit = defineEmits(['added', 'invalidContent', 'discard'])
+const emit = defineEmits(['added', 'invalidContent', 'discard', 'typing'])
 
 const isAnon = computed(() => props.mode === 'anonymous')
 const editing = ref(true)
@@ -57,6 +58,15 @@ const { onInput } = useContentEditableLimiter({
   onInvalid: (msg) => emit('invalidContent', msg)
 })
 
+const { triggerTyping } = useTypingTrigger(emit)
+
+const onKeyDown = (event: KeyboardEvent) => {
+  if (!isAnon.value) {
+    // Trigger the throttled typing event
+    triggerTyping(event)
+  }
+}
+
 const vFocus = {
   mounted: (el: HTMLElement) => {
     el.focus()
@@ -69,7 +79,7 @@ const vFocus = {
 
     <div class="text-gray-500 dark:text-white pb-2">
       <article v-focus class="min-h-[3.5rem] text-center break-words focus:outline-none cursor-auto"
-        contenteditable="true" @blur="add" @keydown.enter="addOnEnter" @input="onInput"></article>
+        contenteditable="true" @blur="add" @keydown.enter="addOnEnter" @keydown="onKeyDown" @input="onInput"></article>
     </div>
 
   </div>

@@ -237,6 +237,10 @@ func (u *TestUser) StopTimer(expiryDurationInSeconds uint16) error {
 	return u.SendEvent("timer", timerEv)
 }
 
+func (u *TestUser) SendTyping() error {
+	return u.SendEvent("t", TypedEvent{})
+}
+
 func (u *TestUser) ChangeColumns(cols []*BoardColumn) error {
 	colChangeEv := ColumnsChangeEvent{
 		Columns: cols,

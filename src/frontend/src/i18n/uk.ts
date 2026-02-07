@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: 'Перевищено допустимий обсяг контенту.',
         contentStrippingError: 'Текст було скорочено через перевищення ліміту.',
-        invalidColumnSelection: 'Оберіть колонку(и)'
+        invalidColumnSelection: 'Оберіть колонку(и)',
+        typing: '{name} друкує'
     },
     join: {
         label: 'Приєднатися як гість',

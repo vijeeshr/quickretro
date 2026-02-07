@@ -806,6 +806,35 @@ func (p *ColumnsChangeEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	}
 }
 
+type TypedEvent struct{}
+
+func (p *TypedEvent) Handle(e *Event, h *Hub) {
+	if !config.TypingActivityConfig.Enabled {
+		return
+	}
+
+	// Publish to Redis (for broadcasting)
+	// *Message is nil as this is not a message related update.
+	h.redis.Publish(e.Group, &BroadcastArgs{Message: nil, Event: e})
+}
+func (p *TypedEvent) Broadcast(e *Event, m *Message, h *Hub) {
+	response := &TypedResponse{Type: "t", Xid: e.Xid}
+
+	clients := h.clients[e.Group]
+	for client := range clients {
+		// No need to send response to initiator
+		if client.id == e.By {
+			continue
+		}
+
+		select {
+		case client.send <- response:
+		default:
+			client.hub.unregister <- client
+		}
+	}
+}
+
 // Helper struct from Broadcasting
 type BroadcastArgs struct {
 	Event   *Event

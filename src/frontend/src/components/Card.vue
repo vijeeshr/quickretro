@@ -12,6 +12,7 @@ import { useI18n } from 'vue-i18n';
 import NewComment from './NewComment.vue';
 import Comment from './Comment.vue';
 import { useContentEditableLimiter } from '../composables/useContentEditableLimiter';
+import { useTypingTrigger } from '../composables/useTypingTrigger';
 
 // "currentUserNickname", "card.cat" only used to calculate message size in bytes. "category" already passed with "card.cat".
 // Message size calc and trimming only done when editing.
@@ -27,7 +28,7 @@ interface Props {
 }
 const props = defineProps<Props>()
 const emit = defineEmits(['updated', 'deleted', 'discard', 'invalidContent', 'liked', 'categoryChanged', 'avatarClicked',
-    'comment-added', 'comment-updated', 'comment-deleted', 'comment-discard', 'comment-invalidContent'
+    'comment-added', 'comment-updated', 'comment-deleted', 'comment-discard', 'comment-invalidContent', 'typing'
 ])
 
 const { t } = useI18n()
@@ -158,6 +159,15 @@ const { onInput } = useContentEditableLimiter({
     isComment: false,
     onInvalid: (msg) => emit('invalidContent', msg)
 })
+
+const { triggerTyping } = useTypingTrigger(emit)
+
+const onKeyDown = (event: KeyboardEvent) => {
+    if (!props.card.anon) {
+        // Trigger the throttled typing event
+        triggerTyping(event)
+    }
+}
 </script>
 
 <template>
@@ -169,7 +179,7 @@ const { onInput } = useContentEditableLimiter({
             <article class="min-h-4 text-center break-words focus:outline-none"
                 :class="[editing ? 'cursor-auto' : card.mine && !locked ? 'cursor-pointer' : 'cursor-default']"
                 :contenteditable="editing && card.mine && !(locked && editing)" @click="edit" @blur="save"
-                @keydown.enter="saveOnEnter" @input="onInput">{{
+                @keydown.enter="saveOnEnter" @keydown="onKeyDown" @input="onInput">{{
                     content }}</article>
         </div>
 
@@ -279,14 +289,14 @@ const { onInput } = useContentEditableLimiter({
 
             <NewComment :parent-id="props.card.id" :category="props.card.cat" :locked="locked"
                 :nickname="props.currentUserNickname" @added="emit('comment-added', $event)"
-                @invalid-content="emit('comment-invalidContent', $event)"></NewComment>
+                @invalid-content="emit('comment-invalidContent', $event)" @typing="emit('typing')"></NewComment>
 
             <template v-if="comments?.length">
                 <Comment v-for="comment in comments" :key="comment.id" :comment="comment" :mask="mask"
                     :current-user-nickname="currentUserNickname" :can-manage="props.canManage" :locked="locked"
                     @updated="emit('comment-updated', $event)" @deleted="emit('comment-deleted', $event)"
-                    @discard="emit('comment-discard', $event)"
-                    @invalid-content="emit('comment-invalidContent', $event)" />
+                    @discard="emit('comment-discard', $event)" @invalid-content="emit('comment-invalidContent', $event)"
+                    @typing="emit('typing')" />
             </template>
 
         </div>

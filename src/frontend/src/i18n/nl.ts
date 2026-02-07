@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: 'Inhoud overschrijdt limiet.',
         contentStrippingError: 'Extra tekst verwijderd.',
-        invalidColumnSelection: 'Selecteer kolom(en)'
+        invalidColumnSelection: 'Selecteer kolom(en)',
+        typing: '{name} is aan het typen'
     },
     join: {
         label: 'Als gast deelnemen',

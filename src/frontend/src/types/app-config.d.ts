@@ -33,6 +33,11 @@ declare interface AppConfig {
     frontend: {
         contentEditableInvalidDebounceMs: number
     }
+    typingActivity: {
+        enabled: boolean
+        emitThrottleMs: number
+        displayTimeoutMs: number
+    }
 }
 
 declare interface Window {

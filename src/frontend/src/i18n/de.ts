@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: 'Inhalt überschreitet Limit.',
         contentStrippingError: 'Inhalt zu lang. Überschüssiger Text wurde entfernt.',
-        invalidColumnSelection: 'Bitte Spalte(n) auswählen'
+        invalidColumnSelection: 'Bitte Spalte(n) auswählen',
+        typing: '{name} schreibt gerade'
     },
     join: {
         label: 'Als Gast beitreten',

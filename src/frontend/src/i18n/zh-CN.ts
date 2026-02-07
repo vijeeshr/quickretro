@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: '内容超过允许限制',
         contentStrippingError: '内容超出限制，多余文字已被删除',
-        invalidColumnSelection: '请选择列'
+        invalidColumnSelection: '请选择列',
+        typing: '{name} 正在输入'
     },
     join: {
         label: '以访客加入',

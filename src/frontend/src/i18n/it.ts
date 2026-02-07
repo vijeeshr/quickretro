@@ -14,7 +14,8 @@ export default {
         },
         contentOverloadError: 'Contenuto oltre il limite consentito.',
         contentStrippingError: 'Testo in eccesso rimosso.',
-        invalidColumnSelection: 'Seleziona colonna(e)'
+        invalidColumnSelection: 'Seleziona colonna(e)',
+        typing: '{name} sta scrivendo'
     },
     join: {
         label: 'Partecipa come ospite',
