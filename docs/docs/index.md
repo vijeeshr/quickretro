@@ -64,6 +64,9 @@ features:
   - icon: 👥
     title: Online Presence Display
     details: See participants present in the meeting
+  - icon: ✍️
+    title: Live Typing Indicator
+    details: Know when others are typing
   - icon: 🗑️
     title: Auto-Delete data
     details: Auto-delete data with configurable retention duration

@@ -10,7 +10,8 @@ The left side-bar for a guest user has fewer controls.
 <img src="/dashboard_guest.png" class="shadow-img" alt="Dashboard" width="640" loading="lazy">
 
 The right-sidebar shows a real-time display of all participants who are currently in the meeting.\
-From <Badge type="tip" text="v1.2.0" /> onwards, each participant's message count is also displayed.
+From <Badge type="tip" text="v1.2.0" /> onwards, each participant's message count is also displayed.\
+From <Badge type="tip" text="v1.6.3" /> onwards, each participant's Avatar displays live pulse animation to indicate that user's typing activity for non-anonymous messages or comments.
 
 ::: tip
 Hover over the user's Avatar to know the full nickname.
