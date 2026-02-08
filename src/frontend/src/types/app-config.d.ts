@@ -35,6 +35,7 @@ declare interface AppConfig {
     }
     typingActivity: {
         enabled: boolean
+        autoDisableAfterCount: number
         emitThrottleMs: number
         displayTimeoutMs: number
     }

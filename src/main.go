@@ -41,9 +41,10 @@ type Config struct {
 		ContentEditableInvalidDebounceMs uint16 `toml:"content_editable_invalid_debounce_ms"`
 	} `toml:"frontend"`
 	TypingActivityConfig struct {
-		EmitThrottleMs   int  `toml:"emit_throttle_ms"`
-		DisplayTimeoutMs int  `toml:"display_timeout_ms"`
-		Enabled          bool `toml:"enabled"`
+		AutoDisableAfterCount int  `toml:"auto_disable_after_count"`
+		EmitThrottleMs        int  `toml:"emit_throttle_ms"`
+		DisplayTimeoutMs      int  `toml:"display_timeout_ms"`
+		Enabled               bool `toml:"enabled"`
 	} `toml:"typing_activity"`
 }
 
@@ -137,7 +138,7 @@ func main() {
 		data:{maxCategoryTextLength:%d,maxTextLength:%d},
 		websocket:{maxMessageSizeBytes:%d},
 		frontend:{contentEditableInvalidDebounceMs:%d},
-		typingActivity:{enabled:%t,emitThrottleMs:%d,displayTimeoutMs:%d}
+		typingActivity:{enabled:%t,autoDisableAfterCount:%d,emitThrottleMs:%d,displayTimeoutMs:%d}
 		};`,
 			turnstileEnabled,
 			turnstileSiteKey,
@@ -146,6 +147,7 @@ func main() {
 			config.Websocket.MaxMessageSizeBytes,
 			config.Frontend.ContentEditableInvalidDebounceMs,
 			config.TypingActivityConfig.Enabled,
+			config.TypingActivityConfig.AutoDisableAfterCount,
 			config.TypingActivityConfig.EmitThrottleMs,
 			config.TypingActivityConfig.DisplayTimeoutMs,
 		)

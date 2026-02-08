@@ -39,6 +39,10 @@ content_editable_invalid_debounce_ms = 500
 [typing_activity]
 # Enable or disable typing activity notifications globally (also used by frontend)
 enabled = true
+# Automatically disable dispatch of "typing" events in the frontend when 
+# the number of other active users(excluding current user) in a board exceeds this value.
+# Set to 0 (or a negative value) to disable this limit. (only used by frontend)
+auto_disable_after_count = 15
 # Minimum time (in milliseconds) between consecutive "typing" events emitted by the same client. (only used by frontend)
 # This acts as a throttle to:
 # - Reduce WebSocket noise
@@ -46,4 +50,4 @@ enabled = true
 emit_throttle_ms = 3000
 # Time (in milliseconds) after which the typing indicator is automatically cleared if no new typing event is received. (only used by frontend)
 # This controls how long the activity ring stays visible on the user's avatar after they stop typing.
-display_timeout_ms = 2500
+display_timeout_ms = 2000

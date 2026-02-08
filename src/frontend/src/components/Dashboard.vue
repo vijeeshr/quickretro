@@ -30,7 +30,7 @@ import { CategoryDefinition } from '../models/CategoryDefinition';
 import { defaultCategories } from '../constants/defaultCategories';
 import { env } from '../env';
 import AvatarActivity from './AvatarActivity.vue';
-import { TYPING_ACTIVITY_DISPLAY_TIMEOUT_MS, TYPING_ACTIVITY_ENABLED } from '../utils/appConfig';
+import { TYPING_ACTIVITY_AUTO_DISABLE_AFTER_COUNT, TYPING_ACTIVITY_DISPLAY_TIMEOUT_MS, TYPING_ACTIVITY_ENABLED } from '../utils/appConfig';
 
 const { locale, setLocale, languageOptions } = useLanguage()
 const { t } = useI18n()
@@ -267,7 +267,23 @@ const onCommentInvalidContent = (errorMessage: string) => {
     toast.error(errorMessage)
 }
 
+const otherActiveUsersCount = computed(
+    () => onlineUsersCardsStats.value.length
+)
+
+const typingActivityDispatchAllowed = computed(() => {
+    if (!TYPING_ACTIVITY_ENABLED) return false
+    if (otherActiveUsersCount.value === 0) return false
+
+    const limit = TYPING_ACTIVITY_AUTO_DISABLE_AFTER_COUNT
+    if (limit > 0 && otherActiveUsersCount.value > limit) return false
+
+    return true
+})
+
 const onTyping = () => {
+    if (!typingActivityDispatchAllowed.value) return
+
     dispatchEvent<TypedEvent>("t", {})
 }
 

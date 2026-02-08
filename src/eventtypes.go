@@ -813,8 +813,6 @@ func (p *TypedEvent) Handle(e *Event, h *Hub) {
 		return
 	}
 
-	// Publish to Redis (for broadcasting)
-	// *Message is nil as this is not a message related update.
 	h.redis.Publish(e.Group, &BroadcastArgs{Message: nil, Event: e})
 }
 func (p *TypedEvent) Broadcast(e *Event, m *Message, h *Hub) {
