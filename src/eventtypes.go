@@ -19,12 +19,7 @@ func (p *RegisterEvent) Handle(e *Event, h *Hub) {
 	if p.ByNickname == "" {
 		return
 	}
-	// Mostly the board should exist. That check is done during handshake.
-	// This is to prevent adding UserPresence data to redis on receipt of a reg event payload with a non-existent board.
-	// TODO: Check if this is needed?
-	if !h.redis.BoardExists(e.Group) {
-		return
-	}
+	// Board existence is already validated during the WebSocket handshake in handleWebSocket.
 
 	// Execute
 	if ok := h.redis.CommitUserPresence(e.Group, &User{Id: e.By, Xid: e.Xid, Nickname: p.ByNickname}); !ok {

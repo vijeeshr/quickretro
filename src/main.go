@@ -121,9 +121,15 @@ func main() {
 	})
 
 	// Serve static files from the embedded file system
+	// Vite-built assets are content-hashed, so they can be cached aggressively
 	assetsFS, _ := fs.Sub(frontendFiles, "frontend/dist/assets")
 	assetsHandler := http.FileServer(http.FS(assetsFS))
-	router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", assetsHandler)).Methods("GET")
+	// router.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", assetsHandler)).Methods("GET")
+	cachedAssetsHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		http.StripPrefix("/assets/", assetsHandler).ServeHTTP(w, r)
+	})
+	router.PathPrefix("/assets/").Handler(cachedAssetsHandler).Methods("GET")
 	router.HandleFunc("/config.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/javascript")
 		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")

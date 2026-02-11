@@ -96,24 +96,27 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 	autoDeleteTimeUtcSeconds := autoDeleteTime.Unix()
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-		pipe.HSet(c.ctx, key, "id", b.Id)
-		pipe.HSet(c.ctx, key, "name", b.Name)
-		pipe.HSet(c.ctx, key, "team", b.Team)
-		pipe.HSet(c.ctx, key, "owner", b.Owner)
-		pipe.HSet(c.ctx, key, "status", int(b.Status))
-		pipe.HSet(c.ctx, key, "mask", b.Mask)
-		pipe.HSet(c.ctx, key, "lock", b.Lock)
-		pipe.HSet(c.ctx, key, "createdAtUtc", currentTimeUtcSeconds)
-		pipe.HSet(c.ctx, key, "autoDeleteAtUtc", autoDeleteTimeUtcSeconds)
+		pipe.HSet(c.ctx, key,
+			"id", b.Id,
+			"name", b.Name,
+			"team", b.Team,
+			"owner", b.Owner,
+			"status", int(b.Status),
+			"mask", b.Mask,
+			"lock", b.Lock,
+			"createdAtUtc", currentTimeUtcSeconds,
+			"autoDeleteAtUtc", autoDeleteTimeUtcSeconds,
+		)
 		// Columns
 		for _, col := range cols {
 			colKey := fmt.Sprintf("board:col:%s:%s", b.Id, col.Id)
-			pipe.HSet(c.ctx, colKey, "id", col.Id)
-			pipe.HSet(c.ctx, colKey, "text", col.Text)
-			pipe.HSet(c.ctx, colKey, "isDefault", col.IsDefault)
-			pipe.HSet(c.ctx, colKey, "color", col.Color)
-			pipe.HSet(c.ctx, colKey, "pos", col.Position)
-			// pipe.Expire(c.ctx, colKey, 2*time.Hour)
+			pipe.HSet(c.ctx, colKey,
+				"id", col.Id,
+				"text", col.Text,
+				"isDefault", col.IsDefault,
+				"color", col.Color,
+				"pos", col.Position,
+			)
 			pipe.ExpireAt(c.ctx, colKey, autoDeleteTime)
 			pipe.SAdd(c.ctx, boardColsKey, col.Id)
 		}
@@ -206,27 +209,35 @@ func (c *RedisConnector) ResetBoardColumns(b *Board, oldCols []*BoardColumn, new
 
 			// If didn’t exist → full create
 			if !existed {
-				pipe.HSet(c.ctx, colKey, "id", newCol.Id)
-				pipe.HSet(c.ctx, colKey, "text", newCol.Text)
-				pipe.HSet(c.ctx, colKey, "isDefault", newCol.IsDefault)
-				pipe.HSet(c.ctx, colKey, "color", newCol.Color)
-				pipe.HSet(c.ctx, colKey, "pos", newCol.Position)
+				pipe.HSet(c.ctx, colKey,
+					"id", newCol.Id,
+					"text", newCol.Text,
+					"isDefault", newCol.IsDefault,
+					"color", newCol.Color,
+					"pos", newCol.Position,
+				)
 				pipe.ExpireAt(c.ctx, colKey, autoDeleteTime)
 				continue
 			}
 
 			// Deep diff: Only update changed fields
+			var changes []any
+
 			if oldCol.Text != newCol.Text {
-				pipe.HSet(c.ctx, colKey, "text", newCol.Text)
+				changes = append(changes, "text", newCol.Text)
 			}
 			if oldCol.Color != newCol.Color {
-				pipe.HSet(c.ctx, colKey, "color", newCol.Color)
+				changes = append(changes, "color", newCol.Color)
 			}
 			if oldCol.IsDefault != newCol.IsDefault {
-				pipe.HSet(c.ctx, colKey, "isDefault", newCol.IsDefault)
+				changes = append(changes, "isDefault", newCol.IsDefault)
 			}
 			if oldCol.Position != newCol.Position {
-				pipe.HSet(c.ctx, colKey, "pos", newCol.Position)
+				changes = append(changes, "pos", newCol.Position)
+			}
+
+			if len(changes) > 0 {
+				pipe.HSet(c.ctx, colKey, changes...)
 			}
 
 			// Note: TTL is preserved automatically unless created new
@@ -410,9 +421,11 @@ func (c *RedisConnector) CommitUserPresence(boardId string, user *User) bool {
 	boardUsersKey := fmt.Sprintf("board:users:%s", boardId)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-		pipe.HSet(c.ctx, userKey, "id", user.Id)
-		pipe.HSet(c.ctx, userKey, "xid", user.Xid)
-		pipe.HSet(c.ctx, userKey, "nickname", user.Nickname)
+		pipe.HSet(c.ctx, userKey,
+			"id", user.Id,
+			"xid", user.Xid,
+			"nickname", user.Nickname,
+		)
 		pipe.SAdd(c.ctx, boardUsersKey, user.Id)
 		pipe.Expire(c.ctx, userKey, c.timeToLive)       // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
 		pipe.Expire(c.ctx, boardUsersKey, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
@@ -650,15 +663,17 @@ func (c *RedisConnector) Save(msg *Message, modes ...SaveMode) bool {
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		// Always save the message/comment to the Hash
-		pipe.HSet(c.ctx, key, "id", msg.Id)
-		pipe.HSet(c.ctx, key, "by", msg.By)
-		pipe.HSet(c.ctx, key, "byxid", msg.ByXid)
-		pipe.HSet(c.ctx, key, "nickname", msg.ByNickname)
-		pipe.HSet(c.ctx, key, "group", msg.Group)
-		pipe.HSet(c.ctx, key, "content", msg.Content)
-		pipe.HSet(c.ctx, key, "category", msg.Category)
-		pipe.HSet(c.ctx, key, "anon", msg.Anonymous)
-		pipe.HSet(c.ctx, key, "pid", msg.ParentId)
+		pipe.HSet(c.ctx, key,
+			"id", msg.Id,
+			"by", msg.By,
+			"byxid", msg.ByXid,
+			"nickname", msg.ByNickname,
+			"group", msg.Group,
+			"content", msg.Content,
+			"category", msg.Category,
+			"anon", msg.Anonymous,
+			"pid", msg.ParentId,
+		)
 		pipe.Expire(c.ctx, key, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But requires a call to get board details. Skipping it for now.
 
 		// Handle optional extra behavior
@@ -689,19 +704,27 @@ func (c *RedisConnector) Save(msg *Message, modes ...SaveMode) bool {
 }
 
 func (c *RedisConnector) Like(msgId string, by string, like bool) bool {
-	var affected int64
-	var err error
 	key := fmt.Sprintf("msg:likes:%s", msgId)
 
+	var affected int64
 	if like {
-		affected, err = c.client.SAdd(c.ctx, key, by).Result() // Todo: Pipeline ?
-		c.client.Expire(c.ctx, key, c.timeToLive)              // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
+		cmds, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+			pipe.SAdd(c.ctx, key, by)
+			pipe.Expire(c.ctx, key, c.timeToLive)
+			return nil
+		})
+		if err != nil {
+			slog.Error("Error when liking", "err", err, "msgId", msgId, "by", by)
+			return false
+		}
+		affected, _ = cmds[0].(*redis.IntCmd).Result()
 	} else {
-		affected, err = c.client.SRem(c.ctx, key, by).Result()
-	}
-	if err != nil {
-		slog.Error("Error when liking/unliking", "err", err, "msgId", msgId, "by", by, "like", like)
-		return false
+		result, err := c.client.SRem(c.ctx, key, by).Result()
+		if err != nil {
+			slog.Error("Error when unliking", "err", err, "msgId", msgId, "by", by)
+			return false
+		}
+		affected = result
 	}
 	if affected == 0 {
 		if like {
