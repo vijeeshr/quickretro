@@ -3,6 +3,7 @@ package main
 import (
 	"log/slog"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -37,19 +38,14 @@ var upgrader = websocket.Upgrader{
 		// default:
 		// 	return false
 		// }
-		for _, allowedOrigin := range config.Server.AllowedOrigins {
-			if origin == allowedOrigin {
-				return true
-			}
-		}
-		return false
+		return slices.Contains(config.Server.AllowedOrigins, origin)
 	},
 }
 
 type Client struct {
 	hub   *Hub
 	conn  *websocket.Conn
-	send  chan interface{}
+	send  chan any
 	id    string // This is the user uuid
 	xid   string // The is the externally exposed uuid of the user
 	group string // This can be a board/room
@@ -162,7 +158,7 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Represent the websocket connection as a "Client".
-	client := &Client{id: user, xid: xid, group: board, conn: conn, send: make(chan interface{}, 256), hub: hub}
+	client := &Client{id: user, xid: xid, group: board, conn: conn, send: make(chan any, 256), hub: hub}
 
 	// Register the connection/client with the Hub
 	client.hub.register <- client

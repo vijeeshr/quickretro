@@ -1,13 +1,13 @@
 module github.com/vijeeshr/quickretro
 
-go 1.25.4
+go 1.26.0
 
 require (
-	github.com/BurntSushi/toml v1.5.0
+	github.com/BurntSushi/toml v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/lithammer/shortuuid/v4 v4.2.0
-	github.com/redis/go-redis/v9 v9.17.1
+	github.com/redis/go-redis/v9 v9.17.3
 )
 
 require (

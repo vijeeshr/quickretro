@@ -8,7 +8,7 @@ RUN npm install
 COPY src/frontend/ .
 RUN npm run build
 
-FROM golang:1.25.4-alpine AS backend-builder
+FROM golang:1.26.0-alpine AS backend-builder
 WORKDIR /app
 # Copy Go module files and download dependencies
 COPY src/go.mod src/go.sum ./

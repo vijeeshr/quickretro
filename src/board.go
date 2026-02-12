@@ -83,8 +83,7 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 	var createReq CreateBoardReq
 	err := decodeJSONBody(w, r, &createReq)
 	if err != nil {
-		var mr *malformedRequest
-		if errors.As(err, &mr) {
+		if mr, ok := errors.AsType[*malformedRequest](err); ok {
 			http.Error(w, mr.msg, mr.status)
 		} else {
 			slog.Error("Error parsing CreateBoardRequest", "details", err.Error())
