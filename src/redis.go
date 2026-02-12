@@ -1,18 +1,5 @@
 package main
 
-// Store structure - Redis
-/*
-(KEY)board:{boardId}				(VALUE)board					Board - Redis Hash. The board details. Owned by single user.
-(KEY)msg:{messageId}				(VALUE)message					Message - Redis Hash. Useful for fetch/add/update for an individual message.
-(KEY)board:msg:{boardId}			(VALUE)[messageIds] 			Board-wise Messages - Redis Set. Useful for fetching list of messages.
-(KEY)board:cmts:{boardId}      		(VALUE)[commentIds]      		Board-wise Comments - Redis Set. For fetching all comments.
-(KEY)msg:likes:{messageId}			(VALUE)[userIds]				Likes - Redis Set. For recording likes/votes for a message.
-(KEY)board:user:{boardId}:{userId}	(VALUE)User						User - Redis Hash. User master. Keeping as board specific.
-(KEY)board:users:{boardId}			(VALUE)[userIds]				Board-wise Users - Redis Set. Useful for fetching members of a board.
-(KEY)board:col:{boardId}:{colId}	(VALUE)column					Column - Redis Hash. Column definition for a Board.
-(KEY)board:col:{boardId}			(Value)[colIds]					Board-wise columns - Redis Set. Just a list of colIds for a board.
-*/
-
 import (
 	"context"
 	"encoding/json"
@@ -87,8 +74,8 @@ func (c *RedisConnector) Publish(redisChannel string, payload any) {
 }
 
 func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
-	key := fmt.Sprintf("board:%s", b.Id)
-	boardColsKey := fmt.Sprintf("board:col:%s", b.Id) // Boardwise-ColIds
+	key := boardKey(b.Id)
+	boardColsKey := boardColsKey(b.Id) // Boardwise-ColIds
 
 	currentTime := time.Now().UTC()
 	currentTimeUtcSeconds := currentTime.Unix()
@@ -109,7 +96,7 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 		)
 		// Columns
 		for _, col := range cols {
-			colKey := fmt.Sprintf("board:col:%s:%s", b.Id, col.Id)
+			colKey := boardColKey(b.Id, col.Id)
 			pipe.HSet(c.ctx, colKey,
 				"id", col.Id,
 				"text", col.Text,
@@ -178,7 +165,7 @@ func (c *RedisConnector) HasMessagesForColumnsMarkedForRemoval(boardId string, o
 }
 
 func (c *RedisConnector) ResetBoardColumns(b *Board, oldCols []*BoardColumn, newCols []*BoardColumn) bool {
-	boardColsKey := fmt.Sprintf("board:col:%s", b.Id)
+	boardColsKey := boardColsKey(b.Id)
 	autoDeleteTime := time.Unix(b.AutoDeleteAtUtc, 0).UTC()
 
 	// Convert to map for quick lookup
@@ -196,7 +183,7 @@ func (c *RedisConnector) ResetBoardColumns(b *Board, oldCols []*BoardColumn, new
 		// DELETE columns that no longer exist
 		for oldId := range oldMap {
 			if _, stillExists := newMap[oldId]; !stillExists {
-				colKey := fmt.Sprintf("board:col:%s:%s", b.Id, oldId)
+				colKey := boardColKey(b.Id, oldId)
 				pipe.Del(c.ctx, colKey)
 			}
 		}
@@ -205,7 +192,7 @@ func (c *RedisConnector) ResetBoardColumns(b *Board, oldCols []*BoardColumn, new
 		for _, newCol := range newCols {
 
 			oldCol, existed := oldMap[newCol.Id]
-			colKey := fmt.Sprintf("board:col:%s:%s", b.Id, newCol.Id)
+			colKey := boardColKey(b.Id, newCol.Id)
 
 			// If didn’t exist → full create
 			if !existed {
@@ -263,7 +250,7 @@ func (c *RedisConnector) ResetBoardColumns(b *Board, oldCols []*BoardColumn, new
 
 func (c *RedisConnector) UpdateMasking(b *Board, mask bool) bool {
 	// Todo: Deduplicate with UpdateBoardLock() & UpdateTimer()
-	key := fmt.Sprintf("board:%s", b.Id)
+	key := boardKey(b.Id)
 	if _, err := c.client.HSet(c.ctx, key, "mask", mask).Result(); err != nil {
 		slog.Error("Failed to mask/unmask", "err", err, "board", b)
 		return false
@@ -273,7 +260,7 @@ func (c *RedisConnector) UpdateMasking(b *Board, mask bool) bool {
 
 func (c *RedisConnector) UpdateBoardLock(b *Board, lock bool) bool {
 	// Todo: Deduplicate with UpdateMasking() & UpdateTimer()
-	key := fmt.Sprintf("board:%s", b.Id)
+	key := boardKey(b.Id)
 	if _, err := c.client.HSet(c.ctx, key, "lock", lock).Result(); err != nil {
 		slog.Error("Failed to lock/unlock", "err", err, "board", b)
 		return false
@@ -283,7 +270,7 @@ func (c *RedisConnector) UpdateBoardLock(b *Board, lock bool) bool {
 
 func (c *RedisConnector) UpdateTimer(b *Board, expiryDurationInSeconds uint16) bool {
 	// Todo: Deduplicate with UpdateMasking() & UpdateBoardLock()
-	key := fmt.Sprintf("board:%s", b.Id)
+	key := boardKey(b.Id)
 	duration := time.Duration(expiryDurationInSeconds) * time.Second
 	expiryTime := time.Now().UTC().Add(duration).Unix()
 
@@ -295,7 +282,7 @@ func (c *RedisConnector) UpdateTimer(b *Board, expiryDurationInSeconds uint16) b
 }
 
 func (c *RedisConnector) StopTimer(b *Board) bool {
-	key := fmt.Sprintf("board:%s", b.Id)
+	key := boardKey(b.Id)
 	// To stop the timer, just reset the timerExpiresAtUtc to one second before current time.
 	// This will cause the expiryTimeInSeconds to be sent as 0 (if expiryTime - curentTime is negative, its also sent as zero)
 	// ...e.g check TimerEvent.broadcast, RegEvent.broadcast
@@ -309,7 +296,7 @@ func (c *RedisConnector) StopTimer(b *Board) bool {
 }
 
 func (c *RedisConnector) BoardExists(boardId string) bool {
-	key := fmt.Sprintf("board:%s", boardId)
+	key := boardKey(boardId)
 
 	k, err := c.client.Exists(c.ctx, key).Result()
 	if err != nil {
@@ -326,7 +313,7 @@ func (c *RedisConnector) BoardExists(boardId string) bool {
 
 func (c *RedisConnector) GetBoard(boardId string) (*Board, bool) {
 	var b Board
-	key := fmt.Sprintf("board:%s", boardId)
+	key := boardKey(boardId)
 
 	if err := c.client.HGetAll(c.ctx, key).Scan(&b); err != nil {
 		slog.Error("Failed to get board from Redis", "err", err, "boardId", boardId)
@@ -341,7 +328,7 @@ func (c *RedisConnector) GetBoard(boardId string) (*Board, bool) {
 }
 
 func (c *RedisConnector) IsBoardOwner(boardId string, userId string) bool {
-	key := fmt.Sprintf("board:%s", boardId)
+	key := boardKey(boardId)
 
 	if userId == "" || boardId == "" {
 		return false
@@ -361,7 +348,7 @@ func (c *RedisConnector) IsBoardLocked(boardId string) bool {
 		return true
 	}
 
-	key := fmt.Sprintf("board:%s", boardId)
+	key := boardKey(boardId)
 	isLocked, err := c.client.HGet(c.ctx, key, "lock").Result()
 	if err != nil {
 		slog.Error("Cannot find board in Redis", "err", err, "boardId", boardId)
@@ -372,7 +359,7 @@ func (c *RedisConnector) IsBoardLocked(boardId string) bool {
 }
 
 func (c *RedisConnector) IsBoardColumnActive(boardId, colId string) bool {
-	key := fmt.Sprintf("board:col:%s", boardId)
+	key := boardColsKey(boardId)
 
 	ok, err := c.client.SIsMember(c.ctx, key, colId).Result()
 	if err != nil {
@@ -386,7 +373,7 @@ func (c *RedisConnector) IsBoardColumnActive(boardId, colId string) bool {
 func (c *RedisConnector) GetBoardColumns(boardId string) ([]*BoardColumn, bool) {
 	cols := make([]*BoardColumn, 0)
 
-	key := fmt.Sprintf("board:col:%s", boardId)
+	key := boardColsKey(boardId)
 	colIds, err := c.client.SMembers(c.ctx, key).Result()
 	if err != nil {
 		slog.Error("Failed to get columns from Redis", "err", err, "boardId", boardId)
@@ -395,7 +382,7 @@ func (c *RedisConnector) GetBoardColumns(boardId string) ([]*BoardColumn, bool) 
 
 	cmds, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		for _, id := range colIds {
-			key := fmt.Sprintf("board:col:%s:%s", boardId, id)
+			key := boardColKey(boardId, id)
 			pipe.HGetAll(c.ctx, key)
 		}
 		return nil
@@ -417,8 +404,8 @@ func (c *RedisConnector) GetBoardColumns(boardId string) ([]*BoardColumn, bool) 
 }
 
 func (c *RedisConnector) CommitUserPresence(boardId string, user *User) bool {
-	userKey := fmt.Sprintf("board:user:%s:%s", boardId, user.Id)
-	boardUsersKey := fmt.Sprintf("board:users:%s", boardId)
+	userKey := boardUserKey(boardId, user.Id)
+	boardUsersKey := boardUsersKey(boardId)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		pipe.HSet(c.ctx, userKey,
@@ -441,8 +428,8 @@ func (c *RedisConnector) CommitUserPresence(boardId string, user *User) bool {
 }
 
 func (c *RedisConnector) RemoveUserPresence(boardId string, userId string) bool {
-	userKey := fmt.Sprintf("board:user:%s:%s", boardId, userId)
-	boardUsersKey := fmt.Sprintf("board:users:%s", boardId)
+	userKey := boardUserKey(boardId, userId)
+	boardUsersKey := boardUsersKey(boardId)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		pipe.Del(c.ctx, userKey)
@@ -471,7 +458,7 @@ func (c *RedisConnector) RemoveUserPresence(boardId string, userId string) bool 
 func (c *RedisConnector) GetUsersPresence(boardId string) ([]*User, bool) {
 	users := make([]*User, 0)
 
-	key := fmt.Sprintf("board:users:%s", boardId)
+	key := boardUsersKey(boardId)
 	userIds, err := c.client.SMembers(c.ctx, key).Result()
 	if err != nil {
 		slog.Error("Failed getting userIds from Redis", "err", err, "boardId", boardId)
@@ -480,7 +467,7 @@ func (c *RedisConnector) GetUsersPresence(boardId string) ([]*User, bool) {
 
 	cmds, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		for _, id := range userIds {
-			key := fmt.Sprintf("board:user:%s:%s", boardId, id)
+			key := boardUserKey(boardId, id)
 			pipe.HGetAll(c.ctx, key)
 		}
 		return nil
@@ -504,7 +491,7 @@ func (c *RedisConnector) GetUsersPresence(boardId string) ([]*User, bool) {
 
 // Deprecated: No longer used
 func (c *RedisConnector) GetPresentUserIds(boardId string) ([]string, bool) {
-	key := fmt.Sprintf("board:users:%s", boardId)
+	key := boardUsersKey(boardId)
 	ids, err := c.client.SMembers(c.ctx, key).Result()
 	if err != nil {
 		slog.Error("Failed getting userIds from Redis", "err", err, "boardId", boardId)
@@ -515,7 +502,7 @@ func (c *RedisConnector) GetPresentUserIds(boardId string) ([]string, bool) {
 
 func (c *RedisConnector) GetMessage(msgId string) (*Message, bool) {
 	var message Message
-	key := fmt.Sprintf("msg:%s", msgId)
+	key := msgKey(msgId)
 
 	if err := c.client.HGetAll(c.ctx, key).Scan(&message); err != nil {
 		slog.Error("Failed getting/mapping message from Redis", "err", err, "msgId", msgId)
@@ -530,7 +517,7 @@ func (c *RedisConnector) GetMessage(msgId string) (*Message, bool) {
 }
 
 func (c *RedisConnector) GetMessages(boardId string) ([]*Message, bool) {
-	key := fmt.Sprintf("board:msg:%s", boardId)
+	key := boardMsgsKey(boardId)
 	messageIds, err := c.client.SMembers(c.ctx, key).Result()
 	if err != nil {
 		slog.Error("Failed getting messageIds from Redis", "err", err, "boardId", boardId)
@@ -541,7 +528,7 @@ func (c *RedisConnector) GetMessages(boardId string) ([]*Message, bool) {
 
 // Deprecated: No longer used
 func (c *RedisConnector) GetComments(boardId string) ([]*Message, bool) {
-	key := fmt.Sprintf("board:cmts:%s", boardId)
+	key := boardCmtsKey(boardId)
 	commentIds, err := c.client.SMembers(c.ctx, key).Result()
 	if err != nil {
 		slog.Error("Failed getting commentIds from Redis", "err", err, "boardId", boardId)
@@ -559,7 +546,7 @@ func (c *RedisConnector) GetMessagesByIds(ids []string, boardId string) ([]*Mess
 
 	cmds, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		for _, id := range ids {
-			key := fmt.Sprintf("msg:%s", id)
+			key := msgKey(id)
 			pipe.HGetAll(c.ctx, key)
 		}
 		return nil
@@ -581,7 +568,7 @@ func (c *RedisConnector) GetMessagesByIds(ids []string, boardId string) ([]*Mess
 }
 
 func (c *RedisConnector) GetLikesCount(msgId string) int64 {
-	key := fmt.Sprintf("msg:likes:%s", msgId)
+	key := msgLikesKey(msgId)
 
 	count, err := c.client.SCard(c.ctx, key).Result()
 	if err != nil {
@@ -592,7 +579,7 @@ func (c *RedisConnector) GetLikesCount(msgId string) int64 {
 }
 
 func (c *RedisConnector) HasLiked(msgId string, users []string) []bool {
-	key := fmt.Sprintf("msg:likes:%s", msgId)
+	key := msgLikesKey(msgId)
 
 	results, err := c.client.SMIsMember(c.ctx, key, users).Result()
 	if err != nil {
@@ -624,7 +611,7 @@ func (c *RedisConnector) GetLikesInfo(by string, msgIds ...string) (map[string]L
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		for _, id := range msgIds {
-			key := fmt.Sprintf("msg:likes:%s", id)
+			key := msgLikesKey(id)
 			countCmd := pipe.SCard(c.ctx, key)
 			likedCmd := pipe.SIsMember(c.ctx, key, by)
 			cmds[id] = likeCmds{count: countCmd, liked: likedCmd}
@@ -657,9 +644,9 @@ func (c *RedisConnector) GetLikesInfo(by string, msgIds ...string) (map[string]L
 }
 
 func (c *RedisConnector) Save(msg *Message, modes ...SaveMode) bool {
-	key := fmt.Sprintf("msg:%s", msg.Id)
-	messagesKey := fmt.Sprintf("board:msg:%s", msg.Group)
-	commentsKey := fmt.Sprintf("board:cmts:%s", msg.Group)
+	key := msgKey(msg.Id)
+	messagesKey := boardMsgsKey(msg.Group)
+	commentsKey := boardCmtsKey(msg.Group)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		// Always save the message/comment to the Hash
@@ -704,7 +691,7 @@ func (c *RedisConnector) Save(msg *Message, modes ...SaveMode) bool {
 }
 
 func (c *RedisConnector) Like(msgId string, by string, like bool) bool {
-	key := fmt.Sprintf("msg:likes:%s", msgId)
+	key := msgLikesKey(msgId)
 
 	var affected int64
 	if like {
@@ -748,17 +735,17 @@ func (c *RedisConnector) DeleteMessage(group string, msgId string, commentIds []
 			4.1. Delete HASH msg:{commentId}
 			4.2. Remove commentId entry from SET board:cmts:{boardId}
 	*/
-	key := fmt.Sprintf("msg:%s", msgId)
-	likesKey := fmt.Sprintf("msg:likes:%s", msgId)
-	messagesKey := fmt.Sprintf("board:msg:%s", group)
-	commentsKey := fmt.Sprintf("board:cmts:%s", group)
+	key := msgKey(msgId)
+	likesKey := msgLikesKey(msgId)
+	messagesKey := boardMsgsKey(group)
+	commentsKey := boardCmtsKey(group)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		// Delete the top-level message and other related data
 		pipe.Del(c.ctx, key, likesKey)
 		pipe.SRem(c.ctx, messagesKey, msgId)
 		for _, cid := range commentIds {
-			cKey := fmt.Sprintf("msg:%s", cid)
+			cKey := msgKey(cid)
 			// Delete each attached comment
 			// Comments don't have likes right now
 			pipe.Del(c.ctx, cKey)
@@ -785,8 +772,8 @@ func (c *RedisConnector) DeleteComment(group string, commentId string) bool {
 		1. Delete HASH msg:{messageId}
 		2. Remove messageId entry from SET board:cmts:{boardId}
 	*/
-	key := fmt.Sprintf("msg:%s", commentId)
-	commentsKey := fmt.Sprintf("board:cmts:%s", group)
+	key := msgKey(commentId)
+	commentsKey := boardCmtsKey(group)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		// Delete the comment data
@@ -828,11 +815,11 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 	*/
 	ctx := c.ctx
 
-	boardMsgsKey := fmt.Sprintf("board:msg:%s", boardId)
-	boardCommsKey := fmt.Sprintf("board:cmts:%s", boardId)
-	boardUsersKey := fmt.Sprintf("board:users:%s", boardId)
-	boardColsKey := fmt.Sprintf("board:col:%s", boardId)
-	boardKey := fmt.Sprintf("board:%s", boardId)
+	boardMsgsKey := boardMsgsKey(boardId)
+	boardCommsKey := boardCmtsKey(boardId)
+	boardUsersKey := boardUsersKey(boardId)
+	boardColsKey := boardColsKey(boardId)
+	boardKey := boardKey(boardId)
 
 	// Collect all message Ids, comment Ids, user Ids, and column Ids
 	// Pipeline SMEMBERS (read phase)
@@ -857,29 +844,29 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 
 		// Delete messages + likes
 		for _, msgId := range messageIds {
-			likesKey := fmt.Sprintf("msg:likes:%s", msgId)
-			msgKey := fmt.Sprintf("msg:%s", msgId)
+			likesKey := msgLikesKey(msgId)
+			msgKey := msgKey(msgId)
 			pipe.Del(ctx, likesKey, msgKey)
 		}
 		pipe.Del(ctx, boardMsgsKey)
 
 		// Delete comments
 		for _, cid := range commentIds {
-			commentKey := fmt.Sprintf("msg:%s", cid)
+			commentKey := msgKey(cid)
 			pipe.Del(ctx, commentKey)
 		}
 		pipe.Del(ctx, boardCommsKey)
 
 		// Delete users
 		for _, userId := range userIds {
-			userKey := fmt.Sprintf("board:user:%s:%s", boardId, userId)
+			userKey := boardUserKey(boardId, userId)
 			pipe.Del(ctx, userKey)
 		}
 		pipe.Del(ctx, boardUsersKey)
 
 		// Delete columns
 		for _, colId := range colIds {
-			colKey := fmt.Sprintf("board:col:%s:%s", boardId, colId)
+			colKey := boardColKey(boardId, colId)
 			pipe.Del(ctx, colKey)
 		}
 		pipe.Del(ctx, boardColsKey)
@@ -901,11 +888,11 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 func (c *RedisConnector) UpdateCategory(category string, msgId string, commentIds []string) bool {
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		// Update main message
-		key := fmt.Sprintf("msg:%s", msgId)
+		key := msgKey(msgId)
 		pipe.HSet(c.ctx, key, "category", category)
 		// Update associated comments (if any)
 		for _, cid := range commentIds {
-			ckey := fmt.Sprintf("msg:%s", cid)
+			ckey := msgKey(cid)
 			pipe.HSet(c.ctx, ckey, "category", category)
 		}
 		return nil
@@ -930,11 +917,11 @@ type BoardAggregatedData struct {
 func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregatedData, bool) {
 	pipe := c.client.Pipeline()
 
-	boardCmd := pipe.HGetAll(c.ctx, fmt.Sprintf("board:%s", boardId))
-	colIdsCmd := pipe.SMembers(c.ctx, fmt.Sprintf("board:col:%s", boardId))
-	userIdsCmd := pipe.SMembers(c.ctx, fmt.Sprintf("board:users:%s", boardId))
-	msgIdsCmd := pipe.SMembers(c.ctx, fmt.Sprintf("board:msg:%s", boardId))
-	cmtIdsCmd := pipe.SMembers(c.ctx, fmt.Sprintf("board:cmts:%s", boardId))
+	boardCmd := pipe.HGetAll(c.ctx, boardKey(boardId))
+	colIdsCmd := pipe.SMembers(c.ctx, boardColsKey(boardId))
+	userIdsCmd := pipe.SMembers(c.ctx, boardUsersKey(boardId))
+	msgIdsCmd := pipe.SMembers(c.ctx, boardMsgsKey(boardId))
+	cmtIdsCmd := pipe.SMembers(c.ctx, boardCmtsKey(boardId))
 
 	if _, err := pipe.Exec(c.ctx); err != nil {
 		slog.Error("Failed to fetch board metadata pipeline", "err", err, "boardId", boardId)
@@ -959,22 +946,22 @@ func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregate
 
 	colCmds := make([]*redis.MapStringStringCmd, len(colIds))
 	for i, id := range colIds {
-		colCmds[i] = pipe2.HGetAll(c.ctx, fmt.Sprintf("board:col:%s:%s", boardId, id))
+		colCmds[i] = pipe2.HGetAll(c.ctx, boardColKey(boardId, id))
 	}
 
 	userCmds := make([]*redis.MapStringStringCmd, len(userIds))
 	for i, id := range userIds {
-		userCmds[i] = pipe2.HGetAll(c.ctx, fmt.Sprintf("board:user:%s:%s", boardId, id))
+		userCmds[i] = pipe2.HGetAll(c.ctx, boardUserKey(boardId, id))
 	}
 
 	msgCmds := make([]*redis.MapStringStringCmd, len(msgIds))
 	for i, id := range msgIds {
-		msgCmds[i] = pipe2.HGetAll(c.ctx, fmt.Sprintf("msg:%s", id))
+		msgCmds[i] = pipe2.HGetAll(c.ctx, msgKey(id))
 	}
 
 	cmtCmds := make([]*redis.MapStringStringCmd, len(cmtIds))
 	for i, id := range cmtIds {
-		cmtCmds[i] = pipe2.HGetAll(c.ctx, fmt.Sprintf("msg:%s", id))
+		cmtCmds[i] = pipe2.HGetAll(c.ctx, msgKey(id))
 	}
 
 	if _, err := pipe2.Exec(c.ctx); err != nil {
