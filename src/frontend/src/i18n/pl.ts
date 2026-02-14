@@ -15,7 +15,16 @@ export default {
         contentOverloadError: 'Treść przekracza dozwolony limit.',
         contentStrippingError: 'Treść przekracza dozwolony limit. Nadmiarowy tekst został obcięty z końca.',
         invalidColumnSelection: 'Proszę wybrać kolumnę/kolumny',
-        typing: '{name} pisze'
+        typing: '{name} pisze',
+        share: {
+            linkCopied: 'Link skopiowany!',
+            linkCopyError: 'Nie udało się skopiować. Proszę skopiować ręcznie.'
+        },
+        customColumnSetup: {
+            shareLabel: 'Udostępnij konfigurację kolumn',
+            shareHelp: 'Skopiuj poniższy link, aby udostępnić swoją niestandardową konfigurację kolumn innym lub zapisać go na później.',
+            applied: 'Zastosowano niestandardową konfigurację kolumn'
+        }
     },
     join: {
         label: 'Dołącz jako gość',
@@ -31,7 +40,8 @@ export default {
         button: 'Utwórz',
         buttonProgress: 'Tworzenie...',
         captchaInfo: 'Proszę ukończyć CAPTCHA, aby kontynuować',
-        boardCreationError: 'Błąd podczas tworzenia tablicy'
+        boardCreationError: 'Błąd podczas tworzenia tablicy',
+        columns: 'Kolumny'
     },
     dashboard: {
         timer: {
@@ -44,8 +54,6 @@ export default {
         },
         share: {
             title: 'Skopiuj i udostępnij poniższy link uczestnikom',
-            linkCopied: 'Link skopiowany!',
-            linkCopyError: 'Nie udało się skopiować. Proszę skopiować ręcznie.',
             toolTip: 'Udostępnij tablicę innym'
         },
         mask: {

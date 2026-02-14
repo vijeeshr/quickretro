@@ -632,10 +632,10 @@ const share = () => {
 const copyShareLink = async () => {
     try {
         await navigator.clipboard.writeText(shareLink)
-        toast.success(t('dashboard.share.linkCopied'))
+        toast.success(t('common.share.linkCopied'))
         setIsShareDialogOpen(false)
     } catch (err) {
-        toast.error(t('dashboard.share.linkCopyError'))
+        toast.error(t('common.share.linkCopyError'))
     }
 }
 

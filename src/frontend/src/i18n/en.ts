@@ -15,7 +15,16 @@ export default {
         contentOverloadError: 'Content more than allowed limit.',
         contentStrippingError: 'Content more than allowed limit. Extra text is stripped from the end.',
         invalidColumnSelection: 'Please select column(s)',
-        typing: '{name} is typing'
+        typing: '{name} is typing',
+        share: {
+            linkCopied: 'Link copied!',
+            linkCopyError: 'Failed to copy. Please copy directly.'
+        },
+        customColumnSetup : {
+            shareLabel: 'Share column setup',
+            shareHelp: 'Copy the link below to share your custom column setup with others, or bookmark it for later.',
+            applied: 'Custom column setup applied'
+        }
     },
     join: {
         label: 'Join as guest',
@@ -31,7 +40,8 @@ export default {
         button: 'Create',
         buttonProgress: 'Creating..',
         captchaInfo: 'Please complete the CAPTCHA to continue',
-        boardCreationError: 'Error when creating board'
+        boardCreationError: 'Error when creating board',
+        columns: 'Columns'
     },
     dashboard: {
         timer: {
@@ -44,8 +54,6 @@ export default {
         },
         share: {
             title: 'Copy and share below url to participants',
-            linkCopied: 'Link copied!',
-            linkCopyError: 'Failed to copy. Please copy directly.',
             toolTip: 'Share board with others'
         },
         mask: {

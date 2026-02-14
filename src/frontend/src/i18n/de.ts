@@ -15,7 +15,16 @@ export default {
         contentOverloadError: 'Inhalt überschreitet Limit.',
         contentStrippingError: 'Inhalt zu lang. Überschüssiger Text wurde entfernt.',
         invalidColumnSelection: 'Bitte Spalte(n) auswählen',
-        typing: '{name} schreibt gerade'
+        typing: '{name} schreibt gerade',
+        share: {
+            linkCopied: 'Link kopiert!',
+            linkCopyError: 'Kopieren fehlgeschlagen. Bitte manuell kopieren.'
+        },
+        customColumnSetup: {
+            shareLabel: 'Spaltenkonfiguration teilen',
+            shareHelp: 'Kopiere den untenstehenden Link, um deine benutzerdefinierte Spaltenkonfiguration mit anderen zu teilen oder sie für später zu speichern.',
+            applied: 'Benutzerdefinierte Spaltenkonfiguration angewendet'
+        }
     },
     join: {
         label: 'Als Gast beitreten',
@@ -31,7 +40,8 @@ export default {
         button: 'Erstellen',
         buttonProgress: 'Wird erstellt..',
         captchaInfo: 'Bitte lösen Sie das CAPTCHA, um fortzufahren',
-        boardCreationError: 'Fehler beim Erstellen des Boards'
+        boardCreationError: 'Fehler beim Erstellen des Boards',
+        columns: 'Spalten'
     },
     dashboard: {
         timer: {
@@ -44,8 +54,6 @@ export default {
         },
         share: {
             title: 'URL an Teilnehmer kopieren',
-            linkCopied: 'Link kopiert!',
-            linkCopyError: 'Kopieren fehlgeschlagen. Bitte manuell kopieren.',
             toolTip: 'Board teilen'
         },
         mask: {

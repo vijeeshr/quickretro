@@ -15,7 +15,16 @@ export default {
         contentOverloadError: 'Contenido excede el límite permitido.',
         contentStrippingError: 'Contenido excede el límite permitido. El texto adicional ha sido eliminado.',
         invalidColumnSelection: 'Por favor selecciona columna(s)',
-        typing: '{name} está escribiendo'
+        typing: '{name} está escribiendo',
+        share: {
+            linkCopied: '¡Enlace copiado!',
+            linkCopyError: 'Error al copiar. Copia manualmente.'
+        },
+        customColumnSetup: {
+            shareLabel: 'Compartir configuración de columnas',
+            shareHelp: 'Copia el enlace de abajo para compartir tu configuración de columnas personalizada con otros, o guárdalo en favoritos para usarlo más tarde.',
+            applied: 'Configuración de columnas personalizada aplicada'
+        }
     },
     join: {
         label: 'Unirse como invitado',
@@ -31,7 +40,8 @@ export default {
         button: 'Crear',
         buttonProgress: 'Creando..',
         captchaInfo: 'Por favor, complete el CAPTCHA para continuar',
-        boardCreationError: 'Error al crear el tablero'
+        boardCreationError: 'Error al crear el tablero',
+        columns: 'Columnas'
     },
     dashboard: {
         timer: {
@@ -44,8 +54,6 @@ export default {
         },
         share: {
             title: 'Copia y comparte esta URL con participantes',
-            linkCopied: '¡Enlace copiado!',
-            linkCopyError: 'Error al copiar. Copia manualmente.',
             toolTip: 'Compartir tablero'
         },
         mask: {

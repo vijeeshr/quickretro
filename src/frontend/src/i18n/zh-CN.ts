@@ -15,7 +15,16 @@ export default {
         contentOverloadError: '内容超过允许限制',
         contentStrippingError: '内容超出限制，多余文字已被删除',
         invalidColumnSelection: '请选择列',
-        typing: '{name} 正在输入'
+        typing: '{name} 正在输入',
+        share: {
+            linkCopied: '链接已复制！',
+            linkCopyError: '复制失败，请手动复制'
+        },
+        customColumnSetup: {
+            shareLabel: '分享列设置',
+            shareHelp: '复制下方链接以与他人分享你的自定义列设置，或将其加入书签以便日后使用。',
+            applied: '已应用自定义列设置'
+        }
     },
     join: {
         label: '以访客加入',
@@ -32,7 +41,8 @@ export default {
         button: '创建',
 		buttonProgress: '创建中..',
         captchaInfo: '请完成验证码以继续',
-        boardCreationError: '创建看板时出错'
+        boardCreationError: '创建看板时出错',
+        columns: '列'
     },
     dashboard: {
         timer: {
@@ -45,8 +55,6 @@ export default {
         },
         share: {
             title: '复制并分享链接',
-            linkCopied: '链接已复制！',
-            linkCopyError: '复制失败，请手动复制',
             toolTip: '分享看板'
         },
         mask: {

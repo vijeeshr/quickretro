@@ -15,7 +15,16 @@ export default {
         contentOverloadError: 'Inhoud overschrijdt limiet.',
         contentStrippingError: 'Extra tekst verwijderd.',
         invalidColumnSelection: 'Selecteer kolom(en)',
-        typing: '{name} is aan het typen'
+        typing: '{name} is aan het typen',
+        share: {
+            linkCopied: 'Link gekopieerd!',
+            linkCopyError: 'Kopieer handmatig.'
+        },
+        customColumnSetup: {
+            shareLabel: 'Kolomindeling delen',
+            shareHelp: 'Kopieer de onderstaande link om je aangepaste kolomindeling met anderen te delen of sla deze op voor later gebruik.',
+            applied: 'Aangepaste kolomindeling toegepast'
+        }
     },
     join: {
         label: 'Als gast deelnemen',
@@ -31,7 +40,8 @@ export default {
         button: 'Aanmaken',
         buttonProgress: 'Aanmaken..',
         captchaInfo: 'Voltooi de CAPTCHA om door te gaan',
-        boardCreationError: 'Fout bij het aanmaken van het bord'
+        boardCreationError: 'Fout bij het aanmaken van het bord',
+        columns: 'Kolommen'
     },
     dashboard: {
         timer: {
@@ -44,8 +54,6 @@ export default {
         },
         share: {
             title: 'Deel deze link',
-            linkCopied: 'Link gekopieerd!',
-            linkCopyError: 'Kopieer handmatig.',
             toolTip: 'Bord delen'
         },
         mask: {

@@ -15,7 +15,16 @@ export default {
         contentOverloadError: 'Contenuto oltre il limite consentito.',
         contentStrippingError: 'Testo in eccesso rimosso.',
         invalidColumnSelection: 'Seleziona colonna(e)',
-        typing: '{name} sta scrivendo'
+        typing: '{name} sta scrivendo',
+        share: {
+            linkCopied: 'Link copiato!',
+            linkCopyError: 'Copia fallita. Copia manualmente.'
+        },
+        customColumnSetup: {
+            shareLabel: 'Condividi configurazione delle colonne',
+            shareHelp: 'Copia il link qui sotto per condividere la tua configurazione personalizzata delle colonne con altri oppure salvalo per usarlo in seguito.',
+            applied: 'Configurazione delle colonne personalizzata applicata'
+        }
     },
     join: {
         label: 'Partecipa come ospite',
@@ -31,7 +40,8 @@ export default {
         button: 'Crea',
         buttonProgress: 'Creazione..',
         captchaInfo: 'Completa il CAPTCHA per continuare',
-        boardCreationError: 'Errore durante la creazione della bacheca'
+        boardCreationError: 'Errore durante la creazione della bacheca',
+        columns: 'Colonne'
     },
     dashboard: {
         timer: {
@@ -44,8 +54,6 @@ export default {
         },
         share: {
             title: 'Copia e condividi il link',
-            linkCopied: 'Link copiato!',
-            linkCopyError: 'Copia fallita. Copia manualmente.',
             toolTip: 'Condividi bacheca'
         },
         mask: {

@@ -159,7 +159,7 @@ export const exceedsEventRequestMaxSize = <T>(eventType: string, payload: T) => 
 }
 
 /**
- * Standard Trailing-Edge Debounce
+ * Standard Trailing-Edge Debounce.
  * Delays execution until 'delay' ms after the last call.
  */
 export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
@@ -174,7 +174,7 @@ export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number
 }
 
 /**
- * requestAnimationFrame Throttle
+ * requestAnimationFrame Throttle.
  * Limits execution to once per browser paint (approx 60fps).
  */
 export function throttleRAF<T extends (...args: any[]) => any>(fn: T) {
@@ -189,4 +189,44 @@ export function throttleRAF<T extends (...args: any[]) => any>(fn: T) {
             ticking = true
         }
     }
+}
+
+/**
+ * Encodes the passed data to URL-safe string.
+ * Safe for Non-ASCII chars.
+ */
+export const encodeToUrlSafeBase64FromJson = (data: any): string => {
+    const json = JSON.stringify(data)
+
+    // Convert string to UTF-8 bytes
+    const bytes = new TextEncoder().encode(json)
+
+    // Convert bytes to a "binary string" btoa can handle
+    const binString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("")
+
+    // Encode to Base64 and make it URL-safe
+    return btoa(binString)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '')
+}
+
+/**
+ * Decodes the passed URL-safe string to JSON.
+ * Safe for Non-ASCII chars.
+ */
+export const decodeToJsonFromUrlSafeBase64 = (encoded: string): any => {
+    // Restore URL-safe characters and padding
+    let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/')
+    while (base64.length % 4) base64 += '='
+    
+    // Convert Base64 to binary string
+    const binString = atob(base64)
+    
+    // Convert binary string to UTF-8 bytes
+    const bytes = Uint8Array.from(binString, (m) => m.charCodeAt(0))
+    
+    // Decode bytes back to a string and parse JSON
+    const jsonStr = new TextDecoder().decode(bytes)
+    return JSON.parse(jsonStr)
 }

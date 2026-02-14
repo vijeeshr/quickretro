@@ -15,7 +15,16 @@ export default {
         contentOverloadError: 'Превышен лимит содержимого',
         contentStrippingError: 'Лишний текст удалён',
         invalidColumnSelection: 'Выберите столбцы',
-        typing: '{name} печатает'
+        typing: '{name} печатает',
+        share: {
+            linkCopied: 'Ссылка скопирована!',
+            linkCopyError: 'Ошибка копирования'
+        },
+        customColumnSetup: {
+            shareLabel: 'Поделиться настройками колонок',
+            shareHelp: 'Скопируйте ссылку ниже, чтобы поделиться пользовательскими настройками колонок с другими или сохранить её для использования позже.',
+            applied: 'Пользовательские настройки колонок применены'
+        }
     },
     join: {
         label: 'Войти как гость',
@@ -31,7 +40,8 @@ export default {
         button: 'Создать',
 		buttonProgress: 'Создание..',
         captchaInfo: 'Пройдите CAPTCHA для продолжения',
-        boardCreationError: 'Ошибка при создании доски'
+        boardCreationError: 'Ошибка при создании доски',
+        columns: 'Колонки'
     },
     dashboard: {
         timer: {
@@ -44,8 +54,6 @@ export default {
         },
         share: {
             title: 'Скопируйте и поделитесь ссылкой',
-            linkCopied: 'Ссылка скопирована!',
-            linkCopyError: 'Ошибка копирования',
             toolTip: 'Поделиться доской'
         },
         mask: {

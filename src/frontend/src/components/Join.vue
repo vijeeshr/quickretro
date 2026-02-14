@@ -26,7 +26,7 @@ const join = () => {
         if (board && board.trim() != '') {
             router.push(`/board/${board}`)
         } else {
-            router.push(`/create`) // Todo: How about router.replace() ?
+            router.push({ path: '/create', query: route.query })
         }
     }
 }

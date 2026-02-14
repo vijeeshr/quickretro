@@ -15,7 +15,16 @@ export default {
         contentOverloadError: '허용된 내용 초과',
         contentStrippingError: '초과된 텍스트가 삭제되었습니다',
         invalidColumnSelection: '열을 선택해 주세요',
-        typing: '{name}님이 입력 중입니다'
+        typing: '{name}님이 입력 중입니다',
+        share: {
+            linkCopied: '링크 복사됨!',
+            linkCopyError: '복사 실패. 직접 복사해 주세요.'
+        },
+        customColumnSetup: {
+            shareLabel: '열 설정 공유',
+            shareHelp: '아래 링크를 복사하여 사용자 지정 열 설정을 다른 사람과 공유하거나 나중에 사용할 수 있도록 북마크하세요.',
+            applied: '사용자 지정 열 설정이 적용되었습니다'
+        }
     },
     join: {
         label: '게스트로 참여',
@@ -31,7 +40,8 @@ export default {
         button: '생성',
 		buttonProgress: '생성 중..',
         captchaInfo: '계속하려면 CAPTCHA를 완료하세요',
-        boardCreationError: '보드 생성 중 오류 발생'
+        boardCreationError: '보드 생성 중 오류 발생',
+        columns: '열'
     },
     dashboard: {
         timer: {
@@ -44,8 +54,6 @@ export default {
         },
         share: {
             title: '링크 공유',
-            linkCopied: '링크 복사됨!',
-            linkCopyError: '복사 실패. 직접 복사해 주세요.',
             toolTip: '보드 공유'
         },
         mask: {

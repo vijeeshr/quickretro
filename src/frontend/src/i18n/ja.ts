@@ -15,7 +15,16 @@ export default {
         contentOverloadError: 'コンテンツ制限超過',
         contentStrippingError: '末尾のテキストが削除されました',
         invalidColumnSelection: '列を選択してください',
-        typing: '{name} が入力中'
+        typing: '{name} が入力中',
+        share: {
+            linkCopied: 'コピーしました！',
+            linkCopyError: 'コピー失敗 手動でコピーしてください'
+        },
+        customColumnSetup: {
+            shareLabel: '列設定を共有',
+            shareHelp: '下のリンクをコピーしてカスタム列設定を他のユーザーと共有するか、後で使うためにブックマークしてください。',
+            applied: 'カスタム列設定が適用されました'
+        }
     },
     join: {
         label: 'ゲスト参加',
@@ -31,7 +40,8 @@ export default {
         button: '作成',
 		buttonProgress: '作成中..',
         captchaInfo: 'CAPTCHAを完了してください',
-        boardCreationError: 'ボードの作成中にエラーが発生しました'
+        boardCreationError: 'ボードの作成中にエラーが発生しました',
+        columns: '列'
     },
     dashboard: {
         timer: {
@@ -44,8 +54,6 @@ export default {
         },
         share: {
             title: 'URLを共有',
-            linkCopied: 'コピーしました！',
-            linkCopyError: 'コピー失敗 手動でコピーしてください',
             toolTip: 'ボードを共有'
         },
         mask: {

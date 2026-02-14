@@ -15,9 +15,9 @@ export default createRouter({
       path: '/create',
       name: 'create',
       component: CreateBoard,
-      beforeEnter: () => {
+      beforeEnter: (to) => {
         if (!localStorage.getItem("user") || !localStorage.getItem("xid") || !localStorage.getItem("nickname")) {
-          return `/`
+          return { path: '/', query: to.query }
         }
       },
     },

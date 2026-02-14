@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { CreateBoardRequest, createBoard } from '../api'
 import DarkModeToggle from './DarkModeToggle.vue';
 import { BoardColumn } from '../models/BoardColumn';
@@ -12,9 +12,12 @@ import { useToast } from 'vue-toast-notification';
 import CategoryEditor from './CategoryEditor.vue';
 import { defaultCategories } from '../constants/defaultCategories';
 import { MAX_TEXT_LENGTH, TURNSTILE_ENABLED, TURNSTILE_SITEKEY } from '../utils/appConfig';
+import CategoryPresetShare from './CategoryPresetShare.vue';
+import { decodeToJsonFromUrlSafeBase64 } from '../utils';
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const boardname = ref('')
 const team = ref('')
 const isDark = ref(localStorage.getItem("theme") === "dark")
@@ -99,8 +102,54 @@ const create = async () => {
     }
 }
 
+const applyPresetFromRoute = () => {
+    const preset = route.query.preset
+    if (typeof preset !== 'string') return
+    if (!preset.startsWith('v1:')) return
+
+    try {
+        const encoded = preset.slice(3)
+        const decoded = decodeToJsonFromUrlSafeBase64(encoded)
+
+        if (!Array.isArray(decoded) || decoded.length === 0) return
+
+        // Map defaults by id for safe merging
+        const defaultsById = new Map(
+            defaultCategories.map(c => [c.id, { ...c }])
+        )
+
+        const merged: CategoryDefinition[] = decoded
+            .map((c: any) => {
+                const base = defaultsById.get(c.id)
+                if (!base) return null // ignore unknown categories
+
+                return {
+                    ...base,
+                    text: String(c.text ?? '').slice(0, MAX_TEXT_LENGTH),
+                    enabled: !!c.enabled,
+                    pos: Number.isFinite(Number(c.pos)) ? Number(c.pos) : base.pos,
+                    color: c.color ?? base.color
+                }
+            })
+            .filter(Boolean) as CategoryDefinition[] // filter out non-truthy values null | undefined that may come as a result of "if (!base) return null" above
+
+        if (merged.length === 0) return
+
+        // Normalize ordering
+        merged
+            .sort((a, b) => a.pos - b.pos)
+            .forEach((c, i) => (c.pos = i + 1))
+
+        categories.value = merged
+        toast.info(t('common.customColumnSetup.applied'), { duration: 2000 })
+    } catch (err) {
+        console.warn('Invalid category preset ignored', err)
+    }
+}
+
 onMounted(() => {
     document.documentElement.classList.toggle("dark", isDark.value)
+    applyPresetFromRoute()
 })
 </script>
 
@@ -160,6 +209,11 @@ onMounted(() => {
                                     class="w-full rounded-md focus:outline-none focus:border focus:border-gray-200 focus:ring-gray-200 dark:text-slate-200 dark:bg-gray-900 dark:focus:border-gray-800 dark:focus:ring-gray-800" />
                             </li>
                         </ul> -->
+                        <div class="flex justify-between items-end mb-2">
+                            <span class="text-sm font-medium text-gray-600 dark:text-gray-200">{{
+                                t('createBoard.columns') }}</span>
+                            <CategoryPresetShare :categories="categories" />
+                        </div>
                         <CategoryEditor :categories="categories" @category-text-update="handleCategoryTextUpdate"
                             @category-toggle="handleCategoryToggle" @categories-reorder="handleCategoriesReorder"
                             @valid="handleCategorySelectionValidity">
