@@ -24,50 +24,50 @@ hero:
 features:
   - icon: 🙅‍♂️
     title: No Signups
-    details: That's right! No need to signup or login
+    details: Join instantly. No signup or login required.
   - icon: ♾️
-    title: No Board Limits
-    details: Create Boards or Invite Users without limits
+    title: Unlimited Boards
+    details: Create as many boards as you need. Invite unlimited Users.
   - icon: 📱
-    title: Mobile Friendly UI
-    details: Easily participate from your mobile phone
+    title: Mobile Friendly
+    details: Fully responsive design for seamless mobile participation.
   - icon: 📝
-    title: Customize Columns
-    details: Choose upto 5 columns with any name in any order
+    title: Flexible Columns
+    details: Customize upto 5 columns. Rename, reorder them freely.
   - icon: 🙈
-    title: Mask/Blur messages
-    details: Avoid revealing messages of other participants
+    title: Blur messages
+    details: Mask message content to prevent bias during brainstorming.
   - icon: 👤
-    title: Anonymous Messages
-    details: Post messages without revealing your name
+    title: Anonymous Mode
+    details: Post anonymously to encourage honest feedback.
   - icon: ⬇️
     title: Print as PDF
-    details: Print to save messages as PDF
+    details: Print to save messages as PDF.
   - icon: ⏱️
     title: Countdown Timer
-    details: Stopwatch with max 1 hour limit
+    details: Keep meetings on track with a built-in stopwatch.
   - icon: 🔒
     title: Board Lock
-    details: Lock to stop addition/updation of messages
+    details: Lock boards to freeze content.
   - icon: 💬
     title: Comments
-    details: Add comments to discuss ideas directly on each card 
+    details: Add comments to discuss ideas directly on each card.
   - icon: 🌙
-    title: Dark Theme
-    details: Easily switch to use a Dark theme
+    title: Dark Mode
+    details: Switch between light and dark themes for comfort.
   - icon: 🔦
-    title: Focussed View
-    details: Highlight cards just for a User at a time
+    title: Focused View
+    details: Highlight cards just for a User at a time.
   - icon: 🤖
     title: Smart CAPTCHA Integration
-    details: Built-in integration with Cloudflare Turnstile
+    details: Built-in integration with Cloudflare Turnstile.
   - icon: 👥
-    title: Online Presence Display
-    details: See participants present in the meeting
+    title: Live Presence
+    details: See who is currently online in the meeting.
   - icon: ✍️
     title: Live Typing Indicator
-    details: Know when others are typing
+    details: See when others are typing in real-time.
   - icon: 🗑️
-    title: Auto-Delete data
-    details: Auto-delete data with configurable retention duration
+    title: Auto-Cleanup
+    details: Data is automatically deleted after a configurable duration.
 ---

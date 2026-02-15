@@ -30,6 +30,15 @@ Drag-and-Drop columns vertically to change the column order.
 
 When a Board is created, the user is taken to the [Dashboard](dashboard).
 
+## Share/Bookmark Custom Column Setups
+Available from <Badge type="tip" text="v1.6.4" />  
+Use the ***Share column setup*** button to create links for different custom column configurations.  
+These links can be bookmarked or shared with other board creators. Use the generated links to prefill or apply the column configurations directly.
+
+This is ideal for recurring retrospective formats or distributed teams.  
+
+<img src="/bookmark-share-column-setup.png" class="shadow-img" alt="Create Board" width="360" loading="lazy">
+
 ## Quick video
 
 <video class="video-play" id="createBoardVideo" controls width="640">

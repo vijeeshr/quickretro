@@ -3,7 +3,7 @@
 This guide gives a quick and easy functional walkthrough of QuickRetro app.\
 To start, visit the site and type in a name to join as guest. There is no signup/login process.
 
-### Latest version <Badge type="tip" text="v1.6.3" />
+### Latest version <Badge type="tip" text="v1.6.4" />
 
 ## Try the Demo
 Try out the [live demo](https://demo.quickretro.app). It is recommended to self-host.
@@ -32,4 +32,9 @@ Nederlands\
 Українська (uk)\
 Italiano\
 Français (Canada)\
-Polski <Badge type="tip" text="v1.5.5^" />
+Polski
+
+::: info NOTE
+Languages are auto-detected from <Badge type="tip" text="v1.6.4" /> based on browser language settings.  
+If a user has already selected a language explicitly, the auto-deleted language won't be applied and the user's preference will be retained.
+:::
