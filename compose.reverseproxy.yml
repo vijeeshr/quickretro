@@ -4,7 +4,7 @@
 #   docker compose -f compose.reverseproxy.yml up
 #   To force a rebuild without cache:
 #     docker compose -f compose.reverseproxy.yml build --no-cache
-#     docker compose -f compose.reverseproxy.yml up      
+#     docker compose -f compose.reverseproxy.yml up
 
 # Restart services.
 # Containers are NOT deleted, just STOPPED and STARTED. No data is lost.
@@ -26,7 +26,7 @@
 
 services:
   redis:
-    image: "redis:8.0.1-alpine"
+    image: 'redis:8.0.1-alpine'
     ############## Redis ACL ##############
     # volumes:
     #   - ./redis/users.acl:/usr/local/etc/redis/users.acl
@@ -47,17 +47,17 @@ services:
     build:
       context: .
       dockerfile: build.Dockerfile
-    restart: unless-stopped  
+    restart: unless-stopped
     depends_on:
       - redis
     environment:
-      # Load from .env file in same directory as the compose file. 
+      # Load from .env file in same directory as the compose file.
       # To create file, in CLI: echo "REDIS_CONNSTR=redis://redis:6379/0" > .env
       # DO NOT create file from Windows. It creates Unicode text, UTF-16, little-endian text, with CRLF line terminators.
       - PORT=${PORT:-8080}
-      - REDIS_CONNSTR=${REDIS_CONNSTR}  
+      - REDIS_CONNSTR=${REDIS_CONNSTR}
       # Default Redis (No Auth or ACL). Outside docker - redis://localhost:6379/0
-      # - REDIS_CONNSTR=redis://redis:6379/0 
+      # - REDIS_CONNSTR=redis://redis:6379/0
       # Using Redis ACL with Username & Password. Outside docker - redis://app-user:mysecretpassword@localhost:6379/0
       # - REDIS_CONNSTR=redis://app-user:mysecretpassword@redis:6379/0
       - TURNSTILE_ENABLED=${TURNSTILE_ENABLED}
@@ -75,13 +75,13 @@ services:
     image: caddy:2.10.0-alpine
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
     depends_on:
       - app
     networks:
-      - proxynet          
+      - proxynet
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./homepage:/var/www/homepage
@@ -92,7 +92,7 @@ services:
 volumes:
   redis_data:
   caddy_data:
-  caddy_config:      
+  caddy_config:
 
 networks:
   redisnet:

@@ -9,10 +9,11 @@ We'll soon see it in [Dashboard](dashboard) section.
 :::
 
 ## Configuring Board Columns
+
 ::: tip
 Since the introduction of multi-language support with <Badge type="tip" text="v1.3.0" />, default column names can be automatically translated to other
 languages.\
-***Custom column names are not automatically translated.***\
+**_Custom column names are not automatically translated._**\
 It is recommended to use the defaults, if any of your team members use the app in a different language.
 :::
 
@@ -21,21 +22,23 @@ You can choose which columns you want and name them accordingly.
 
 <img src="/createboard.png" class="shadow-img" alt="Create Board" width="360" loading="lazy">
 
-Click the coloured dot (***present towards left of each column name***) to enable/disable a column.\
+Click the coloured dot (**_present towards left of each column name_**) to enable/disable a column.\
 Click the column name text to type any custom name.
 
 ### Changing column order
+
 Available from <Badge type="tip" text="v1.5.4" />  
 Drag-and-Drop columns vertically to change the column order.
 
 When a Board is created, the user is taken to the [Dashboard](dashboard).
 
 ## Share/Bookmark Custom Column Setups
+
 Available from <Badge type="tip" text="v1.6.4" />  
-Use the ***Share column setup*** button to create links for different custom column configurations.  
+Use the **_Share column setup_** button to create links for different custom column configurations.  
 These links can be bookmarked or shared with other board creators. Use the generated links to prefill or apply the column configurations directly.
 
-This is ideal for recurring retrospective formats or distributed teams.  
+This is ideal for recurring retrospective formats or distributed teams.
 
 <img src="/bookmark-share-column-setup.png" class="shadow-img" alt="Create Board" width="360" loading="lazy">
 
@@ -52,7 +55,7 @@ Available from <Badge type="tip" text="v1.4.0" />
 
 <img src="/createboard_turnstile.png" class="shadow-img" alt="Cloudflare Turnstile" width="360" loading="lazy">
 
-Cloudflare Turnstile is a CAPTCHA alternative provided by Cloudflare. The integration can be enabled/disabled in a configurable way. It is disabled by default. 
+Cloudflare Turnstile is a CAPTCHA alternative provided by Cloudflare. The integration can be enabled/disabled in a configurable way. It is disabled by default.
 
 Details to enable it provided in [Configurations](configurations#enable-cloudflare-turnstile)
 

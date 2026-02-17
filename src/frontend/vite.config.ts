@@ -22,8 +22,8 @@ export default defineConfig(({ mode }) => {
           target: apiBase,
           changeOrigin: true,
           secure: false,
-        }
-      }
-    }
+        },
+      },
+    },
   }
 })

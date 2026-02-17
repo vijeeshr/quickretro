@@ -1,4 +1,4 @@
 export interface OnlineUser {
-    nickname: string
-    xid: string
+  nickname: string
+  xid: string
 }

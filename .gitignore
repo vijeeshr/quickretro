@@ -25,3 +25,8 @@ node_modules
 # VitePress output directory
 docs/docs/.vitepress/cache/
 docs/docs/.vitepress/dist/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

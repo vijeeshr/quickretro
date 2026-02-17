@@ -2,11 +2,11 @@
 # https://vitepress.dev/reference/default-theme-home-page
 layout: home
 
-title: "QuickRetro - Free and Open-Source Sprint Retrospective Meeting App"
+title: 'QuickRetro - Free and Open-Source Sprint Retrospective Meeting App'
 
 hero:
-  name: "QuickRetro"
-  text: "Sprint Retrospective Meeting App for Remote Agile Teams"
+  name: 'QuickRetro'
+  text: 'Sprint Retrospective Meeting App for Remote Agile Teams'
   tagline: Free, Open-Source & Self-hosted
   actions:
     - theme: brand
@@ -19,7 +19,7 @@ hero:
     light: /logo_large_light.png
     dark: /logo_large_dark.png
     # src: /logo.png
-    alt: QuickRetro      
+    alt: QuickRetro
 
 features:
   - icon: 🙅‍♂️

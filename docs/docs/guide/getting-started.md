@@ -6,6 +6,7 @@ To start, visit the site and type in a name to join as guest. There is no signup
 ### Latest version <Badge type="tip" text="v1.6.4" />
 
 ## Try the Demo
+
 Try out the [live demo](https://demo.quickretro.app). It is recommended to self-host.
 
 ::: danger DATA CLEANUP
@@ -18,6 +19,7 @@ The name you enter initially is saved in your browser cache. It will be auto-fil
 :::
 
 ## Supported Languages
+
 English\
 简体中文 (zh-CN)\
 Español\

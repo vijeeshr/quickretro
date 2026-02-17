@@ -1,4 +1,4 @@
 export interface LikeMessage {
-    msgId: string
-    like: boolean
+  msgId: string
+  like: boolean
 }

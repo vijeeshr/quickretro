@@ -8,15 +8,19 @@ export default createRouter({
   routes: [
     {
       path: '/',
-      name: "start",
+      name: 'start',
       component: Join,
     },
     {
       path: '/create',
       name: 'create',
       component: CreateBoard,
-      beforeEnter: (to) => {
-        if (!localStorage.getItem("user") || !localStorage.getItem("xid") || !localStorage.getItem("nickname")) {
+      beforeEnter: to => {
+        if (
+          !localStorage.getItem('user') ||
+          !localStorage.getItem('xid') ||
+          !localStorage.getItem('nickname')
+        ) {
           return { path: '/', query: to.query }
         }
       },
@@ -25,8 +29,12 @@ export default createRouter({
       path: '/board/:board',
       name: 'dashboard',
       component: Dashboard,
-      beforeEnter: (to) => {
-        if (!localStorage.getItem("user") || !localStorage.getItem("xid") || !localStorage.getItem("nickname")) {
+      beforeEnter: to => {
+        if (
+          !localStorage.getItem('user') ||
+          !localStorage.getItem('xid') ||
+          !localStorage.getItem('nickname')
+        ) {
           return `/board/${to.params.board}/join`
         }
       },

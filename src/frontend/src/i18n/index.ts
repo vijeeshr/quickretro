@@ -19,35 +19,66 @@ import pl from './pl'
 type MessageSchema = typeof en
 
 function detectLocale(): string {
-    const saved = localStorage.getItem('lang')
-    if (saved) return saved
+  const saved = localStorage.getItem('lang')
+  if (saved) return saved
 
-    const locales = availableLocales as readonly string[]
+  const locales = availableLocales as readonly string[]
 
-    // Walk through the user's preferred languages in order
-    for (const lang of navigator.languages) {
-        // Try exact match with region (e.g. zh-CN → zhCN, pt-BR → ptBR, fr-CA → frCA)
-        const normalized = lang.replace('-', '')
-        if (locales.includes(normalized)) return normalized
+  // Walk through the user's preferred languages in order
+  for (const lang of navigator.languages) {
+    // Try exact match with region (e.g. zh-CN → zhCN, pt-BR → ptBR, fr-CA → frCA)
+    const normalized = lang.replace('-', '')
+    if (locales.includes(normalized)) return normalized
 
-        // Try base language only (e.g. de-AT → de, en-US → en)
-        const base = lang.split('-')[0]
-        if (locales.includes(base)) return base
-    }
+    // Try base language only (e.g. de-AT → de, en-US → en)
+    const base = lang.split('-')[0]
+    if (locales.includes(base)) return base
+  }
 
-    return 'en'
+  return 'en'
 }
 
-export default createI18n<[MessageSchema], 'en' | 'zhCN' | 'es' | 'de' | 'fr' | 'ptBR' | 'ru' | 'ja' | 'nl' | 'ko' | 'it' | 'pt' | 'uk' | 'frCA' | 'pl'>({
-    legacy: false,
-    locale: detectLocale(),
-    fallbackLocale: 'en',
-    messages : {
-        en, zhCN, es, de, fr, ptBR, ru, ja, nl, ko, it, pt, uk, frCA, pl
-    }
+export default createI18n<
+  [MessageSchema],
+  | 'en'
+  | 'zhCN'
+  | 'es'
+  | 'de'
+  | 'fr'
+  | 'ptBR'
+  | 'ru'
+  | 'ja'
+  | 'nl'
+  | 'ko'
+  | 'it'
+  | 'pt'
+  | 'uk'
+  | 'frCA'
+  | 'pl'
+>({
+  legacy: false,
+  locale: detectLocale(),
+  fallbackLocale: 'en',
+  messages: {
+    en,
+    zhCN,
+    es,
+    de,
+    fr,
+    ptBR,
+    ru,
+    ja,
+    nl,
+    ko,
+    it,
+    pt,
+    uk,
+    frCA,
+    pl,
+  },
 })
 
 declare module 'vue-i18n' {
-    // Define the vue-i18n type schema
-    export interface DefineLocaleMessage extends MessageSchema {}
+  // Define the vue-i18n type schema
+  export interface DefineLocaleMessage extends MessageSchema {}
 }

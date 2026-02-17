@@ -3,17 +3,18 @@ export default {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {
-      minHeight: (theme) => ({
+      minHeight: theme => ({
         ...theme('spacing'),
       }),
-    }
+    },
   },
   darkMode: 'class',
   plugins: [],
   safelist: [
     // Backgrounds
     {
-      pattern: /^(bg|hover:bg|dark:bg|dark:hover:bg)-(red|green|yellow|fuchsia|orange)-(100|400|500|600|800)/,
+      pattern:
+        /^(bg|hover:bg|dark:bg|dark:hover:bg)-(red|green|yellow|fuchsia|orange)-(100|400|500|600|800)/,
       variants: ['hover', 'dark', 'dark:hover'],
     },
     // Borders
@@ -25,7 +26,7 @@ export default {
     {
       pattern: /^(text|dark:text)-(red|green|yellow|fuchsia|orange)-(100|600)/,
       variants: ['dark'],
-    }
+    },
     // Sizes
     // {
     //   pattern: /w-(6|8)/,
