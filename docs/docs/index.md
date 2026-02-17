@@ -3,6 +3,7 @@
 layout: home
 
 title: 'QuickRetro - Free and Open-Source Sprint Retrospective Meeting App'
+description: QuickRetro is a free and open-source sprint retrospective app for agile teams. Self-hosted, real-time, mobile-friendly, and privacy-first.
 
 hero:
   name: 'QuickRetro'

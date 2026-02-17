@@ -1,4 +1,6 @@
 ---
+title: QuickRetro Development Guide
+description: Learn how to set up QuickRetro locally, and start contributing.
 outline: deep
 ---
 

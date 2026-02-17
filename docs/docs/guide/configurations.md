@@ -1,3 +1,8 @@
+---
+title: QuickRetro Configuration Options
+description: Discover all QuickRetro configuration options, including feature toggles, WebSocket limits, and settings to customize app behavior.
+---
+
 # Configurations
 
 The application's default behaviour can be altered with configuration settings. This document provides a quick overview about it.

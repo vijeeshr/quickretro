@@ -2,16 +2,15 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "QuickRetro",
-  description: "Self-hosted, Free & Open-source Sprint retro app",
+  title: 'QuickRetro',
+  description:
+    'QuickRetro is a free and open-source sprint retrospective app for agile teams. Self-hosted, real-time, mobile-friendly, and privacy-first.',
 
   transformHead({ pageData }) {
-    const relativePath = pageData.relativePath.replace(/\.md$/, '');
-    const relativePathForCanonicalUrl = relativePath === 'index' ? '' : `/${relativePath}`;
-    const canonicalUrl = `https://quickretro.app${relativePathForCanonicalUrl}`;
-    return [
-      ['link', { rel: 'canonical', href: canonicalUrl }]
-    ];
+    const relativePath = pageData.relativePath.replace(/\.md$/, '')
+    const relativePathForCanonicalUrl = relativePath === 'index' ? '' : `/${relativePath}`
+    const canonicalUrl = `https://quickretro.app${relativePathForCanonicalUrl}`
+    return [['link', { rel: 'canonical', href: canonicalUrl }]]
   },
 
   head: [
@@ -22,26 +21,59 @@ export default defineConfig({
     // Canonical Link
     // ['link', { rel: 'canonical', href: 'https://quickretro.app' }],
     // Meta Tags
-    ['meta', { name: 'title', content: 'QuickRetro - Free and Open-Source Sprint Retrospective Meeting App' }],
     ['meta', { name: 'robots', content: 'index, follow' }],
     ['meta', { name: 'language', content: 'English' }],
-    ['meta', { name: 'keywords', content: 'sprint, agile, restrospective, meeting, websocket, opensource, free' }],
+    [
+      'meta',
+      {
+        name: 'keywords',
+        content:
+          'sprint, board, agile, restrospective, feedback, meeting, websocket, opensource, free',
+      },
+    ],
     // OpenGraph tags
-    ['meta', { property: 'og:title', content: 'QuickRetro - Free and Open-Source Sprint Retrospective Meeting App' }],
-    ['meta', { property: 'og:url', content: 'https://quickretro.app' }],    
+    [
+      'meta',
+      {
+        property: 'og:title',
+        content: 'QuickRetro - Free and Open-Source Sprint Retrospective Meeting App',
+      },
+    ],
+    ['meta', { property: 'og:url', content: 'https://quickretro.app' }],
     ['meta', { property: 'og:site_name', content: 'QuickRetro' }],
-    ['meta', { property: 'og:description', content: 'Easily conduct a Sprint retrospective online with this free and open-source app' }],
+    [
+      'meta',
+      {
+        property: 'og:description',
+        content: 'Easily conduct a Sprint retrospective online with this free and open-source app',
+      },
+    ],
     ['meta', { property: 'og:image', content: 'https://quickretro.app/logo.png' }],
     ['meta', { property: 'og:type', content: 'website' }],
     // Twitter tags
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    ['meta', { name: 'twitter:title', content: 'QuickRetro - Free and Open-Source Sprint Retrospective Meeting App' }],
-    ['meta', { name: 'twitter:description', content: 'Easily conduct a Sprint retrospective online with this free and open-source app' }],
+    [
+      'meta',
+      {
+        name: 'twitter:title',
+        content: 'QuickRetro - Free and Open-Source Sprint Retrospective Meeting App',
+      },
+    ],
+    [
+      'meta',
+      {
+        name: 'twitter:description',
+        content: 'Easily conduct a Sprint retrospective online with this free and open-source app',
+      },
+    ],
     ['meta', { name: 'twitter:image', content: 'https://quickretro.app/logo.png' }],
     ['meta', { property: 'twitter:domain', content: 'quickretro.app' }],
     ['meta', { property: 'twitter:url', content: 'https://quickretro.app/' }],
     // JSON-LD Structured Data for SEO
-    ['script', { type: 'application/ld+json' }, `
+    [
+      'script',
+      { type: 'application/ld+json' },
+      `
       {
         "@context": "https://schema.org",
         "@type": "WebSite",
@@ -50,18 +82,19 @@ export default defineConfig({
         "description": "Easily conduct a Sprint retrospective online with this free and open-source app",
         "logo": "https://quickretro.app/logo.png"
       }
-    `]
+    `,
+    ],
   ],
 
   lastUpdated: true,
   cleanUrls: true,
   ignoreDeadLinks: [
     // ignore all localhost links
-    /^https?:\/\/localhost/
+    /^https?:\/\/localhost/,
   ],
   sitemap: {
     hostname: 'https://quickretro.app',
-    transformItems: (items) => {
+    transformItems: items => {
       // modify/filter existing items
       items.forEach(item => {
         // Default priority
@@ -72,7 +105,7 @@ export default defineConfig({
           item.img = {
             url: 'https://quickretro.app/dashboard_owner.png',
             caption: 'Dashboard features',
-            title: 'Dashboard features'
+            title: 'Dashboard features',
           }
         }
         // Home page
@@ -81,7 +114,7 @@ export default defineConfig({
           item.img = {
             url: 'https://quickretro.app/logo.png',
             caption: 'Free and Open-Source Sprint Retrospective App',
-            title: 'QuickRetro | Free and Open-Source Sprint Retrospective Meeting App'
+            title: 'QuickRetro | Free and Open-Source Sprint Retrospective Meeting App',
           }
         }
         // Create-Board
@@ -90,7 +123,7 @@ export default defineConfig({
           item.img = {
             url: 'https://quickretro.app/createboard.png',
             caption: 'Create board',
-            title: 'Create board'
+            title: 'Create board',
           }
         }
         // Development
@@ -103,21 +136,21 @@ export default defineConfig({
       // Demo link
       items.push({
         url: 'https://demo.quickretro.app',
-        priority: 1
+        priority: 1,
       })
 
       return items
-    }
+    },
   },
-  
+
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    logo : { light: "logo_large_light.png", dark: "logo_large_dark.png", width: 24, height: 24 },
+    logo: { light: 'logo_large_light.png', dark: 'logo_large_dark.png', width: 24, height: 24 },
 
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Features', link: '/guide/dashboard' },
-      { text: 'Development', link: '/guide/development' }
+      { text: 'Development', link: '/guide/development' },
     ],
 
     sidebar: [
@@ -126,32 +159,27 @@ export default defineConfig({
         items: [
           { text: 'Getting Started', link: '/guide/getting-started' },
           { text: 'Create Board', link: '/guide/create-board' },
-          { text: 'Dashboard', link: '/guide/dashboard' }
-        ]
+          { text: 'Dashboard', link: '/guide/dashboard' },
+        ],
       },
       {
         // text: 'Development',
         items: [
           { text: 'Development', link: '/guide/development' },
-          { text: 'Configurations', link: '/guide/configurations' }
-        ]
+          { text: 'Configurations', link: '/guide/configurations' },
+        ],
       },
       {
         // text: 'Self-hosting',
-        items: [
-          { text: 'Self-Hosting', link: '/guide/self-hosting' }
-        ]
-      }             
+        items: [{ text: 'Self-Hosting', link: '/guide/self-hosting' }],
+      },
     ],
 
-    socialLinks: [
-      { icon: 'github', link: 'https://github.com/vijeeshr/quickretro' }
-    ],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/vijeeshr/quickretro' }],
 
     footer: {
       message: 'Released under the AGPL-3.0 license',
-      copyright: 'Copyright © 2024-present QuickRetro™'
-    }
-
-  }
+      copyright: 'Copyright © 2024-present QuickRetro™',
+    },
+  },
 })

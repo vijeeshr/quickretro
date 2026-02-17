@@ -1,3 +1,8 @@
+---
+title: Getting Started with QuickRetro
+description: Get started with QuickRetro in minutes. Learn how to create your first sprint retrospective board and invite your team.
+---
+
 # Getting Started
 
 This guide gives a quick and easy functional walkthrough of QuickRetro app.\

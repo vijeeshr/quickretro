@@ -1,3 +1,8 @@
+---
+title: Create a Sprint Retrospective Board
+description: Learn how to create a sprint retrospective board in QuickRetro, customize columns, and start collecting team feedback instantly.
+---
+
 # Create Board
 
 The first thing you do is create/setup a board.\

@@ -1,4 +1,9 @@
-# Self-Hosting
+---
+title: Self-Hosting QuickRetro with Docker
+description: Step-by-step guide to self-host QuickRetro using Docker. Learn configuration, deployment, and production setup.
+---
+
+# Self Hosting
 
 Although the [demo app](https://demo.quickretro.app) has all the features and can be used as-is, it runs on low resources. The data is auto-deleted within 2 days. It is recommended to self-host the app for better flexibility.
 

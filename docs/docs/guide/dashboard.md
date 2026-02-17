@@ -1,3 +1,8 @@
+---
+title: Dashboard
+description: Learn how to use the QuickRetro dashboard to manage sprint retrospectives, moderate discussions, lock boards, and track team feedback in real time.
+---
+
 # Dashboard
 
 This guide gives a quick overview of the dashboard and all its features.
