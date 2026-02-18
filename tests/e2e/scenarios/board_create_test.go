@@ -70,7 +70,7 @@ func TestBoardCreation(t *testing.T) {
 	t.Run("Validation: Too many columns", func(t *testing.T) {
 		payload := validPayload()
 		cols := make([]map[string]any, 6)
-		for i := 0; i < 6; i++ {
+		for i := range 6 {
 			cols[i] = validColumns[0] // duplicate is fine for this check essentially
 		}
 		payload["columns"] = cols

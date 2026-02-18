@@ -99,7 +99,7 @@ func (u *TestUser) Close() {
 	}
 }
 
-func (u *TestUser) SendEvent(typ string, payload interface{}) error {
+func (u *TestUser) SendEvent(typ string, payload any) error {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		return err
