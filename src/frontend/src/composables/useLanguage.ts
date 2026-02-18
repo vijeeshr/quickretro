@@ -1,28 +1,12 @@
 import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
+import { loadLanguageAsync } from '../i18n'
+import { languageNames, availableLocales, type AvailableLocales } from '../i18n/locales'
 
-export const availableLocales = [
-  'en',
-  'zhCN',
-  'es',
-  'de',
-  'fr',
-  'ptBR',
-  'ru',
-  'ja',
-  'nl',
-  'ko',
-  'it',
-  'pt',
-  'uk',
-  'frCA',
-  'pl',
-] as const
-
-export type AvailableLocales = (typeof availableLocales)[number]
+export { languageNames, availableLocales, type AvailableLocales }
 
 export function useLanguage() {
-  const { locale: i18nLocale, getLocaleMessage } = useI18n()
+  const { locale: i18nLocale } = useI18n()
 
   const locale = computed<AvailableLocales>({
     get: () => i18nLocale.value as AvailableLocales,
@@ -31,26 +15,28 @@ export function useLanguage() {
     },
   })
 
-  const setLocale = (newLocale: AvailableLocales) => {
-    i18nLocale.value = newLocale
+  const setLocale = async (newLocale: AvailableLocales) => {
     try {
+      await loadLanguageAsync(newLocale)
       localStorage.setItem('lang', newLocale)
     } catch (error) {
-      console.error('Failed to save locale:', error)
+      console.error('Failed to load/save locale:', error)
     }
   }
 
   const languageOptions = computed(() =>
     availableLocales.map(code => ({
       code,
-      name: getLocaleMessage(code).langName,
+      name: languageNames[code],
     }))
   )
+
+  const getLanguageName = (code: AvailableLocales) => languageNames[code]
 
   return {
     locale,
     setLocale,
     languageOptions,
-    getLocaleMessage,
+    getLanguageName,
   }
 }

@@ -1,5 +1,4 @@
 export default {
-  langName: '日本語 (ja)',
   common: {
     anonymous: '匿名',
     minutes: '分',

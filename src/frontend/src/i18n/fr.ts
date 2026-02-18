@@ -1,5 +1,4 @@
 export default {
-  langName: 'Français',
   common: {
     anonymous: 'Anonyme',
     minutes: 'Minutes',

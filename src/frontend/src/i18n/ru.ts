@@ -1,5 +1,4 @@
 export default {
-  langName: 'Русский (ru)',
   common: {
     anonymous: 'Аноним',
     minutes: 'Минуты',

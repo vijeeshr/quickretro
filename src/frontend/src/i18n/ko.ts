@@ -1,5 +1,4 @@
 export default {
-  langName: '한국어 (ko)',
   common: {
     anonymous: '익명',
     minutes: '분',

@@ -1,5 +1,4 @@
 export default {
-  langName: '简体中文 (zh-CN)',
   common: {
     anonymous: '匿名',
     minutes: '分钟',
