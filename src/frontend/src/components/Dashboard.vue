@@ -572,7 +572,17 @@ const print = async () => {
                             padding: 20px;
                             -webkit-print-color-adjust: exact;
                             print-color-adjust: exact;
-                            font-family: Arial, sans-serif, "Noto Sans CJK SC", "Hiragino Sans GB";
+                            font-family:
+                                Arial,
+                                "Noto Sans",
+                                "Noto Sans CJK SC",
+                                "Hiragino Sans GB",
+                                system-ui,
+                                -apple-system,
+                                BlinkMacSystemFont,
+                                "Segoe UI",
+                                Roboto,
+                                sans-serif;
                         }
 
                         .print-section {
@@ -613,7 +623,9 @@ const print = async () => {
                             page-break-inside: avoid;
                             color: #505050;
                             font-size: 1rem;
-                            word-break: break-all;
+                            word-break: break-word;
+                            overflow-wrap: anywhere;
+                            line-height: 1.4;
                         }
 
                         .print-card:nth-child(even) {

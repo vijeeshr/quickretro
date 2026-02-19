@@ -14,6 +14,8 @@ export const languageNames = {
   uk: 'Українська (uk)',
   frCA: 'Français (Canada)',
   pl: 'Polski',
+  id: 'Bahasa Indonesia',
+  vi: 'Tiếng Việt',
 } as const
 
 export type AvailableLocales = keyof typeof languageNames
