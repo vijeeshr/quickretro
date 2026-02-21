@@ -8,7 +8,7 @@ description: Get started with QuickRetro in minutes. Learn how to create your fi
 This guide gives a quick and easy functional walkthrough of QuickRetro app.\
 To start, visit the site and type in a name to join as guest. There is no signup/login process.
 
-### Latest version <Badge type="tip" text="v1.6.4" />
+### Latest version <Badge type="tip" text="v1.6.5" />
 
 ## Try the Demo
 
@@ -39,7 +39,9 @@ Nederlands\
 Українська (uk)\
 Italiano\
 Français (Canada)\
-Polski
+Polski\
+Bahasa Indonesia\
+Tiếng Việt (Vietnamese)
 
 ::: info NOTE
 Languages are auto-detected from <Badge type="tip" text="v1.6.4" /> based on browser language settings.  

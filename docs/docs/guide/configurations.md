@@ -109,7 +109,7 @@ allowed_origins = [
 
 This is enough to run the app in port 9090 using docker compose.
 
-::: tip Direct Frontend to connect to new port during development
+::: tip Connect frontend app to new port during development
 During development, you may need to run the Vue frontend outside the docker container. While the above change works when the app is built and run entirely in a docker container with Docker Compose, the Vue frontend won't automatically connect to the newly changed port 9090 running inside the docker container.
 
 Change value of VITE env variable `VITE*API_BASE_URL` in `src/frontend/.env` to make the frontend(\_running outside of docker\*) connect to backend(_running inside docker container with new port 9090 exposed to host_).

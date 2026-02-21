@@ -15,11 +15,20 @@ This guide is intended to help you get started with running the application loca
 - Docker
 - Redis is used as the datastore and for pubsub
 - A text editor, preferably VS Code, and a CLI
+- Recommended VS Code extensions - `golang.go`, `Vue.volar`, `esbenp.prettier-vscode`, `dbaeumer.vscode-eslint`
   ::: info
   The Go app runs as a single binary with the frontend embedded inside it
   :::
 
 ## Running locally
+
+::: warning
+The Golang app expects the built front-end assets to be present in the `frontend/dist/` directory. Without them, you will see an error like
+`main.go:17:12: pattern all:frontend/dist/*: no matching files found`,
+when starting the Go app.
+
+Make sure the **Vue frontend is built before starting the Go app**.
+:::
 
 The easiest way to run locally is by using Docker.
 
