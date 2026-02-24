@@ -1,6 +1,11 @@
 ---
 title: Self-Hosting QuickRetro with Docker
 description: Step-by-step guide to self-host QuickRetro using Docker. Learn configuration, deployment, and production setup.
+outline: deep
+head:
+  - - meta
+    - name: keywords
+      content: self-host sprint retrospective, docker agile app, redis retro app
 ---
 
 # Self Hosting
@@ -35,6 +40,10 @@ DO NOT create the file directly from Windows `CMD` if you intend to run the app 
 On Windows, you can create the file in UTF-8 using Git Terminal.
 :::
 
-## Sample Compose files
-
 Check out the sample docker compose files `compose.yml`, `compose.reverseproxy.yml`, `compose.demohosting.yml` etc in [github repository](https://github.com/vijeeshr/quickretro) for more details.
+
+## Frequently Asked Questions
+
+### Why isn't my `.env` file working on Linux?
+
+Ensure it is saved with UTF-8 encoding and LF (Line Feed) line endings, not Windows CRLF. Creating it via standard Windows command prompt can cause encoding issues Docker Compose cannot read.

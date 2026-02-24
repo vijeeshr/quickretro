@@ -1,6 +1,11 @@
 ---
 title: Dashboard
 description: Learn how to use the QuickRetro dashboard to manage sprint retrospectives, moderate discussions, lock boards, and track team feedback in real time.
+outline: deep
+head:
+  - - meta
+    - name: keywords
+      content: retrospective dashboard, remote team meeting, agile board features
 ---
 
 # Dashboard
@@ -277,3 +282,21 @@ Only available to the board owner.
 Use the **Delete Board** button to permanently remove the board and all its data.
 
 ⚠️ This action cannot be undone.
+
+## Frequently Asked Questions
+
+### Why are messages of other users' appearing blurred?
+
+To prevent bias during brainstorming, other users' cards are blurred by default. Board owner can reveal or blur messages anytime.
+
+### Who can lock the board or delete whole board?
+
+Only the board owner can perform these actions.
+
+### Can anonymous message creators be revealed later?
+
+No. Anonymous message / card creators will always remain anonymous.
+
+### Can I post anonymous comments?
+
+No. Anonymous comments aren't yet supported. Only anonymous messages / cards can be added.

@@ -1,6 +1,11 @@
 ---
 title: QuickRetro Configuration Options
 description: Discover all QuickRetro configuration options, including feature toggles, WebSocket limits, and settings to customize app behavior.
+outline: deep
+head:
+  - - meta
+    - name: keywords
+      content: quickretro settings, websocket size, cloudflare turnstile captcha
 ---
 
 # Configurations
@@ -189,6 +194,13 @@ auto_disable_after_count = 15
 # - Prevent excessive broadcasts while a user is actively typing for a long time
 emit_throttle_ms = 3000
 # Time (in milliseconds) after which the typing indicator is automatically cleared if no new typing event is received. (only used by frontend)
-# This controls how long the activity ring stays visible on the user's avatar after they stop typing.
 display_timeout_ms = 2000
 ```
+
+## Frequently Asked Questions
+
+### How do I change the default port?
+Update the `PORT` env variable via `.env` file, and update `allowed_origins` in `config.toml` to include your new port.
+
+### How can I prevent bots from creating boards?
+Enable the Cloudflare Turnstile integration by providing the required site key and secret key in your environment variables.

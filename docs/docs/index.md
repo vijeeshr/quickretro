@@ -4,6 +4,10 @@ layout: home
 
 title: 'QuickRetro - Free and Open-Source Sprint Retrospective Meeting App'
 description: QuickRetro is a free and open-source sprint retrospective app for agile teams. Self-hosted, real-time, mobile-friendly, and privacy-first.
+head:
+  - - meta
+    - name: keywords
+      content: sprint retrospective, open-source retro, agile retro board, free retrospective tool, self-hosted retro app, feedback app, chat app, team collaboration
 
 hero:
   name: 'QuickRetro'
@@ -72,3 +76,56 @@ features:
     title: Auto-Cleanup
     details: Data is automatically deleted after a configurable duration.
 ---
+
+<div class="faq-section">
+
+## Frequently Asked Questions
+
+<details>
+<summary><strong>What else can I use QuickRetro for?</strong></summary>
+While QuickRetro is designed primarily for running sprint retrospectives, it works really well for any situation that needs lightweight, private, and honest feedback.
+
+Because it’s real-time, anonymous (when needed), and auto-cleans data (no long-term data storage), teams can use it for much more than retros:
+
+**Common alternative uses include:**
+
+- **Instant team feedback**  
+  Gather quick thoughts after meetings, demos, or workshops - without long surveys or follow-ups.
+
+- **Brainstorming sessions**  
+  Let participants add ideas in parallel, reducing bias and encouraging quieter voices to contribute.
+
+- **Team health checks**  
+  Run short pulse checks to understand morale, blockers, or concerns in a safe, non-judgmental space.
+
+- **Workshops & training sessions**  
+  Collect feedback from attendees in real time to see what worked and what didn’t.
+
+- **Temporary chat room**  
+  Create an auto-deleting chat room without forcing account sign-ups.
+
+QuickRetro’s focus on privacy, minimal setup, and automatic data deletion makes it especially useful when you want honest input without creating permanent records or tracking individuals.
+
+</details>
+
+<details>
+<summary><strong>How does QuickRetro protect privacy?</strong></summary>
+
+QuickRetro is designed to be privacy-first by default:
+
+- **No accounts or sign-ups required** - participants can join and post instantly
+- **Anonymous participation** - post without revealing identiy
+- **Automatic data deletion** - all data removed after a configurable time
+- **No data collection** - no tracking, profiling, or behavioral analytics
+- **Self-hosting support** - keep all data fully under your control
+
+This makes QuickRetro ideal for teams that want honest feedback without creating permanent records or collecting personal data.
+
+</details>
+
+<details>
+<summary><strong>Can QuickRetro be self-hosted?</strong></summary>
+Yes. QuickRetro can be self-hosted for full data control.
+</details>
+
+</div>

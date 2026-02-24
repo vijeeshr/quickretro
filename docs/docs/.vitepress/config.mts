@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  lang: 'en-US',
   title: 'QuickRetro',
   description:
     'QuickRetro is a free and open-source sprint retrospective app for agile teams. Self-hosted, real-time, mobile-friendly, and privacy-first.',
@@ -10,7 +11,48 @@ export default defineConfig({
     const relativePath = pageData.relativePath.replace(/\.md$/, '')
     const relativePathForCanonicalUrl = relativePath === 'index' ? '' : `/${relativePath}`
     const canonicalUrl = `https://quickretro.app${relativePathForCanonicalUrl}`
-    return [['link', { rel: 'canonical', href: canonicalUrl }]]
+    
+    const head: import('vitepress').HeadConfig[] = [
+      ['link', { rel: 'canonical', href: canonicalUrl }]
+    ]
+
+    // Generate JSON-LD dynamically
+    let jsonLd: any = {
+      "@context": "https://schema.org",
+      "name": "QuickRetro",
+      "url": "https://quickretro.app",
+      "logo": "https://quickretro.app/logo.png"
+    }
+
+    if (relativePath === 'index') {
+      jsonLd = {
+        ...jsonLd,
+        "@type": ["WebSite", "SoftwareApplication"],
+        "name": "QuickRetro - Free and Open-Source Sprint Retrospective App",
+        "description": "Easily conduct a Sprint retrospective online with this free and open-source app",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "All"
+      }
+    } else {
+      jsonLd = {
+        ...jsonLd,
+        "@type": "Article",
+        "headline": pageData.frontmatter.title || "QuickRetro Documentation",
+        "description": pageData.frontmatter.description || "Guide on using QuickRetro",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": canonicalUrl
+        }
+      }
+    }
+
+    head.push([
+      'script',
+      { type: 'application/ld+json' },
+      JSON.stringify(jsonLd)
+    ])
+
+    return head
   },
 
   head: [
@@ -28,7 +70,7 @@ export default defineConfig({
       {
         name: 'keywords',
         content:
-          'sprint, board, agile, restrospective, feedback, meeting, websocket, opensource, free',
+          'agile, sprint, retrospective, feedback, board, team collaboration, remote retros, meeting, websocket, opensource, free',
       },
     ],
     // OpenGraph tags
@@ -68,22 +110,7 @@ export default defineConfig({
     ],
     ['meta', { name: 'twitter:image', content: 'https://quickretro.app/logo.png' }],
     ['meta', { property: 'twitter:domain', content: 'quickretro.app' }],
-    ['meta', { property: 'twitter:url', content: 'https://quickretro.app/' }],
-    // JSON-LD Structured Data for SEO
-    [
-      'script',
-      { type: 'application/ld+json' },
-      `
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "QuickRetro - Free and Open-Source Sprint Retrospective Meeting App",
-        "url": "https://quickretro.app",
-        "description": "Easily conduct a Sprint retrospective online with this free and open-source app",
-        "logo": "https://quickretro.app/logo.png"
-      }
-    `,
-    ],
+    ['meta', { property: 'twitter:url', content: 'https://quickretro.app/' }]
   ],
 
   lastUpdated: true,
@@ -145,7 +172,7 @@ export default defineConfig({
 
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    logo: { light: 'logo_large_light.png', dark: 'logo_large_dark.png', width: 24, height: 24 },
+    logo: { light: '/logo_large_light.png', dark: '/logo_large_dark.png', width: 24, height: 24 },
 
     nav: [
       { text: 'Home', link: '/' },

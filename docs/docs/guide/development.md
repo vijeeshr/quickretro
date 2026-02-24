@@ -2,6 +2,10 @@
 title: QuickRetro Development Guide
 description: Learn how to set up QuickRetro locally, and start contributing.
 outline: deep
+head:
+  - - meta
+    - name: keywords
+      content: quickretro development, open source commit, self-hosting retro app locally
 ---
 
 # Development Guide

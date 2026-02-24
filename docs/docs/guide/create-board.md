@@ -1,6 +1,11 @@
 ---
 title: Create a Sprint Retrospective Board
 description: Learn how to create a sprint retrospective board in QuickRetro, customize columns, and start collecting team feedback instantly.
+outline: deep
+head:
+  - - meta
+    - name: keywords
+      content: create retro board, custom columns retrospective, sprint board setup
 ---
 
 # Create Board
@@ -63,6 +68,12 @@ Available from <Badge type="tip" text="v1.4.0" />
 Cloudflare Turnstile is a CAPTCHA alternative provided by Cloudflare. The integration can be enabled/disabled in a configurable way. It is disabled by default.
 
 Details to enable it provided in [Configurations](configurations#enable-cloudflare-turnstile)
+
+## Frequently Asked Questions
+
+### Can I choose my own custom colors for columns?
+
+No. Customs colors aren't yet supported. You can move the provided colored columns in any order, with any text for now.
 
 <script setup>
 import { onMounted } from 'vue';

@@ -1,6 +1,11 @@
 ---
 title: Getting Started with QuickRetro
 description: Get started with QuickRetro in minutes. Learn how to create your first sprint retrospective board and invite your team.
+outline: deep
+head:
+  - - meta
+    - name: keywords
+      content: get started sprint retrospective, quickretro setup, online retro meeting, free sprint board
 ---
 
 # Getting Started
@@ -47,3 +52,17 @@ Tiếng Việt (Vietnamese)
 Languages are auto-detected from <Badge type="tip" text="v1.6.4" /> based on browser language settings.  
 If a user has already selected a language explicitly, the auto-deleted language won't be applied and the user's preference will be retained.
 :::
+
+## Frequently Asked Questions
+
+### Does everyone need an account to use QuickRetro?
+
+No. Signups or logins are **not required** to participate, or to create boards.
+
+### How long is data stored?
+
+In the demo app, data is **auto-deleted after 2 days**. When self-hosting, the retention period is completely configurable.
+
+### Can data be deleted earlier?
+
+Yes. Board owner can **delete all data** anytime, even before its scheduled auto-deletion.
