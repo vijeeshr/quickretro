@@ -8,21 +8,23 @@ package main
 (KEY)board:cmts:{boardId}      		(VALUE)[commentIds]      		Board-wise Comments - Redis Set. For fetching all comments.
 (KEY)msg:likes:{messageId}			(VALUE)[userIds]				Likes - Redis Set. For recording likes/votes for a message.
 (KEY)board:user:{boardId}:{userId}	(VALUE)User						User - Redis Hash. User master. Keeping as board specific.
-(KEY)board:users:{boardId}			(VALUE)[userIds]				Board-wise Users - Redis Set. Useful for fetching members of a board.
+(KEY)board:user:xid:seq:{boardId}	(VALUE)last_xid					Last generated sequential xid for Board - Redis INCR. Used to generate sequential Xids.
+(KEY)board:presence:{boardId}		(VALUE)[userIds]				Board-wise Live(Connected) Users - Redis Set.
 (KEY)board:col:{boardId}:{colId}	(VALUE)column					Column - Redis Hash. Column definition for a Board.
-(KEY)board:col:{boardId}			(Value)[colIds]					Board-wise columns - Redis Set. Just a list of colIds for a board.
+(KEY)board:col:{boardId}			(VALUE)[colIds]					Board-wise columns - Redis Set. Just a list of colIds for a board.
 */
 
 // Base prefixes
 const (
-	keyBoard      = "board:"
-	keyBoardMsgs  = "board:msg:"
-	keyBoardCmts  = "board:cmts:"
-	keyBoardUsers = "board:users:"
-	keyBoardUser  = "board:user:"
-	keyBoardCols  = "board:col:"
-	keyMsg        = "msg:"
-	keyMsgLikes   = "msg:likes:"
+	keyBoard              = "board:"
+	keyBoardMsgs          = "board:msg:"
+	keyBoardCmts          = "board:cmts:"
+	keyBoardUsersPresence = "board:presence:"
+	keyBoardUser          = "board:user:"
+	keyBoardUserXid       = "board:user:xid:seq:"
+	keyBoardCols          = "board:col:"
+	keyMsg                = "msg:"
+	keyMsgLikes           = "msg:likes:"
 )
 
 // board:{boardId}.
@@ -43,10 +45,16 @@ func boardCmtsKey(boardId string) string {
 	return keyBoardCmts + boardId
 }
 
-// board:users:{boardId}.
-// Board-wise Users - Redis SET.
-func boardUsersKey(boardId string) string {
-	return keyBoardUsers + boardId
+// board:presence:{boardId}.
+// Board-wise Live(Connected) users - Redis SET.
+func boardUsersPresenceKey(boardId string) string {
+	return keyBoardUsersPresence + boardId
+}
+
+// board:user:xid:seq:{boardId}.
+// Key for last generated sequential Xid - Redis INCR.
+func boardUserXidKey(boardId string) string {
+	return keyBoardUserXid + boardId
 }
 
 // board:col:{boardId}.

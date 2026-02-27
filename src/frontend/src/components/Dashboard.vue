@@ -79,7 +79,7 @@ const route = useRoute()
 const board = Array.isArray(route.params.board) ? route.params.board[0] : route.params.board
 // Todo: Find a way of passing this from route..meta?
 const user = localStorage.getItem('user') || ''
-const xid = localStorage.getItem('xid') || ''
+const xid = ref('') //localStorage.getItem('xid') || ''
 const nickname = localStorage.getItem('nickname') || ''
 const isConnected = ref(false)
 const boardName = ref('')
@@ -184,7 +184,7 @@ const cardsStats = computed<Record<string, UserCardStats>>(() => {
 })
 
 const myCardsCount = computed(() => {
-  return cardsStats.value[xid]?.count ?? 0
+  return cardsStats.value[xid.value]?.count ?? 0
 })
 
 const onlineUsersCardsStats = computed(() => {
@@ -194,7 +194,7 @@ const onlineUsersCardsStats = computed(() => {
       cardsCount: cardsStats.value[user.xid]?.count || 0,
       xid: user.xid,
     }))
-    .filter(u => u.xid !== xid)
+    .filter(u => u.xid !== xid.value)
 })
 
 const usersWithCards = computed(() => {
@@ -757,6 +757,7 @@ const openColumnEditDialog = () => {
 
 // onRegisterResponse is only triggered for user who dispatches 'RegisterEvent'
 const onRegisterResponse = (response: RegisterResponse) => {
+  xid.value = response.xid
   timerExpiresInSeconds.value = response.timerExpiresInSeconds // This always gets set. Todo: find a better way to sync timer.
   boardExpiryLocalTime.value = formatDate(response.boardExpiryUtcSeconds)
   onlineUsers.value = []
@@ -1097,7 +1098,7 @@ const dispatchEvent = <T,>(eventType: string, payload: T) => {
 const socketOnOpen = (event: Event) => {
   logMessage('[open] Connection established', event)
   isConnected.value = true
-  dispatchEvent<RegisterEvent>('reg', { nickname: nickname })
+  dispatchEvent<RegisterEvent>('reg', {})
 }
 const socketOnClose = (event: CloseEvent) => {
   isConnected.value = false
@@ -1180,7 +1181,7 @@ const handleConnectivity = () => {
 
 onMounted(() => {
   socket = new WebSocket(
-    `${env.wsProtocol}://${document.location.host}/ws/board/${board}/user/${user}/meet?xid=${xid}`
+    `${env.wsProtocol}://${document.location.host}/ws/board/${board}/user/${user}/meet?nickname=${encodeURIComponent(nickname)}`
   )
   socket.onopen = socketOnOpen
   socket.onclose = socketOnClose

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"slices"
 	"time"
+	"unicode/utf8"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -125,8 +126,8 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	xid := r.URL.Query().Get("xid")
-	if xid == "" || len(xid) > MaxIdSizeBytes {
+	nickname := r.URL.Query().Get("nickname")
+	if nickname == "" || utf8.RuneCountInString(nickname) > config.Data.MaxTextLength {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -149,6 +150,12 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	u, ok := hub.redis.EnsureUser(board, user, nickname)
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	slog.Info("Connecting", "board", board, "user", user)
 	// Upgrade http request to websocket
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -158,7 +165,7 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Represent the websocket connection as a "Client".
-	client := &Client{id: user, xid: xid, group: board, conn: conn, send: make(chan any, 256), hub: hub}
+	client := &Client{id: user, xid: u.Xid, group: board, conn: conn, send: make(chan any, 256), hub: hub}
 
 	// Register the connection/client with the Hub
 	client.hub.register <- client

@@ -14,11 +14,13 @@ const board = Array.isArray(route.params.board) ? route.params.board[0] : route.
 const guestname = ref(localStorage.getItem('nickname') || '')
 
 const isGuestNameValid = computed(() => {
+  // TODO: Validate if length exceeds MAX_TEXT_LENGTH
   if (guestname.value && guestname.value.trim() !== '') return true
   return false
 })
 
 const join = () => {
+  // TODO: Validate if length exceeds MAX_TEXT_LENGTH
   if (isGuestNameValid.value) {
     localStorage.setItem('nickname', guestname.value)
     if (board && board.trim() != '') {
@@ -32,9 +34,6 @@ const join = () => {
 onMounted(() => {
   if (!localStorage.getItem('user')) {
     localStorage.setItem('user', crypto.randomUUID())
-  }
-  if (!localStorage.getItem('xid')) {
-    localStorage.setItem('xid', crypto.randomUUID())
   }
 
   const isDark = ref(localStorage.getItem('theme') === 'dark')

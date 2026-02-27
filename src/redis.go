@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -403,24 +404,81 @@ func (c *RedisConnector) GetBoardColumns(boardId string) ([]*BoardColumn, bool) 
 	return cols, true
 }
 
-func (c *RedisConnector) CommitUserPresence(boardId string, user *User) bool {
-	userKey := boardUserKey(boardId, user.Id)
-	boardUsersKey := boardUsersKey(boardId)
+func (c *RedisConnector) EnsureUser(boardId, userId, nickname string) (*User, bool) {
+	userKey := boardUserKey(boardId, userId)
+	xidSeqKey := boardUserXidKey(boardId)
+
+	// Try to load existing user
+	var user User
+	if err := c.client.HGetAll(c.ctx, userKey).Scan(&user); err != nil {
+		slog.Error("Failed to HGETALL user", "err", err, "boardId", boardId, "userId", userId)
+		return nil, false
+	}
+
+	// User already exists
+	if user.Id != "" && user.Xid != "" {
+		// Update nickname if changed
+		// Nickname update is best-effort; failure should not block upstream call
+		if user.Nickname != nickname {
+			if err := c.client.HSet(c.ctx, userKey, "nickname", nickname).Err(); err != nil {
+				slog.Error("Failed updating nickname", "err", err, "boardId", boardId, "userId", userId)
+			}
+			user.Nickname = nickname
+		}
+
+		return &user, true
+	}
+
+	// Create new user
+	var xidCmd *redis.IntCmd
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+		xidCmd = pipe.Incr(c.ctx, xidSeqKey)
+		pipe.Expire(c.ctx, xidSeqKey, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
+
 		pipe.HSet(c.ctx, userKey,
-			"id", user.Id,
-			"xid", user.Xid,
-			"nickname", user.Nickname,
+			"id", userId,
+			"nickname", nickname,
 		)
-		pipe.SAdd(c.ctx, boardUsersKey, user.Id)
-		pipe.Expire(c.ctx, userKey, c.timeToLive)       // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
+		pipe.Expire(c.ctx, userKey, c.timeToLive)
+		return nil
+	})
+
+	if err != nil {
+		slog.Error("Failed creating user", "err", err, "boardId", boardId, "userId", userId)
+		return nil, false
+	}
+
+	// Persist xid (now that we know it)
+	xid := strconv.FormatInt(xidCmd.Val(), 10)
+
+	if err := c.client.HSet(c.ctx, userKey, "xid", xid).Err(); err != nil {
+		// Todo: Should the above key be deleted on failure to create xid?
+		slog.Error("Failed setting xid", "err", err, "boardId", boardId, "userId", userId)
+		return nil, false
+	}
+
+	user = User{
+		Id:       userId,
+		Xid:      xid,
+		Nickname: nickname,
+	}
+
+	return &user, true
+}
+
+func (c *RedisConnector) CommitUserPresence(boardId string, userId string) bool {
+	boardUsersKey := boardUsersPresenceKey(boardId)
+
+	// Todo: Remove pipeline?
+	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+		pipe.SAdd(c.ctx, boardUsersKey, userId)
 		pipe.Expire(c.ctx, boardUsersKey, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But the requires a call to get board details. Skipping it for now.
 		return nil
 	})
 
 	if err != nil {
-		slog.Error("Failed committing user presence to Redis", "err", err, "boardId", boardId, "user", user)
+		slog.Error("Failed committing user presence to Redis", "err", err, "boardId", boardId, "user", userId)
 		return false
 	}
 
@@ -428,26 +486,18 @@ func (c *RedisConnector) CommitUserPresence(boardId string, user *User) bool {
 }
 
 func (c *RedisConnector) RemoveUserPresence(boardId string, userId string) bool {
-	userKey := boardUserKey(boardId, userId)
-	boardUsersKey := boardUsersKey(boardId)
+	boardUsersKey := boardUsersPresenceKey(boardId)
 
-	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
-		pipe.Del(c.ctx, userKey)
-		pipe.SRem(c.ctx, boardUsersKey, userId)
-		return nil
-	})
+	// removed, err := c.client.SRem(c.ctx, boardUsersKey, userId).Result()
+	// if err != nil {
+	// 	return false
+	// }
+	// if removed == 0 {
+	// 	slog.Debug("User presence already absent", "boardId", boardId, "userId", userId)
+	// }
 
-	if err != nil {
-		// Todo: Recheck this logic. userKey hash get for xid is now removed from the pipeline.
-		// With redis.Nil err, we can assume the userKey hash get in the pipeline didn't return it as it doesn't exist
-		// This use-case happens when DeleteAll is executed i.e when user manually deletes a board
-		// We will still return false, as this helps the caller UserClosingEvent.Handle from doing unnecessary broadcasting of UserClosing responses
-		// to clients in a board that is being deleted
-		if err == redis.Nil {
-			slog.Debug("User presence cleanup skipped (already removed)", "boardId", boardId, "userId", userId)
-		} else {
-			slog.Error("Failed removing user presence from Redis", "err", err, "boardId", boardId, "userId", userId)
-		}
+	if err := c.client.SRem(c.ctx, boardUsersKey, userId).Err(); err != nil {
+		slog.Error("Failed removing user presence from Redis", "err", err, "boardId", boardId, "userId", userId)
 		return false
 	}
 
@@ -458,7 +508,7 @@ func (c *RedisConnector) RemoveUserPresence(boardId string, userId string) bool 
 func (c *RedisConnector) GetUsersPresence(boardId string) ([]*User, bool) {
 	users := make([]*User, 0)
 
-	key := boardUsersKey(boardId)
+	key := boardUsersPresenceKey(boardId)
 	userIds, err := c.client.SMembers(c.ctx, key).Result()
 	if err != nil {
 		slog.Error("Failed getting userIds from Redis", "err", err, "boardId", boardId)
@@ -491,7 +541,7 @@ func (c *RedisConnector) GetUsersPresence(boardId string) ([]*User, bool) {
 
 // Deprecated: No longer used
 func (c *RedisConnector) GetPresentUserIds(boardId string) ([]string, bool) {
-	key := boardUsersKey(boardId)
+	key := boardUsersPresenceKey(boardId)
 	ids, err := c.client.SMembers(c.ctx, key).Result()
 	if err != nil {
 		slog.Error("Failed getting userIds from Redis", "err", err, "boardId", boardId)
@@ -806,8 +856,9 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 		(KEY)msg:likes:{messageId}				(VALUE)[userIds]				Likes - Redis Set. For recording likes/votes for a message
 
 		Users
-		(KEY)board:users:{boardId}				(VALUE)[userIds]				Board-wise Users - Redis Set. Useful for fetching members of a board.
+		(KEY)board:presence:{boardId}			(VALUE)[userIds]				Board-wise Live(Connected) Users - Redis Set.
 		(KEY)board:user:{boardId}:{userId}	    (VALUE)User						User - Redis Hash. User master. Keeping as board specific.
+		(KEY)board:user:xid:seq:{boardId}		(VALUE)last_xid					Last generated sequential xid for Board - Redis INCR. Used to generate sequential Xids.
 
 		Columns
 		(KEY)board:col:{boardId}				(Value)[colIds]					Board-wise columns - Redis Set. Just a list of colIds for a board.
@@ -817,7 +868,8 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 
 	boardMsgsKey := boardMsgsKey(boardId)
 	boardCommsKey := boardCmtsKey(boardId)
-	boardUsersKey := boardUsersKey(boardId)
+	boardUsersKey := boardUsersPresenceKey(boardId)
+	boardUserXidKey := boardUserXidKey(boardId)
 	boardColsKey := boardColsKey(boardId)
 	boardKey := boardKey(boardId)
 
@@ -863,6 +915,7 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 			pipe.Del(ctx, userKey)
 		}
 		pipe.Del(ctx, boardUsersKey)
+		pipe.Del(ctx, boardUserXidKey)
 
 		// Delete columns
 		for _, colId := range colIds {
@@ -919,7 +972,7 @@ func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregate
 
 	boardCmd := pipe.HGetAll(c.ctx, boardKey(boardId))
 	colIdsCmd := pipe.SMembers(c.ctx, boardColsKey(boardId))
-	userIdsCmd := pipe.SMembers(c.ctx, boardUsersKey(boardId))
+	userIdsCmd := pipe.SMembers(c.ctx, boardUsersPresenceKey(boardId))
 	msgIdsCmd := pipe.SMembers(c.ctx, boardMsgsKey(boardId))
 	cmtIdsCmd := pipe.SMembers(c.ctx, boardCmtsKey(boardId))
 

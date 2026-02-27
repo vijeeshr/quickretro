@@ -16,11 +16,7 @@ export default createRouter({
       name: 'create',
       component: CreateBoard,
       beforeEnter: to => {
-        if (
-          !localStorage.getItem('user') ||
-          !localStorage.getItem('xid') ||
-          !localStorage.getItem('nickname')
-        ) {
+        if (!localStorage.getItem('user') || !localStorage.getItem('nickname')) {
           return { path: '/', query: to.query }
         }
       },
@@ -30,11 +26,7 @@ export default createRouter({
       name: 'dashboard',
       component: Dashboard,
       beforeEnter: to => {
-        if (
-          !localStorage.getItem('user') ||
-          !localStorage.getItem('xid') ||
-          !localStorage.getItem('nickname')
-        ) {
+        if (!localStorage.getItem('user') || !localStorage.getItem('nickname')) {
           return `/board/${to.params.board}/join`
         }
       },

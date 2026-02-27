@@ -6,9 +6,7 @@ export interface EventRequest<T> {
   pyl: T
 }
 
-export interface RegisterEvent {
-  nickname: string
-}
+export interface RegisterEvent {}
 
 export interface MaskEvent {
   mask: boolean
@@ -63,6 +61,7 @@ export interface RegisterResponse {
   boardTeam: string
   columns: BoardColumn[]
   boardStatus: string
+  xid: string
   boardMasking: boolean
   boardLock: boolean
   isBoardOwner: boolean
