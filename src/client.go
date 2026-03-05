@@ -70,7 +70,7 @@ func (c *Client) read() {
 		var event Event
 		err := c.conn.ReadJSON(&event)
 		if err != nil {
-			slog.Error("Disconnecting", "err", err, "user", c.id)
+			slog.Error("Leave", "err", err, "user", c.id)
 			break
 		}
 
@@ -156,7 +156,7 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	slog.Info("Connecting", "board", board, "user", user)
+	slog.Info("Join", "board", board, "user", user)
 	// Upgrade http request to websocket
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {

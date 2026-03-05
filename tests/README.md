@@ -26,4 +26,5 @@ Run tests (ignore cache)
 ```sh
 cd ./tests/e2e/
 go test -count=1 -v ./scenarios/...
+go test -count=1 -v ./scenarios -run TestConnectHandshake
 ```

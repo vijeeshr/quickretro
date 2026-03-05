@@ -3,6 +3,6 @@ package main
 // Store
 type User struct {
 	Id       string `redis:"id"`
-	Xid      string `redis:"xid"` // Todo: Change to Int
+	Xid      string `redis:"xid"`
 	Nickname string `redis:"nickname"`
 }

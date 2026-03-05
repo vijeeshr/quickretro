@@ -27,9 +27,10 @@ func TestRegistration(t *testing.T) {
 			userA.MustWaitForEvent(t, "reg", &got)
 			require.True(t, got.IsBoardOwner)
 			require.Equal(t, 1, len(got.Users))
+			require.Equal(t, "1", got.Xid) // Xid is flaky
 			require.Equal(t, harness.UserDetails{
 				Nickname: userA.Nickname,
-				Xid:      "xid-" + userA.Id,
+				Xid:      "1",
 			}, got.Users[0])
 			require.Equal(t, 0, len(got.Messages))
 			require.Equal(t, 0, len(got.Comments))
@@ -47,7 +48,7 @@ func TestRegistration(t *testing.T) {
 		t.Run("Bob receives joining event for Alice", func(t *testing.T) {
 			var got harness.UserJoiningResponse
 			userB.MustWaitForEvent(t, "joining", &got)
-			require.Equal(t, "xid-"+userA.Id, got.Xid)
+			require.Equal(t, "1", got.Xid)
 			require.Equal(t, userA.Nickname, got.Nickname)
 		})
 
@@ -63,17 +64,18 @@ func TestRegistration(t *testing.T) {
 			var got harness.RegisterResponse
 			userB.MustWaitForEvent(t, "reg", &got)
 			require.False(t, got.IsBoardOwner) // Bob should NOT be board owner
+			require.Equal(t, "2", got.Xid)
 			require.Equal(t, 2, len(got.Users))
 			require.ElementsMatch(t, []harness.UserDetails{
-				{Nickname: userA.Nickname, Xid: "xid-" + userA.Id},
-				{Nickname: userB.Nickname, Xid: "xid-" + userB.Id},
+				{Nickname: userA.Nickname, Xid: "1"},
+				{Nickname: userB.Nickname, Xid: "2"},
 			}, got.Users)
 		})
 
 		t.Run("Alice receives joining event for Bob", func(t *testing.T) {
 			var got harness.UserJoiningResponse
 			userA.MustWaitForEvent(t, "joining", &got)
-			require.Equal(t, "xid-"+userB.Id, got.Xid)
+			require.Equal(t, "2", got.Xid)
 			require.Equal(t, userB.Nickname, got.Nickname)
 		})
 
@@ -103,8 +105,8 @@ func TestRegistration(t *testing.T) {
 
 			require.Equal(t, 2, len(got.Users))
 			require.ElementsMatch(t, []harness.UserDetails{
-				{Nickname: userA.Nickname, Xid: "xid-" + userA.Id},
-				{Nickname: userB.Nickname, Xid: "xid-" + userB.Id},
+				{Nickname: userA.Nickname, Xid: "1"},
+				{Nickname: userB.Nickname, Xid: "2"},
 			}, got.Users)
 
 			require.Equal(t, 1, len(got.Messages))
@@ -174,7 +176,7 @@ func TestMessageLifecycle(t *testing.T) {
 		Type:       "msg",
 		Id:         msgId,
 		ParentId:   "",
-		ByXid:      "xid-" + userA.Id,
+		ByXid:      "1",
 		ByNickname: userA.Nickname,
 		Content:    content,
 		Category:   category,
@@ -1265,7 +1267,7 @@ func TestUserLeaving(t *testing.T) {
 
 		var got harness.UserClosingResponse
 		userA.MustWaitForEvent(t, "closing", &got)
-		require.Equal(t, "xid-"+userB.Id, got.Xid)
+		require.Equal(t, "2", got.Xid)
 	})
 }
 

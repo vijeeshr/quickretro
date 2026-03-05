@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 
 type TestUser struct {
 	Id       string
-	Xid      string
 	Nickname string
 	Board    string
 	Conn     *websocket.Conn
@@ -27,7 +27,6 @@ type TestUser struct {
 func NewUser(id, nickname, board string) *TestUser {
 	return &TestUser{
 		Id:       id,
-		Xid:      "xid-" + id,
 		Nickname: nickname,
 		Board:    board,
 		Received: make(chan Event, 100),
@@ -44,12 +43,12 @@ func NewUser(id, nickname, board string) *TestUser {
 // }
 
 func (u *TestUser) Connect(baseUrl string) error {
-	url := fmt.Sprintf("%s/ws/board/%s/user/%s/meet?xid=%s", baseUrl, u.Board, u.Id, u.Xid)
+	urlStr := fmt.Sprintf("%s/ws/board/%s/user/%s/meet?nickname=%s", baseUrl, u.Board, u.Id, url.QueryEscape(u.Nickname))
 	// Convert http(s) to ws(s)
-	if len(url) > 4 && url[:5] == "https" {
-		url = "wss" + url[5:]
-	} else if len(url) > 3 && url[:4] == "http" {
-		url = "ws" + url[4:]
+	if len(urlStr) > 4 && urlStr[:5] == "https" {
+		urlStr = "wss" + urlStr[5:]
+	} else if len(urlStr) > 3 && urlStr[:4] == "http" {
+		urlStr = "ws" + urlStr[4:]
 	}
 
 	dialer := websocket.DefaultDialer
@@ -58,11 +57,14 @@ func (u *TestUser) Connect(baseUrl string) error {
 		ServerName:         "localhost",
 	}
 
-	conn, _, err := dialer.Dial(url, http.Header{"Origin": []string{"https://localhost"}})
+	conn, _, err := dialer.Dial(urlStr, http.Header{"Origin": []string{"https://localhost"}})
 	if err != nil {
 		return err
 	}
 	u.Conn = conn
+
+	// // If u.Done is already closed or nil, recreate it
+	// u.Done = make(chan struct{})
 
 	// Start reading loop
 	go func() {
@@ -112,9 +114,7 @@ func (u *TestUser) SendEvent(typ string, payload any) error {
 }
 
 func (u *TestUser) Register() error {
-	reg := RegisterEvent{
-		ByNickname: u.Nickname,
-	}
+	reg := RegisterEvent{}
 	return u.SendEvent("reg", reg)
 }
 
