@@ -17,7 +17,7 @@ func TestTypingIndicator(t *testing.T) {
 		// User B receives typing event
 		var got harness.TypedResponse
 		userB.MustWaitForEvent(t, "t", &got)
-		require.Equal(t, "xid-"+userA.Id, got.Xid)
+		require.Equal(t, "1", got.Xid)
 
 		// User A should NOT receive their own typing event
 		require.NoError(t, userA.MustNotReceiveEvent("t"))
@@ -33,7 +33,7 @@ func TestTypingIndicator(t *testing.T) {
 		// User A receives typing event
 		var got harness.TypedResponse
 		userA.MustWaitForEvent(t, "t", &got)
-		require.Equal(t, "xid-"+userB.Id, got.Xid)
+		require.Equal(t, "2", got.Xid)
 
 		// User B should NOT receive their own typing event
 		require.NoError(t, userB.MustNotReceiveEvent("t"))

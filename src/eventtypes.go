@@ -7,22 +7,16 @@ import (
 	"unicode/utf8"
 )
 
-type RegisterEvent struct {
-	// The broadcaster of RegisterEvent i.e. "Broadcast" method below sends two types of responses -
-	// RegisterResponse: Sent to the client who triggered the RegisterEvent, and
-	// UserJoiningResponse: Sent to all the other active clients in the board
-	ByNickname string `json:"nickname"`
-}
+// The broadcaster of RegisterEvent i.e. "Broadcast" method below sends two types of responses -
+// RegisterResponse: Sent to the client who triggered the RegisterEvent, and
+// UserJoiningResponse: Sent to all the other active clients in the board
+type RegisterEvent struct{}
 
 func (p *RegisterEvent) Handle(e *Event, h *Hub) {
-	// Validate
-	if p.ByNickname == "" {
-		return
-	}
 	// Board existence is already validated during the WebSocket handshake in handleWebSocket.
 
 	// Execute
-	if ok := h.redis.CommitUserPresence(e.Group, &User{Id: e.By, Xid: e.Xid, Nickname: p.ByNickname}); !ok {
+	if ok := h.redis.CommitUserPresence(e.Group, e.By); !ok {
 		return
 	}
 
@@ -93,6 +87,7 @@ func (p *RegisterEvent) Broadcast(e *Event, m *Message, h *Hub) {
 		BoardTeam:                 board.Team,
 		BoardColumns:              cols,
 		BoardStatus:               board.Status.String(),
+		Xid:                       e.Xid,
 		BoardMasking:              board.Mask,
 		BoardLock:                 board.Lock,
 		Users:                     userDetails,
@@ -104,9 +99,16 @@ func (p *RegisterEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	}
 	// Prepare UserJoiningResponse
 	// UserJoiningResponse is sent to all other active clients (except initiator)
+	var joiningUser *User
+	for _, u := range users {
+		if u.Id == e.By {
+			joiningUser = u
+			break
+		}
+	}
 	joinResp := UserJoiningResponse{
 		Type:     "joining",
-		Nickname: p.ByNickname,
+		Nickname: joiningUser.Nickname,
 		Xid:      e.Xid,
 	}
 

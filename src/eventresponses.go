@@ -10,6 +10,7 @@ type RegisterResponse struct {
 	BoardName                 string            `json:"boardName"`
 	BoardTeam                 string            `json:"boardTeam"`
 	BoardStatus               string            `json:"boardStatus"`
+	Xid                       string            `json:"xid"`
 	BoardColumns              []*BoardColumn    `json:"columns"` // Using same BoardColumn struct that is used for request and redis store. Todo - refactor later.
 	Users                     []UserDetails     `json:"users"`
 	Messages                  []MessageResponse `json:"messages"`              // Todo: Change to *MessageResponse

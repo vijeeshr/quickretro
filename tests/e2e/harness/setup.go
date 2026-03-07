@@ -60,11 +60,8 @@ func CreateBoard(t *testing.T, ownerId string) string {
 	return result["id"]
 }
 
-// SetupTest creates a board and two users (Alice as owner, Bob as guest),
-// connects them.
-// If autoRegister is true, it also performs the registration flow for both users.
-// It returns the board ID and the two users.
-func SetupTest(t *testing.T, autoRegister bool) (string, *TestUser, *TestUser) {
+// SetupBoardAndUsers creates a board and two users (Alice as owner, Bob as guest) but does not connect them.
+func SetupBoardAndUsers(t *testing.T) (string, *TestUser, *TestUser) {
 	// Shared Setup
 	userAId := "user-a"
 	userBId := "user-b"
@@ -75,6 +72,21 @@ func SetupTest(t *testing.T, autoRegister bool) (string, *TestUser, *TestUser) {
 
 	userA := NewUser(userAId, "Alice", boardId)
 	userB := NewUser(userBId, "Bob", boardId)
+
+	// t.Cleanup(func() {
+	// 	userA.Close()
+	// 	userB.Close()
+	// })
+
+	return boardId, userA, userB
+}
+
+// SetupTest creates a board and two users (Alice as owner, Bob as guest),
+// connects them.
+// If autoRegister is true, it also performs the registration flow for both users.
+// It returns the board ID and the two users.
+func SetupTest(t *testing.T, autoRegister bool) (string, *TestUser, *TestUser) {
+	boardId, userA, userB := SetupBoardAndUsers(t)
 
 	// Connect Users
 	require.NoError(t, userA.Connect(BaseURL))

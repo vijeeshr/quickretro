@@ -9,11 +9,10 @@ type Event struct {
 	Raw     json.RawMessage `json:"-"`
 }
 
-type RegisterEvent struct {
-	ByNickname string `json:"nickname"`
-}
+type RegisterEvent struct{}
 type RegisterResponse struct {
 	Type                      string            `json:"typ"`
+	Xid                       string            `json:"xid"`
 	BoardColumns              []*BoardColumn    `json:"columns"`
 	Users                     []UserDetails     `json:"users"`
 	Messages                  []MessageResponse `json:"messages"`
@@ -76,8 +75,7 @@ type DeleteMessageResponse struct {
 	Id string `json:"id"`
 }
 
-type DeleteAllEvent struct {
-}
+type DeleteAllEvent struct{}
 type DeleteAllResponse struct {
 	Type string `json:"typ"`
 }
