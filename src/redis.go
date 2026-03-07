@@ -453,7 +453,6 @@ func (c *RedisConnector) EnsureUser(boardId, userId, nickname string) (*User, bo
 	xid := strconv.FormatInt(xidCmd.Val(), 10)
 
 	if err := c.client.HSet(c.ctx, userKey, "xid", xid).Err(); err != nil {
-		// Todo: Should the above key be deleted on failure to create xid?
 		slog.Error("Failed setting xid", "err", err, "boardId", boardId, "userId", userId)
 		return nil, false
 	}

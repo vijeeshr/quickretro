@@ -79,8 +79,8 @@ const route = useRoute()
 const board = Array.isArray(route.params.board) ? route.params.board[0] : route.params.board
 // Todo: Find a way of passing this from route..meta?
 const user = localStorage.getItem('user') || ''
-const xid = ref('') //localStorage.getItem('xid') || ''
 const nickname = localStorage.getItem('nickname') || ''
+const xid = ref('')
 const isConnected = ref(false)
 const boardName = ref('')
 const shareLink = `${window.location.href}/join`
