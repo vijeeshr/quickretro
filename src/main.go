@@ -49,11 +49,12 @@ type Config struct {
 }
 
 type EnvironmentConfig struct {
-	Port               string
-	RedisConnStr       string
-	TurnstileSiteKey   string
-	TurnstileSecretKey string
-	TurnstileEnabled   bool
+	Port                  string
+	RedisConnStr          string
+	TurnstileSiteKey      string
+	TurnstileSecretKey    string
+	TurnstileEnabled      bool
+	EnableSecurityHeaders bool
 }
 
 var config Config
@@ -89,7 +90,7 @@ func main() {
 
 	// Load Environment configuration
 	envConfig = LoadEnvironmentConfig()
-	// slog.Info("Loaded environment configuration", "TurnstileEnabled", envConfig.TurnstileEnabled)
+	// slog.Info("Loaded environment configuration", "config", envConfig)
 
 	// Connect to Redis
 	ctx := context.Background()
@@ -167,9 +168,17 @@ func main() {
 	router.HandleFunc("/board/{id}", frontendIndexHandler).Methods("GET")
 	router.HandleFunc("/", frontendIndexHandler).Methods("GET")
 
+	var handler http.Handler = router
+	if envConfig.EnableSecurityHeaders {
+		slog.Info("Applying security headers middleware")
+		handler = securityHeaders(envConfig, router)
+	} else {
+		slog.Warn("Security headers middleware disabled (expecting proxy to handle them)")
+	}
+
 	//err := http.ListenAndServe(":8080", nil)
 	logger.Info("Server listening on port " + envConfig.Port)
-	if err := http.ListenAndServe(":"+envConfig.Port, router); err != nil {
+	if err := http.ListenAndServe(":"+envConfig.Port, handler); err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
@@ -216,11 +225,12 @@ func LoadEnvironmentConfig() EnvironmentConfig {
 	// https://developers.cloudflare.com/turnstile/troubleshooting/testing/
 
 	return EnvironmentConfig{
-		Port:               getEnv("PORT", "8080"),
-		RedisConnStr:       getEnv("REDIS_CONNSTR", "redis://localhost:6379/0"),
-		TurnstileEnabled:   getEnv("TURNSTILE_ENABLED", "false") == "true",
-		TurnstileSiteKey:   getEnv("TURNSTILE_SITE_KEY", "1x00000000000000000000AA"),
-		TurnstileSecretKey: getEnv("TURNSTILE_SECRET_KEY", "1x0000000000000000000000000000000AA"),
+		Port:                  getEnv("PORT", "8080"),
+		RedisConnStr:          getEnv("REDIS_CONNSTR", "redis://localhost:6379/0"),
+		TurnstileEnabled:      getEnv("TURNSTILE_ENABLED", "false") == "true",
+		TurnstileSiteKey:      getEnv("TURNSTILE_SITE_KEY", "1x00000000000000000000AA"),
+		TurnstileSecretKey:    getEnv("TURNSTILE_SECRET_KEY", "1x0000000000000000000000000000000AA"),
+		EnableSecurityHeaders: getEnv("ENABLE_SECURITY_HEADERS", "false") == "true",
 	}
 }
 
@@ -229,4 +239,38 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func securityHeaders(env EnvironmentConfig, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+
+		// Base CSP Policy
+		// 'self' allows assets from own domain
+		// 'unsafe-inline' is often needed for Vite/Style injections, but use with caution
+		csp := "default-src 'self'; " +
+			"script-src 'self'; " +
+			"style-src 'self' 'unsafe-inline'; " + // Vite often needs unsafe-inline for styles
+			"connect-src 'self' ws: wss:; " + // Allow WebSockets
+			"img-src 'self' data:; " +
+			"frame-src 'none';"
+
+		if env.TurnstileEnabled {
+			// Expand CSP to allow Cloudflare Turnstile
+			csp = "default-src 'self'; " +
+				"script-src 'self' https://challenges.cloudflare.com; " +
+				"style-src 'self' 'unsafe-inline'; " +
+				"connect-src 'self' ws: wss: https://challenges.cloudflare.com; " +
+				"img-src 'self' data:; " +
+				"frame-src https://challenges.cloudflare.com;" // Needed for the widget iframe
+		}
+
+		w.Header().Set("Content-Security-Policy", csp)
+		next.ServeHTTP(w, r)
+	})
 }
