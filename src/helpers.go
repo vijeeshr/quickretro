@@ -74,6 +74,9 @@ func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst any) error {
 func parseDuration(s string) (time.Duration, error) {
 	var multiplier time.Duration = 1
 	switch {
+	case strings.HasSuffix(s, "ms"):
+		multiplier = time.Millisecond
+		s = strings.TrimSuffix(s, "ms")
 	case strings.HasSuffix(s, "s"):
 		multiplier = time.Second
 		s = strings.TrimSuffix(s, "s")
@@ -87,7 +90,7 @@ func parseDuration(s string) (time.Duration, error) {
 		multiplier = 24 * time.Hour
 		s = strings.TrimSuffix(s, "d")
 	default:
-		return 0, fmt.Errorf("invalid duration format: missing unit (use s/m/h/d)")
+		return 0, fmt.Errorf("invalid duration format: missing unit (use ms/s/m/h/d)")
 	}
 
 	value, err := strconv.Atoi(s)

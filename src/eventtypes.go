@@ -299,7 +299,21 @@ type MessageEvent struct {
 }
 
 func (p *MessageEvent) Handle(e *Event, h *Hub) {
-	// Validate
+	// Validate field lengths
+	if len(p.Id) == 0 || len(p.Id) > MaxIdSizeBytes {
+		slog.Warn("Invalid message ID length", "len", len(p.Id))
+		return
+	}
+	if len(p.Category) > MaxColumnIdSizeBytes {
+		slog.Warn("Invalid category length", "len", len(p.Category))
+		return
+	}
+	if len(p.ParentId) > MaxIdSizeBytes {
+		slog.Warn("Invalid parent ID length", "len", len(p.ParentId))
+		return
+	}
+
+	// Validate board lock
 	if h.redis.IsBoardLocked(e.Group) {
 		slog.Warn("Cannot save message in read-only board", "board", e.Group)
 		return

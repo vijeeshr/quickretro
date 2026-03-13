@@ -28,6 +28,16 @@ max_text_length = 80
 # Maximum message size (in bytes) allowed from peer for the websocket connection (also used by frontend)
 max_message_size_bytes = 1024
 
+# Per-client rate limit for incoming WebSocket messages (all event types).
+# Uses a token-bucket algorithm per connection.
+[websocket.rate_limit]
+# Enable or disable per-client WebSocket message rate limiting
+enabled = true
+# Maximum burst of messages a client can send before being throttled
+burst = 10
+# How often one token is added back (format: <number><unit>; units: s/m/h/d)
+refill_interval = "500ms"
+
 [frontend]
 # Delay (in milliseconds) before showing "message size limit reached" notification for cards/comments
 content_editable_invalid_debounce_ms = 500
@@ -51,3 +61,19 @@ emit_throttle_ms = 3000
 # Time (in milliseconds) after which the typing indicator is automatically cleared if no new typing event is received. (only used by frontend)
 # This controls how long the activity ring stays visible on the user's avatar after they stop typing.
 display_timeout_ms = 2000
+
+# ---------------------------------------------------------------------------------------------------
+# Rate Limiting
+# Controls the per-IP rate limit for board creation and webSocket handshake urls.
+# Uses a token-bucket algorithm: each IP starts with 'burst' tokens.
+# One token is consumed per request. Tokens refill at 1 per 'refill_interval'.
+# ---------------------------------------------------------------------------------------------------
+[rate_limit]
+# Enable or disable per-IP HTTP rate limiting
+enabled = true
+# Maximum number of board creation requests allowed per IP before rate limiting kicks in
+burst = 5
+# How often one token is added back per IP (format: <number><unit>; units: s/m/h/d)
+refill_interval = "1m"
+# How often stale rate-limit entries are purged from memory (format: <number><unit>; units: s/m/h/d)
+cleanup_interval = "10m"
