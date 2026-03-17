@@ -46,11 +46,11 @@ var upgrader = websocket.Upgrader{
 type Client struct {
 	hub     *Hub
 	conn    *websocket.Conn
+	limiter *ClientRateLimiter
 	send    chan any
 	id      string // This is the user uuid
 	xid     string // The is the externally exposed uuid of the user
 	group   string // This can be a board/room
-	limiter *ClientRateLimiter
 }
 
 func (c *Client) read() {

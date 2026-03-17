@@ -72,9 +72,9 @@ func TestSecurityHeaders_SetsAllHeaders(t *testing.T) {
 
 	expected := map[string]string{
 		"X-Content-Type-Options":    "nosniff",
-		"X-Frame-Options":          "DENY",
-		"Referrer-Policy":          "strict-origin-when-cross-origin",
-		"Permissions-Policy":       "camera=(), microphone=(), geolocation=()",
+		"X-Frame-Options":           "DENY",
+		"Referrer-Policy":           "strict-origin-when-cross-origin",
+		"Permissions-Policy":        "camera=(), microphone=(), geolocation=()",
 		"Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
 	}
 
@@ -116,88 +116,6 @@ func TestSecurityHeaders_CSPIncludesTurnstile_WhenEnabled(t *testing.T) {
 }
 
 // --------------------
-// RateLimiter tests
-// --------------------
-
-func TestRateLimiter_AllowsWithinBurst(t *testing.T) {
-	rl := NewRateLimiter(3, time.Minute, time.Hour)
-	defer rl.Stop()
-
-	for i := 0; i < 3; i++ {
-		if !rl.Allow("127.0.0.1") {
-			t.Errorf("request %d should be allowed within burst of 3", i+1)
-		}
-	}
-}
-
-func TestRateLimiter_BlocksAfterBurst(t *testing.T) {
-	rl := NewRateLimiter(2, time.Minute, time.Hour)
-	defer rl.Stop()
-
-	rl.Allow("127.0.0.1") // 1st — ok
-	rl.Allow("127.0.0.1") // 2nd — ok
-
-	if rl.Allow("127.0.0.1") {
-		t.Error("3rd request should be blocked after burst of 2")
-	}
-}
-
-func TestRateLimiter_RefillsAfterInterval(t *testing.T) {
-	// Use a very short refill interval for testing
-	rl := NewRateLimiter(1, 10*time.Millisecond, time.Hour)
-	defer rl.Stop()
-
-	rl.Allow("127.0.0.1") // Uses the single token
-
-	if rl.Allow("127.0.0.1") {
-		t.Error("should be blocked immediately after exhausting burst")
-	}
-
-	// Wait for refill
-	time.Sleep(15 * time.Millisecond)
-
-	if !rl.Allow("127.0.0.1") {
-		t.Error("should be allowed after refill interval")
-	}
-}
-
-func TestRateLimiter_TracksIPsSeparately(t *testing.T) {
-	rl := NewRateLimiter(1, time.Minute, time.Hour)
-	defer rl.Stop()
-
-	rl.Allow("10.0.0.1") // Exhausts IP1's token
-
-	if !rl.Allow("10.0.0.2") {
-		t.Error("different IP should have its own token bucket")
-	}
-}
-
-func TestRateLimitMiddleware_Returns429(t *testing.T) {
-	rl := NewRateLimiter(1, time.Minute, time.Hour)
-	defer rl.Stop()
-
-	handler := RateLimitMiddleware(rl, func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-
-	// First request — allowed
-	req1 := httptest.NewRequest(http.MethodPost, "/", nil)
-	rr1 := httptest.NewRecorder()
-	handler.ServeHTTP(rr1, req1)
-	if rr1.Code != http.StatusOK {
-		t.Errorf("first request: expected status 200, got %d", rr1.Code)
-	}
-
-	// Second request — rate limited
-	req2 := httptest.NewRequest(http.MethodPost, "/", nil)
-	rr2 := httptest.NewRecorder()
-	handler.ServeHTTP(rr2, req2)
-	if rr2.Code != http.StatusTooManyRequests {
-		t.Errorf("second request: expected status 429, got %d", rr2.Code)
-	}
-}
-
-// --------------------
 // Helper
 // --------------------
 
@@ -220,7 +138,7 @@ func containsSubstringImpl(s, substr string) bool {
 
 func TestClientRateLimiter_AllowsWithinBurst(t *testing.T) {
 	cl := NewClientRateLimiter(5, time.Minute)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		if !cl.Allow() {
 			t.Errorf("request %d should be allowed within burst of 5", i+1)
 		}

@@ -73,7 +73,17 @@ services:
       - ${PORT:-8080}
 
   caddy:
-    image: caddy:2.10.0-alpine
+    ################# No Http Rate Limit #################
+    # To skip Http rate-limiting, use image directly.
+    # Update .Caddyfile as well to remove rate-limiting.
+    # image: caddy:2.11.2-alpine
+    ################# No Http Rate Limit #################
+    ################# Http Rate Limit #################
+    # To enable Http rate-limiting, build with xcaddy using caddy.dockerfile
+    build:
+      context: .
+      dockerfile: caddy.dockerfile
+    ################# Http Rate Limit #################
     restart: unless-stopped
     ports:
       - '80:80'

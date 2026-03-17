@@ -35,12 +35,12 @@ type Config struct {
 		MaxTextLength         int    `toml:"max_text_length"`
 	} `toml:"data"`
 	Websocket struct {
-		MaxMessageSizeBytes int64 `toml:"max_message_size_bytes"`
 		RateLimit struct {
-			Enabled        bool   `toml:"enabled"`
-			Burst          int    `toml:"burst"`
 			RefillInterval string `toml:"refill_interval"`
+			Burst          int    `toml:"burst"`
+			Enabled        bool   `toml:"enabled"`
 		} `toml:"rate_limit"`
+		MaxMessageSizeBytes int64 `toml:"max_message_size_bytes"`
 	} `toml:"websocket"`
 	Frontend struct {
 		ContentEditableInvalidDebounceMs uint16 `toml:"content_editable_invalid_debounce_ms"`
@@ -51,12 +51,6 @@ type Config struct {
 		DisplayTimeoutMs      int  `toml:"display_timeout_ms"`
 		Enabled               bool `toml:"enabled"`
 	} `toml:"typing_activity"`
-	RateLimit struct {
-		Enabled         bool   `toml:"enabled"`
-		Burst           int    `toml:"burst"`
-		RefillInterval  string `toml:"refill_interval"`
-		CleanupInterval string `toml:"cleanup_interval"`
-	} `toml:"rate_limit"`
 }
 
 type EnvironmentConfig struct {
@@ -99,26 +93,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Parse Rate Limit durations and prepare limiter (if enabled)
-	var rateLimiter *RateLimiter
-	if config.RateLimit.Enabled {
-		refillInterval, err := parseDuration(config.RateLimit.RefillInterval)
-		if err != nil {
-			slog.Error("Invalid rate limit refill_interval format", "error", err)
-			os.Exit(1)
-		}
-		cleanupInterval, err := parseDuration(config.RateLimit.CleanupInterval)
-		if err != nil {
-			slog.Error("Invalid rate limit cleanup_interval format", "error", err)
-			os.Exit(1)
-		}
-		rateLimiter = NewRateLimiter(config.RateLimit.Burst, refillInterval, cleanupInterval)
-		defer rateLimiter.Stop()
-		slog.Info("HTTP rate limiting enabled", "burst", config.RateLimit.Burst, "refill", config.RateLimit.RefillInterval)
-	} else {
-		slog.Warn("HTTP rate limiting disabled")
-	}
-
 	// Load Environment configuration
 	envConfig = LoadEnvironmentConfig()
 
@@ -134,20 +108,13 @@ func main() {
 	// Setup routes and handlers
 	router := mux.NewRouter()
 
-	createBoardHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/api/board/create", func(w http.ResponseWriter, r *http.Request) {
 		HandleCreateBoard(red, w, r)
-	})
-	wsHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	}).Methods("POST")
+
+	router.HandleFunc("/ws/board/{board}/user/{user}/meet", func(w http.ResponseWriter, r *http.Request) {
 		handleWebSocket(hub, w, r)
 	})
-
-	if rateLimiter != nil {
-		router.HandleFunc("/api/board/create", RateLimitMiddleware(rateLimiter, createBoardHandler)).Methods("POST")
-		router.HandleFunc("/ws/board/{board}/user/{user}/meet", RateLimitMiddleware(rateLimiter, wsHandler))
-	} else {
-		router.HandleFunc("/api/board/create", createBoardHandler).Methods("POST")
-		router.HandleFunc("/ws/board/{board}/user/{user}/meet", wsHandler)
-	}
 
 	// router.HandleFunc("/api/board/{id}/user/{user}", func(w http.ResponseWriter, r *http.Request) {
 	// 	HandleGetBoard(red, w, r)
@@ -210,6 +177,12 @@ func main() {
 		handler = securityHeaders(envConfig, router)
 	} else {
 		slog.Warn("Security headers middleware disabled (expecting proxy to handle them)")
+	}
+
+	if config.Websocket.RateLimit.Enabled {
+		slog.Info("Websocket rate limiting enabled", "burst", config.Websocket.RateLimit.Burst, "refill", config.Websocket.RateLimit.RefillInterval)
+	} else {
+		slog.Warn("Websocket rate limiting disabled")
 	}
 
 	//err := http.ListenAndServe(":8080", nil)
