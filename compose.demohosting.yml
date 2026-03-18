@@ -87,16 +87,14 @@ services:
 
   caddy:
     ################# No Http Rate Limit #################
-    # To skip Http rate-limiting, use image directly.
-    # Update Caddyfile.demohosting as well to remove rate-limiting.
     # image: caddy:2.11.2-alpine
     ################# No Http Rate Limit #################
-    ################# Http Rate Limit #################
-    # To enable Http rate-limiting, build with xcaddy using caddy.dockerfile
+    ################# Http Rate Limit ####################
+    # Build with xcaddy using caddy.ratelimit.Dockerfile
     build:
       context: .
-      dockerfile: caddy.dockerfile
-    ################# Http Rate Limit #################
+      dockerfile: caddy.ratelimit.Dockerfile
+    ################# Http Rate Limit ####################
     restart: unless-stopped
     ports:
       - '80:80'
@@ -107,7 +105,12 @@ services:
     networks:
       - proxynet
     volumes:
-      - ./Caddyfile.demohosting:/etc/caddy/Caddyfile
+      ################# No Http Rate Limit #################
+      # - ./Caddyfile.demohosting:/etc/caddy/Caddyfile
+      ################# No Http Rate Limit #################
+      ################# Http Rate Limit ####################
+      - ./Caddyfile.ratelimit.demohosting:/etc/caddy/Caddyfile
+      ################# Http Rate Limit ####################
       - ./homepage:/var/www/homepage
       - ./site:/srv
       - caddy_data:/data
