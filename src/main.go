@@ -116,14 +116,6 @@ func main() {
 		handleWebSocket(hub, w, r)
 	})
 
-	// router.HandleFunc("/api/board/{id}/user/{user}", func(w http.ResponseWriter, r *http.Request) {
-	// 	HandleGetBoard(red, w, r)
-	// }).Methods("GET") // Todo: Check origin in handler
-
-	// router.HandleFunc("/api/board/{id}/user/{user}/refresh", func(w http.ResponseWriter, r *http.Request) {
-	// 	HandleRefresh(red, w, r)
-	// }).Methods("GET") // Todo: Check origin in handler
-
 	// Serve static files from the embedded file system
 	// Vite-built assets are content-hashed, so they can be cached aggressively
 	assetsFS, _ := fs.Sub(frontendFiles, "frontend/dist/assets")
