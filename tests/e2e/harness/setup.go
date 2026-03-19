@@ -47,8 +47,15 @@ func CreateBoard(t *testing.T, ownerId string) string {
 	}
 	client := &http.Client{Transport: tr}
 
-	resp, err := client.Post(BaseURL+"/api/board/create", "application/json", bytes.NewBuffer(body))
+	// resp, err := client.Post(BaseURL+"/api/board/create", "application/json", bytes.NewBuffer(body))
+	// require.NoError(t, err)
+	req, err := http.NewRequest("POST", BaseURL+"/api/board/create", bytes.NewBuffer(body))
 	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Origin", "https://localhost")
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+
 	defer resp.Body.Close()
 
 	require.Equal(t, http.StatusCreated, resp.StatusCode)

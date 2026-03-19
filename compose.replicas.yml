@@ -75,13 +75,13 @@ services:
 
   caddy:
     ################# No Http Rate Limit #################
-    # image: caddy:2.11.2-alpine
+    image: caddy:2.11.2-alpine
     ################# No Http Rate Limit #################
     ################# Http Rate Limit ####################
-    # Build with xcaddy using caddy.ratelimit.Dockerfile
-    build:
-      context: .
-      dockerfile: caddy.ratelimit.Dockerfile
+    # # Build with xcaddy using caddy.ratelimit.Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: caddy.ratelimit.Dockerfile
     ################# Http Rate Limit ####################
     restart: unless-stopped
     ports:
@@ -94,10 +94,10 @@ services:
       - proxynet
     volumes:
       ################# No Http Rate Limit #################
-      # - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./Caddyfile:/etc/caddy/Caddyfile
       ################# No Http Rate Limit #################
       ################# Http Rate Limit ####################
-      - ./Caddyfile.ratelimit:/etc/caddy/Caddyfile
+      # - ./Caddyfile.ratelimit:/etc/caddy/Caddyfile
       ################# Http Rate Limit ####################
       - ./site:/srv
       - caddy_data:/data

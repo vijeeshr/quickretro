@@ -41,5 +41,10 @@ demo.quickretro.app {
     import security_headers
     encode gzip
 
+    # Temporary for debugging
+    log {
+        output file /data/access.log
+    }
+
     reverse_proxy app:8080
 }
