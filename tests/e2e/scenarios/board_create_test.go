@@ -21,13 +21,21 @@ func TestBoardCreation(t *testing.T) {
 		}
 		client := &http.Client{Transport: tr}
 
-		resp, err := client.Post(harness.BaseURL+"/api/board/create", "application/json", bytes.NewBuffer(body))
+		// resp, err := client.Post(harness.BaseURL+"/api/board/create", "application/json", bytes.NewBuffer(body))
+		// require.NoError(t, err)
+
+		req, err := http.NewRequest("POST", harness.BaseURL+"/api/board/create", bytes.NewBuffer(body))
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Origin", "https://localhost")
+		resp, err := client.Do(req)
 		require.NoError(t, err)
 
 		// Parse response if JSON
 		var result map[string]any
-		if resp.Header.Get("Content-Type") == "application/json" {
+		if resp != nil && resp.Header.Get("Content-Type") == "application/json" {
 			_ = json.NewDecoder(resp.Body).Decode(&result)
+			defer resp.Body.Close()
 		}
 		return resp, result
 	}

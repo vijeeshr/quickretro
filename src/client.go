@@ -39,17 +39,18 @@ var upgrader = websocket.Upgrader{
 		// default:
 		// 	return false
 		// }
-		return slices.Contains(config.Server.AllowedOrigins, origin)
+		return origin != "" && slices.Contains(config.Server.AllowedOrigins, origin)
 	},
 }
 
 type Client struct {
-	hub   *Hub
-	conn  *websocket.Conn
-	send  chan any
-	id    string // This is the user uuid
-	xid   string // The is the externally exposed uuid of the user
-	group string // This can be a board/room
+	hub     *Hub
+	conn    *websocket.Conn
+	limiter *ClientRateLimiter
+	send    chan any
+	id      string // This is the user uuid
+	xid     string // The is the externally exposed uuid of the user
+	group   string // This can be a board/room
 }
 
 func (c *Client) read() {
@@ -78,6 +79,12 @@ func (c *Client) read() {
 		event.Group = c.group
 		event.By = c.id
 		event.Xid = c.xid
+
+		// Rate limit: drop message if client is sending too fast
+		if c.limiter != nil && !c.limiter.Allow() {
+			slog.Warn("WebSocket rate limit exceeded, dropping message", "user", c.id, "type", event.Type)
+			continue
+		}
 
 		event.Handle(c.hub)
 	}
@@ -165,7 +172,17 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Represent the websocket connection as a "Client".
-	client := &Client{id: user, xid: u.Xid, group: board, conn: conn, send: make(chan any, 256), hub: hub}
+	// Create per-client rate limiter from config (if enabled)
+	var wsLimiter *ClientRateLimiter
+	if config.Websocket.RateLimit.Enabled {
+		wsRefill, err := parseDuration(config.Websocket.RateLimit.RefillInterval)
+		if err == nil && config.Websocket.RateLimit.Burst > 0 {
+			wsLimiter = NewClientRateLimiter(config.Websocket.RateLimit.Burst, wsRefill)
+		}
+	}
+
+	// Represent the websocket connection as a "Client".
+	client := &Client{id: user, xid: u.Xid, group: board, conn: conn, send: make(chan any, 256), hub: hub, limiter: wsLimiter}
 
 	// Register the connection/client with the Hub
 	client.hub.register <- client

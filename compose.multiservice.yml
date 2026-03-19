@@ -1,6 +1,6 @@
 # Example with running multiple services of same image, load balanced using Caddy reverse-proxy.
 
-# Update Caddyfile with instructions given in it.
+# Update Caddyfile / Caddyfile.ratelimit files with instructions given in it.
 
 # Run following command to build the image before running docker compose.
 #   docker build -f build.Dockerfile -t quickretro-app .
@@ -41,6 +41,7 @@ x-app-defaults: &app-defaults
     # - REDIS_CONNSTR=redis://redis:6379/0
     # Using Redis ACL with Username & Password. Outside docker - redis://app-user:mysecretpassword@localhost:6379/0
     # - REDIS_CONNSTR=redis://app-user:mysecretpassword@redis:6379/0
+    - ENABLE_SECURITY_HEADERS=${ENABLE_SECURITY_HEADERS}
     - TURNSTILE_ENABLED=${TURNSTILE_ENABLED}
     - TURNSTILE_SITE_KEY=${TURNSTILE_SITE_KEY}
     - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY}
@@ -74,7 +75,15 @@ services:
     <<: *app-defaults
 
   caddy:
-    image: caddy:2.10.0-alpine
+    ################# No Http Rate Limit #################
+    image: caddy:2.11.2-alpine
+    ################# No Http Rate Limit #################
+    ################# Http Rate Limit ####################
+    # # Build with xcaddy using caddy.ratelimit.Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: caddy.ratelimit.Dockerfile
+    ################# Http Rate Limit ####################
     restart: unless-stopped
     ports:
       - '80:80'
@@ -85,7 +94,12 @@ services:
     networks:
       - proxynet
     volumes:
+      ################# No Http Rate Limit #################
       - ./Caddyfile:/etc/caddy/Caddyfile
+      ################# No Http Rate Limit #################
+      ################# Http Rate Limit ####################
+      # - ./Caddyfile.ratelimit:/etc/caddy/Caddyfile
+      ################# Http Rate Limit ####################
       - ./site:/srv
       - caddy_data:/data
       - caddy_config:/config

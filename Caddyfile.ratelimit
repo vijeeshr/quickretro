@@ -1,0 +1,115 @@
+{
+   # Define the order so Caddy knows when to apply the limit
+   order rate_limit before reverse_proxy   
+}
+
+(security_headers) {
+    header {
+        # Security defaults
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+        # CSP tailored for Vite + Turnstile setup
+        Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; frame-src 'self' https://challenges.cloudflare.com; connect-src 'self' ws: wss: https://challenges.cloudflare.com; img-src 'self' data:;"
+    }
+}
+
+# Define reusable rate limit snippets
+(strict_limit) {
+    rate_limit {
+        zone strict_zone {
+            key {remote_ip} # Use {client_ip} if behind a trusted proxy. Requires configuring trusted_proxies in global options to work correctly in a proxied environment.
+            events 2        # Number of allowed requests
+            window 1m       # Within this time window
+        }
+    }
+}
+
+(relaxed_limit) {
+    rate_limit {
+        zone relaxed_zone {
+            key {remote_ip} # Use {client_ip} if behind a trusted proxy. Requires configuring trusted_proxies in global options to work correctly in a proxied environment.
+            events 10       # Number of allowed requests
+            window 20s      # Within this time window
+        }
+    }
+}
+
+## --------------------------------------------
+# Use this block with compose.multiservice.yml
+## --------------------------------------------
+#(multi_app_proxy) {
+#    reverse_proxy {
+#        to app:8080 app01:8080
+
+#        lb_policy round_robin
+#        lb_retries 2
+#    }
+#}
+## --------------------------------------------
+
+docs.localhost {
+    import security_headers
+
+    # Permanent redirects for changed URLs
+    redir /configurations /guide/configurations 301
+    redir /create-board /guide/create-board 301
+    redir /dashboard /guide/dashboard 301
+    redir /development /guide/development 301
+    redir /getting-started /guide/getting-started 301
+    redir /self-hosting /guide/self-hosting 301
+    # Handle trailing slash for guide
+    redir /guide/ /guide/getting-started 301
+    redir /guide /guide/getting-started 301
+
+    encode gzip
+    root * /var/www/homepage
+    try_files {path}.html {path}/ {path} /404.html
+    file_server
+}
+
+localhost {
+    import security_headers
+    encode gzip
+
+    handle /api/board/create {
+        import strict_limit
+        reverse_proxy app:8080
+    }
+
+    handle /ws/* {
+        import relaxed_limit
+        reverse_proxy app:8080
+    }
+
+    handle {
+        reverse_proxy app:8080
+    }
+}
+
+# Uncomment below block and comment above "localhost" block to use with compose.multiservice.yml
+## -------------------------------------------
+# Use this block with compose.multiservice.yml
+## -------------------------------------------
+#localhost {
+#    import security_headers
+#    encode gzip
+
+#    handle /api/board/create {
+#        import strict_limit
+#        import multi_app_proxy
+#    }
+
+#    handle /ws/* {
+#        import relaxed_limit
+#        import multi_app_proxy
+#    }
+
+#    handle {
+#        import multi_app_proxy
+#    }
+#}
+## -------------------------------------------

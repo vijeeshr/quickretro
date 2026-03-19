@@ -139,6 +139,7 @@ func Test_parseDuration(t *testing.T) {
 		{"0s", 0, false},
 		{"100m", 100 * time.Minute, false},
 		{"-5m", -5 * time.Minute, false},
+		{"500ms", 500 * time.Millisecond, false},
 		{"abc", 0, true},
 		{"10x", 0, true},
 		{"", 0, true},

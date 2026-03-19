@@ -28,6 +28,16 @@ max_text_length = 80
 # Maximum message size (in bytes) allowed from peer for the websocket connection (also used by frontend)
 max_message_size_bytes = 1024
 
+# Per-client rate limit for incoming WebSocket messages (all event types).
+# Uses a token-bucket algorithm per connection.
+[websocket.rate_limit]
+# Enable or disable per-client WebSocket message rate limiting
+enabled = false
+# Maximum burst of messages a client can send before being throttled
+burst = 20
+# How often one token is added back (format: <number><unit>; units: s/m/h/d)
+refill_interval = "500ms"
+
 [frontend]
 # Delay (in milliseconds) before showing "message size limit reached" notification for cards/comments
 content_editable_invalid_debounce_ms = 500

@@ -1,4 +1,20 @@
+(security_headers) {
+    header {
+        # Security defaults
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+        # CSP tailored for Vite + Turnstile setup
+        Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; frame-src 'self' https://challenges.cloudflare.com; connect-src 'self' ws: wss: https://challenges.cloudflare.com; img-src 'self' data:;"
+    }
+}
+
 docs.localhost {
+    import security_headers
+
     # Permanent redirects for changed URLs
     redir /configurations /guide/configurations 301
     redir /create-board /guide/create-board 301
@@ -17,13 +33,20 @@ docs.localhost {
 }
 
 localhost {
+    import security_headers
     encode gzip
+
     reverse_proxy app:8080
 }
 
-# Uncomment below block and comment above block when used with compose.multiservice.yml
+# Uncomment below block and comment above "localhost" block to use with compose.multiservice.yml
+## -----------------------------------------------------------------
+## Use this block with compose.multiservice.yml
+## -----------------------------------------------------------------
 # localhost {
+#    import security_headers
 #    encode gzip
+
 #    reverse_proxy  {
 #        to app:8080 app01:8080
 
@@ -31,3 +54,4 @@ localhost {
 #        lb_retries 2
 #    }
 # }
+## -----------------------------------------------------------------

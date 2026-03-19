@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"slices"
 	"unicode/utf8"
 
 	"github.com/gorilla/mux"
@@ -69,15 +70,20 @@ type GetBoardRes struct {
 	IsOwner bool   `json:"isOwner"`
 }
 
-// ToDo: Protect this from abuse. This can be misused for DOS, as it adds data to Redis on every call.
+// isOriginAllowed checks if the request Origin header is in the configured allowed origins list.
+func isOriginAllowed(r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+	return origin != "" && slices.Contains(config.Server.AllowedOrigins, origin)
+}
+
 // Creates a new board and returns it
 func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request) {
-	// Todo: Protect this function with auth and permissions.
-	// Validate request.
-	// if r.Method != "POST" {
-	// 	w.WriteHeader(http.StatusMethodNotAllowed)
-	// 	return
-	// }
+	// Validate Origin
+	if !isOriginAllowed(r) {
+		slog.Warn("Rejected request with disallowed origin", "origin", r.Header.Get("Origin"), "remote", r.RemoteAddr)
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return
+	}
 
 	// Parse request
 	var createReq CreateBoardReq

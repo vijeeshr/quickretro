@@ -299,12 +299,13 @@ func (c *RedisConnector) StopTimer(b *Board) bool {
 func (c *RedisConnector) BoardExists(boardId string) bool {
 	key := boardKey(boardId)
 
-	k, err := c.client.Exists(c.ctx, key).Result()
+	exists, err := c.client.Exists(c.ctx, key).Result()
 	if err != nil {
-		slog.Error("Cannot find board in Redis", "err", err, "boardId", boardId)
+		slog.Error("Cannot check board in Redis", "err", err, "boardId", boardId)
 		return false
 	}
-	if k != 1 {
+
+	if exists == 0 {
 		slog.Warn("Non-existent board", "boardId", boardId)
 		return false
 	}

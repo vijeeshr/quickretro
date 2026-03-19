@@ -1,5 +1,7 @@
 {
-   email vijeesh82@gmail.com 
+   email vijeesh82@gmail.com
+   # Define the order so Caddy knows when to apply the limit
+   order rate_limit before reverse_proxy   
 }
 
 (security_headers) {
@@ -13,6 +15,27 @@
 
         # CSP tailored for Vite + Turnstile setup
         Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; frame-src 'self' https://challenges.cloudflare.com; connect-src 'self' ws: wss: https://challenges.cloudflare.com; img-src 'self' data:;"
+    }
+}
+
+# Define reusable rate limit snippets
+(strict_limit) {
+    rate_limit {
+        zone strict_zone {
+            key {remote_ip} # Use {client_ip} if behind a trusted proxy. Requires configuring trusted_proxies in global options to work correctly in a proxied environment.
+            events 2        # Number of allowed requests
+            window 1m       # Within this time window
+        }
+    }
+}
+
+(relaxed_limit) {
+    rate_limit {
+        zone relaxed_zone {
+            key {remote_ip} # Use {client_ip} if behind a trusted proxy. Requires configuring trusted_proxies in global options to work correctly in a proxied environment.
+            events 10       # Number of allowed requests
+            window 20s      # Within this time window
+        }
     }
 }
 
@@ -41,10 +64,18 @@ demo.quickretro.app {
     import security_headers
     encode gzip
 
-    # Temporary for debugging
-    log {
-        output file /data/access.log
+    # With Http Rate Limit
+    handle /api/board/create {
+        import strict_limit
+        reverse_proxy app:8080
     }
 
-    reverse_proxy app:8080
+    handle /ws/* {
+        import relaxed_limit
+        reverse_proxy app:8080
+    }
+
+    handle {
+        reverse_proxy app:8080
+    }
 }
