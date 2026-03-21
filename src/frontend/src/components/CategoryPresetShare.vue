@@ -2,12 +2,11 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { CategoryDefinition } from '../models/CategoryDefinition'
-import { useToast } from 'vue-toast-notification'
+import { toast } from 'vue-sonner'
 import { encodeToUrlSafeBase64FromJson } from '../utils'
 
 const props = defineProps<{ categories: CategoryDefinition[] }>()
 const { t } = useI18n()
-const toast = useToast()
 const isOpen = ref(false)
 
 const shareUrl = computed(() => {

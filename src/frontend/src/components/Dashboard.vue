@@ -47,10 +47,7 @@ import {
   formatDate,
   logMessage,
 } from '../utils'
-import { useToast } from 'vue-toast-notification'
-// import 'vue-toast-notification/dist/theme-sugar.css';
-// import 'vue-toast-notification/dist/theme-bootstrap.css';
-import 'vue-toast-notification/dist/theme-default.css'
+import { toast } from 'vue-sonner'
 import DarkModeToggle from './DarkModeToggle.vue'
 import { BoardColumn } from '../models/BoardColumn'
 import { CategoryChangeMessage } from '../models/CategoryChangeMessage'
@@ -125,14 +122,12 @@ const setIsColumnEditDialogOpen = (value: boolean) => {
   isColumnEditDialogOpen.value = value
 }
 
-const toast = useToast()
-
 const onOneMinuteLeftWarning = () => {
-  toast.info(t('dashboard.timer.oneMinuteLeft'), { pauseOnHover: false })
+  toast.info(t('dashboard.timer.oneMinuteLeft'))
 }
 
 const onCountdownCompleted = () => {
-  toast.error(t('dashboard.timer.timeCompleted'), { pauseOnHover: false, duration: 4000 })
+  toast.error(t('dashboard.timer.timeCompleted'), { duration: 4000 })
 }
 
 const onLanguageSelect = (localeCode: AvailableLocales) => {
@@ -237,7 +232,7 @@ const columnWidthClass = computed(() => {
 const openSpotlight = () => {
   if (usersWithCards.value.length === 0) {
     closeSpotlight()
-    toast.info(t('dashboard.spotlight.noCardsToFocus'), { pauseOnHover: false })
+    toast.info(t('dashboard.spotlight.noCardsToFocus'))
     return
   }
   spotlightFor.value = usersWithCards.value[0]
@@ -541,7 +536,7 @@ const generateDocument = () => {
 //         //     .setFontSize(12)
 //         //     .text(moreText, 0.5, 3.5, { align: "left", maxWidth: 7.5 });
 //     } catch (error) {
-//         // toast.error(t('dashboard.download.error'), { pauseOnHover: false })
+//         // toast.error(t('dashboard.download.error'))
 //         console.error('PDF download failed:', error)
 //     }
 // }
@@ -710,7 +705,7 @@ const print = async () => {
       printWindow.print()
     }
   } catch (error) {
-    // toast.error(t('dashboard.download.error'), { pauseOnHover: false })
+    // toast.error(t('dashboard.download.error'))
     console.error('Print failed:', error)
   } finally {
     setTimeout(() => {
@@ -814,7 +809,7 @@ const onRegisterResponse = (response: RegisterResponse) => {
   // Show expiration notification for newly created board. Show only for board creator/owner
   if (response.isBoardOwner && response.notifyNewBoardExpiry) {
     const initialExpiryMsg = `${t('dashboard.autoDeleteScheduleBase', { date: boardExpiryLocalTime.value })}${t('dashboard.autoDeleteScheduleAddon')}`
-    toast.warning(initialExpiryMsg, { pauseOnHover: false, duration: 10000 })
+    toast.warning(initialExpiryMsg, { duration: 10000 })
   }
 }
 
@@ -1170,10 +1165,10 @@ const handleVisibilityChange = () => {
 
 const handleConnectivity = () => {
   if (!navigator.onLine) {
-    toast.error(t('dashboard.offline'), { pauseOnHover: false, duration: 4000 })
+    toast.error(t('dashboard.offline'), { duration: 4000 })
   }
   // if (navigator.onLine) {
-  //     toast.success("You are online", { pauseOnHover: false, duration: 4000 })
+  //     toast.success("You are online", { duration: 4000 })
   //     // Attempt reinitializing the app (with browser reload) when websocket is closed because of connectivity issues
   //     if (socket.readyState !== WebSocket.OPEN) {
   //         window.location.reload()

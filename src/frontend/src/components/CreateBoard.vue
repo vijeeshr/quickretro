@@ -8,7 +8,7 @@ import { CategoryDefinition } from '../models/CategoryDefinition'
 import { useI18n } from 'vue-i18n'
 import LanguageSelector from './LanguageSelector.vue'
 import TurnstileWidget from './TurnstileWidget.vue'
-import { useToast } from 'vue-toast-notification'
+import { toast } from 'vue-sonner'
 import CategoryEditor from './CategoryEditor.vue'
 import { defaultCategories } from '../constants/defaultCategories'
 import { MAX_TEXT_LENGTH, TURNSTILE_ENABLED, TURNSTILE_SITEKEY } from '../utils/appConfig'
@@ -67,8 +67,6 @@ const handleTokenVerified = (token: string) => {
   turnstileToken.value = token
 }
 
-const toast = useToast()
-
 const create = async () => {
   // Todo: Throttle this.
   if (isTurnstileEnabled.value && !isTurnstileVerified.value) return
@@ -96,7 +94,7 @@ const create = async () => {
     const createdBoard = await createBoard(payload)
     router.push(`/board/${createdBoard.id}`)
   } catch (error) {
-    toast.error(t('createBoard.boardCreationError', { pauseOnHover: false }))
+    toast.error(t('createBoard.boardCreationError'))
     console.error('Error creating board:', error)
   } finally {
     isSubmitting.value = false
