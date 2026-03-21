@@ -699,7 +699,7 @@ const print = async () => {
 
     // Write in one synchronous block. Chrome-safe and Firefox-safe
     printWindow.document.open()
-    // @ts-ignore - document.write is required for print reliability
+    // document.write is required for print reliability
     printWindow.document.write(html)
     printWindow.document.close()
     // Once fully rendered, print
@@ -730,7 +730,7 @@ const copyShareLink = async () => {
     await navigator.clipboard.writeText(shareLink)
     toast.success(t('common.share.linkCopied'))
     setIsShareDialogOpen(false)
-  } catch (err) {
+  } catch {
     toast.error(t('common.share.linkCopyError'))
   }
 }
@@ -903,9 +903,11 @@ const onDeleteMessageResponse = (response: DeleteMessageResponse) => {
     if (index !== -1) {
       const updated = [...comments]
       updated.splice(index, 1)
-      updated.length > 0
-        ? commentsMap.value.set(parentId, updated)
-        : commentsMap.value.delete(parentId)
+      if (updated.length > 0) {
+        commentsMap.value.set(parentId, updated)
+      } else {
+        commentsMap.value.delete(parentId)
+      }
       return
     }
   }
@@ -1110,7 +1112,7 @@ const socketOnClose = (event: CloseEvent) => {
 const socketOnError = (event: Event) => {
   console.error(event)
 }
-const socketOnMessage = (event: MessageEvent<any>) => {
+const socketOnMessage = (event: MessageEvent<string>) => {
   const response = toSocketResponse(JSON.parse(event.data))
   logMessage('Response', response)
 
@@ -1288,7 +1290,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Dialog for Timer settings -->
-    <Dialog :open="isTimerDialogOpen" @close="setIsTimerDialogOpen" class="relative z-50">
+    <Dialog :open="isTimerDialogOpen" class="relative z-50" @close="setIsTimerDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1311,7 +1313,7 @@ onUnmounted(() => {
     </Dialog>
 
     <!-- Dialog to share url -->
-    <Dialog :open="isShareDialogOpen" @close="setIsShareDialogOpen" class="relative z-50">
+    <Dialog :open="isShareDialogOpen" class="relative z-50" @close="setIsShareDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1342,7 +1344,7 @@ onUnmounted(() => {
     </Dialog>
 
     <!-- Dialog for Language selection -->
-    <Dialog :open="isLanguageDialogOpen" @close="setIsLanguageDialogOpen" class="relative z-50">
+    <Dialog :open="isLanguageDialogOpen" class="relative z-50" @close="setIsLanguageDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1353,13 +1355,13 @@ onUnmounted(() => {
             <button
               v-for="lang in languageOptions"
               :key="lang.code"
-              @click="onLanguageSelect(lang.code)"
               class="px-3 py-1.5 text-sm rounded-lg border transition-colors"
               :class="[
                 locale === lang.code
                   ? 'bg-blue-100 border-blue-200 text-blue-800 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-200'
                   : 'bg-gray-100 border-gray-200 text-gray-700 hover:bg-gray-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600',
               ]"
+              @click="onLanguageSelect(lang.code)"
             >
               {{ lang.name }}
             </button>
@@ -1369,7 +1371,7 @@ onUnmounted(() => {
     </Dialog>
 
     <!-- Dialog for DeleteAll Confirmation -->
-    <Dialog :open="isDeleteAllDialogOpen" @close="setIsDeleteAllDialogOpen" class="relative z-50">
+    <Dialog :open="isDeleteAllDialogOpen" class="relative z-50" @close="setIsDeleteAllDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1411,7 +1413,7 @@ onUnmounted(() => {
     </Dialog>
 
     <!-- Dialog for Column editing -->
-    <Dialog :open="isColumnEditDialogOpen" @close="setIsColumnEditDialogOpen" class="relative z-50">
+    <Dialog :open="isColumnEditDialogOpen" class="relative z-50" @close="setIsColumnEditDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1448,7 +1450,7 @@ onUnmounted(() => {
     <div class="w-16 p-3">
       <!-- Timer -->
       <CountdownTimer
-        :timeLeftInSeconds="timerExpiresInSeconds"
+        :time-left-in-seconds="timerExpiresInSeconds"
         :title="t('dashboard.timer.tooltip')"
         class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-[1rem] font-bold text-white ml-auto mx-auto mb-4"
         :class="isOwner ? 'cursor-pointer' : 'cursor-default'"
@@ -1478,13 +1480,13 @@ onUnmounted(() => {
       <!-- Mask controls -->
       <div :title="!isMasked ? t('dashboard.mask.maskTooltip') : t('dashboard.mask.unmaskTooltip')">
         <svg
+          v-if="isOwner"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
           stroke="currentColor"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          v-if="isOwner"
           :class="{ hidden: isMasked }"
           @click="mask"
         >
@@ -1495,13 +1497,13 @@ onUnmounted(() => {
           />
         </svg>
         <svg
+          v-if="isOwner"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
           stroke="currentColor"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          v-if="isOwner"
           :class="{ hidden: !isMasked }"
           @click="mask"
         >
@@ -1520,13 +1522,13 @@ onUnmounted(() => {
       <!-- Lock controls -->
       <div :title="!isLocked ? t('dashboard.lock.lockTooltip') : t('dashboard.lock.unlockTooltip')">
         <svg
+          v-if="isOwner"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
           stroke="currentColor"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          v-if="isOwner"
           :class="{ hidden: isLocked }"
           @click="lock"
         >
@@ -1537,13 +1539,13 @@ onUnmounted(() => {
           />
         </svg>
         <svg
+          v-if="isOwner"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
           stroke="currentColor"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          v-if="isOwner"
           :class="{ hidden: !isLocked }"
           @click="lock"
         >
@@ -1557,13 +1559,13 @@ onUnmounted(() => {
       <!-- Print -->
       <div :title="t('dashboard.print.tooltip')">
         <svg
+          v-if="isOwner"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
           stroke="currentColor"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          v-if="isOwner"
           @click="generateDocument"
         >
           <path
@@ -1601,8 +1603,8 @@ onUnmounted(() => {
           viewBox="0 0 24 24"
           stroke-width="2"
           stroke="currentColor"
-          @click="openLanguageDialog"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+          @click="openLanguageDialog"
         >
           <path
             stroke-linecap="round"
@@ -1614,13 +1616,13 @@ onUnmounted(() => {
       <!-- Delete All-->
       <div :title="t('dashboard.delete.tooltip')">
         <svg
+          v-if="isOwner"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
           stroke="currentColor"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          v-if="isOwner"
           @click="openDeleteAllDialog"
         >
           <path
@@ -1661,8 +1663,8 @@ onUnmounted(() => {
     <!-- Dashboard Content -->
     <div class="w-full min-h-screen overflow-hidden">
       <div
-        class="flex justify-center items-center bg-gray-100 dark:bg-gray-900 w-full text-red-500 dark:text-red-300 pt-1"
         v-if="isLocked"
+        class="flex justify-center items-center bg-gray-100 dark:bg-gray-900 w-full text-red-500 dark:text-red-300 pt-1"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -1701,7 +1703,7 @@ onUnmounted(() => {
             :category="column.id"
             :nickname="nickname"
             @added="onAdded"
-            @invalidContent="onInvalidContent"
+            @invalid-content="onInvalidContent"
             @discard="onDiscard"
             @typing="onTyping"
           />
@@ -1710,24 +1712,30 @@ onUnmounted(() => {
             :category="column.id"
             nickname=""
             @added="onAdded"
-            @invalidContent="onInvalidContent"
+            @invalid-content="onInvalidContent"
             @discard="onDiscard"
           />
           <Card
             v-for="card in filterCards(column.id)"
+            :key="card.id"
             :card="card"
             :comments="filterComments(card.id)"
             :current-user-nickname="nickname"
             :mask="isMasked"
             :can-manage="isOwner"
-            :key="card.id"
             :categories="columns"
             :locked="isLocked"
+            :class="{
+              'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none':
+                isSpotlightOn && usersWithCards.length > 0 && card.byxid !== spotlightFor?.byxid,
+              'bg-black dark:bg-black border border-gray-200 z-[51]':
+                isSpotlightOn && usersWithCards.length > 0 && card.byxid === spotlightFor?.byxid,
+            }"
             @updated="onUpdated"
             @deleted="onDeleted"
             @liked="onLiked"
             @category-changed="onCategoryChanged"
-            @invalidContent="onInvalidContent"
+            @invalid-content="onInvalidContent"
             @avatar-clicked="showSpotlightFor"
             @discard="notifyForLostMessages({ dueToLock: true })"
             @comment-added="onCommentAdded"
@@ -1736,12 +1744,6 @@ onUnmounted(() => {
             @comment-discard="notifyForLostMessages({ dueToLock: true })"
             @comment-invalid-content="onCommentInvalidContent"
             @typing="onTyping"
-            :class="{
-              'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none':
-                isSpotlightOn && usersWithCards.length > 0 && card.byxid !== spotlightFor?.byxid,
-              'bg-black dark:bg-black border border-gray-200 z-[51]':
-                isSpotlightOn && usersWithCards.length > 0 && card.byxid === spotlightFor?.byxid,
-            }"
           />
         </Category>
       </div>
@@ -1760,20 +1762,20 @@ onUnmounted(() => {
         </span>
       </div>
       <div
-        v-for="user in onlineUsersCardsStats"
-        :key="user.xid"
+        v-for="onlineUser in onlineUsersCardsStats"
+        :key="onlineUser.xid"
         class="relative w-8 h-8 ml-auto mx-auto mb-4"
       >
         <AvatarActivity
-          :name="user.nickname"
-          :is-typing="typingUsers.has(user.xid)"
+          :name="onlineUser.nickname"
+          :is-typing="typingUsers.has(onlineUser.xid)"
           class="w-8 h-8"
         />
         <span
-          v-if="user.cardsCount > 0"
+          v-if="onlineUser.cardsCount > 0"
           class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none"
         >
-          {{ user.cardsCount }}
+          {{ onlineUser.cardsCount }}
         </span>
       </div>
     </div>

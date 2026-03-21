@@ -6,7 +6,7 @@ import { env } from '../env'
 
 interface Props {
   sitekey: string
-  darkTheme: boolean
+  darkTheme?: boolean
 }
 const props = withDefaults(defineProps<Props>(), {
   darkTheme: false,

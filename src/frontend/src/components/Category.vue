@@ -8,8 +8,8 @@ interface Props {
   // color?: string,
   // buttonText?: string,
   width?: string
-  buttonHighlight: boolean
-  anonymousButtonHighlight: boolean
+  buttonHighlight?: boolean
+  anonymousButtonHighlight?: boolean
   editable: boolean
   locked: boolean
 }

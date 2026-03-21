@@ -33,7 +33,7 @@ const copyLink = async () => {
     await navigator.clipboard.writeText(shareUrl.value)
     toast.success(t('common.share.linkCopied'))
     isOpen.value = false
-  } catch (e) {
+  } catch {
     toast.error(t('common.share.linkCopyError'))
   }
 }
@@ -43,8 +43,8 @@ const copyLink = async () => {
   <div class="relative inline-block text-left">
     <button
       type="button"
-      @click="toggleShare"
       class="text-xs flex items-center gap-1 text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300 transition-colors"
+      @click="toggleShare"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -79,8 +79,8 @@ const copyLink = async () => {
             class="flex-1 rounded-md border text-xs border-gray-300 dark:border-gray-600 px-2 py-1 bg-gray-50 dark:bg-gray-700 dark:text-gray-200 focus:outline-none"
           />
           <button
-            @click="copyLink"
             class="rounded-md bg-sky-100 dark:bg-sky-900 px-2 py-1 text-xs font-medium text-sky-700 dark:text-sky-200 hover:bg-sky-200 dark:hover:bg-sky-800"
+            @click="copyLink"
           >
             {{ t('common.copy', 'Copy') }}
           </button>
@@ -88,8 +88,8 @@ const copyLink = async () => {
       </div>
       <!-- Close button -->
       <button
-        @click="isOpen = false"
         class="absolute top-1 right-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        @click="isOpen = false"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

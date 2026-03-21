@@ -50,6 +50,7 @@ export async function loadLanguageAsync(locale: AvailableLocales): Promise<void>
   }
 
   return nextTick()
+  // await nextTick()
 }
 
 // Helper to detect initial language
@@ -83,5 +84,6 @@ if (initialLocale !== 'en') {
 // based on the English message schema.
 declare module 'vue-i18n' {
   // Define the vue-i18n type schema
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   export interface DefineLocaleMessage extends MessageSchema {}
 }

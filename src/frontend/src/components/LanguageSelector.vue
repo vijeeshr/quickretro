@@ -48,8 +48,8 @@ const { locale, languageOptions, getLanguageName } = useLanguage()
         <ListboxOption
           v-for="lang in languageOptions"
           :key="lang.code"
-          :value="lang.code"
           v-slot="{ active, selected }"
+          :value="lang.code"
         >
           <li
             :class="[

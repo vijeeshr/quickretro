@@ -118,8 +118,8 @@ const applyPresetFromRoute = () => {
     const defaultsById = new Map(defaultCategories.map(c => [c.id, { ...c }]))
 
     const merged: CategoryDefinition[] = decoded
-      .map((c: any) => {
-        const base = defaultsById.get(c.id)
+      .map((c: Record<string, unknown>) => {
+        const base = defaultsById.get(c.id as string)
         if (!base) return null // ignore unknown categories
 
         return {
@@ -263,8 +263,8 @@ onMounted(() => {
           </div>
           <div v-if="isTurnstileEnabled" class="min-w-[300px] flex items-center justify-center">
             <TurnstileWidget
-              ref="turnstileRef"
               v-if="isTurnstileEnabled"
+              ref="turnstileRef"
               class="w-full"
               :sitekey="turnstileSiteKey"
               :dark-theme="isDark"

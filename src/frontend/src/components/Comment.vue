@@ -105,7 +105,7 @@ const remove = () => {
     logMessage('Locked! Cannot delete.')
     return
   }
-  if (manageable) {
+  if (manageable.value) {
     emit('deleted', props.comment.id)
   }
 }
@@ -141,7 +141,7 @@ const onKeyDown = (event: KeyboardEvent) => {
     >
       {{ content }}
     </article>
-    <div class="flex" v-if="manageable">
+    <div v-if="manageable" class="flex">
       <!-- Delete comment button -->
       <svg
         xmlns="http://www.w3.org/2000/svg"

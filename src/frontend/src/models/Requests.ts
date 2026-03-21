@@ -6,7 +6,7 @@ export interface EventRequest<T> {
   pyl: T
 }
 
-export interface RegisterEvent {}
+export type RegisterEvent = Record<string, never>
 
 export interface MaskEvent {
   mask: boolean
@@ -35,7 +35,7 @@ export interface DeleteMessageEvent {
   commentIds: string[]
 }
 
-export interface DeleteAllEvent {}
+export type DeleteAllEvent = Record<string, never>
 
 export interface CategoryChangeEvent {
   msgId: string
@@ -53,7 +53,7 @@ export interface ColumnsChangeEvent {
   columns: BoardColumn[]
 }
 
-export interface TypedEvent {}
+export type TypedEvent = Record<string, never>
 
 export interface RegisterResponse {
   typ: 'reg'
@@ -161,35 +161,36 @@ export type SocketResponse =
   | ColumnsChangeResponse
   | TypedResponse
 
-export function toSocketResponse(json: any): SocketResponse | null {
-  if (json && json.typ) {
-    switch (json.typ) {
+export function toSocketResponse(json: unknown): SocketResponse | null {
+  const obj = json as Record<string, unknown>
+  if (obj && obj.typ) {
+    switch (obj.typ) {
       case 'reg':
-        return json as RegisterResponse
+        return obj as unknown as RegisterResponse
       case 'mask':
-        return json as MaskResponse
+        return obj as unknown as MaskResponse
       case 'lock':
-        return json as LockResponse
+        return obj as unknown as LockResponse
       case 'msg':
-        return json as MessageResponse
+        return obj as unknown as MessageResponse
       case 'like':
-        return json as LikeMessageResponse
+        return obj as unknown as LikeMessageResponse
       case 'del':
-        return json as DeleteMessageResponse
+        return obj as unknown as DeleteMessageResponse
       case 'delall':
-        return json as DeleteAllResponse
+        return obj as unknown as DeleteAllResponse
       case 'catchng':
-        return json as CategoryChangeResponse
+        return obj as unknown as CategoryChangeResponse
       case 'joining':
-        return json as UserJoiningResponse
+        return obj as unknown as UserJoiningResponse
       case 'closing':
-        return json as UserClosingResponse
+        return obj as unknown as UserClosingResponse
       case 'timer':
-        return json as TimerResponse
+        return obj as unknown as TimerResponse
       case 'colreset':
-        return json as ColumnsChangeResponse
+        return obj as unknown as ColumnsChangeResponse
       case 't':
-        return json as TypedResponse
+        return obj as unknown as TypedResponse
       // const data: MaskResponse = json
       // return data
 

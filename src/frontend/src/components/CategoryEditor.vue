@@ -127,13 +127,13 @@ const updateCategoryText = (id: string, event: Event) => {
 
       <!-- Text Input -->
       <input
-        type="text"
         :id="cat.id"
+        type="text"
         :value="cat.text"
         :maxlength="MAX_CATEGORY_TEXT_LENGTH"
-        @input="updateCategoryText(cat.id, $event)"
         :placeholder="t(`dashboard.columns.${cat.id}`)"
         class="w-full rounded-md focus:outline-none focus:border focus:border-gray-200 focus:ring-gray-200 dark:text-slate-200 dark:bg-gray-900 dark:focus:border-gray-800 dark:focus:ring-gray-800"
+        @input="updateCategoryText(cat.id, $event)"
       />
     </li>
   </ul>

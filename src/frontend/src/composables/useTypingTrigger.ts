@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { TYPING_ACTIVITY_EMIT_THROTTLE_MS, TYPING_ACTIVITY_ENABLED } from '../utils/appConfig'
 
-export function useTypingTrigger(emit: any) {
+export function useTypingTrigger(emit: (event: 'typing') => void) {
   const isThrottled = ref(false)
 
   const triggerTyping = (event?: KeyboardEvent) => {

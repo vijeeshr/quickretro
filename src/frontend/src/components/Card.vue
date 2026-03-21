@@ -144,7 +144,7 @@ const remove = () => {
     logMessage('Locked! Cannot delete.')
     return
   }
-  if (manageable) {
+  if (manageable.value) {
     emit('deleted', props.card.id)
   }
 }
@@ -154,7 +154,7 @@ const changeCategory = (newCategory: string, oldCategory: string) => {
     logMessage('Locked! Cannot change category.')
     return
   }
-  if (manageable && newCategory !== oldCategory) {
+  if (manageable.value && newCategory !== oldCategory) {
     const payload: CategoryChangeMessage = {
       msgId: props.card.id,
       newCategoryId: newCategory,
