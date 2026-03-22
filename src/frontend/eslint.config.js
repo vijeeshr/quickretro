@@ -49,7 +49,7 @@ export default [
       'prettier/prettier': [
         'error',
         {
-          endOfLine: 'auto', // This tells Prettier to ignore the CRLF vs LF difference
+          endOfLine: 'lf', // Enforce LF line endings for cross-platform consistency
         },
       ],
 
