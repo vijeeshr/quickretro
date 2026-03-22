@@ -1217,7 +1217,7 @@ onUnmounted(() => {
     <!-- Focus navigation panel -->
     <div
       v-if="isSpotlightOn && usersWithCards.length > 0"
-      class="fixed flex items-center gap-2 top-4 left-1/2 transform -translate-x-1/2 text-white bg-black/50 border border-gray-500 px-4 py-2 rounded-lg shadow-md z-[60]"
+      class="fixed flex items-center gap-2 top-4 left-1/2 transform -translate-x-1/2 text-white bg-black/50 border border-gray-500 px-4 py-2 rounded-lg shadow-md z-60"
     >
       <button class="rounded-md hover:bg-gray-200 hover:text-gray-600" @click="prevSpotlight">
         <svg
@@ -1321,14 +1321,14 @@ onUnmounted(() => {
             >{{ t('dashboard.share.title') }}
           </DialogTitle>
           <article
-            class="select-all break-all bg-slate-100 dark:bg-slate-700 dark:text-gray-100 my-6 rounded-sm"
+            class="select-all break-all bg-slate-100 dark:bg-slate-700 dark:text-gray-100 my-6 rounded-xs"
           >
             {{ shareLink }}
           </article>
           <div class="mt-4">
             <button
               type="button"
-              class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-none focus:ring-0"
+              class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-hidden focus:ring-0"
               @click="copyShareLink"
             >
               {{ t('common.copy') }}
@@ -1384,14 +1384,14 @@ onUnmounted(() => {
           <div class="flex justify-center mt-4 space-x-2">
             <button
               type="button"
-              class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-none focus:ring-0"
+              class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-hidden focus:ring-0"
               @click="setIsDeleteAllDialogOpen(false)"
             >
               {{ t('dashboard.delete.cancelDelete') }}
             </button>
             <button
               type="button"
-              class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-red-100 hover:bg-red-400 border-red-300 text-red-600 hover:text-white hover:border-transparent dark:bg-red-800 dark:hover:bg-red-600 dark:border-red-700 dark:text-red-100 select-none focus:outline-none focus:ring-0"
+              class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-red-100 hover:bg-red-400 border-red-300 text-red-600 hover:text-white hover:border-transparent dark:bg-red-800 dark:hover:bg-red-600 dark:border-red-700 dark:text-red-100 select-none focus:outline-hidden focus:ring-0"
               @click="deleteAll()"
             >
               {{ t('dashboard.delete.continueDelete') }}
@@ -1431,7 +1431,7 @@ onUnmounted(() => {
           </p>
           <button
             type="button"
-            class="px-4 py-2 mt-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white hover:border-transparent disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 select-none focus:outline-none focus:ring-0"
+            class="px-4 py-2 mt-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white hover:border-transparent disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 select-none focus:outline-hidden focus:ring-0"
             :disabled="hasCardsInDisabledCategories || !isCategorySelectionValid"
             @click="saveCategoryChanges"
           >
@@ -1447,7 +1447,7 @@ onUnmounted(() => {
       <CountdownTimer
         :time-left-in-seconds="timerExpiresInSeconds"
         :title="t('dashboard.timer.tooltip')"
-        class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-[1rem] font-bold text-white ml-auto mx-auto mb-4"
+        class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white ml-auto mx-auto mb-4"
         :class="isOwner ? 'cursor-pointer' : 'cursor-default'"
         @click="timerSettings"
         @countdown-progress-update="onCountdownProgressUpdate"
@@ -1721,9 +1721,9 @@ onUnmounted(() => {
             :categories="columns"
             :locked="isLocked"
             :class="{
-              'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none':
+              'bg-white dark:bg-gray-400 opacity-10 z-51 pointer-events-none':
                 isSpotlightOn && usersWithCards.length > 0 && card.byxid !== spotlightFor?.byxid,
-              'bg-black dark:bg-black border border-gray-200 z-[51]':
+              'bg-black dark:bg-black border border-gray-200 z-51':
                 isSpotlightOn && usersWithCards.length > 0 && card.byxid === spotlightFor?.byxid,
             }"
             @updated="onUpdated"

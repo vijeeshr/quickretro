@@ -9,7 +9,7 @@ const { locale, languageOptions, getLanguageName } = useLanguage()
   <Listbox v-model="locale">
     <div class="relative w-full text-sm">
       <ListboxButton
-        class="w-full flex items-center gap-2 px-4 py-2 text-left bg-white border border-gray-300 rounded-md shadow-sm dark:bg-slate-800 dark:text-slate-200"
+        class="w-full flex items-center gap-2 px-4 py-2 text-left bg-white border border-gray-300 rounded-md shadow-xs dark:bg-slate-800 dark:text-slate-200"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

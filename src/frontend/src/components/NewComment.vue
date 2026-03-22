@@ -75,7 +75,7 @@ const vFocus = {
 <template>
   <article
     v-focus
-    class="w-full mt-2 border dark:border-gray-400 rounded-lg p-2 text-sm resize-none text-gray-500 dark:text-white min-h-[3.5rem] break-words focus:outline-none cursor-auto focus:border-sky-400 dark:focus:border-white"
+    class="w-full mt-2 border dark:border-gray-400 rounded-lg p-2 text-sm resize-none text-gray-500 dark:text-white min-h-14 wrap-break-word focus:outline-hidden cursor-auto focus:border-sky-400 dark:focus:border-white"
     :contenteditable="!locked"
     @blur="add"
     @keydown.enter="addOnEnter"

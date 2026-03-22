@@ -85,6 +85,6 @@ onUnmounted(() => {
     {{ formattedRemainingTime }}
   </div>
   <!-- <div
-        class="inline-flex items-center justify-center overflow-hidden rounded-full w-8 h-8 text-[0.625rem] leading-[0.875rem] font-bold text-white border-2 border-white-600 ml-auto mx-auto mb-4 cursor-default">
+        class="inline-flex items-center justify-center overflow-hidden rounded-full w-8 h-8 text-[0.625rem] leading-3.5 font-bold text-white border-2 border-white-600 ml-auto mx-auto mb-4 cursor-default">
         {{ formattedRemainingTime }}</div> -->
 </template>

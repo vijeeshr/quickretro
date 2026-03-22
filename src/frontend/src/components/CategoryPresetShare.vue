@@ -42,7 +42,7 @@ const copyLink = async () => {
   <div class="relative inline-block text-left">
     <button
       type="button"
-      class="text-xs flex items-center gap-1 text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300 transition-colors"
+      class="text-xs flex items-center gap-1 text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300 transition-colors cursor-pointer"
       @click="toggleShare"
     >
       <svg
@@ -64,7 +64,7 @@ const copyLink = async () => {
 
     <div
       v-if="isOpen"
-      class="absolute right-0 z-10 mt-2 w-72 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none p-4"
+      class="absolute right-0 z-10 mt-2 w-72 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-gray-300 ring-opacity-5 focus:outline-hidden p-4"
     >
       <div class="flex flex-col gap-2">
         <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -75,7 +75,7 @@ const copyLink = async () => {
             type="text"
             :value="shareUrl"
             readonly
-            class="flex-1 rounded-md border text-xs border-gray-300 dark:border-gray-600 px-2 py-1 bg-gray-50 dark:bg-gray-700 dark:text-gray-200 focus:outline-none"
+            class="flex-1 rounded-md border text-xs border-gray-300 dark:border-gray-600 px-2 py-1 bg-gray-50 dark:bg-gray-700 dark:text-gray-200 focus:outline-hidden"
           />
           <button
             class="rounded-md bg-sky-100 dark:bg-sky-900 px-2 py-1 text-xs font-medium text-sky-700 dark:text-sky-200 hover:bg-sky-200 dark:hover:bg-sky-800"
