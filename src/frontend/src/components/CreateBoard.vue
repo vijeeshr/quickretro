@@ -136,7 +136,9 @@ const applyPresetFromRoute = () => {
     merged.sort((a, b) => a.pos - b.pos).forEach((c, i) => (c.pos = i + 1))
 
     categories.value = merged
-    toast.info(t('common.customColumnSetup.applied'), { duration: 2000 })
+    // Fix toast notification to show in other languages. Was always showing en.
+    // toast.info(() => h('span', t('common.customColumnSetup.applied')), { duration: 2000 }) // Another approach
+    toast.info(() => t('common.customColumnSetup.applied'), { duration: 2000 })
   } catch (err) {
     console.warn('Invalid category preset ignored', err)
   }
