@@ -1101,7 +1101,7 @@ const socketOnClose = (event: CloseEvent) => {
   isConnected.value = false
   logMessage('Close received', event)
   if (event.code === 1008 && event.reason === 'BOARDNOTFOUND') {
-    toast.error(t('dashboard.notExists'), { duration: 0 })
+    toast.error(t('dashboard.notExists'), { duration: Infinity })
   }
 }
 const socketOnError = (event: Event) => {
