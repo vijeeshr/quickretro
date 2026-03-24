@@ -43,7 +43,12 @@ demo.quickretro.app {
 
     # Temporary for debugging
     log {
-        output file /data/access.log
+        output file /data/access.log {
+            roll_size 10mb    # Rotate after 10MB
+            roll_keep 5       # Keep only the last 5 logs
+            roll_keep_for 72h # Or keep them for 3 days
+        }
+        format json
     }
 
     reverse_proxy app:8080
