@@ -47,10 +47,7 @@ import {
   formatDate,
   logMessage,
 } from '../utils'
-import { useToast } from 'vue-toast-notification'
-// import 'vue-toast-notification/dist/theme-sugar.css';
-// import 'vue-toast-notification/dist/theme-bootstrap.css';
-import 'vue-toast-notification/dist/theme-default.css'
+import { toast } from 'vue-sonner'
 import DarkModeToggle from './DarkModeToggle.vue'
 import { BoardColumn } from '../models/BoardColumn'
 import { CategoryChangeMessage } from '../models/CategoryChangeMessage'
@@ -125,14 +122,12 @@ const setIsColumnEditDialogOpen = (value: boolean) => {
   isColumnEditDialogOpen.value = value
 }
 
-const toast = useToast()
-
 const onOneMinuteLeftWarning = () => {
-  toast.info(t('dashboard.timer.oneMinuteLeft'), { pauseOnHover: false })
+  toast.info(t('dashboard.timer.oneMinuteLeft'))
 }
 
 const onCountdownCompleted = () => {
-  toast.error(t('dashboard.timer.timeCompleted'), { pauseOnHover: false, duration: 4000 })
+  toast.error(t('dashboard.timer.timeCompleted'), { duration: 4000 })
 }
 
 const onLanguageSelect = (localeCode: AvailableLocales) => {
@@ -237,7 +232,7 @@ const columnWidthClass = computed(() => {
 const openSpotlight = () => {
   if (usersWithCards.value.length === 0) {
     closeSpotlight()
-    toast.info(t('dashboard.spotlight.noCardsToFocus'), { pauseOnHover: false })
+    toast.info(t('dashboard.spotlight.noCardsToFocus'))
     return
   }
   spotlightFor.value = usersWithCards.value[0]
@@ -541,7 +536,7 @@ const generateDocument = () => {
 //         //     .setFontSize(12)
 //         //     .text(moreText, 0.5, 3.5, { align: "left", maxWidth: 7.5 });
 //     } catch (error) {
-//         // toast.error(t('dashboard.download.error'), { pauseOnHover: false })
+//         // toast.error(t('dashboard.download.error'))
 //         console.error('PDF download failed:', error)
 //     }
 // }
@@ -699,7 +694,7 @@ const print = async () => {
 
     // Write in one synchronous block. Chrome-safe and Firefox-safe
     printWindow.document.open()
-    // @ts-ignore - document.write is required for print reliability
+    // document.write is required for print reliability
     printWindow.document.write(html)
     printWindow.document.close()
     // Once fully rendered, print
@@ -710,7 +705,7 @@ const print = async () => {
       printWindow.print()
     }
   } catch (error) {
-    // toast.error(t('dashboard.download.error'), { pauseOnHover: false })
+    // toast.error(t('dashboard.download.error'))
     console.error('Print failed:', error)
   } finally {
     setTimeout(() => {
@@ -730,7 +725,7 @@ const copyShareLink = async () => {
     await navigator.clipboard.writeText(shareLink)
     toast.success(t('common.share.linkCopied'))
     setIsShareDialogOpen(false)
-  } catch (err) {
+  } catch {
     toast.error(t('common.share.linkCopyError'))
   }
 }
@@ -814,7 +809,7 @@ const onRegisterResponse = (response: RegisterResponse) => {
   // Show expiration notification for newly created board. Show only for board creator/owner
   if (response.isBoardOwner && response.notifyNewBoardExpiry) {
     const initialExpiryMsg = `${t('dashboard.autoDeleteScheduleBase', { date: boardExpiryLocalTime.value })}${t('dashboard.autoDeleteScheduleAddon')}`
-    toast.warning(initialExpiryMsg, { pauseOnHover: false, duration: 10000 })
+    toast.warning(initialExpiryMsg, { duration: 10000 })
   }
 }
 
@@ -903,9 +898,11 @@ const onDeleteMessageResponse = (response: DeleteMessageResponse) => {
     if (index !== -1) {
       const updated = [...comments]
       updated.splice(index, 1)
-      updated.length > 0
-        ? commentsMap.value.set(parentId, updated)
-        : commentsMap.value.delete(parentId)
+      if (updated.length > 0) {
+        commentsMap.value.set(parentId, updated)
+      } else {
+        commentsMap.value.delete(parentId)
+      }
       return
     }
   }
@@ -1104,13 +1101,13 @@ const socketOnClose = (event: CloseEvent) => {
   isConnected.value = false
   logMessage('Close received', event)
   if (event.code === 1008 && event.reason === 'BOARDNOTFOUND') {
-    toast.error(t('dashboard.notExists'), { duration: 0 })
+    toast.error(t('dashboard.notExists'), { duration: Infinity })
   }
 }
 const socketOnError = (event: Event) => {
   console.error(event)
 }
-const socketOnMessage = (event: MessageEvent<any>) => {
+const socketOnMessage = (event: MessageEvent<string>) => {
   const response = toSocketResponse(JSON.parse(event.data))
   logMessage('Response', response)
 
@@ -1168,10 +1165,10 @@ const handleVisibilityChange = () => {
 
 const handleConnectivity = () => {
   if (!navigator.onLine) {
-    toast.error(t('dashboard.offline'), { pauseOnHover: false, duration: 4000 })
+    toast.error(t('dashboard.offline'), { duration: 4000 })
   }
   // if (navigator.onLine) {
-  //     toast.success("You are online", { pauseOnHover: false, duration: 4000 })
+  //     toast.success("You are online", { duration: 4000 })
   //     // Attempt reinitializing the app (with browser reload) when websocket is closed because of connectivity issues
   //     if (socket.readyState !== WebSocket.OPEN) {
   //         window.location.reload()
@@ -1220,7 +1217,7 @@ onUnmounted(() => {
     <!-- Focus navigation panel -->
     <div
       v-if="isSpotlightOn && usersWithCards.length > 0"
-      class="fixed flex items-center gap-2 top-4 left-1/2 transform -translate-x-1/2 text-white bg-black/50 border border-gray-500 px-4 py-2 rounded-lg shadow-md z-[60]"
+      class="fixed flex items-center gap-2 top-4 left-1/2 transform -translate-x-1/2 text-white bg-black/50 border border-gray-500 px-4 py-2 rounded-lg shadow-md z-60"
     >
       <button class="rounded-md hover:bg-gray-200 hover:text-gray-600" @click="prevSpotlight">
         <svg
@@ -1288,7 +1285,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Dialog for Timer settings -->
-    <Dialog :open="isTimerDialogOpen" @close="setIsTimerDialogOpen" class="relative z-50">
+    <Dialog :open="isTimerDialogOpen" class="relative z-50" @close="setIsTimerDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1311,7 +1308,7 @@ onUnmounted(() => {
     </Dialog>
 
     <!-- Dialog to share url -->
-    <Dialog :open="isShareDialogOpen" @close="setIsShareDialogOpen" class="relative z-50">
+    <Dialog :open="isShareDialogOpen" class="relative z-50" @close="setIsShareDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1324,14 +1321,14 @@ onUnmounted(() => {
             >{{ t('dashboard.share.title') }}
           </DialogTitle>
           <article
-            class="select-all break-all bg-slate-100 dark:bg-slate-700 dark:text-gray-100 my-6 rounded-sm"
+            class="select-all break-all bg-slate-100 dark:bg-slate-700 dark:text-gray-100 my-6 rounded-xs"
           >
             {{ shareLink }}
           </article>
           <div class="mt-4">
             <button
               type="button"
-              class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-none focus:ring-0"
+              class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-hidden focus:ring-0"
               @click="copyShareLink"
             >
               {{ t('common.copy') }}
@@ -1342,7 +1339,7 @@ onUnmounted(() => {
     </Dialog>
 
     <!-- Dialog for Language selection -->
-    <Dialog :open="isLanguageDialogOpen" @close="setIsLanguageDialogOpen" class="relative z-50">
+    <Dialog :open="isLanguageDialogOpen" class="relative z-50" @close="setIsLanguageDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1353,13 +1350,13 @@ onUnmounted(() => {
             <button
               v-for="lang in languageOptions"
               :key="lang.code"
-              @click="onLanguageSelect(lang.code)"
               class="px-3 py-1.5 text-sm rounded-lg border transition-colors"
               :class="[
                 locale === lang.code
                   ? 'bg-blue-100 border-blue-200 text-blue-800 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-200'
                   : 'bg-gray-100 border-gray-200 text-gray-700 hover:bg-gray-200 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600',
               ]"
+              @click="onLanguageSelect(lang.code)"
             >
               {{ lang.name }}
             </button>
@@ -1369,7 +1366,7 @@ onUnmounted(() => {
     </Dialog>
 
     <!-- Dialog for DeleteAll Confirmation -->
-    <Dialog :open="isDeleteAllDialogOpen" @close="setIsDeleteAllDialogOpen" class="relative z-50">
+    <Dialog :open="isDeleteAllDialogOpen" class="relative z-50" @close="setIsDeleteAllDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1387,14 +1384,14 @@ onUnmounted(() => {
           <div class="flex justify-center mt-4 space-x-2">
             <button
               type="button"
-              class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-none focus:ring-0"
+              class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-hidden focus:ring-0"
               @click="setIsDeleteAllDialogOpen(false)"
             >
               {{ t('dashboard.delete.cancelDelete') }}
             </button>
             <button
               type="button"
-              class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-red-100 hover:bg-red-400 border-red-300 text-red-600 hover:text-white hover:border-transparent dark:bg-red-800 dark:hover:bg-red-600 dark:border-red-700 dark:text-red-100 select-none focus:outline-none focus:ring-0"
+              class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-red-100 hover:bg-red-400 border-red-300 text-red-600 hover:text-white hover:border-transparent dark:bg-red-800 dark:hover:bg-red-600 dark:border-red-700 dark:text-red-100 select-none focus:outline-hidden focus:ring-0"
               @click="deleteAll()"
             >
               {{ t('dashboard.delete.continueDelete') }}
@@ -1411,7 +1408,7 @@ onUnmounted(() => {
     </Dialog>
 
     <!-- Dialog for Column editing -->
-    <Dialog :open="isColumnEditDialogOpen" @close="setIsColumnEditDialogOpen" class="relative z-50">
+    <Dialog :open="isColumnEditDialogOpen" class="relative z-50" @close="setIsColumnEditDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1434,7 +1431,7 @@ onUnmounted(() => {
           </p>
           <button
             type="button"
-            class="px-4 py-2 mt-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white hover:border-transparent disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 select-none focus:outline-none focus:ring-0"
+            class="px-4 py-2 mt-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white hover:border-transparent disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 select-none focus:outline-hidden focus:ring-0"
             :disabled="hasCardsInDisabledCategories || !isCategorySelectionValid"
             @click="saveCategoryChanges"
           >
@@ -1448,9 +1445,9 @@ onUnmounted(() => {
     <div class="w-16 p-3">
       <!-- Timer -->
       <CountdownTimer
-        :timeLeftInSeconds="timerExpiresInSeconds"
+        :time-left-in-seconds="timerExpiresInSeconds"
         :title="t('dashboard.timer.tooltip')"
-        class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-[1rem] font-bold text-white ml-auto mx-auto mb-4"
+        class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white ml-auto mx-auto mb-4"
         :class="isOwner ? 'cursor-pointer' : 'cursor-default'"
         @click="timerSettings"
         @countdown-progress-update="onCountdownProgressUpdate"
@@ -1478,13 +1475,13 @@ onUnmounted(() => {
       <!-- Mask controls -->
       <div :title="!isMasked ? t('dashboard.mask.maskTooltip') : t('dashboard.mask.unmaskTooltip')">
         <svg
+          v-if="isOwner"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
           stroke="currentColor"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          v-if="isOwner"
           :class="{ hidden: isMasked }"
           @click="mask"
         >
@@ -1495,13 +1492,13 @@ onUnmounted(() => {
           />
         </svg>
         <svg
+          v-if="isOwner"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
           stroke="currentColor"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          v-if="isOwner"
           :class="{ hidden: !isMasked }"
           @click="mask"
         >
@@ -1520,13 +1517,13 @@ onUnmounted(() => {
       <!-- Lock controls -->
       <div :title="!isLocked ? t('dashboard.lock.lockTooltip') : t('dashboard.lock.unlockTooltip')">
         <svg
+          v-if="isOwner"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
           stroke="currentColor"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          v-if="isOwner"
           :class="{ hidden: isLocked }"
           @click="lock"
         >
@@ -1537,13 +1534,13 @@ onUnmounted(() => {
           />
         </svg>
         <svg
+          v-if="isOwner"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
           stroke="currentColor"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          v-if="isOwner"
           :class="{ hidden: !isLocked }"
           @click="lock"
         >
@@ -1557,13 +1554,13 @@ onUnmounted(() => {
       <!-- Print -->
       <div :title="t('dashboard.print.tooltip')">
         <svg
+          v-if="isOwner"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
           stroke="currentColor"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          v-if="isOwner"
           @click="generateDocument"
         >
           <path
@@ -1601,8 +1598,8 @@ onUnmounted(() => {
           viewBox="0 0 24 24"
           stroke-width="2"
           stroke="currentColor"
-          @click="openLanguageDialog"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+          @click="openLanguageDialog"
         >
           <path
             stroke-linecap="round"
@@ -1614,13 +1611,13 @@ onUnmounted(() => {
       <!-- Delete All-->
       <div :title="t('dashboard.delete.tooltip')">
         <svg
+          v-if="isOwner"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           stroke-width="1.5"
           stroke="currentColor"
           class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          v-if="isOwner"
           @click="openDeleteAllDialog"
         >
           <path
@@ -1661,8 +1658,8 @@ onUnmounted(() => {
     <!-- Dashboard Content -->
     <div class="w-full min-h-screen overflow-hidden">
       <div
-        class="flex justify-center items-center bg-gray-100 dark:bg-gray-900 w-full text-red-500 dark:text-red-300 pt-1"
         v-if="isLocked"
+        class="flex justify-center items-center bg-gray-100 dark:bg-gray-900 w-full text-red-500 dark:text-red-300 pt-1"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -1701,7 +1698,7 @@ onUnmounted(() => {
             :category="column.id"
             :nickname="nickname"
             @added="onAdded"
-            @invalidContent="onInvalidContent"
+            @invalid-content="onInvalidContent"
             @discard="onDiscard"
             @typing="onTyping"
           />
@@ -1710,24 +1707,30 @@ onUnmounted(() => {
             :category="column.id"
             nickname=""
             @added="onAdded"
-            @invalidContent="onInvalidContent"
+            @invalid-content="onInvalidContent"
             @discard="onDiscard"
           />
           <Card
             v-for="card in filterCards(column.id)"
+            :key="card.id"
             :card="card"
             :comments="filterComments(card.id)"
             :current-user-nickname="nickname"
             :mask="isMasked"
             :can-manage="isOwner"
-            :key="card.id"
             :categories="columns"
             :locked="isLocked"
+            :class="{
+              'bg-white dark:bg-gray-400 opacity-10 z-51 pointer-events-none':
+                isSpotlightOn && usersWithCards.length > 0 && card.byxid !== spotlightFor?.byxid,
+              'bg-black dark:bg-black border border-gray-200 z-51':
+                isSpotlightOn && usersWithCards.length > 0 && card.byxid === spotlightFor?.byxid,
+            }"
             @updated="onUpdated"
             @deleted="onDeleted"
             @liked="onLiked"
             @category-changed="onCategoryChanged"
-            @invalidContent="onInvalidContent"
+            @invalid-content="onInvalidContent"
             @avatar-clicked="showSpotlightFor"
             @discard="notifyForLostMessages({ dueToLock: true })"
             @comment-added="onCommentAdded"
@@ -1736,12 +1739,6 @@ onUnmounted(() => {
             @comment-discard="notifyForLostMessages({ dueToLock: true })"
             @comment-invalid-content="onCommentInvalidContent"
             @typing="onTyping"
-            :class="{
-              'bg-white dark:bg-gray-400 opacity-10 z-[51] pointer-events-none':
-                isSpotlightOn && usersWithCards.length > 0 && card.byxid !== spotlightFor?.byxid,
-              'bg-black dark:bg-black border border-gray-200 z-[51]':
-                isSpotlightOn && usersWithCards.length > 0 && card.byxid === spotlightFor?.byxid,
-            }"
           />
         </Category>
       </div>
@@ -1760,20 +1757,20 @@ onUnmounted(() => {
         </span>
       </div>
       <div
-        v-for="user in onlineUsersCardsStats"
-        :key="user.xid"
+        v-for="onlineUser in onlineUsersCardsStats"
+        :key="onlineUser.xid"
         class="relative w-8 h-8 ml-auto mx-auto mb-4"
       >
         <AvatarActivity
-          :name="user.nickname"
-          :is-typing="typingUsers.has(user.xid)"
+          :name="onlineUser.nickname"
+          :is-typing="typingUsers.has(onlineUser.xid)"
           class="w-8 h-8"
         />
         <span
-          v-if="user.cardsCount > 0"
+          v-if="onlineUser.cardsCount > 0"
           class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none"
         >
-          {{ user.cardsCount }}
+          {{ onlineUser.cardsCount }}
         </span>
       </div>
     </div>

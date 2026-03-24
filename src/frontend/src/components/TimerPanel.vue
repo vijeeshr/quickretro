@@ -55,13 +55,13 @@ const decrementSeconds = () => {
   <div class="flex justify-evenly items-center w-full">
     <!-- https://www.material-tailwind.com/docs/html/input-number#input-amount-buttons -->
     <!-- Mins Input Start -->
-    <div class="w-[10rem] max-w-sm relative mt-4 pr-1">
+    <div class="w-40 max-w-sm relative mt-4 pr-1">
       <label class="block mb-1 text-sm text-slate-600 dark:text-slate-300 select-none">{{
         t('common.minutes')
       }}</label>
       <div class="relative">
         <button
-          class="absolute right-9 top-1 rounded bg-slate-800 p-1.5 border border-transparent text-center text-sm text-white transition-all shadow-sm hover:shadow focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+          class="absolute right-9 top-1 rounded-sm bg-slate-800 p-1.5 border border-transparent text-center text-sm text-white transition-all shadow-xs hover:shadow-sm focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
           type="button"
           @click="decrementMinutes"
         >
@@ -75,16 +75,16 @@ const decrementSeconds = () => {
           </svg>
         </button>
         <input
+          v-model.trim.number="minutes"
           type="number"
           value="0"
           :placeholder="t('common.minutes')"
           min="0"
           max="60"
-          v-model.trim.number="minutes"
-          class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 dark:text-slate-200 text-sm border border-slate-200 rounded-md pl-3 pr-20 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 dark:text-slate-200 text-sm border border-slate-200 rounded-md pl-3 pr-20 py-2 transition duration-300 ease focus:outline-hidden focus:border-slate-400 hover:border-slate-300 shadow-xs focus:shadow-sm appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
         <button
-          class="absolute right-1 top-1 rounded bg-slate-800 p-1.5 border border-transparent text-center text-sm text-white transition-all shadow-sm hover:shadow focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+          class="absolute right-1 top-1 rounded-sm bg-slate-800 p-1.5 border border-transparent text-center text-sm text-white transition-all shadow-xs hover:shadow-sm focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
           type="button"
           @click="incrementMinutes"
         >
@@ -104,13 +104,13 @@ const decrementSeconds = () => {
     <!-- Mins Input End -->
 
     <!-- Seconds Input Start -->
-    <div class="w-[10rem] max-w-sm relative mt-4 pl-1">
+    <div class="w-40 max-w-sm relative mt-4 pl-1">
       <label class="block mb-1 text-sm text-slate-600 dark:text-slate-300 select-none">{{
         t('common.seconds')
       }}</label>
       <div class="relative">
         <button
-          class="absolute right-9 top-1 rounded bg-slate-800 p-1.5 border border-transparent text-center text-sm text-white transition-all shadow-sm hover:shadow focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+          class="absolute right-9 top-1 rounded-sm bg-slate-800 p-1.5 border border-transparent text-center text-sm text-white transition-all shadow-xs hover:shadow-sm focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
           type="button"
           @click="decrementSeconds"
         >
@@ -124,16 +124,16 @@ const decrementSeconds = () => {
           </svg>
         </button>
         <input
+          v-model.trim.number="seconds"
           type="number"
           value="0"
           :placeholder="t('common.seconds')"
           min="0"
           max="60"
-          v-model.trim.number="seconds"
-          class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 dark:text-slate-200 text-sm border border-slate-200 rounded-md pl-3 pr-20 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 dark:text-slate-200 text-sm border border-slate-200 rounded-md pl-3 pr-20 py-2 transition duration-300 ease focus:outline-hidden focus:border-slate-400 hover:border-slate-300 shadow-xs focus:shadow-sm appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
         <button
-          class="absolute right-1 top-1 rounded bg-slate-800 p-1.5 border border-transparent text-center text-sm text-white transition-all shadow-sm hover:shadow focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+          class="absolute right-1 top-1 rounded-sm bg-slate-800 p-1.5 border border-transparent text-center text-sm text-white transition-all shadow-xs hover:shadow-sm focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
           type="button"
           @click="incrementSeconds"
         >
@@ -167,19 +167,19 @@ const decrementSeconds = () => {
 
   <div class="flex justify-center mt-8">
     <button
-      type="button"
-      class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white hover:border-transparent disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 select-none focus:outline-none focus:ring-0"
       v-if="!isCountdownInProgress"
-      @click="start"
+      type="button"
+      class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white hover:border-transparent disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 select-none focus:outline-hidden focus:ring-0"
       :disabled="!isTimeValid"
+      @click="start"
     >
       {{ t('common.start') }}
     </button>
 
     <button
-      type="button"
-      class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-red-100 hover:bg-red-400 border-red-300 text-red-600 hover:text-white hover:border-transparent dark:bg-red-800 dark:hover:bg-red-600 dark:border-red-700 dark:text-red-100 select-none focus:outline-none focus:ring-0"
       v-if="isCountdownInProgress"
+      type="button"
+      class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-red-100 hover:bg-red-400 border-red-300 text-red-600 hover:text-white hover:border-transparent dark:bg-red-800 dark:hover:bg-red-600 dark:border-red-700 dark:text-red-100 select-none focus:outline-hidden focus:ring-0"
       @click="stop"
     >
       {{ t('common.stop') }}

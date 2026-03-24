@@ -23,7 +23,7 @@ const add = (event: Event) => {
 
   if (
     msg.length === 0 ||
-    /^[\u0000\u200B\u200C\u200D\uFEFF]*$/.test(msg) // Check if contains only zero-width chars or null bytes
+    /^(\u200B|\u200C|\u200D|\uFEFF)*$/.test(msg) // Check if contains only zero-width chars
   ) {
     logMessage('discarding empty new comment...')
     el.innerText = ''
@@ -75,7 +75,7 @@ const vFocus = {
 <template>
   <article
     v-focus
-    class="w-full mt-2 border dark:border-gray-400 rounded-lg p-2 text-sm resize-none text-gray-500 dark:text-white min-h-[3.5rem] break-words focus:outline-none cursor-auto focus:border-sky-400 dark:focus:border-white"
+    class="w-full mt-2 border dark:border-gray-400 rounded-lg p-2 text-sm resize-none text-gray-500 dark:text-white min-h-14 wrap-break-word focus:outline-hidden cursor-auto focus:border-sky-400 dark:focus:border-white"
     :contenteditable="!locked"
     @blur="add"
     @keydown.enter="addOnEnter"

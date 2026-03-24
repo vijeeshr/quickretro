@@ -8,7 +8,7 @@ import { CategoryDefinition } from '../models/CategoryDefinition'
 import { useI18n } from 'vue-i18n'
 import LanguageSelector from './LanguageSelector.vue'
 import TurnstileWidget from './TurnstileWidget.vue'
-import { useToast } from 'vue-toast-notification'
+import { toast } from 'vue-sonner'
 import CategoryEditor from './CategoryEditor.vue'
 import { defaultCategories } from '../constants/defaultCategories'
 import { MAX_TEXT_LENGTH, TURNSTILE_ENABLED, TURNSTILE_SITEKEY } from '../utils/appConfig'
@@ -67,8 +67,6 @@ const handleTokenVerified = (token: string) => {
   turnstileToken.value = token
 }
 
-const toast = useToast()
-
 const create = async () => {
   // Todo: Throttle this.
   if (isTurnstileEnabled.value && !isTurnstileVerified.value) return
@@ -96,7 +94,7 @@ const create = async () => {
     const createdBoard = await createBoard(payload)
     router.push(`/board/${createdBoard.id}`)
   } catch (error) {
-    toast.error(t('createBoard.boardCreationError', { pauseOnHover: false }))
+    toast.error(t('createBoard.boardCreationError'))
     console.error('Error creating board:', error)
   } finally {
     isSubmitting.value = false
@@ -118,8 +116,8 @@ const applyPresetFromRoute = () => {
     const defaultsById = new Map(defaultCategories.map(c => [c.id, { ...c }]))
 
     const merged: CategoryDefinition[] = decoded
-      .map((c: any) => {
-        const base = defaultsById.get(c.id)
+      .map((c: Record<string, unknown>) => {
+        const base = defaultsById.get(c.id as string)
         if (!base) return null // ignore unknown categories
 
         return {
@@ -138,7 +136,9 @@ const applyPresetFromRoute = () => {
     merged.sort((a, b) => a.pos - b.pos).forEach((c, i) => (c.pos = i + 1))
 
     categories.value = merged
-    toast.info(t('common.customColumnSetup.applied'), { duration: 2000 })
+    // Fix toast notification to show in other languages. Was always showing en.
+    // toast.info(() => h('span', t('common.customColumnSetup.applied')), { duration: 2000 }) // Another approach
+    toast.info(() => t('common.customColumnSetup.applied'), { duration: 2000 })
   } catch (err) {
     console.warn('Invalid category preset ignored', err)
   }
@@ -170,7 +170,7 @@ onMounted(() => {
                 :placeholder="t('createBoard.namePlaceholder')"
                 required
                 autofocus
-                class="px-2 py-2 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-sky-500 sm:text-sm dark:bg-slate-800 dark:text-slate-200"
+                class="px-2 py-2 mt-1 block w-full rounded-md border border-gray-300 shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-sky-500 sm:text-sm dark:bg-slate-800 dark:text-slate-200"
               />
             </div>
             <p
@@ -189,7 +189,7 @@ onMounted(() => {
                 type="text"
                 :maxlength="MAX_TEXT_LENGTH"
                 :placeholder="t('createBoard.teamNamePlaceholder')"
-                class="px-2 py-2 mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-sky-500 sm:text-sm dark:bg-slate-800 dark:text-slate-200"
+                class="px-2 py-2 mt-1 block w-full rounded-md border border-gray-300 shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-sky-500 sm:text-sm dark:bg-slate-800 dark:text-slate-200"
               />
             </div>
           </div>
@@ -221,7 +221,7 @@ onMounted(() => {
                                 </button>
                                 <input type="text" v-model.trim="column.text"
                                     :placeholder="t(`dashboard.columns.${column.id}`)"
-                                    class="w-full rounded-md focus:outline-none focus:border focus:border-gray-200 focus:ring-gray-200 dark:text-slate-200 dark:bg-gray-900 dark:focus:border-gray-800 dark:focus:ring-gray-800" />
+                                    class="w-full rounded-md focus:outline-hidden focus:border focus:border-gray-200 focus:ring-gray-200 dark:text-slate-200 dark:bg-gray-900 dark:focus:border-gray-800 dark:focus:ring-gray-800" />
                             </li>
                         </ul> -->
             <div class="flex justify-between items-end mb-2">
@@ -242,7 +242,7 @@ onMounted(() => {
           <div class="flex w-full gap-2">
             <button
               type="submit"
-              class="flex justify-center px-4 py-2 text-sm w-[90%] shadow-md bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-sky-600 focus:ring-offset-2 dark:focus:ring-2 dark:focus:ring-offset-0 select-none"
+              class="flex justify-center px-4 py-2 text-sm w-[90%] shadow-md bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-300 dark:disabled:text-gray-500 dark:disabled:border-gray-400 dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent font-medium rounded-md border focus:outline-hidden focus:ring-2 focus:ring-sky-600 focus:ring-offset-2 dark:focus:ring-2 dark:focus:ring-offset-0 select-none"
               :disabled="
                 !boardnameEntered ||
                 !isCategorySelectionValid ||
@@ -255,7 +255,7 @@ onMounted(() => {
             <div
               class="w-[10%] flex items-center justify-center shadow-md border rounded-md border-sky-200"
             >
-              <DarkModeToggle class="w-6 h-6 cursor-pointer text-sky-200 hover:text-sky-400" />
+              <DarkModeToggle class="w-6 h-6 text-sky-200 hover:text-sky-400" />
             </div>
           </div>
           <div class="w-full">
@@ -263,8 +263,8 @@ onMounted(() => {
           </div>
           <div v-if="isTurnstileEnabled" class="min-w-[300px] flex items-center justify-center">
             <TurnstileWidget
-              ref="turnstileRef"
               v-if="isTurnstileEnabled"
+              ref="turnstileRef"
               class="w-full"
               :sitekey="turnstileSiteKey"
               :dark-theme="isDark"

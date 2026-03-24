@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 interface Props {
-  timeLeftInSeconds: number
+  timeLeftInSeconds?: number
 }
 
 // const props = defineProps<Props>()
@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits(['CountdownProgressUpdate', 'OneMinuteLeftWarning', 'CountdownCompleted'])
 
-let interval: any = null
+let interval: ReturnType<typeof setInterval> | null = null
 const remainingTime = ref(props.timeLeftInSeconds)
 
 const formattedRemainingTime = computed(() => {
@@ -32,8 +32,10 @@ const startCountdown = () => {
     if (remainingTime.value <= 0) {
       // Todo: On first run/load, interval can be undefined|null. cleanInterval(interval) doesn't seem to error out. Check behaviour in browsers.
       // ..Chrome seems fine. Should we try a check for interval object before clearing it. Doesn't seem necessary.
-      clearInterval(interval)
-      interval = null
+      if (interval !== null) {
+        clearInterval(interval)
+        interval = null
+      }
       emit('CountdownProgressUpdate', false)
       emit('CountdownCompleted') // Keeping a separate event for notifying the user that time's up. Can probably reuse "CountdownProgressUpdate", but not sure of it may end up being fired multiple times?
       return
@@ -45,8 +47,10 @@ const startCountdown = () => {
 
 const stopCountdown = () => {
   // Todo: Check for interval truthyness?
-  clearInterval(interval)
-  interval = null
+  if (interval !== null) {
+    clearInterval(interval)
+    interval = null
+  }
   emit('CountdownProgressUpdate', false)
 }
 
@@ -81,6 +85,6 @@ onUnmounted(() => {
     {{ formattedRemainingTime }}
   </div>
   <!-- <div
-        class="inline-flex items-center justify-center overflow-hidden rounded-full w-8 h-8 text-[0.625rem] leading-[0.875rem] font-bold text-white border-2 border-white-600 ml-auto mx-auto mb-4 cursor-default">
+        class="inline-flex items-center justify-center overflow-hidden rounded-full w-8 h-8 text-[0.625rem] leading-3.5 font-bold text-white border-2 border-white-600 ml-auto mx-auto mb-4 cursor-default">
         {{ formattedRemainingTime }}</div> -->
 </template>

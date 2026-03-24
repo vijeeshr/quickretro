@@ -28,7 +28,7 @@ const add = (event: Event) => {
 
     if (
       msg.length === 0 ||
-      /^[\u0000\u200B\u200C\u200D\uFEFF]*$/.test(msg) // Check if contains only zero-width chars or null bytes
+      /^(\u200B|\u200C|\u200D|\uFEFF)*$/.test(msg) // Check if contains only zero-width chars
     ) {
       emit('discard')
       return
@@ -84,7 +84,7 @@ const vFocus = {
     <div class="text-gray-500 dark:text-white pb-2">
       <article
         v-focus
-        class="min-h-[3.5rem] text-center break-words focus:outline-none cursor-auto"
+        class="min-h-14 text-center wrap-break-word focus:outline-hidden cursor-auto"
         contenteditable="true"
         @blur="add"
         @keydown.enter="addOnEnter"

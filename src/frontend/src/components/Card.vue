@@ -144,7 +144,7 @@ const remove = () => {
     logMessage('Locked! Cannot delete.')
     return
   }
-  if (manageable) {
+  if (manageable.value) {
     emit('deleted', props.card.id)
   }
 }
@@ -154,7 +154,7 @@ const changeCategory = (newCategory: string, oldCategory: string) => {
     logMessage('Locked! Cannot change category.')
     return
   }
-  if (manageable && newCategory !== oldCategory) {
+  if (manageable.value && newCategory !== oldCategory) {
     const payload: CategoryChangeMessage = {
       msgId: props.card.id,
       newCategoryId: newCategory,
@@ -187,9 +187,9 @@ const onKeyDown = (event: KeyboardEvent) => {
     class="bg-white dark:bg-gray-700 rounded-lg p-3 mb-2 shadow-xl border"
     :class="editing && card.mine ? 'border-sky-400 dark:border-white' : 'border-transparent'"
   >
-    <div class="text-gray-500 pb-2 dark:text-white" :class="{ 'blur-sm': mask && !card.mine }">
+    <div class="text-gray-500 pb-2 dark:text-white" :class="{ 'blur-xs': mask && !card.mine }">
       <article
-        class="min-h-4 text-center break-words focus:outline-none"
+        class="min-h-4 text-center wrap-break-word focus:outline-hidden"
         :class="[
           editing ? 'cursor-auto' : card.mine && !locked ? 'cursor-pointer' : 'cursor-default',
         ]"
@@ -311,7 +311,7 @@ const onKeyDown = (event: KeyboardEvent) => {
             leave-to-class="transform scale-95 opacity-0"
           >
             <MenuItems
-              class="absolute left-6 top-1 min-w-max origin-top-right rounded-md bg-transparent border-0 space-y-0.5 focus:outline-none"
+              class="absolute left-6 top-1 min-w-max origin-top-right rounded-md bg-transparent border-0 space-y-0.5 focus:outline-hidden"
             >
               <MenuItem v-for="otherCategory in otherCategories" :key="otherCategory.id">
                 <button

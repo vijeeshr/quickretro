@@ -105,7 +105,7 @@ const remove = () => {
     logMessage('Locked! Cannot delete.')
     return
   }
-  if (manageable) {
+  if (manageable.value) {
     emit('deleted', props.comment.id)
   }
 }
@@ -123,13 +123,13 @@ const onKeyDown = (event: KeyboardEvent) => {
     class="bg-gray-50 dark:bg-gray-600 p-2 rounded-xl text-sm border"
     :class="editing && comment.mine ? 'border-sky-400 dark:border-white' : 'border-transparent'"
   >
-    <div class="font-semibold break-words text-gray-700 dark:text-white">
+    <div class="font-semibold wrap-break-word text-gray-700 dark:text-white">
       {{ comment.nickname }}
     </div>
     <article
-      class="text-gray-600 dark:text-white min-h-4 break-words focus:outline-none"
+      class="text-gray-600 dark:text-white min-h-4 wrap-break-word focus:outline-hidden"
       :class="[
-        { 'blur-sm': mask && !comment.mine },
+        { 'blur-xs': mask && !comment.mine },
         editing ? 'cursor-auto' : comment.mine && !locked ? 'cursor-pointer' : 'cursor-default',
       ]"
       :contenteditable="editing && comment.mine && !(locked && editing)"
@@ -141,7 +141,7 @@ const onKeyDown = (event: KeyboardEvent) => {
     >
       {{ content }}
     </article>
-    <div class="flex" v-if="manageable">
+    <div v-if="manageable" class="flex">
       <!-- Delete comment button -->
       <svg
         xmlns="http://www.w3.org/2000/svg"

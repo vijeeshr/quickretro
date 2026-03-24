@@ -3,7 +3,7 @@ import { BoardColumn } from '../models/BoardColumn'
 import { EventRequest, SaveMessageEvent } from '../models/Requests'
 import { MAX_WEBSOCKET_MESSAGE_SIZE_BYTES } from './appConfig'
 
-export const logMessage = (...args: any[]): void => {
+export const logMessage = (...args: unknown[]): void => {
   if (env.showConsoleLogs) {
     console.log(...args)
   }
@@ -171,10 +171,10 @@ export const exceedsEventRequestMaxSize = <T>(eventType: string, payload: T) => 
  * Standard Trailing-Edge Debounce.
  * Delays execution until 'delay' ms after the last call.
  */
-export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
+export function debounce<T extends (...args: never[]) => unknown>(fn: T, delay: number) {
   let timeoutId: ReturnType<typeof setTimeout> | null = null
 
-  return function (this: any, ...args: Parameters<T>) {
+  return function (this: unknown, ...args: Parameters<T>) {
     if (timeoutId) clearTimeout(timeoutId)
     timeoutId = setTimeout(() => {
       fn.apply(this, args)
@@ -186,10 +186,10 @@ export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number
  * requestAnimationFrame Throttle.
  * Limits execution to once per browser paint (approx 60fps).
  */
-export function throttleRAF<T extends (...args: any[]) => any>(fn: T) {
+export function throttleRAF<T extends (...args: never[]) => unknown>(fn: T) {
   let ticking = false
 
-  return function (this: any, ...args: Parameters<T>) {
+  return function (this: unknown, ...args: Parameters<T>) {
     if (!ticking) {
       requestAnimationFrame(() => {
         fn.apply(this, args)
@@ -204,7 +204,7 @@ export function throttleRAF<T extends (...args: any[]) => any>(fn: T) {
  * Encodes the passed data to URL-safe string.
  * Safe for Non-ASCII chars.
  */
-export const encodeToUrlSafeBase64FromJson = (data: any): string => {
+export const encodeToUrlSafeBase64FromJson = (data: unknown): string => {
   const json = JSON.stringify(data)
 
   // Convert string to UTF-8 bytes
@@ -221,7 +221,7 @@ export const encodeToUrlSafeBase64FromJson = (data: any): string => {
  * Decodes the passed URL-safe string to JSON.
  * Safe for Non-ASCII chars.
  */
-export const decodeToJsonFromUrlSafeBase64 = (encoded: string): any => {
+export const decodeToJsonFromUrlSafeBase64 = (encoded: string): unknown => {
   // Restore URL-safe characters and padding
   let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/')
   while (base64.length % 4) base64 += '='

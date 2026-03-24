@@ -23,7 +23,7 @@ const handleAdded = (payload: DraftMessage) => {
     v-bind="props"
     :mode="mode"
     @added="handleAdded"
-    @invalidContent="emit('invalidContent', $event)"
+    @invalid-content="emit('invalidContent', $event)"
     @discard="emit('discard')"
   />
 </template>
