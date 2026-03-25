@@ -52,7 +52,7 @@
 ## --------------------------------------------
 
 docs.localhost {
-    import security_headers
+    # import security_headers
 
     # Permanent redirects for changed URLs
     redir /configurations /guide/configurations 301
