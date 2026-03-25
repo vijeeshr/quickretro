@@ -95,6 +95,9 @@ Because it’s real-time, anonymous (when needed), and auto-cleans data (no long
 - **Brainstorming sessions**  
   Let participants add ideas in parallel, reducing bias and encouraging quieter voices to contribute.
 
+- **Asynchronous retro sessions**  
+  If your team is spread out across timezones and geographies, an asynchronous retro makes sense.
+
 - **Team health checks**  
   Run short pulse checks to understand morale, blockers, or concerns in a safe, non-judgmental space.
 
