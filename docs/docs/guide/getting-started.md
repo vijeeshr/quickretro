@@ -13,7 +13,7 @@ head:
 This guide gives a quick and easy functional walkthrough of QuickRetro app.\
 To start, visit the site and type in a name to join as guest. There is no signup/login process.
 
-### Latest version <Badge type="tip" text="v1.6.5" />
+### Latest version <Badge type="tip" text="v1.6.6" />
 
 ## Try the Demo
 

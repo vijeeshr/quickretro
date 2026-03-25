@@ -88,6 +88,7 @@ To run in a different port, for e.g. 9090, change the value of `ENV` variable na
 ```ini{1}
 PORT=9090
 REDIS_CONNSTR=<YOUR_REDIS_CONNECTION_STRING>
+ENABLE_SECURITY_HEADERS=false
 TURNSTILE_ENABLED=true
 TURNSTILE_SITE_KEY=<YOUR_SITE_KEY>
 TURNSTILE_SECRET_KEY=<YOUR_SECRET_KEY>
@@ -144,9 +145,10 @@ Turnstile is a smart CAPTCHA alternative from Cloudflare used to prevent bots. I
 
 To enable it, set the `TURNSTILE_ENABLED`, `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` environment variables.
 
-```ini{3-5}
+```ini{4-6}
 PORT=8080
 REDIS_CONNSTR=<YOUR_REDIS_CONNECTION_STRING>
+ENABLE_SECURITY_HEADERS=false
 TURNSTILE_ENABLED=true
 TURNSTILE_SITE_KEY=<YOUR_SITE_KEY>
 TURNSTILE_SECRET_KEY=<YOUR_SECRET_KEY>
@@ -154,6 +156,28 @@ TURNSTILE_SECRET_KEY=<YOUR_SECRET_KEY>
 
 ::: tip
 You need to register with Cloudflare to get `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`. Visit [Cloudflare](https://www.cloudflare.com/en-in/application-services/products/turnstile/) for more details.
+:::
+
+## Security Headers
+
+Available from <Badge type="tip" text="v1.6.6" />
+
+Security headers in responses (_directly from the app_) are **disabled** by default.  
+It is better to delegate it to a proxy.  
+If you still want the app to directly add security headers in responses, set `ENABLE_SECURITY_HEADERS` ENV var to true.
+
+```ini{3}
+PORT=8080
+REDIS_CONNSTR=<YOUR_REDIS_CONNECTION_STRING>
+ENABLE_SECURITY_HEADERS=false
+TURNSTILE_ENABLED=true
+TURNSTILE_SITE_KEY=<YOUR_SITE_KEY>
+TURNSTILE_SECRET_KEY=<YOUR_SECRET_KEY>
+```
+
+::: warning
+If both app and revere proxy adds headers, it can end-up as duplicates, which may cause issues in some browsers.  
+It is recommended to have the reverse proxy handle the headers.
 :::
 
 ## Content limit notification delay
@@ -197,10 +221,44 @@ emit_throttle_ms = 3000
 display_timeout_ms = 2000
 ```
 
+## Rate-Limiting
+
+Available from <Badge type="tip" text="v1.6.6" />
+
+### Websocket rate-limiting
+
+The app supports setting rate-limits for incoming websocket messages using token bucket algorithm.  
+The limit is applied per websocket connection and is **disabled** by default.
+
+What each setting does is defined in comments in `src/config.toml`
+
+```toml{7,9,11}
+# ------------------------------------------------------------------------
+# Per-client rate limit for incoming WebSocket messages (all event types).
+# Uses a token-bucket algorithm per connection.
+# ------------------------------------------------------------------------
+[websocket.rate_limit]
+# Enable or disable per-client WebSocket message rate limiting
+enabled = false
+# Maximum burst of messages a client can send before being throttled
+burst = 20
+# How often one token is added back (format: <number><unit>; units: ms/s/m/h/d)
+refill_interval = "500ms"
+```
+
+### Http rate-limiting
+
+Unlike websockets, there is no built-in rate limiter provided for Http connections.
+
+For a sample implementation, check `compose.reverseproxy.yml` _caddy_ section, `caddy.ratelimit.Dockerfile` and `Caddyfile.ratelimit` in the [github repository](https://github.com/vijeeshr/quickretro).  
+It demonstrates limiting requests for the _create board_ and _websocket handshake_ urls.
+
 ## Frequently Asked Questions
 
 ### How do I change the default port?
+
 Update the `PORT` env variable via `.env` file, and update `allowed_origins` in `config.toml` to include your new port.
 
 ### How can I prevent bots from creating boards?
+
 Enable the Cloudflare Turnstile integration by providing the required site key and secret key in your environment variables.
