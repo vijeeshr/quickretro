@@ -92,6 +92,28 @@ const commentsMap = ref(new Map<string, MessageResponse[]>()) // map of messageI
 const columns = ref<BoardColumn[]>([])
 const onlineUsers = ref<OnlineUser[]>([])
 
+const leftSidebarContentRef = ref<HTMLElement | null>(null)
+const isLeftSidebarSticky = ref(true)
+let leftSidebarObserver: ResizeObserver | null = null
+
+const rightSidebarContentRef = ref<HTMLElement | null>(null)
+const isRightSidebarSticky = ref(true)
+let rightSidebarObserver: ResizeObserver | null = null
+
+const updateSidebarSticky = (
+  contentRef: typeof leftSidebarContentRef,
+  stickyFlag: typeof isLeftSidebarSticky
+) => {
+  if (contentRef.value) {
+    stickyFlag.value = contentRef.value.scrollHeight <= window.innerHeight
+  }
+}
+
+const updateLeftSidebarSticky = () =>
+  updateSidebarSticky(leftSidebarContentRef, isLeftSidebarSticky)
+const updateRightSidebarSticky = () =>
+  updateSidebarSticky(rightSidebarContentRef, isRightSidebarSticky)
+
 const isShareDialogOpen = ref(false)
 const setIsShareDialogOpen = (value: boolean) => {
   isShareDialogOpen.value = value
@@ -1188,6 +1210,17 @@ onMounted(() => {
   document.addEventListener('visibilitychange', handleVisibilityChange)
   window.addEventListener('offline', handleConnectivity)
   // window.addEventListener("online", handleConnectivity)
+
+  if (leftSidebarContentRef.value) {
+    leftSidebarObserver = new ResizeObserver(updateLeftSidebarSticky)
+    leftSidebarObserver.observe(leftSidebarContentRef.value)
+  }
+  if (rightSidebarContentRef.value) {
+    rightSidebarObserver = new ResizeObserver(updateRightSidebarSticky)
+    rightSidebarObserver.observe(rightSidebarContentRef.value)
+  }
+  window.addEventListener('resize', updateLeftSidebarSticky)
+  window.addEventListener('resize', updateRightSidebarSticky)
 })
 
 onBeforeUnmount(() => {
@@ -1209,6 +1242,10 @@ onUnmounted(() => {
   ) {
     socket.close(1000)
   }
+  leftSidebarObserver?.disconnect()
+  rightSidebarObserver?.disconnect()
+  window.removeEventListener('resize', updateLeftSidebarSticky)
+  window.removeEventListener('resize', updateRightSidebarSticky)
 })
 </script>
 
@@ -1285,7 +1322,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Dialog for Timer settings -->
-    <Dialog :open="isTimerDialogOpen" class="relative z-50" @close="setIsTimerDialogOpen">
+    <Dialog :open="isTimerDialogOpen" class="relative z-60" @close="setIsTimerDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1308,7 +1345,7 @@ onUnmounted(() => {
     </Dialog>
 
     <!-- Dialog to share url -->
-    <Dialog :open="isShareDialogOpen" class="relative z-50" @close="setIsShareDialogOpen">
+    <Dialog :open="isShareDialogOpen" class="relative z-60" @close="setIsShareDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1339,7 +1376,7 @@ onUnmounted(() => {
     </Dialog>
 
     <!-- Dialog for Language selection -->
-    <Dialog :open="isLanguageDialogOpen" class="relative z-50" @close="setIsLanguageDialogOpen">
+    <Dialog :open="isLanguageDialogOpen" class="relative z-60" @close="setIsLanguageDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1366,7 +1403,7 @@ onUnmounted(() => {
     </Dialog>
 
     <!-- Dialog for DeleteAll Confirmation -->
-    <Dialog :open="isDeleteAllDialogOpen" class="relative z-50" @close="setIsDeleteAllDialogOpen">
+    <Dialog :open="isDeleteAllDialogOpen" class="relative z-60" @close="setIsDeleteAllDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1408,7 +1445,7 @@ onUnmounted(() => {
     </Dialog>
 
     <!-- Dialog for Column editing -->
-    <Dialog :open="isColumnEditDialogOpen" class="relative z-50" @close="setIsColumnEditDialogOpen">
+    <Dialog :open="isColumnEditDialogOpen" class="relative z-60" @close="setIsColumnEditDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
@@ -1442,221 +1479,227 @@ onUnmounted(() => {
     </Dialog>
 
     <!-- Left Sidebar -->
-    <div class="w-16 p-3">
-      <!-- Timer -->
-      <CountdownTimer
-        :time-left-in-seconds="timerExpiresInSeconds"
-        :title="t('dashboard.timer.tooltip')"
-        class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white ml-auto mx-auto mb-4"
-        :class="isOwner ? 'cursor-pointer' : 'cursor-default'"
-        @click="timerSettings"
-        @countdown-progress-update="onCountdownProgressUpdate"
-        @one-minute-left-warning="onOneMinuteLeftWarning"
-        @countdown-completed="onCountdownCompleted"
-      />
-      <!-- Share -->
-      <div :title="t('dashboard.share.toolTip')">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          @click="share"
+    <div class="w-16 p-3" :class="{ 'sticky top-0 self-start': isLeftSidebarSticky }">
+      <div ref="leftSidebarContentRef">
+        <!-- Timer -->
+        <CountdownTimer
+          :time-left-in-seconds="timerExpiresInSeconds"
+          :title="t('dashboard.timer.tooltip')"
+          class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white ml-auto mx-auto mb-4"
+          :class="isOwner ? 'cursor-pointer' : 'cursor-default'"
+          @click="timerSettings"
+          @countdown-progress-update="onCountdownProgressUpdate"
+          @one-minute-left-warning="onOneMinuteLeftWarning"
+          @countdown-completed="onCountdownCompleted"
+        />
+        <!-- Share -->
+        <div :title="t('dashboard.share.toolTip')">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            @click="share"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
+            />
+          </svg>
+        </div>
+        <!-- Mask controls -->
+        <div
+          :title="!isMasked ? t('dashboard.mask.maskTooltip') : t('dashboard.mask.unmaskTooltip')"
         >
-          <path
+          <svg
+            v-if="isOwner"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            :class="{ hidden: isMasked }"
+            @click="mask"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"
+            />
+          </svg>
+          <svg
+            v-if="isOwner"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            :class="{ hidden: !isMasked }"
+            @click="mask"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+            />
+          </svg>
+        </div>
+        <!-- Lock controls -->
+        <div
+          :title="!isLocked ? t('dashboard.lock.lockTooltip') : t('dashboard.lock.unlockTooltip')"
+        >
+          <svg
+            v-if="isOwner"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            :class="{ hidden: isLocked }"
+            @click="lock"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+            />
+          </svg>
+          <svg
+            v-if="isOwner"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            :class="{ hidden: !isLocked }"
+            @click="lock"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+            />
+          </svg>
+        </div>
+        <!-- Print -->
+        <div :title="t('dashboard.print.tooltip')">
+          <svg
+            v-if="isOwner"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            @click="generateDocument"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+            />
+          </svg>
+        </div>
+        <DarkModeToggle class="w-8 h-8 mx-auto mb-4 cursor-pointer" />
+        <!-- Focus -->
+        <div :title="t('dashboard.spotlight.tooltip')" class="w-8 h-8 mx-auto mb-4 cursor-pointer">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-            d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
-          />
-        </svg>
+            @click="openSpotlight"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+            <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+            <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+            <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+          </svg>
+        </div>
+        <!-- Language picker -->
+        <div :title="t('dashboard.language.tooltip')">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            @click="openLanguageDialog"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802"
+            />
+          </svg>
+        </div>
+        <!-- Delete All-->
+        <div :title="t('dashboard.delete.tooltip')">
+          <svg
+            v-if="isOwner"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            @click="openDeleteAllDialog"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+            />
+          </svg>
+        </div>
+        <a href="https://github.com/vijeeshr/quickretro" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="h-8 w-8 mx-auto mb-4 fill-slate-100">
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M12 2C6.477 2 2 6.463 2 11.97c0 4.404 2.865 8.14 6.839 9.458.5.092.682-.216.682-.48 0-.236-.008-.864-.013-1.695-2.782.602-3.369-1.337-3.369-1.337-.454-1.151-1.11-1.458-1.11-1.458-.908-.618.069-.606.069-.606 1.003.07 1.531 1.027 1.531 1.027.892 1.524 2.341 1.084 2.91.828.092-.643.35-1.083.636-1.332-2.22-.251-4.555-1.107-4.555-4.927 0-1.088.39-1.979 1.029-2.675-.103-.252-.446-1.266.098-2.638 0 0 .84-.268 2.75 1.022A9.607 9.607 0 0 1 12 6.82c.85.004 1.705.114 2.504.336 1.909-1.29 2.747-1.022 2.747-1.022.546 1.372.202 2.386.1 2.638.64.696 1.028 1.587 1.028 2.675 0 3.83-2.339 4.673-4.566 4.92.359.307.678.915.678 1.846 0 1.332-.012 2.407-.012 2.734 0 .267.18.577.688.48 3.97-1.32 6.833-5.054 6.833-9.458C22 6.463 17.522 2 12 2Z"
+            ></path>
+          </svg>
+        </a>
+        <a href="https://quickretro.app/guide/dashboard" target="_blank" rel="noopener noreferrer">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="h-8 w-8 mx-auto"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"
+            />
+          </svg>
+        </a>
       </div>
-      <!-- Mask controls -->
-      <div :title="!isMasked ? t('dashboard.mask.maskTooltip') : t('dashboard.mask.unmaskTooltip')">
-        <svg
-          v-if="isOwner"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          :class="{ hidden: isMasked }"
-          @click="mask"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"
-          />
-        </svg>
-        <svg
-          v-if="isOwner"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          :class="{ hidden: !isMasked }"
-          @click="mask"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
-          />
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-          />
-        </svg>
-      </div>
-      <!-- Lock controls -->
-      <div :title="!isLocked ? t('dashboard.lock.lockTooltip') : t('dashboard.lock.unlockTooltip')">
-        <svg
-          v-if="isOwner"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          :class="{ hidden: isLocked }"
-          @click="lock"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-          />
-        </svg>
-        <svg
-          v-if="isOwner"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          :class="{ hidden: !isLocked }"
-          @click="lock"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-          />
-        </svg>
-      </div>
-      <!-- Print -->
-      <div :title="t('dashboard.print.tooltip')">
-        <svg
-          v-if="isOwner"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          @click="generateDocument"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
-          />
-        </svg>
-      </div>
-      <DarkModeToggle class="w-8 h-8 mx-auto mb-4 cursor-pointer" />
-      <!-- Focus -->
-      <div :title="t('dashboard.spotlight.tooltip')" class="w-8 h-8 mx-auto mb-4 cursor-pointer">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          @click="openSpotlight"
-        >
-          <circle cx="12" cy="12" r="3" />
-          <path d="M3 7V5a2 2 0 0 1 2-2h2" />
-          <path d="M17 3h2a2 2 0 0 1 2 2v2" />
-          <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
-          <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
-        </svg>
-      </div>
-      <!-- Language picker -->
-      <div :title="t('dashboard.language.tooltip')">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="2"
-          stroke="currentColor"
-          class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          @click="openLanguageDialog"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802"
-          />
-        </svg>
-      </div>
-      <!-- Delete All-->
-      <div :title="t('dashboard.delete.tooltip')">
-        <svg
-          v-if="isOwner"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="w-8 h-8 mx-auto mb-4 cursor-pointer"
-          @click="openDeleteAllDialog"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-          />
-        </svg>
-      </div>
-      <a href="https://github.com/vijeeshr/quickretro" target="_blank" rel="noopener noreferrer">
-        <svg viewBox="0 0 24 24" aria-hidden="true" class="h-8 w-8 mx-auto mb-4 fill-slate-100">
-          <path
-            fill-rule="evenodd"
-            clip-rule="evenodd"
-            d="M12 2C6.477 2 2 6.463 2 11.97c0 4.404 2.865 8.14 6.839 9.458.5.092.682-.216.682-.48 0-.236-.008-.864-.013-1.695-2.782.602-3.369-1.337-3.369-1.337-.454-1.151-1.11-1.458-1.11-1.458-.908-.618.069-.606.069-.606 1.003.07 1.531 1.027 1.531 1.027.892 1.524 2.341 1.084 2.91.828.092-.643.35-1.083.636-1.332-2.22-.251-4.555-1.107-4.555-4.927 0-1.088.39-1.979 1.029-2.675-.103-.252-.446-1.266.098-2.638 0 0 .84-.268 2.75 1.022A9.607 9.607 0 0 1 12 6.82c.85.004 1.705.114 2.504.336 1.909-1.29 2.747-1.022 2.747-1.022.546 1.372.202 2.386.1 2.638.64.696 1.028 1.587 1.028 2.675 0 3.83-2.339 4.673-4.566 4.92.359.307.678.915.678 1.846 0 1.332-.012 2.407-.012 2.734 0 .267.18.577.688.48 3.97-1.32 6.833-5.054 6.833-9.458C22 6.463 17.522 2 12 2Z"
-          ></path>
-        </svg>
-      </a>
-      <a href="https://quickretro.app/guide/dashboard" target="_blank" rel="noopener noreferrer">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="h-8 w-8 mx-auto"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"
-          />
-        </svg>
-      </a>
     </div>
     <!-- Left Sidebar -->
 
     <!-- Dashboard Content -->
-    <div class="w-full min-h-screen overflow-hidden">
+    <div class="w-full min-h-screen overflow-clip">
       <div
         v-if="isLocked"
         class="flex justify-center items-center bg-gray-100 dark:bg-gray-900 w-full text-red-500 dark:text-red-300 pt-1"
@@ -1678,7 +1721,7 @@ onUnmounted(() => {
         {{ t('dashboard.lock.message') }}
       </div>
       <div
-        class="flex flex-1 flex-col md:flex-row h-full min-h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden"
+        class="flex flex-1 flex-col md:flex-row h-full min-h-screen bg-gray-100 dark:bg-gray-900 overflow-clip"
       >
         <Category
           v-for="column in columns"
@@ -1746,32 +1789,34 @@ onUnmounted(() => {
     <!-- Dashboard Content -->
 
     <!-- Right Sidebar -->
-    <div class="w-16 p-4">
-      <div class="relative w-8 h-8 ml-auto mx-auto mb-4">
-        <Avatar :name="nickname" class="w-8 h-8" />
-        <span
-          v-if="myCardsCount > 0"
-          class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none"
+    <div class="w-16 p-4" :class="{ 'sticky top-0 self-start': isRightSidebarSticky }">
+      <div ref="rightSidebarContentRef">
+        <div class="relative w-8 h-8 ml-auto mx-auto mb-4">
+          <Avatar :name="nickname" class="w-8 h-8" />
+          <span
+            v-if="myCardsCount > 0"
+            class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none"
+          >
+            {{ myCardsCount }}
+          </span>
+        </div>
+        <div
+          v-for="onlineUser in onlineUsersCardsStats"
+          :key="onlineUser.xid"
+          class="relative w-8 h-8 ml-auto mx-auto mb-4"
         >
-          {{ myCardsCount }}
-        </span>
-      </div>
-      <div
-        v-for="onlineUser in onlineUsersCardsStats"
-        :key="onlineUser.xid"
-        class="relative w-8 h-8 ml-auto mx-auto mb-4"
-      >
-        <AvatarActivity
-          :name="onlineUser.nickname"
-          :is-typing="typingUsers.has(onlineUser.xid)"
-          class="w-8 h-8"
-        />
-        <span
-          v-if="onlineUser.cardsCount > 0"
-          class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none"
-        >
-          {{ onlineUser.cardsCount }}
-        </span>
+          <AvatarActivity
+            :name="onlineUser.nickname"
+            :is-typing="typingUsers.has(onlineUser.xid)"
+            class="w-8 h-8"
+          />
+          <span
+            v-if="onlineUser.cardsCount > 0"
+            class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none"
+          >
+            {{ onlineUser.cardsCount }}
+          </span>
+        </div>
       </div>
     </div>
     <!-- Right Sidebar -->

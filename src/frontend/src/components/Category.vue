@@ -45,7 +45,9 @@ const onCategoryClick = () => {
 
 <template>
   <div class="p-1" :class="[`w-full md:px-6 md:pb-6 md:pt-2 md:${width} min-w-0`]">
-    <div class="grid grid-cols-2 gap-1 mb-2 min-w-0">
+    <div
+      class="grid grid-cols-2 gap-1 mb-2 min-w-0 md:sticky md:top-0 md:z-51 md:bg-gray-100 md:dark:bg-gray-900 md:pb-1"
+    >
       <div
         class="col-span-2 flex items-center justify-center p-1 text-sm w-full font-semibold rounded-md border select-none wrap-break-word"
         :class="[
