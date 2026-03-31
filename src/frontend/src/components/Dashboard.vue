@@ -1699,7 +1699,7 @@ onUnmounted(() => {
     <!-- Left Sidebar -->
 
     <!-- Dashboard Content -->
-    <div class="w-full min-h-screen overflow-clip">
+    <div class="flex-1 min-w-0 min-h-screen overflow-clip">
       <div
         v-if="isLocked"
         class="flex justify-center items-center bg-gray-100 dark:bg-gray-900 w-full text-red-500 dark:text-red-300 pt-1"
@@ -1721,7 +1721,7 @@ onUnmounted(() => {
         {{ t('dashboard.lock.message') }}
       </div>
       <div
-        class="flex flex-1 flex-col md:flex-row h-full min-h-screen bg-gray-100 dark:bg-gray-900 overflow-clip"
+        class="flex flex-1 flex-col md:flex-row h-full min-h-screen bg-gray-100 dark:bg-gray-900 overflow-clip min-w-0"
       >
         <Category
           v-for="column in columns"
