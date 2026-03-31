@@ -636,7 +636,7 @@ const print = async () => {
                         }
 
                         .print-card {
-                            padding: 0.5rem;
+                            padding: 0.25rem;
                             page-break-inside: avoid;
                             color: #505050;
                             font-size: 1rem;
@@ -660,7 +660,7 @@ const print = async () => {
                             right: 0;
                             font-size: 0.8rem;
                             text-align: center;
-                            padding: 0.5rem;
+                            padding-top: 0.5rem;
                             color: gray;
                         }
                     }
