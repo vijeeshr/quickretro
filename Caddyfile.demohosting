@@ -2,22 +2,30 @@
    email vijeesh82@gmail.com 
 }
 
+# Default security headers (No CSP)
 (security_headers) {
     header {
-        # Security defaults
         X-Content-Type-Options "nosniff"
         X-Frame-Options "DENY"
         Referrer-Policy "strict-origin-when-cross-origin"
         Permissions-Policy "camera=(), microphone=(), geolocation=()"
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-
-        # CSP tailored for Vite + Turnstile setup
-        Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; frame-src 'self' https://challenges.cloudflare.com; connect-src 'self' ws: wss: https://challenges.cloudflare.com; img-src 'self' data:;"
     }
 }
 
+# CSP for the main App with Vite + Turnstile setup (Strict)
+(app_csp) {
+    header Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; frame-src 'self' https://challenges.cloudflare.com; connect-src 'self' ws: wss: https://challenges.cloudflare.com; img-src 'self' data:;"
+}
+
+# CSP for VitePress Docs (Allow Inline Scripts, No Turnstile)
+(docs_csp) {
+    header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+}
+
 quickretro.app {
-    # import security_headers  
+    import security_headers
+    import docs_csp
 
     # Permanent redirects for changed URLs
     redir /configurations /guide/configurations 301
@@ -39,6 +47,7 @@ quickretro.app {
 
 demo.quickretro.app {
     import security_headers
+    import app_csp
     encode gzip
 
     # Temporary for debugging
