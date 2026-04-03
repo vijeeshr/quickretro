@@ -13,7 +13,7 @@ head:
 This guide gives a quick and easy functional walkthrough of QuickRetro app.\
 To start, visit the site and type in a name to join as guest. There is no signup/login process.
 
-### Latest version <Badge type="tip" text="v1.6.6" />
+### Latest version <Badge type="tip" text="v1.6.7" />
 
 ## Try the Demo
 
@@ -55,7 +55,7 @@ If a user has already selected a language explicitly, the auto-deleted language 
 
 ## Frequently Asked Questions
 
-### Does everyone need an account to use QuickRetro?
+### Is an account needed to user QuickRetro?
 
 No. Signups or logins are **not required** to participate, or to create boards.
 
