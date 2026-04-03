@@ -55,7 +55,7 @@ If a user has already selected a language explicitly, the auto-deleted language 
 
 ## Frequently Asked Questions
 
-### Is an account needed to user QuickRetro?
+### Is an account needed to use QuickRetro?
 
 No. Signups or logins are **not required** to participate, or to create boards.
 
