@@ -79,7 +79,8 @@ const vFocus = {
 
 <template>
   <div
-    class="bg-white dark:bg-gray-700 rounded-lg p-3 mb-2 shadow-xl border border-sky-400 dark:border-white"
+    class="bg-white dark:bg-gray-700 rounded-lg p-3 mb-2 shadow-xl border dark:border-white"
+    :class="isAnon ? 'border-purple-400' : 'border-sky-400'"
   >
     <div class="text-gray-500 dark:text-white pb-2">
       <article

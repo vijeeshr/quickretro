@@ -84,7 +84,7 @@ const onCategoryClick = () => {
       <button
         class="rounded-lg border font-semibold bg-gray-50 dark:bg-white/30 hover:bg-gray-200 dark:hover:bg-white/40 flex items-center justify-center p-1 shadow-md cursor-pointer"
         :class="{
-          'border-sky-400 dark:border-white text-sky-400 hover:text-sky-600 dark:text-white':
+          'border-purple-400 dark:border-white text-purple-400 hover:text-purple-600 dark:text-white':
             anonymousButtonHighlight,
           'border-gray-300 dark:border-white/20 text-gray-500 hover:text-gray-700 dark:text-white':
             !anonymousButtonHighlight,

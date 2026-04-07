@@ -50,10 +50,7 @@ const handleCategorySelectionValidity = (val: boolean) => {
   isCategorySelectionValid.value = val
 }
 
-const boardnameEntered = computed(() => {
-  if (boardname.value && boardname.value.trim() !== '') return true
-  return false
-})
+const boardnameEntered = computed(() => !!boardname.value?.trim())
 
 const handleTokenError = () => {
   console.log('Turnstile error occurred')

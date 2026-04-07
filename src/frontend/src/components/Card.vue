@@ -185,7 +185,13 @@ const onKeyDown = (event: KeyboardEvent) => {
 <template>
   <div
     class="bg-white dark:bg-gray-700 rounded-lg p-3 mb-2 shadow-xl border"
-    :class="editing && card.mine ? 'border-sky-400 dark:border-white' : 'border-transparent'"
+    :class="
+      editing && card.mine
+        ? card.anon
+          ? 'border-purple-400 dark:border-white'
+          : 'border-sky-400 dark:border-white'
+        : 'border-transparent'
+    "
   >
     <div class="text-gray-500 pb-2 dark:text-white" :class="{ 'blur-xs': mask && !card.mine }">
       <article
