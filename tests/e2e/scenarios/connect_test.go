@@ -113,8 +113,8 @@ func TestConnectHandshake(t *testing.T) {
 		userB.MustWaitForEvent(t, "joining", &joiningRes)
 		// UserA should see new nickname in "reg" response
 		require.ElementsMatch(t, []harness.UserDetails{
-			{Nickname: newNickname, Xid: "1"},
-			{Nickname: userB.Nickname, Xid: "2"},
+			{Nickname: newNickname, Xid: "1", IsOwner: true, Active: true},
+			{Nickname: userB.Nickname, Xid: "2", IsOwner: false, Active: true},
 		}, regRes.Users, "Reg response should show new nickname")
 		// UserB should see new nickname of UserA in "joining" response
 		require.Equal(t, newNickname, joiningRes.Nickname, "Joining response should show new nickname")

@@ -427,11 +427,19 @@ func (c *RedisConnector) EnsureUser(boardId, userId, nickname string) (*User, bo
 			user.Nickname = nickname
 		}
 
+		// Ensure user is in the all-users set (idempotent)
+		allUsersKey := boardAllUsersKey(boardId)
+		if err := c.client.SAdd(c.ctx, allUsersKey, userId).Err(); err != nil {
+			slog.Error("Failed adding returning user to all-users set", "err", err, "boardId", boardId, "userId", userId)
+		}
+
 		return &user, true
 	}
 
 	// Create new user
 	var xidCmd *redis.IntCmd
+
+	allUsersKey := boardAllUsersKey(boardId)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		xidCmd = pipe.Incr(c.ctx, xidSeqKey)
@@ -442,6 +450,10 @@ func (c *RedisConnector) EnsureUser(boardId, userId, nickname string) (*User, bo
 			"nickname", nickname,
 		)
 		pipe.Expire(c.ctx, userKey, c.timeToLive)
+
+		// Track in all-users set
+		pipe.SAdd(c.ctx, allUsersKey, userId)
+		pipe.Expire(c.ctx, allUsersKey, c.timeToLive)
 		return nil
 	})
 
@@ -857,6 +869,7 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 
 		Users
 		(KEY)board:presence:{boardId}			(VALUE)[userIds]				Board-wise Live(Connected) Users - Redis Set.
+		(KEY)board:users:{boardId}				(VALUE)[userIds]				Board-wise All Users (ever connected) - Redis Set.
 		(KEY)board:user:{boardId}:{userId}	    (VALUE)User						User - Redis Hash. User master. Keeping as board specific.
 		(KEY)board:user:xid:seq:{boardId}		(VALUE)last_xid					Last generated sequential xid for Board - Redis INCR. Used to generate sequential Xids.
 
@@ -869,6 +882,7 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 	boardMsgsKey := boardMsgsKey(boardId)
 	boardCommsKey := boardCmtsKey(boardId)
 	boardUsersKey := boardUsersPresenceKey(boardId)
+	boardAllUsersKey := boardAllUsersKey(boardId)
 	boardUserXidKey := boardUserXidKey(boardId)
 	boardColsKey := boardColsKey(boardId)
 	boardKey := boardKey(boardId)
@@ -878,7 +892,7 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 	readPipe := c.client.Pipeline()
 	msgsCmd := readPipe.SMembers(ctx, boardMsgsKey)
 	cmtsCmd := readPipe.SMembers(ctx, boardCommsKey)
-	usrsCmd := readPipe.SMembers(ctx, boardUsersKey)
+	usrsCmd := readPipe.SMembers(ctx, boardAllUsersKey)
 	colsCmd := readPipe.SMembers(ctx, boardColsKey)
 
 	if _, err := readPipe.Exec(ctx); err != nil {
@@ -915,6 +929,7 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 			pipe.Del(ctx, userKey)
 		}
 		pipe.Del(ctx, boardUsersKey)
+		pipe.Del(ctx, boardAllUsersKey)
 		pipe.Del(ctx, boardUserXidKey)
 
 		// Delete columns
@@ -960,11 +975,12 @@ func (c *RedisConnector) UpdateCategory(category string, msgId string, commentId
 
 // Store helper - DTO
 type BoardAggregatedData struct {
-	Board    *Board
-	Columns  []*BoardColumn
-	Users    []*User
-	Messages []*Message
-	Comments []*Message
+	Board         *Board
+	Columns       []*BoardColumn
+	Users         []*User
+	ActiveUserIds map[string]struct{}
+	Messages      []*Message
+	Comments      []*Message
 }
 
 func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregatedData, bool) {
@@ -972,7 +988,8 @@ func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregate
 
 	boardCmd := pipe.HGetAll(c.ctx, boardKey(boardId))
 	colIdsCmd := pipe.SMembers(c.ctx, boardColsKey(boardId))
-	userIdsCmd := pipe.SMembers(c.ctx, boardUsersPresenceKey(boardId))
+	allUserIdsCmd := pipe.SMembers(c.ctx, boardAllUsersKey(boardId))
+	activeUserIdsCmd := pipe.SMembers(c.ctx, boardUsersPresenceKey(boardId))
 	msgIdsCmd := pipe.SMembers(c.ctx, boardMsgsKey(boardId))
 	cmtIdsCmd := pipe.SMembers(c.ctx, boardCmtsKey(boardId))
 
@@ -991,9 +1008,16 @@ func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregate
 	}
 
 	colIds := colIdsCmd.Val()
-	userIds := userIdsCmd.Val()
+	allUserIds := allUserIdsCmd.Val()
+	activeUserIds := activeUserIdsCmd.Val()
 	msgIds := msgIdsCmd.Val()
 	cmtIds := cmtIdsCmd.Val()
+
+	// Build active user lookup set
+	activeUserSet := make(map[string]struct{}, len(activeUserIds))
+	for _, id := range activeUserIds {
+		activeUserSet[id] = struct{}{}
+	}
 
 	pipe2 := c.client.Pipeline()
 
@@ -1002,8 +1026,8 @@ func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregate
 		colCmds[i] = pipe2.HGetAll(c.ctx, boardColKey(boardId, id))
 	}
 
-	userCmds := make([]*redis.MapStringStringCmd, len(userIds))
-	for i, id := range userIds {
+	userCmds := make([]*redis.MapStringStringCmd, len(allUserIds))
+	for i, id := range allUserIds {
 		userCmds[i] = pipe2.HGetAll(c.ctx, boardUserKey(boardId, id))
 	}
 
@@ -1024,11 +1048,12 @@ func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregate
 	}
 
 	data := &BoardAggregatedData{
-		Board:    &b,
-		Columns:  make([]*BoardColumn, 0, len(colIds)),
-		Users:    make([]*User, 0, len(userIds)),
-		Messages: make([]*Message, 0, len(msgIds)),
-		Comments: make([]*Message, 0, len(cmtIds)),
+		Board:         &b,
+		Columns:       make([]*BoardColumn, 0, len(colIds)),
+		Users:         make([]*User, 0, len(allUserIds)),
+		ActiveUserIds: activeUserSet,
+		Messages:      make([]*Message, 0, len(msgIds)),
+		Comments:      make([]*Message, 0, len(cmtIds)),
 	}
 
 	for _, cmd := range colCmds {

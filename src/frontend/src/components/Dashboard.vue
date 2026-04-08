@@ -206,10 +206,24 @@ const myCardsCount = computed(() => {
 
 const onlineUsersCardsStats = computed(() => {
   return onlineUsers.value
+    .filter(u => u.active)
     .map(user => ({
       nickname: user.nickname,
       cardsCount: cardsStats.value[user.xid]?.count || 0,
       xid: user.xid,
+      isOwner: user.isOwner,
+    }))
+    .filter(u => u.xid !== xid.value)
+})
+
+const inactiveUsersCardsStats = computed(() => {
+  return onlineUsers.value
+    .filter(u => !u.active)
+    .map(user => ({
+      nickname: user.nickname,
+      cardsCount: cardsStats.value[user.xid]?.count || 0,
+      xid: user.xid,
+      isOwner: user.isOwner,
     }))
     .filter(u => u.xid !== xid.value)
 })
@@ -839,13 +853,16 @@ const onUserJoiningResponse = (response: UserJoiningResponse) => {
   const idx = onlineUsers.value.findIndex(u => u.xid === response.xid)
 
   if (idx === -1) {
-    // User not present, add
+    // User not present, add as active
     onlineUsers.value.push({
       xid: response.xid,
       nickname: response.nickname,
+      active: true,
+      isOwner: false,
     })
   } else {
-    // User exists, update nickname only if changed
+    // User exists, mark active and update nickname if changed
+    onlineUsers.value[idx].active = true
     if (onlineUsers.value[idx].nickname !== response.nickname) {
       onlineUsers.value[idx].nickname = response.nickname
     }
@@ -853,7 +870,10 @@ const onUserJoiningResponse = (response: UserJoiningResponse) => {
 }
 
 const onUserClosingResponse = (response: UserClosingResponse) => {
-  onlineUsers.value = onlineUsers.value.filter(u => u.xid !== response.xid)
+  const idx = onlineUsers.value.findIndex(u => u.xid === response.xid)
+  if (idx !== -1) {
+    onlineUsers.value[idx].active = false
+  }
 }
 
 const onMaskResponse = (response: MaskResponse) => {
@@ -1791,7 +1811,21 @@ onUnmounted(() => {
     <!-- Right Sidebar -->
     <div class="w-16 p-4" :class="{ 'sticky top-0 self-start': isRightSidebarSticky }">
       <div ref="rightSidebarContentRef">
+        <!-- Current user -->
         <div class="relative w-8 h-8 ml-auto mx-auto mb-4">
+          <svg
+            v-if="isOwner"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="absolute -top-1 -left-1 w-4 h-4 text-yellow-500 drop-shadow-sm z-10"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z"
+              clip-rule="evenodd"
+            />
+          </svg>
           <Avatar :name="nickname" class="w-8 h-8" />
           <span
             v-if="myCardsCount > 0"
@@ -1800,11 +1834,25 @@ onUnmounted(() => {
             {{ myCardsCount }}
           </span>
         </div>
+        <!-- Active users -->
         <div
           v-for="onlineUser in onlineUsersCardsStats"
           :key="onlineUser.xid"
           class="relative w-8 h-8 ml-auto mx-auto mb-4"
         >
+          <svg
+            v-if="onlineUser.isOwner"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="absolute -top-1 -left-1 w-4 h-4 text-yellow-500 drop-shadow-sm z-10"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z"
+              clip-rule="evenodd"
+            />
+          </svg>
           <AvatarActivity
             :name="onlineUser.nickname"
             :is-typing="typingUsers.has(onlineUser.xid)"
@@ -1817,6 +1865,36 @@ onUnmounted(() => {
             {{ onlineUser.cardsCount }}
           </span>
         </div>
+        <!-- Inactive users -->
+        <template v-if="inactiveUsersCardsStats.length > 0">
+          <hr class="my-3 border-gray-300 dark:border-gray-600" />
+          <div
+            v-for="inactiveUser in inactiveUsersCardsStats"
+            :key="inactiveUser.xid"
+            class="relative w-8 h-8 ml-auto mx-auto mb-4 opacity-40"
+          >
+            <svg
+              v-if="inactiveUser.isOwner"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="absolute -top-1 -left-1 w-4 h-4 text-yellow-500 drop-shadow-sm z-10"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <Avatar :name="inactiveUser.nickname" :inactive="true" class="w-8 h-8" />
+            <span
+              v-if="inactiveUser.cardsCount > 0"
+              class="absolute -top-1 -right-1 bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none"
+            >
+              {{ inactiveUser.cardsCount }}
+            </span>
+          </div>
+        </template>
       </div>
     </div>
     <!-- Right Sidebar -->

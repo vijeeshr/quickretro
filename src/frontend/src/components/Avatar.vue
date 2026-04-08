@@ -5,12 +5,14 @@ interface Props {
   name?: string
   viewType?: 'Default' | 'Badge'
   showTitle?: boolean
+  inactive?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   name: 'Anonymous',
   viewType: 'Default',
   showTitle: true,
+  inactive: false,
 })
 
 const avatarText = computed(() => {
@@ -26,6 +28,9 @@ const avatarText = computed(() => {
 })
 
 const avatarColor = computed(() => {
+  if (props.inactive) {
+    return '#9ca3af'
+  }
   if (props.name) {
     let hash = 0
     const saturation = 50,

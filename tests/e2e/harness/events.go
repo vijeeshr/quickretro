@@ -34,6 +34,8 @@ type BoardColumn struct {
 type UserDetails struct {
 	Nickname string `json:"nickname"`
 	Xid      string `json:"xid"`
+	Active   bool   `json:"active"`
+	IsOwner  bool   `json:"isOwner"`
 }
 type UserJoiningResponse struct {
 	Type     string `json:"typ"`

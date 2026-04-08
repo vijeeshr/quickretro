@@ -31,14 +31,13 @@ func (p *RegisterEvent) Broadcast(e *Event, m *Message, h *Hub) {
 		return
 	}
 
-	board, cols, users, messages, comments := data.Board, data.Columns, data.Users, data.Messages, data.Comments
+	board, cols, users, activeUserIds, messages, comments := data.Board, data.Columns, data.Users, data.ActiveUserIds, data.Messages, data.Comments
 
 	// Prepare user details
-	// userDetails := make([]UserDetails, 0)
-	// userDetails := make([]UserDetails, 0, len(users))
 	userDetails := make([]UserDetails, len(users)) // Preallocate length instead of capacity. len == cap == len(users), so can index directly.
 	for in, u := range users {
-		userDetails[in] = UserDetails{Nickname: u.Nickname, Xid: u.Xid}
+		_, isActive := activeUserIds[u.Id]
+		userDetails[in] = UserDetails{Nickname: u.Nickname, Xid: u.Xid, Active: isActive, IsOwner: u.Id == board.Owner}
 	}
 
 	// Prepare message details

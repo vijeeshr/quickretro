@@ -10,6 +10,7 @@ package main
 (KEY)board:user:{boardId}:{userId}	(VALUE)User						User - Redis Hash. User master. Keeping as board specific.
 (KEY)board:user:xid:seq:{boardId}	(VALUE)last_xid					Last generated sequential xid for Board - Redis INCR. Used to generate sequential Xids.
 (KEY)board:presence:{boardId}		(VALUE)[userIds]				Board-wise Live(Connected) Users - Redis Set.
+(KEY)board:users:{boardId}			(VALUE)[userIds]				Board-wise All Users (ever connected) - Redis Set.
 (KEY)board:col:{boardId}:{colId}	(VALUE)column					Column - Redis Hash. Column definition for a Board.
 (KEY)board:col:{boardId}			(VALUE)[colIds]					Board-wise columns - Redis Set. Just a list of colIds for a board.
 */
@@ -20,6 +21,7 @@ const (
 	keyBoardMsgs          = "board:msg:"
 	keyBoardCmts          = "board:cmts:"
 	keyBoardUsersPresence = "board:presence:"
+	keyBoardUsers         = "board:users:"
 	keyBoardUser          = "board:user:"
 	keyBoardUserXid       = "board:user:xid:seq:"
 	keyBoardCols          = "board:col:"
@@ -49,6 +51,12 @@ func boardCmtsKey(boardId string) string {
 // Board-wise Live(Connected) users - Redis SET.
 func boardUsersPresenceKey(boardId string) string {
 	return keyBoardUsersPresence + boardId
+}
+
+// board:users:{boardId}.
+// Board-wise All Users (ever connected) - Redis SET.
+func boardAllUsersKey(boardId string) string {
+	return keyBoardUsers + boardId
 }
 
 // board:user:xid:seq:{boardId}.

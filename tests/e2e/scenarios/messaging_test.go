@@ -26,12 +26,12 @@ func TestRegistration(t *testing.T) {
 			var got harness.RegisterResponse
 			userA.MustWaitForEvent(t, "reg", &got)
 			require.True(t, got.IsBoardOwner)
-			require.Equal(t, 1, len(got.Users))
+			require.Equal(t, 2, len(got.Users))
 			require.Equal(t, "1", got.Xid) // Xid is flaky
-			require.Equal(t, harness.UserDetails{
-				Nickname: userA.Nickname,
-				Xid:      "1",
-			}, got.Users[0])
+			require.ElementsMatch(t, []harness.UserDetails{
+				{Nickname: userA.Nickname, Xid: "1", IsOwner: true, Active: true}, // Active is true on register
+				{Nickname: userB.Nickname, Xid: "2", IsOwner: false, Active: false},
+			}, got.Users)
 			require.Equal(t, 0, len(got.Messages))
 			require.Equal(t, 0, len(got.Comments))
 			require.ElementsMatch(t, []*harness.BoardColumn{
@@ -67,8 +67,8 @@ func TestRegistration(t *testing.T) {
 			require.Equal(t, "2", got.Xid)
 			require.Equal(t, 2, len(got.Users))
 			require.ElementsMatch(t, []harness.UserDetails{
-				{Nickname: userA.Nickname, Xid: "1"},
-				{Nickname: userB.Nickname, Xid: "2"},
+				{Nickname: userA.Nickname, Xid: "1", IsOwner: true, Active: true},
+				{Nickname: userB.Nickname, Xid: "2", IsOwner: false, Active: true}, // Active true on registration
 			}, got.Users)
 		})
 
@@ -105,8 +105,8 @@ func TestRegistration(t *testing.T) {
 
 			require.Equal(t, 2, len(got.Users))
 			require.ElementsMatch(t, []harness.UserDetails{
-				{Nickname: userA.Nickname, Xid: "1"},
-				{Nickname: userB.Nickname, Xid: "2"},
+				{Nickname: userA.Nickname, Xid: "1", IsOwner: true, Active: true},
+				{Nickname: userB.Nickname, Xid: "2", IsOwner: false, Active: true},
 			}, got.Users)
 
 			require.Equal(t, 1, len(got.Messages))
@@ -1261,13 +1261,45 @@ func TestBoardDeletion(t *testing.T) {
 func TestUserLeaving(t *testing.T) {
 	_, userA, userB := harness.SetupTest(t, true)
 
-	t.Run("Other users receive closing event when a user leaves", func(t *testing.T) {
+	// Bob will try to leave
+
+	t.Run("The user going to leave is seen as active initially", func(t *testing.T) {
+		require.NoError(t, userB.Register())
+		var got harness.RegisterResponse
+		userB.MustWaitForEvent(t, "reg", &got)
+
+		require.Equal(t, 2, len(got.Users))
+		require.ElementsMatch(t, []harness.UserDetails{
+			{Nickname: userA.Nickname, Xid: "1", IsOwner: true, Active: true},
+			{Nickname: userB.Nickname, Xid: "2", IsOwner: false, Active: true}, // Bob is active
+		}, got.Users)
+
+		userA.FlushEvents()
+	})
+
+	t.Run("User leaves", func(t *testing.T) {
 		// Bob leaves
 		userB.Close()
 
-		var got harness.UserClosingResponse
-		userA.MustWaitForEvent(t, "closing", &got)
-		require.Equal(t, "2", got.Xid)
+		t.Run("Other users receive closing event", func(t *testing.T) {
+			var got harness.UserClosingResponse
+			userA.MustWaitForEvent(t, "closing", &got)
+			require.Equal(t, "2", got.Xid) // Xid is flaky
+		})
+
+		t.Run("Other users (during registration) see the user who went away as in-active", func(t *testing.T) {
+			// Alice checks Bob's active status with a registration
+			require.NoError(t, userA.Register())
+			var got harness.RegisterResponse
+			userA.MustWaitForEvent(t, "reg", &got)
+
+			require.Equal(t, 2, len(got.Users))
+			require.ElementsMatch(t, []harness.UserDetails{
+				{Nickname: userA.Nickname, Xid: "1", IsOwner: true, Active: true},
+				{Nickname: userB.Nickname, Xid: "2", IsOwner: false, Active: false}, // Bob is in-active
+			}, got.Users)
+		})
+
 	})
 }
 
