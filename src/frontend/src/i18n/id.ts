@@ -68,6 +68,7 @@ export default {
       unlockTooltip: 'Buka kunci papan',
       message: 'Tidak dapat menambah atau memperbarui. Papan dikunci oleh pemilik.',
       discardChanges: 'Papan dikunci! Pesan yang belum disimpan dibuang',
+      unlockButton: 'Buka kunci',
     },
     spotlight: {
       noCardsToFocus: 'Tidak ada kartu untuk difokuskan',

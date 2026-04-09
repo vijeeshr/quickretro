@@ -65,6 +65,7 @@ export default {
       unlockTooltip: '잠금 해제',
       message: '보드가 잠겨 있습니다',
       discardChanges: '보드 잠김! 저장되지 않은 메시지가 삭제되었습니다',
+      unlockButton: '잠금 해제',
     },
     spotlight: {
       noCardsToFocus: '포커스할 카드 없음',

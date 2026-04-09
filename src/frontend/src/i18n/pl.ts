@@ -68,6 +68,7 @@ export default {
       unlockTooltip: 'Odblokuj tablicę',
       message: 'Nie można dodać ani zaktualizować. Tablica jest zablokowana przez właściciela.',
       discardChanges: 'Tablica zablokowana! Niezapisane wiadomości zostały odrzucone',
+      unlockButton: 'Odblokuj',
     },
     spotlight: {
       noCardsToFocus: 'Brak kart do wyświetlenia',

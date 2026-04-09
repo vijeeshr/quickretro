@@ -65,6 +65,7 @@ export default {
       unlockTooltip: 'Déverrouiller le tableau',
       message: 'Tableau verrouillé par le propriétaire.',
       discardChanges: 'Tableau verrouillé ! Messages non sauvegardés supprimés',
+      unlockButton: 'Déverrouiller',
     },
     spotlight: {
       noCardsToFocus: 'Aucune carte à mettre en évidence',

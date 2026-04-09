@@ -65,6 +65,7 @@ export default {
       unlockTooltip: 'ロック解除',
       message: 'ボードがロックされています',
       discardChanges: 'ボードがロックされました！保存されていないメッセージは破棄されました',
+      unlockButton: 'ロック解除',
     },
     spotlight: {
       noCardsToFocus: 'カードがありません',

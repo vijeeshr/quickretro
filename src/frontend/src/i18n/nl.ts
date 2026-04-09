@@ -65,6 +65,7 @@ export default {
       unlockTooltip: 'Bord ontgrendelen',
       message: 'Bord is vergrendeld.',
       discardChanges: 'Board vergrendeld! Niet-opgeslagen berichten verwijderd',
+      unlockButton: 'Ontgrendelen',
     },
     spotlight: {
       noCardsToFocus: 'Geen kaarten om te focussen',

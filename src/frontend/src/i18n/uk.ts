@@ -65,6 +65,7 @@ export default {
       unlockTooltip: 'Розблокувати дошку',
       message: 'Дошка заблокована власником.',
       discardChanges: 'Дошку заблоковано! Незбережені повідомлення видалено',
+      unlockButton: 'Розблокувати',
     },
     spotlight: {
       noCardsToFocus: 'Немає карток для фокусування',

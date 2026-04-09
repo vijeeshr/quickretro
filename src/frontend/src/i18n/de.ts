@@ -65,6 +65,7 @@ export default {
       unlockTooltip: 'Board entsperren',
       message: 'Board ist gesperrt.',
       discardChanges: 'Board gesperrt! Ungespeicherte Nachrichten verworfen',
+      unlockButton: 'Entsperren',
     },
     spotlight: {
       noCardsToFocus: 'Keine Karten vorhanden',

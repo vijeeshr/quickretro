@@ -67,6 +67,7 @@ export default {
       unlockTooltip: 'Mở khóa bảng',
       message: 'Không thể thêm hoặc cập nhật. Bảng đã bị khóa bởi người tạo.',
       discardChanges: 'Bảng đã bị khóa! Các nội dung chưa lưu đã bị hủy',
+      unlockButton: 'Mở khóa',
     },
     spotlight: {
       noCardsToFocus: 'Không có thẻ nào để tập trung',

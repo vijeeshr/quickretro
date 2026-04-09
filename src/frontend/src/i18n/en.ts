@@ -65,8 +65,9 @@ export default {
     lock: {
       lockTooltip: 'Lock board',
       unlockTooltip: 'Unlock board',
-      message: 'Cannot add or update. Board is locked by owner.',
+      message: 'Board locked. No changes allowed.',
       discardChanges: 'Board locked! Unsaved messages discarded',
+      unlockButton: 'Unlock',
     },
     spotlight: {
       noCardsToFocus: 'There are no cards to focus',
