@@ -1,4 +1,4 @@
-FROM node:24.14.0-alpine AS frontend-builder
+FROM node:24.14.1-alpine AS frontend-builder
 WORKDIR /app
 # node_modules directory is excluded with .dockerignore
 # Copy package files first for efficient caching
@@ -8,7 +8,7 @@ RUN npm install
 COPY src/frontend/ .
 RUN npm run build
 
-FROM golang:1.26.1-alpine AS backend-builder
+FROM golang:1.26.2-alpine AS backend-builder
 WORKDIR /app
 # Copy Go module files and download dependencies
 COPY src/go.mod src/go.sum ./
