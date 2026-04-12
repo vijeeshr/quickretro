@@ -23,6 +23,7 @@ type RegisterResponse struct {
 	BoardMasking              bool              `json:"boardMasking"`
 	BoardLock                 bool              `json:"boardLock"`
 	IsBoardOwner              bool              `json:"isBoardOwner"`
+	IsBoardCreator            bool              `json:"isBoardCreator"`
 	// Mine                      bool              `json:"mine"`
 }
 
@@ -37,14 +38,11 @@ type UserClosingResponse struct {
 	Xid  string `json:"xid"`
 }
 
-type MaskResponse struct {
-	Type string `json:"typ"`
-	Mask bool   `json:"mask"`
-}
-
-type LockResponse struct {
-	Type string `json:"typ"`
-	Lock bool   `json:"lock"`
+type SettingsResponse struct {
+	Type     string `json:"typ"`
+	OwnerXid string `json:"ownerXid"`
+	Mask     bool   `json:"mask"`
+	Lock     bool   `json:"lock"`
 }
 
 type MessageResponse struct {

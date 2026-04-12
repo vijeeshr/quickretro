@@ -23,6 +23,7 @@ type RegisterResponse struct {
 	BoardMasking              bool              `json:"boardMasking"`
 	BoardLock                 bool              `json:"boardLock"`
 	IsBoardOwner              bool              `json:"isBoardOwner"`
+	IsBoardCreator            bool              `json:"isBoardCreator"`
 }
 type BoardColumn struct {
 	Id        string `redis:"id" json:"id"`
@@ -82,20 +83,16 @@ type DeleteAllResponse struct {
 	Type string `json:"typ"`
 }
 
-type MaskEvent struct {
-	Mask bool `json:"mask"`
+type SettingsEvent struct {
+	OwnerXid *string `json:"ownerXid,omitempty"`
+	Mask     *bool   `json:"mask,omitempty"`
+	Lock     *bool   `json:"lock,omitempty"`
 }
-type MaskResponse struct {
-	Type string `json:"typ"`
-	Mask bool   `json:"mask"`
-}
-
-type LockEvent struct {
-	Lock bool `json:"lock"`
-}
-type LockResponse struct {
-	Type string `json:"typ"`
-	Lock bool   `json:"lock"`
+type SettingsResponse struct {
+	Type     string `json:"typ"`
+	OwnerXid string `json:"ownerXid"`
+	Mask     bool   `json:"mask"`
+	Lock     bool   `json:"lock"`
 }
 
 type CategoryChangeEvent struct {

@@ -120,6 +120,7 @@ func (p *RegisterEvent) Broadcast(e *Event, m *Message, h *Hub) {
 		// response := regResponse
 		if client.id == e.By {
 			regResponse.IsBoardOwner = client.id == board.Owner
+			regResponse.IsBoardCreator = client.id == board.Creator
 			select {
 			case client.send <- regResponse:
 			default:
@@ -202,81 +203,92 @@ func (p *UserClosingEvent) Broadcast(_ *Event, m *Message, h *Hub) {
 	}
 }
 
-type MaskEvent struct {
-	Mask bool `json:"mask"`
+type SettingsEvent struct {
+	OwnerXid *string `json:"ownerXid,omitempty"`
+	Mask     *bool   `json:"mask,omitempty"`
+	Lock     *bool   `json:"lock,omitempty"`
 }
 
-func (p *MaskEvent) Handle(e *Event, h *Hub) {
+func (p *SettingsEvent) Handle(e *Event, h *Hub) {
 	// Validate
 	b, ok := h.redis.GetBoard(e.Group)
 	if !ok {
-		slog.Warn("Cannot find board when handling MaskEvent", "board", e.Group)
+		slog.Warn("Cannot find board when handling SettingsEvent", "board", e.Group)
 		return
 	}
-	if b.Owner != e.By {
-		slog.Warn("Non-owner trying to update board when handling MaskEvent", "board", e.Group, "user", e.By)
-		return
-	}
-	if b.Mask == p.Mask {
-		slog.Warn("Skipping. Board is already masked/unmasked")
-		return
-	}
-	// Execute
-	if updated := h.redis.UpdateMasking(b, p.Mask); !updated {
-		slog.Warn("Skipping. Unable to update masking information.")
-		return
-	}
-	// Publish to Redis (for broadcasting)
-	// *Message is nil as this is not a message related update. Masking is a UI gimmick. Find a better way.
-	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: e})
-}
-func (p *MaskEvent) Broadcast(e *Event, m *Message, h *Hub) {
-	// Transform to Outgoing format
-	// We can trust the MaskEvent.Mask payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
-	response := &MaskResponse{Type: "mask", Mask: p.Mask}
 
-	clients := h.clients[e.Group]
-	for client := range clients {
-		select {
-		case client.send <- response:
-		default:
-			client.hub.unregister <- client
+	if b.Owner != e.By {
+		isCreator := b.Creator == e.By
+		if isCreator && p.OwnerXid != nil && *p.OwnerXid == e.Xid {
+			// Creator is reclaiming the board.
+			// Prevent them from changing any other settings like mask or lock.
+			p.Mask = nil
+			p.Lock = nil
+		} else {
+			slog.Warn("Non-owner trying to update board when handling SettingsEvent", "board", e.Group, "user", e.By)
+			return
 		}
 	}
-}
 
-type LockEvent struct {
-	Lock bool `json:"lock"`
-}
+	updated := false
 
-func (p *LockEvent) Handle(e *Event, h *Hub) {
-	// validate
-	b, ok := h.redis.GetBoard(e.Group)
-	if !ok {
-		slog.Warn("Cannot find board when handling LockEvent", "board", e.Group)
+	// Update Mask if present
+	if p.Mask != nil && b.Mask != *p.Mask {
+		if h.redis.UpdateMasking(b, *p.Mask) {
+			b.Mask = *p.Mask
+			updated = true
+		}
+	}
+
+	// Update Lock if present
+	if p.Lock != nil && b.Lock != *p.Lock {
+		if h.redis.UpdateBoardLock(b, *p.Lock) {
+			b.Lock = *p.Lock
+			updated = true
+		}
+	}
+
+	// TODO: if *p.OwnerXid == e.Xid, then its assigning self no need hit redis and lookup..maybe this works when "Creator" is reclaiming?
+
+	// TODO: How about saving ownerXid in Board to prevent all the below redis calls? - Can't rely too on xid in payload. Rethink
+	// Update Owner if present
+	if p.OwnerXid != nil {
+		user, userOk := h.redis.GetUserByXid(e.Group, *p.OwnerXid)
+		if userOk && user.Id != "" && user.Id != b.Owner {
+			if h.redis.UpdateBoardOwner(b, user.Id) {
+				b.Owner = user.Id
+				updated = true
+			}
+		} else {
+			slog.Warn("Could not resolve new owner or owner unchanged", "ownerXid", *p.OwnerXid)
+		}
+	}
+
+	if !updated {
+		slog.Warn("Skipping. No settings updated.")
 		return
 	}
-	if b.Owner != e.By {
-		slog.Warn("Non-owner trying to update board when handling LockEvent", "board", e.Group, "user", e.By)
-		return
-	}
-	if b.Lock == p.Lock {
-		slog.Warn("Skipping. Board is already locked/unlocked")
-		return
-	}
-	// Execute
-	if updated := h.redis.UpdateBoardLock(b, p.Lock); !updated {
-		slog.Warn("Skipping. Unable to update lock information.")
-		return
-	}
+
+	// TODO: Can BroadcastArgs be expanded now to accomodate more fields? To help reduce redis calls?
 	// Publish to Redis (for broadcasting)
-	// *Message is nil as this is not a message related update. Locking is a UI gimmick. Find a better way.
 	h.redis.Publish(b.Id, &BroadcastArgs{Message: nil, Event: e})
 }
-func (p *LockEvent) Broadcast(e *Event, m *Message, h *Hub) {
-	// Transform to Outgoing format
-	// We can trust the LockEvent.Lock payload here. The Handle must have validated it. Don't want to add another field in BroadcastArgs{}.
-	response := &LockResponse{Type: "lock", Lock: p.Lock}
+func (p *SettingsEvent) Broadcast(e *Event, m *Message, h *Hub) {
+	b, ok := h.redis.GetBoard(e.Group)
+	if !ok {
+		slog.Warn("Cannot find board when broadcasting SettingsEvent", "board", e.Group)
+		return
+	}
+
+	// TODO: How about saving ownerXid in Board to prevent all the below redis calls? - Can't rely too on xid in payload. Rethink
+	owner, ok := h.redis.GetUser(e.Group, b.Owner)
+
+	response := &SettingsResponse{
+		Type:     "set",
+		OwnerXid: owner.Xid,
+		Mask:     b.Mask,
+		Lock:     b.Lock,
+	}
 
 	clients := h.clients[e.Group]
 	for client := range clients {

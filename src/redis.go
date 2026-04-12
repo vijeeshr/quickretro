@@ -89,6 +89,7 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 			"name", b.Name,
 			"team", b.Team,
 			"owner", b.Owner,
+			"creator", b.Creator,
 			"status", int(b.Status),
 			"mask", b.Mask,
 			"lock", b.Lock,
@@ -254,6 +255,15 @@ func (c *RedisConnector) UpdateMasking(b *Board, mask bool) bool {
 	key := boardKey(b.Id)
 	if _, err := c.client.HSet(c.ctx, key, "mask", mask).Result(); err != nil {
 		slog.Error("Failed to mask/unmask", "err", err, "board", b)
+		return false
+	}
+	return true
+}
+
+func (c *RedisConnector) UpdateBoardOwner(b *Board, owner string) bool {
+	key := boardKey(b.Id)
+	if _, err := c.client.HSet(c.ctx, key, "owner", owner).Result(); err != nil {
+		slog.Error("Failed to update board owner", "err", err, "board", b)
 		return false
 	}
 	return true
@@ -1082,6 +1092,70 @@ func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregate
 	}
 
 	return data, true
+}
+
+// GetUser retrieves a specific user from a board.
+func (c *RedisConnector) GetUser(boardId string, userId string) (*User, bool) {
+	if boardId == "" || userId == "" {
+		return nil, false
+	}
+
+	var u User
+	key := boardUserKey(boardId, userId)
+
+	// Fetch all fields from the Hash and scan into the User struct
+	if err := c.client.HGetAll(c.ctx, key).Scan(&u); err != nil {
+		slog.Error("Failed to get user from Redis", "err", err, "boardId", boardId, "userId", userId)
+		return nil, false
+	}
+
+	// Redis HGetAll doesn't return an error if the key doesn't exist; it returns an empty map.
+	// We check if the Id is empty to determine if the user was actually found.
+	if u.Id == "" {
+		return nil, false
+	}
+
+	return &u, true
+}
+
+// Todo: Add a redis key for a User by xid? That will avoid O(n) lookup by xid.
+func (c *RedisConnector) GetUserByXid(boardId string, xid string) (*User, bool) {
+	if boardId == "" || xid == "" {
+		return nil, false
+	}
+
+	// Get all user IDs associated with this board
+	allUsersKey := boardAllUsersKey(boardId)
+	userIds, err := c.client.SMembers(c.ctx, allUsersKey).Result()
+	if err != nil || len(userIds) == 0 {
+		return nil, false
+	}
+
+	// Pipeline HGETALL for all users
+	cmds, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+		for _, id := range userIds {
+			pipe.HGetAll(c.ctx, boardUserKey(boardId, id))
+		}
+		return nil
+	})
+
+	if err != nil {
+		slog.Error("Failed to pipeline fetch users by xid in GetUserByXid", "err", err, "boardId", boardId)
+		return nil, false
+	}
+
+	// Scan results
+	for _, cmd := range cmds {
+		var u User
+		if err := cmd.(*redis.MapStringStringCmd).Scan(&u); err != nil {
+			continue
+		}
+		if u.Xid == xid {
+			return &u, true
+		}
+	}
+
+	return nil, false
 }
 
 func (c *RedisConnector) Close() {

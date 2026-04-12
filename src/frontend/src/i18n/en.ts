@@ -101,5 +101,15 @@ export default {
     notExists: 'Board was either auto-deleted, or manually deleted by its creator.',
     autoDeleteScheduleBase: 'This board will be cleaned up automatically on {date}',
     autoDeleteScheduleAddon: ', so you do not need to worry about deleting it manually.',
+    reclaim: {
+      tooltip: 'Reclaim board ownership',
+    },
+  },
+  transferOwnership: {
+    title: 'Transfer Ownership',
+    selectLabel: 'Select New Owner',
+    selectPlaceholder: 'Select User',
+    cancel: 'Cancel',
+    confirm: 'Transfer',
   },
 }

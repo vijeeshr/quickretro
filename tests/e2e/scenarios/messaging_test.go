@@ -16,21 +16,23 @@ func TestRegistration(t *testing.T) {
 		MaskedDefault = true
 		LockedDefault = false
 	)
-	_, userA, userB := harness.SetupTest(t, false)
+	_, userA, userB, userC := harness.SetupTest(t, false)
 
 	// Registration: Alice registers
 	t.Run("Alice registers", func(t *testing.T) {
 		require.NoError(t, userA.Register())
 
-		t.Run("Alice receives own reg event, shown as board owner", func(t *testing.T) {
+		t.Run("Alice receives own reg event, shown as board owner as well as board creator", func(t *testing.T) {
 			var got harness.RegisterResponse
 			userA.MustWaitForEvent(t, "reg", &got)
 			require.True(t, got.IsBoardOwner)
-			require.Equal(t, 2, len(got.Users))
+			require.True(t, got.IsBoardCreator, "UserA should be the Board Creator")
+			require.Equal(t, 3, len(got.Users))
 			require.Equal(t, "1", got.Xid) // Xid is flaky
 			require.ElementsMatch(t, []harness.UserDetails{
 				{Nickname: userA.Nickname, Xid: "1", IsOwner: true, Active: true}, // Active is true on register
 				{Nickname: userB.Nickname, Xid: "2", IsOwner: false, Active: false},
+				{Nickname: userC.Nickname, Xid: "3", IsOwner: false, Active: false},
 			}, got.Users)
 			require.Equal(t, 0, len(got.Messages))
 			require.Equal(t, 0, len(got.Comments))
@@ -54,6 +56,7 @@ func TestRegistration(t *testing.T) {
 
 		userA.FlushEvents()
 		userB.FlushEvents()
+		userC.FlushEvents()
 	})
 
 	// Registration: Bob registers
@@ -64,11 +67,13 @@ func TestRegistration(t *testing.T) {
 			var got harness.RegisterResponse
 			userB.MustWaitForEvent(t, "reg", &got)
 			require.False(t, got.IsBoardOwner) // Bob should NOT be board owner
+			require.False(t, got.IsBoardCreator, "UserB should NOT be the Board Creator")
 			require.Equal(t, "2", got.Xid)
-			require.Equal(t, 2, len(got.Users))
+			require.Equal(t, 3, len(got.Users))
 			require.ElementsMatch(t, []harness.UserDetails{
 				{Nickname: userA.Nickname, Xid: "1", IsOwner: true, Active: true},
 				{Nickname: userB.Nickname, Xid: "2", IsOwner: false, Active: true}, // Active true on registration
+				{Nickname: userC.Nickname, Xid: "3", IsOwner: false, Active: false},
 			}, got.Users)
 		})
 
@@ -81,6 +86,7 @@ func TestRegistration(t *testing.T) {
 
 		userA.FlushEvents()
 		userB.FlushEvents()
+		userC.FlushEvents()
 	})
 
 	t.Run("Alice registers again", func(t *testing.T) {
@@ -95,6 +101,7 @@ func TestRegistration(t *testing.T) {
 		// Clear responses for above events
 		userA.FlushEvents()
 		userB.FlushEvents()
+		userC.FlushEvents()
 
 		// Register again
 		require.NoError(t, userA.Register())
@@ -103,10 +110,11 @@ func TestRegistration(t *testing.T) {
 			var got harness.RegisterResponse
 			userA.MustWaitForEvent(t, "reg", &got)
 
-			require.Equal(t, 2, len(got.Users))
+			require.Equal(t, 3, len(got.Users))
 			require.ElementsMatch(t, []harness.UserDetails{
 				{Nickname: userA.Nickname, Xid: "1", IsOwner: true, Active: true},
 				{Nickname: userB.Nickname, Xid: "2", IsOwner: false, Active: true},
+				{Nickname: userC.Nickname, Xid: "3", IsOwner: false, Active: false},
 			}, got.Users)
 
 			require.Equal(t, 1, len(got.Messages))
@@ -118,6 +126,7 @@ func TestRegistration(t *testing.T) {
 
 		userA.FlushEvents()
 		userB.FlushEvents()
+		userC.FlushEvents()
 	})
 
 	t.Run("Reg event should have correct mask and lock status", func(t *testing.T) {
@@ -135,6 +144,7 @@ func TestRegistration(t *testing.T) {
 		// Ignore mask and lock responses
 		userA.FlushEvents()
 		userB.FlushEvents()
+		userC.FlushEvents()
 
 		// Register again
 		require.NoError(t, userA.Register())
@@ -149,6 +159,7 @@ func TestRegistration(t *testing.T) {
 
 		userA.FlushEvents()
 		userB.FlushEvents()
+		userC.FlushEvents()
 	})
 
 	// TODO: Check after deleting board
@@ -166,7 +177,7 @@ func TestRegistration(t *testing.T) {
 }
 
 func TestMessageLifecycle(t *testing.T) {
-	_, userA, userB := harness.SetupTest(t, true)
+	_, userA, userB, _ := harness.SetupTest(t, true)
 
 	content := "First message"
 	category := "col01"
@@ -435,7 +446,7 @@ func extractIDs(msgs []harness.MessageResponse) []string {
 }
 
 func TestAnonymousMessaging(t *testing.T) {
-	_, userA, userB := harness.SetupTest(t, true)
+	_, userA, userB, _ := harness.SetupTest(t, true)
 
 	msgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
 	category := "col02"
@@ -473,7 +484,7 @@ func TestAnonymousMessaging(t *testing.T) {
 }
 
 func TestCommenting(t *testing.T) {
-	_, userA, userB := harness.SetupTest(t, true)
+	_, userA, userB, _ := harness.SetupTest(t, true)
 
 	category := "col02"
 	rootMsgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userB.Id)
@@ -623,46 +634,166 @@ func TestCommenting(t *testing.T) {
 }
 
 func TestBoardControl(t *testing.T) {
-	_, userA, userB := harness.SetupTest(t, true)
+	_, userA, userB, userC := harness.SetupTest(t, true)
 
 	t.Run("Owner can Mask/Reveal", func(t *testing.T) {
-		var got harness.MaskResponse
+		var got harness.SettingsResponse
 
 		// Board starts masked, so unmask first
 		require.NoError(t, userA.Mask(false))
-		userB.MustWaitForEvent(t, "mask", &got)
+		userB.MustWaitForEvent(t, "set", &got)
 		require.False(t, got.Mask)
 
 		// Then mask again
 		require.NoError(t, userA.Mask(true))
-		userB.MustWaitForEvent(t, "mask", &got)
+		userB.MustWaitForEvent(t, "set", &got)
 		require.True(t, got.Mask)
 	})
 
 	t.Run("Guest users cannot mask", func(t *testing.T) {
 		require.NoError(t, userB.Mask(true))
-		require.NoError(t, userB.MustNotReceiveEvent("mask"))
+		require.NoError(t, userB.MustNotReceiveEvent("set"))
 	})
 
 	t.Run("Owner can Lock/Unlock", func(t *testing.T) {
-		var got harness.LockResponse
+		var got harness.SettingsResponse
 		require.NoError(t, userA.LockBoard(true))
-		userB.MustWaitForEvent(t, "lock", &got)
+		userB.MustWaitForEvent(t, "set", &got)
 		require.True(t, got.Lock)
 
 		require.NoError(t, userA.LockBoard(false))
-		userB.MustWaitForEvent(t, "lock", &got)
+		userB.MustWaitForEvent(t, "set", &got)
 		require.False(t, got.Lock)
 	})
 
 	t.Run("Guest users cannot lock", func(t *testing.T) {
 		require.NoError(t, userB.LockBoard(true))
-		require.NoError(t, userB.MustNotReceiveEvent("lock"))
+		require.NoError(t, userB.MustNotReceiveEvent("set"))
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+		userC.FlushEvents()
+	})
+
+	t.Run("Guest user cannot transfer ownership to self", func(t *testing.T) {
+		require.NoError(t, userB.TransferOwnership("2"))
+		require.NoError(t, userB.MustNotReceiveEvent("set"))
+	})
+
+	t.Run("Guest user cannot transfer ownership to another user", func(t *testing.T) {
+		require.NoError(t, userB.TransferOwnership("3"))
+		require.NoError(t, userC.MustNotReceiveEvent("set"))
+	})
+
+	t.Run("Owner(UserA) can transfer ownership to guest (UserB)", func(t *testing.T) {
+		var got harness.SettingsResponse
+		require.NoError(t, userA.TransferOwnership("2"))
+
+		userA.MustWaitForEvent(t, "set", &got)
+		require.Equal(t, "2", got.OwnerXid)
+
+		// Now UserA should NOT be able to lock
+		require.NoError(t, userA.LockBoard(true))
+		require.NoError(t, userA.MustNotReceiveEvent("set"))
+
+		// Cleanup since userA is no longer owner for any following tests
+		userB.FlushEvents()
+		userA.FlushEvents()
+		userC.FlushEvents()
+	})
+
+	t.Run("Register response should reflect ownership change status", func(t *testing.T) {
+		var got harness.RegisterResponse
+
+		// UserA registers
+		require.NoError(t, userA.Register())
+		userA.MustWaitForEvent(t, "reg", &got)
+		require.False(t, got.IsBoardOwner, "UserA looses ownership")
+		require.True(t, got.IsBoardCreator, "UserA is still creator")
+
+		// UserB registers
+		userB.FlushEvents()
+		require.NoError(t, userB.Register())
+		userB.MustWaitForEvent(t, "reg", &got)
+		require.True(t, got.IsBoardOwner, "UserB gets ownership")
+		require.False(t, got.IsBoardCreator, "UserB should never be creator")
+
+		// Cleanup
+		userB.FlushEvents()
+		userA.FlushEvents()
+		userC.FlushEvents()
+	})
+
+	t.Run("New owner(UserB) can Lock/Unlock", func(t *testing.T) {
+		var got harness.SettingsResponse
+		require.NoError(t, userB.LockBoard(true))
+		userB.MustWaitForEvent(t, "set", &got)
+		require.True(t, got.Lock)
+
+		require.NoError(t, userB.LockBoard(false))
+		userB.MustWaitForEvent(t, "set", &got)
+		require.False(t, got.Lock)
+
+		// Cleanup
+		userB.FlushEvents()
+		userA.FlushEvents()
+		userC.FlushEvents()
+	})
+
+	t.Run("New owner(UserB) can transfer ownership to UserC", func(t *testing.T) {
+		var got harness.SettingsResponse
+		require.NoError(t, userB.TransferOwnership("3"))
+
+		userC.MustWaitForEvent(t, "set", &got)
+		require.Equal(t, "3", got.OwnerXid)
+
+		userA.FlushEvents()
+
+		// Now UserB should NOT be able to lock
+		require.NoError(t, userA.LockBoard(true))
+		require.NoError(t, userA.MustNotReceiveEvent("set"))
+
+		// Cleanup since userA is no longer owner for any following tests
+		userB.FlushEvents()
+		userA.FlushEvents()
+		userC.FlushEvents()
+	})
+
+	t.Run("Board Creator(UserA) after relinquishing ownership, cannot give ownership to another user (UserB)", func(t *testing.T) {
+		// userA is the creator but no longer the owner (it's userC now)
+		// Transferring ownership under the guise of reclaiming.
+		require.NoError(t, userA.TransferOwnership("2")) // userB's Xid is '2' in e2e setup
+		require.NoError(t, userB.MustNotReceiveEvent("set"))
+	})
+
+	t.Run("Board Creator(UserA) after relinquishing ownership, can reclaim it forcefully, but only to self", func(t *testing.T) {
+		var got harness.SettingsResponse
+
+		// userA is the creator but no longer the owner (it's userC now)
+		// Reclaiming ownership implies setting the OwnerXid to the creator's own Xid
+		require.NoError(t, userA.TransferOwnership("1")) // userA's Xid is '1' in e2e setup
+
+		userC.MustWaitForEvent(t, "set", &got)
+		require.Equal(t, "1", got.OwnerXid)
+
+		// Now userA is owner again and can lock the board
+		require.NoError(t, userA.LockBoard(true))
+		userC.MustWaitForEvent(t, "set", &got)
+		require.True(t, got.Lock)
+
+		// Reset lock
+		require.NoError(t, userA.LockBoard(false))
+		userC.MustWaitForEvent(t, "set", &got)
+
+		// Cleanup
+		userB.FlushEvents()
+		userA.FlushEvents()
+		userC.FlushEvents()
 	})
 }
 
 func TestTimer(t *testing.T) {
-	_, userA, userB := harness.SetupTest(t, true)
+	_, userA, userB, _ := harness.SetupTest(t, true)
 
 	t.Run("Owner can Start/Stop timer", func(t *testing.T) {
 		timerDurationToExpirySeconds := uint16(3600)
@@ -763,7 +894,7 @@ func TestTimer(t *testing.T) {
 }
 
 func TestMessageCategoryChange(t *testing.T) {
-	_, userA, userB := harness.SetupTest(t, true)
+	_, userA, userB, _ := harness.SetupTest(t, true)
 
 	t.Run("User can move own message and associated comments to another category", func(t *testing.T) {
 		// Setup
@@ -962,7 +1093,7 @@ func TestMessageCategoryChange(t *testing.T) {
 }
 
 func TestLikes(t *testing.T) {
-	_, userA, userB := harness.SetupTest(t, true)
+	_, userA, userB, _ := harness.SetupTest(t, true)
 
 	const (
 		liked    = true
@@ -1058,7 +1189,7 @@ func TestLikes(t *testing.T) {
 }
 
 func TestColumnEditing(t *testing.T) {
-	_, userA, userB := harness.SetupTest(t, true)
+	_, userA, userB, _ := harness.SetupTest(t, true)
 
 	t.Run("Owner can update columns", func(t *testing.T) {
 		newCols := []*harness.BoardColumn{
@@ -1188,8 +1319,8 @@ func TestColumnEditing(t *testing.T) {
 	t.Run("Cannot update columns in a locked board", func(t *testing.T) {
 		// Lock board
 		require.NoError(t, userA.LockBoard(true))
-		var lockResp harness.LockResponse
-		userB.MustWaitForEvent(t, "lock", &lockResp)
+		var lockResp harness.SettingsResponse
+		userB.MustWaitForEvent(t, "set", &lockResp)
 		require.True(t, lockResp.Lock)
 		userA.FlushEvents()
 		userB.FlushEvents()
@@ -1209,7 +1340,7 @@ func TestColumnEditing(t *testing.T) {
 }
 
 func TestBoardDeletion(t *testing.T) {
-	_, userA, userB := harness.SetupTest(t, true)
+	_, userA, userB, _ := harness.SetupTest(t, true)
 
 	t.Run("Guest user cannot delete board", func(t *testing.T) {
 		require.NoError(t, userB.DeleteBoard())
@@ -1259,7 +1390,7 @@ func TestBoardDeletion(t *testing.T) {
 }
 
 func TestUserLeaving(t *testing.T) {
-	_, userA, userB := harness.SetupTest(t, true)
+	_, userA, userB, userC := harness.SetupTest(t, true)
 
 	// Bob will try to leave
 
@@ -1268,13 +1399,15 @@ func TestUserLeaving(t *testing.T) {
 		var got harness.RegisterResponse
 		userB.MustWaitForEvent(t, "reg", &got)
 
-		require.Equal(t, 2, len(got.Users))
+		require.Equal(t, 3, len(got.Users))
 		require.ElementsMatch(t, []harness.UserDetails{
 			{Nickname: userA.Nickname, Xid: "1", IsOwner: true, Active: true},
 			{Nickname: userB.Nickname, Xid: "2", IsOwner: false, Active: true}, // Bob is active
+			{Nickname: userC.Nickname, Xid: "3", IsOwner: false, Active: true}, // Bob is active
 		}, got.Users)
 
 		userA.FlushEvents()
+		userC.FlushEvents()
 	})
 
 	t.Run("User leaves", func(t *testing.T) {
@@ -1285,6 +1418,8 @@ func TestUserLeaving(t *testing.T) {
 			var got harness.UserClosingResponse
 			userA.MustWaitForEvent(t, "closing", &got)
 			require.Equal(t, "2", got.Xid) // Xid is flaky
+
+			userC.FlushEvents()
 		})
 
 		t.Run("Other users (during registration) see the user who went away as in-active", func(t *testing.T) {
@@ -1293,10 +1428,11 @@ func TestUserLeaving(t *testing.T) {
 			var got harness.RegisterResponse
 			userA.MustWaitForEvent(t, "reg", &got)
 
-			require.Equal(t, 2, len(got.Users))
+			require.Equal(t, 3, len(got.Users))
 			require.ElementsMatch(t, []harness.UserDetails{
 				{Nickname: userA.Nickname, Xid: "1", IsOwner: true, Active: true},
 				{Nickname: userB.Nickname, Xid: "2", IsOwner: false, Active: false}, // Bob is in-active
+				{Nickname: userC.Nickname, Xid: "3", IsOwner: false, Active: true},
 			}, got.Users)
 		})
 

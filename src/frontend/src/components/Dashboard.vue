@@ -8,8 +8,6 @@ import NewCard from './NewCard.vue'
 import { useRoute } from 'vue-router'
 import {
   EventRequest,
-  MaskEvent,
-  MaskResponse,
   RegisterEvent,
   RegisterResponse,
   MessageResponse,
@@ -20,8 +18,6 @@ import {
   DeleteMessageResponse,
   LikeMessageEvent,
   LikeMessageResponse,
-  LockEvent,
-  LockResponse,
   TimerResponse,
   TimerEvent,
   CategoryChangeEvent,
@@ -32,7 +28,10 @@ import {
   UserJoiningResponse,
   TypedEvent,
   TypedResponse,
+  SettingsEvent,
+  SettingsResponse,
 } from '../models/Requests'
+import TransferOwnershipModal from './TransferOwnershipModal.vue'
 import { OnlineUser } from '../models/OnlineUser'
 import { DraftMessage } from '../models/DraftMessage'
 import { LikeMessage } from '../models/LikeMessage'
@@ -68,6 +67,7 @@ const { locale, setLocale, languageOptions } = useLanguage()
 const { t } = useI18n()
 const isMasked = ref(true)
 const isOwner = ref(false)
+const isBoardCreator = ref(false)
 const isLocked = ref(false)
 const timerExpiresInSeconds = ref(0)
 const newCardCategory = ref('')
@@ -144,6 +144,20 @@ const setIsColumnEditDialogOpen = (value: boolean) => {
   isColumnEditDialogOpen.value = value
 }
 
+const isTransferOwnershipModalOpen = ref(false)
+const transferOwnershipSelectedXid = ref('')
+
+const openTransferOwnershipModal = (selectedXid: string) => {
+  if (!isOwner.value) return
+  transferOwnershipSelectedXid.value = selectedXid
+  isTransferOwnershipModalOpen.value = true
+}
+
+const onTransferOwnership = (ownerXid: string) => {
+  dispatchEvent<SettingsEvent>('set', { ownerXid })
+  isTransferOwnershipModalOpen.value = false
+}
+
 const onOneMinuteLeftWarning = () => {
   toast.info(t('dashboard.timer.oneMinuteLeft'))
 }
@@ -203,6 +217,10 @@ const cardsStats = computed<Record<string, UserCardStats>>(() => {
 
 const myCardsCount = computed(() => {
   return cardsStats.value[xid.value]?.count ?? 0
+})
+
+const allOtherUsers = computed(() => {
+  return onlineUsers.value.filter(u => u.xid !== xid.value)
 })
 
 const onlineUsersCardsStats = computed(() => {
@@ -424,21 +442,25 @@ const onCategoryChanged = (pyl: CategoryChangeMessage) => {
 }
 
 const mask = () => {
-  dispatchEvent<MaskEvent>('mask', { mask: !isMasked.value })
+  dispatchEvent<SettingsEvent>('set', { mask: !isMasked.value })
 }
 
 const lock = () => {
-  dispatchEvent<LockEvent>('lock', { lock: !isLocked.value })
+  dispatchEvent<SettingsEvent>('set', { lock: !isLocked.value })
 }
 
 const unlock = () => {
   // only used by "unlock" button in "locked panel"
-  dispatchEvent<LockEvent>('lock', { lock: false })
+  dispatchEvent<SettingsEvent>('set', { lock: false })
 }
 
 const deleteAll = () => {
   dispatchEvent<DeleteAllEvent>('delall', {})
   setIsDeleteAllDialogOpen(false)
+}
+
+const reclaimBoard = () => {
+  dispatchEvent<SettingsEvent>('set', { ownerXid: xid.value })
 }
 
 const onTimerStart = (expiryDurationInSeconds: number) => {
@@ -603,8 +625,8 @@ const print = async () => {
                             margin: 20px;
                             size: A4 portrait;
                         }
-                        
-                        body { 
+
+                        body {
                             margin: 0;
                             padding: 20px;
                             -webkit-print-color-adjust: exact;
@@ -832,6 +854,7 @@ const onRegisterResponse = (response: RegisterResponse) => {
   // }
   boardName.value = response.boardName
   isOwner.value = response.isBoardOwner
+  isBoardCreator.value = response.isBoardCreator
   isMasked.value = response.boardMasking
   isLocked.value = response.boardLock
   columns.value = response.columns
@@ -882,17 +905,23 @@ const onUserClosingResponse = (response: UserClosingResponse) => {
   }
 }
 
-const onMaskResponse = (response: MaskResponse) => {
+const onSettingsResponse = (response: SettingsResponse) => {
   isMasked.value = response.mask
-}
+  if (response.lock !== isLocked.value) {
+    isLocked.value = response.lock
+    if (isLocked.value && newCardCreationInProgress.value) {
+      // Board lock received when the user is adding new messages.
+      // The message will be forcefully discarded.
+      clearNewCards()
+      notifyForLostMessages({ dueToLock: true })
+    }
+  }
 
-const onLockResponse = (response: LockResponse) => {
-  isLocked.value = response.lock
-  if (isLocked.value && newCardCreationInProgress.value) {
-    // Board lock received when the user is adding new messages.
-    // The message will be forcefully discarded.
-    clearNewCards()
-    notifyForLostMessages({ dueToLock: true })
+  if (response.ownerXid) {
+    isOwner.value = response.ownerXid === xid.value
+    onlineUsers.value.forEach(u => {
+      u.isOwner = u.xid === response.ownerXid
+    })
   }
 }
 
@@ -1170,11 +1199,8 @@ const socketOnMessage = (event: MessageEvent<string>) => {
       case 'closing':
         onUserClosingResponse(response)
         break
-      case 'mask':
-        onMaskResponse(response)
-        break
-      case 'lock':
-        onLockResponse(response)
+      case 'set':
+        onSettingsResponse(response)
         break
       case 'msg':
         onSaveMessageResponse(response)
@@ -1504,6 +1530,15 @@ onUnmounted(() => {
       </div>
     </Dialog>
 
+    <!-- Transfer Ownership Modal -->
+    <TransferOwnershipModal
+      :is-open="isTransferOwnershipModalOpen"
+      :preselected-xid="transferOwnershipSelectedXid"
+      :users="allOtherUsers"
+      @close="isTransferOwnershipModalOpen = false"
+      @transfer="onTransferOwnership"
+    />
+
     <!-- Left Sidebar -->
     <div class="w-16 p-3" :class="{ 'sticky top-0 self-start': isLeftSidebarSticky }">
       <div ref="leftSidebarContentRef">
@@ -1673,6 +1708,25 @@ onUnmounted(() => {
               stroke-linecap="round"
               stroke-linejoin="round"
               d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802"
+            />
+          </svg>
+        </div>
+        <!-- Reclaim -->
+        <div :title="t('dashboard.reclaim.tooltip')">
+          <svg
+            v-if="isBoardCreator && !isOwner"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer text-amber-600 dark:text-amber-500 hover:scale-110 transition-transform"
+            @click="reclaimBoard"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
             />
           </svg>
         </div>
@@ -1855,6 +1909,10 @@ onUnmounted(() => {
           v-for="onlineUser in onlineUsersCardsStats"
           :key="onlineUser.xid"
           class="relative w-8 h-8 ml-auto mx-auto mb-4"
+          :class="{
+            'cursor-pointer hover:ring-2 hover:ring-white rounded-full transition': isOwner,
+          }"
+          @click="openTransferOwnershipModal(onlineUser.xid)"
         >
           <svg
             v-if="onlineUser.isOwner"
@@ -1890,6 +1948,10 @@ onUnmounted(() => {
             v-for="inactiveUser in inactiveUsersCardsStats"
             :key="inactiveUser.xid"
             class="relative w-8 h-8 ml-auto mx-auto mb-4 opacity-40"
+            :class="{
+              'cursor-pointer hover:ring-2 hover:ring-white rounded-full transition': isOwner,
+            }"
+            @click="openTransferOwnershipModal(inactiveUser.xid)"
           >
             <svg
               v-if="inactiveUser.isOwner"
