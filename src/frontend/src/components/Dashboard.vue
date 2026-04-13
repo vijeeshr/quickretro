@@ -147,9 +147,14 @@ const setIsColumnEditDialogOpen = (value: boolean) => {
 const isTransferOwnershipModalOpen = ref(false)
 const transferOwnershipSelectedXid = ref('')
 
-const openTransferOwnershipModal = (selectedXid: string) => {
+const openTransferOwnershipModalForUser = (selectedXid: string) => {
   if (!isOwner.value) return
   transferOwnershipSelectedXid.value = selectedXid
+  isTransferOwnershipModalOpen.value = true
+}
+
+const openTransferOwnershipModal = () => {
+  if (!isOwner.value) return
   isTransferOwnershipModalOpen.value = true
 }
 
@@ -918,10 +923,19 @@ const onSettingsResponse = (response: SettingsResponse) => {
   }
 
   if (response.ownerXid) {
+    const becameOwner = !isOwner.value && response.ownerXid === xid.value
+    const lostOwnership = isOwner.value && response.ownerXid !== xid.value
+
     isOwner.value = response.ownerXid === xid.value
     onlineUsers.value.forEach(u => {
       u.isOwner = u.xid === response.ownerXid
     })
+
+    if (becameOwner) {
+      toast.success(t('transferOwnership.promotedNotification'))
+    } else if (lostOwnership) {
+      toast.info(t('transferOwnership.demotedNotification'))
+    }
   }
 }
 
@@ -1547,7 +1561,9 @@ onUnmounted(() => {
           :time-left-in-seconds="timerExpiresInSeconds"
           :title="t('dashboard.timer.tooltip')"
           class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white ml-auto mx-auto mb-4"
-          :class="isOwner ? 'cursor-pointer' : 'cursor-default'"
+          :class="
+            isOwner ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-default'
+          "
           @click="timerSettings"
           @countdown-progress-update="onCountdownProgressUpdate"
           @one-minute-left-warning="onOneMinuteLeftWarning"
@@ -1561,7 +1577,7 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             @click="share"
           >
             <path
@@ -1582,7 +1598,7 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             :class="{ hidden: isMasked }"
             @click="mask"
           >
@@ -1599,7 +1615,7 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             :class="{ hidden: !isMasked }"
             @click="mask"
           >
@@ -1626,7 +1642,7 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             :class="{ hidden: isLocked }"
             @click="lock"
           >
@@ -1643,7 +1659,7 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             :class="{ hidden: !isLocked }"
             @click="lock"
           >
@@ -1663,7 +1679,7 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             @click="generateDocument"
           >
             <path
@@ -1673,9 +1689,11 @@ onUnmounted(() => {
             />
           </svg>
         </div>
-        <DarkModeToggle class="w-8 h-8 mx-auto mb-4 cursor-pointer" />
+        <DarkModeToggle
+          class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
+        />
         <!-- Focus -->
-        <div :title="t('dashboard.spotlight.tooltip')" class="w-8 h-8 mx-auto mb-4 cursor-pointer">
+        <div :title="t('dashboard.spotlight.tooltip')">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -1684,6 +1702,7 @@ onUnmounted(() => {
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             @click="openSpotlight"
           >
             <circle cx="12" cy="12" r="3" />
@@ -1701,7 +1720,7 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="2"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             @click="openLanguageDialog"
           >
             <path
@@ -1711,22 +1730,43 @@ onUnmounted(() => {
             />
           </svg>
         </div>
-        <!-- Reclaim -->
-        <div :title="t('dashboard.reclaim.tooltip')">
+        <!-- Transfer ownership -->
+        <div :title="t('transferOwnership.tooltip')">
+          <svg
+            v-if="isOwner"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
+            @click="openTransferOwnershipModal"
+          >
+            <path
+              d="M16.051 12.616a1 1 0 0 1 1.909.024l.737 1.452a1 1 0 0 0 .737.535l1.634.256a1 1 0 0 1 .588 1.806l-1.172 1.168a1 1 0 0 0-.282.866l.259 1.613a1 1 0 0 1-1.541 1.134l-1.465-.75a1 1 0 0 0-.912 0l-1.465.75a1 1 0 0 1-1.539-1.133l.258-1.613a1 1 0 0 0-.282-.866l-1.156-1.153a1 1 0 0 1 .572-1.822l1.633-.256a1 1 0 0 0 .737-.535z"
+            />
+            <path d="M8 15H7a4 4 0 0 0-4 4v2" />
+            <circle cx="10" cy="7" r="4" />
+          </svg>
+        </div>
+        <!-- Reclaim ownership-->
+        <div :title="t('transferOwnership.reclaim.tooltip')">
           <svg
             v-if="isBoardCreator && !isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
-            stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer text-amber-600 dark:text-amber-500 hover:scale-110 transition-transform"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer text-yellow-500 hover:scale-110 transition-transform"
             @click="reclaimBoard"
           >
             <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+              d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"
             />
           </svg>
         </div>
@@ -1739,7 +1779,7 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             @click="openDeleteAllDialog"
           >
             <path
@@ -1750,7 +1790,11 @@ onUnmounted(() => {
           </svg>
         </div>
         <a href="https://github.com/vijeeshr/quickretro" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" aria-hidden="true" class="h-8 w-8 mx-auto mb-4 fill-slate-100">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            class="h-8 w-8 mx-auto mb-4 fill-slate-100 hover:scale-110 transition-transform"
+          >
             <path
               fill-rule="evenodd"
               clip-rule="evenodd"
@@ -1765,7 +1809,7 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="h-8 w-8 mx-auto"
+            class="h-8 w-8 mx-auto hover:scale-110 transition-transform"
           >
             <path
               stroke-linecap="round"
@@ -1912,7 +1956,7 @@ onUnmounted(() => {
           :class="{
             'cursor-pointer hover:ring-2 hover:ring-white rounded-full transition': isOwner,
           }"
-          @click="openTransferOwnershipModal(onlineUser.xid)"
+          @click="openTransferOwnershipModalForUser(onlineUser.xid)"
         >
           <svg
             v-if="onlineUser.isOwner"
@@ -1951,7 +1995,7 @@ onUnmounted(() => {
             :class="{
               'cursor-pointer hover:ring-2 hover:ring-white rounded-full transition': isOwner,
             }"
-            @click="openTransferOwnershipModal(inactiveUser.xid)"
+            @click="openTransferOwnershipModalForUser(inactiveUser.xid)"
           >
             <svg
               v-if="inactiveUser.isOwner"

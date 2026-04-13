@@ -6,6 +6,7 @@ interface Props {
   viewType?: 'Default' | 'Badge'
   showTitle?: boolean
   inactive?: boolean
+  truncateBadgeText?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -13,13 +14,14 @@ const props = withDefaults(defineProps<Props>(), {
   viewType: 'Default',
   showTitle: true,
   inactive: false,
+  truncateBadgeText: true,
 })
 
 const avatarText = computed(() => {
   if (!props.name) return ''
 
   if (props.viewType === 'Badge') {
-    return props.name.length > 16 ? props.name.slice(0, 16) + '..' : props.name
+    return props.name
   }
 
   let n = props.name.trim().split(/\s+/)
@@ -52,6 +54,11 @@ const avatarColor = computed(() => {
     :title="showTitle ? name : undefined"
     :style="{ backgroundColor: avatarColor }"
   >
-    <span class="font-medium text-xs text-white select-none">{{ avatarText }}</span>
+    <span
+      class="font-medium text-xs text-white select-none block"
+      :class="[viewType === 'Badge' && truncateBadgeText ? 'truncate max-w-25' : '']"
+    >
+      {{ avatarText }}
+    </span>
   </div>
 </template>

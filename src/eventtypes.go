@@ -258,6 +258,7 @@ func (p *SettingsEvent) Handle(e *Event, h *Hub) {
 			if h.redis.UpdateBoardOwner(b, user.Id) {
 				b.Owner = user.Id
 				updated = true
+				slog.Info("Transfer", "board", b.Id, "to", b.Owner)
 			}
 		} else {
 			slog.Warn("Could not resolve new owner or owner unchanged", "ownerXid", *p.OwnerXid)

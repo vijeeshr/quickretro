@@ -72,12 +72,11 @@ const getNickname = (xid: string) => {
           <Listbox v-model="selectedXid">
             <div class="relative mt-1">
               <ListboxButton
-                class="relative w-full cursor-default rounded-lg bg-white dark:bg-slate-700 py-2 pl-3 pr-10 text-left border border-slate-300 dark:border-slate-600 focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm"
+                class="relative w-full cursor-default rounded-lg bg-white dark:bg-slate-700 py-2 pl-3 pr-10 text-left border border-slate-300 dark:border-slate-600 focus:outline-none sm:text-sm"
               >
                 <span class="block truncate dark:text-slate-200">
                   <div v-if="selectedXid" class="flex items-center gap-2">
                     <Avatar :name="getNickname(selectedXid)" view-type="Badge" />
-                    <span>{{ getNickname(selectedXid) }}</span>
                   </div>
                   <span v-else>{{ t('transferOwnership.selectPlaceholder') }}</span>
                 </span>
@@ -95,7 +94,7 @@ const getNickname = (xid: string) => {
               </ListboxButton>
 
               <ListboxOptions
-                class="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white dark:bg-slate-700 py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-10"
+                class="absolute mt-1 max-h-40 w-full overflow-auto rounded-md bg-white dark:bg-slate-700 py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-10"
               >
                 <ListboxOption
                   v-for="person in users"
@@ -106,7 +105,7 @@ const getNickname = (xid: string) => {
                   <li
                     :class="[
                       active
-                        ? 'bg-amber-100 dark:bg-slate-600 text-amber-900 dark:text-amber-100'
+                        ? 'bg-amber-100 dark:bg-slate-600 text-white'
                         : 'text-gray-900 dark:text-slate-200',
                       'relative cursor-default select-none py-2 pl-4 pr-4',
                     ]"
@@ -115,8 +114,11 @@ const getNickname = (xid: string) => {
                       class="flex items-center gap-2"
                       :class="[selected ? 'font-medium' : 'font-normal']"
                     >
-                      <Avatar :name="person.nickname" view-type="Badge" />
-                      <span class="block truncate">{{ person.nickname }}</span>
+                      <Avatar
+                        :name="person.nickname"
+                        view-type="Badge"
+                        :truncate-badge-text="false"
+                      />
                     </div>
                   </li>
                 </ListboxOption>
