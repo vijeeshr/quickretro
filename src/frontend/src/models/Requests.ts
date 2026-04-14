@@ -8,12 +8,10 @@ export interface EventRequest<T> {
 
 export type RegisterEvent = Record<string, never>
 
-export interface MaskEvent {
-  mask: boolean
-}
-
-export interface LockEvent {
-  lock: boolean
+export interface SettingsEvent {
+  ownerXid?: string
+  mask?: boolean
+  lock?: boolean
 }
 
 export interface SaveMessageEvent {
@@ -65,6 +63,7 @@ export interface RegisterResponse {
   boardMasking: boolean
   boardLock: boolean
   isBoardOwner: boolean
+  isBoardCreator: boolean
   mine: boolean
   users: OnlineUser[]
   messages: MessageResponse[]
@@ -85,13 +84,10 @@ export interface UserClosingResponse {
   xid: string
 }
 
-export interface MaskResponse {
-  typ: 'mask'
+export interface SettingsResponse {
+  typ: 'set'
+  ownerXid: string
   mask: boolean
-}
-
-export interface LockResponse {
-  typ: 'lock'
   lock: boolean
 }
 
@@ -148,8 +144,7 @@ export interface TypedResponse {
 
 export type SocketResponse =
   | RegisterResponse
-  | MaskResponse
-  | LockResponse
+  | SettingsResponse
   | MessageResponse
   | LikeMessageResponse
   | DeleteMessageResponse
@@ -167,10 +162,8 @@ export function toSocketResponse(json: unknown): SocketResponse | null {
     switch (obj.typ) {
       case 'reg':
         return obj as unknown as RegisterResponse
-      case 'mask':
-        return obj as unknown as MaskResponse
-      case 'lock':
-        return obj as unknown as LockResponse
+      case 'set':
+        return obj as unknown as SettingsResponse
       case 'msg':
         return obj as unknown as MessageResponse
       case 'like':

@@ -27,8 +27,7 @@ type EventHandler interface {
 type eventFactory func(data json.RawMessage) (EventHandler, error)
 
 var registry = map[string]eventFactory{
-	"mask":     makeFactory[MaskEvent](),
-	"lock":     makeFactory[LockEvent](),
+	"set":      makeFactory[SettingsEvent](),
 	"reg":      makeFactory[RegisterEvent](),
 	"msg":      makeFactory[MessageEvent](),
 	"like":     makeFactory[LikeMessageEvent](),

@@ -32,6 +32,7 @@ type Board struct {
 	Name              string      `redis:"name"`
 	Team              string      `redis:"team"`
 	Owner             string      `redis:"owner"`
+	Creator           string      `redis:"creator"`
 	Status            BoardStatus `redis:"status"`
 	Mask              bool        `redis:"mask"`
 	Lock              bool        `redis:"lock"`
@@ -165,7 +166,7 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 
 	// Start creation
 	id := shortuuid.New()
-	board := &Board{Id: id, Name: createReq.Name, Team: createReq.Team, Owner: createReq.Owner, Status: InProgress, Lock: false, Mask: true}
+	board := &Board{Id: id, Name: createReq.Name, Team: createReq.Team, Owner: createReq.Owner, Creator: createReq.Owner, Status: InProgress, Lock: false, Mask: true}
 
 	// Save to Redis
 	if ok := c.CreateBoard(board, createReq.Columns); !ok {

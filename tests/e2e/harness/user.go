@@ -182,17 +182,24 @@ func (u *TestUser) DeleteBoard() error {
 }
 
 func (u *TestUser) Mask(mask bool) error {
-	maskEv := MaskEvent{
-		Mask: mask,
+	setEv := SettingsEvent{
+		Mask: &mask,
 	}
-	return u.SendEvent("mask", maskEv)
+	return u.SendEvent("set", setEv)
 }
 
 func (u *TestUser) LockBoard(lock bool) error {
-	lockEv := LockEvent{
-		Lock: lock,
+	setEv := SettingsEvent{
+		Lock: &lock,
 	}
-	return u.SendEvent("lock", lockEv)
+	return u.SendEvent("set", setEv)
+}
+
+func (u *TestUser) TransferOwnership(ownerXid string) error {
+	setEv := SettingsEvent{
+		OwnerXid: &ownerXid,
+	}
+	return u.SendEvent("set", setEv)
 }
 
 func (u *TestUser) ChangeCategoryOfMessage(msgId, oldCategory, newCategory string) error {

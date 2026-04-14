@@ -100,4 +100,20 @@ export default {
     autoDeleteScheduleBase: '{date}에 이 보드는 자동으로 정리됩니다',
     autoDeleteScheduleAddon: ', 따라서 직접 삭제할 필요가 없습니다.',
   },
+  transferOwnership: {
+    tooltip: '보드 소유권 이전',
+    promotedNotification: '이제 귀하가 보드 소유자입니다. 설정 및 참여자를 관리할 수 있습니다.',
+    demotedNotification: '소유권이 이전되었습니다. 더 이상 보드 소유자가 아닙니다.',
+    title: '소유권 이전',
+    selectLabel: '새 소유자 선택',
+    selectPlaceholder: '사용자 선택',
+    cancel: '취소',
+    confirm: '이전',
+    reclaim: {
+      tooltip: '보드 소유권 회수',
+      title: '소유권 회수',
+      text: '이 작업을 수행하면 다시 보드 소유자가 됩니다.',
+      confirm: '회수',
+    },
+  },
 }

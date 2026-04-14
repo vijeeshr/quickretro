@@ -67,11 +67,12 @@ func CreateBoard(t *testing.T, ownerId string) string {
 	return result["id"]
 }
 
-// SetupBoardAndUsers creates a board and two users (Alice as owner, Bob as guest) but does not connect them.
-func SetupBoardAndUsers(t *testing.T) (string, *TestUser, *TestUser) {
+// SetupBoardAndUsers creates a board and three users (Alice as owner, Bob as guest, Clark as guest) but does not connect them.
+func SetupBoardAndUsers(t *testing.T) (string, *TestUser, *TestUser, *TestUser) {
 	// Shared Setup
 	userAId := "user-a"
 	userBId := "user-b"
+	userCId := "user-c"
 
 	// Create Board
 	boardId := CreateBoard(t, userAId)
@@ -79,49 +80,48 @@ func SetupBoardAndUsers(t *testing.T) (string, *TestUser, *TestUser) {
 
 	userA := NewUser(userAId, "Alice", boardId)
 	userB := NewUser(userBId, "Bob", boardId)
+	userC := NewUser(userCId, "Clark", boardId)
 
 	// t.Cleanup(func() {
 	// 	userA.Close()
 	// 	userB.Close()
+	// 	userC.Close()
 	// })
 
-	return boardId, userA, userB
+	return boardId, userA, userB, userC
 }
 
-// SetupTest creates a board and two users (Alice as owner, Bob as guest),
+// SetupTest creates a board and three users (Alice as owner, Bob as guest, Clark as guest),
 // connects them.
-// If autoRegister is true, it also performs the registration flow for both users.
+// If autoRegister is true, it also performs the registration flow for all users.
 // It returns the board ID and the two users.
-func SetupTest(t *testing.T, autoRegister bool) (string, *TestUser, *TestUser) {
-	boardId, userA, userB := SetupBoardAndUsers(t)
+func SetupTest(t *testing.T, autoRegister bool) (string, *TestUser, *TestUser, *TestUser) {
+	boardId, userA, userB, userC := SetupBoardAndUsers(t)
 
 	// Connect Users
 	require.NoError(t, userA.Connect(BaseURL))
 	require.NoError(t, userB.Connect(BaseURL))
+	require.NoError(t, userC.Connect(BaseURL))
 
 	t.Cleanup(func() {
 		userA.Close()
 		userB.Close()
+		userC.Close()
 	})
 
 	if autoRegister {
 		// Register Alice
 		require.NoError(t, userA.Register())
-		// // Alice receives own reg
-		// userA.MustWaitForEvent(t, "reg", nil)
-		// // Bob receives joining
-		// userB.MustWaitForEvent(t, "joining", nil)
-
 		// Register Bob
 		require.NoError(t, userB.Register())
-		// userB.MustWaitForEvent(t, "reg", nil)
-		// // Alice receives joining for Bob
-		// userA.MustWaitForEvent(t, "joining", nil)
+		// Register Clark
+		require.NoError(t, userC.Register())
 
 		// Flush any extra events to ensure clean slate
 		userA.FlushEvents()
 		userB.FlushEvents()
+		userC.FlushEvents()
 	}
 
-	return boardId, userA, userB
+	return boardId, userA, userB, userC
 }

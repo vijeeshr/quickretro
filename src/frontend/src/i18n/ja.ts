@@ -100,4 +100,20 @@ export default {
     autoDeleteScheduleBase: 'このボードは {date} に自動的にクリーンアップされます',
     autoDeleteScheduleAddon: 'ので、手動で削除する必要はありません。',
   },
+  transferOwnership: {
+    tooltip: 'ボードの所有権を譲渡',
+    promotedNotification: 'あなたがボードの所有者になりました。設定と参加者を管理できます。',
+    demotedNotification: '所有権が譲渡されました。あなたはもうボードの所有者ではありません。',
+    title: '所有権の譲渡',
+    selectLabel: '新しい所有者を選択',
+    selectPlaceholder: 'ユーザーを選択',
+    cancel: 'キャンセル',
+    confirm: '譲渡',
+    reclaim: {
+      tooltip: 'ボードの所有権を取り戻す',
+      title: '所有権の取り戻し',
+      text: 'この操作により、あなたが再びボードの所有者になります。',
+      confirm: '取り戻す',
+    },
+  },
 }

@@ -8,8 +8,6 @@ import NewCard from './NewCard.vue'
 import { useRoute } from 'vue-router'
 import {
   EventRequest,
-  MaskEvent,
-  MaskResponse,
   RegisterEvent,
   RegisterResponse,
   MessageResponse,
@@ -20,8 +18,6 @@ import {
   DeleteMessageResponse,
   LikeMessageEvent,
   LikeMessageResponse,
-  LockEvent,
-  LockResponse,
   TimerResponse,
   TimerEvent,
   CategoryChangeEvent,
@@ -32,7 +28,10 @@ import {
   UserJoiningResponse,
   TypedEvent,
   TypedResponse,
+  SettingsEvent,
+  SettingsResponse,
 } from '../models/Requests'
+import TransferOwnershipModal from './TransferOwnershipModal.vue'
 import { OnlineUser } from '../models/OnlineUser'
 import { DraftMessage } from '../models/DraftMessage'
 import { LikeMessage } from '../models/LikeMessage'
@@ -68,6 +67,7 @@ const { locale, setLocale, languageOptions } = useLanguage()
 const { t } = useI18n()
 const isMasked = ref(true)
 const isOwner = ref(false)
+const isBoardCreator = ref(false)
 const isLocked = ref(false)
 const timerExpiresInSeconds = ref(0)
 const newCardCategory = ref('')
@@ -144,6 +144,37 @@ const setIsColumnEditDialogOpen = (value: boolean) => {
   isColumnEditDialogOpen.value = value
 }
 
+const isTransferOwnershipModalOpen = ref(false)
+const transferOwnershipSelectedXid = ref('')
+const openTransferOwnershipModalForUser = (selectedXid: string) => {
+  if (!isOwner.value) return
+  transferOwnershipSelectedXid.value = selectedXid
+  isTransferOwnershipModalOpen.value = true
+}
+const openTransferOwnershipModal = () => {
+  if (!isOwner.value) return
+  transferOwnershipSelectedXid.value = ''
+  isTransferOwnershipModalOpen.value = true
+}
+const onTransferOwnership = (ownerXid: string) => {
+  dispatchEvent<SettingsEvent>('set', { ownerXid })
+  isTransferOwnershipModalOpen.value = false
+}
+
+const isReclaimDialogOpen = ref(false)
+const setIsReclaimDialogOpen = (value: boolean) => {
+  isReclaimDialogOpen.value = value
+}
+const openReclaimDialog = () => {
+  if (isBoardCreator.value && !isOwner.value) {
+    isReclaimDialogOpen.value = true
+  }
+}
+const reclaimBoard = () => {
+  dispatchEvent<SettingsEvent>('set', { ownerXid: xid.value })
+  setIsReclaimDialogOpen(false)
+}
+
 const onOneMinuteLeftWarning = () => {
   toast.info(t('dashboard.timer.oneMinuteLeft'))
 }
@@ -203,6 +234,10 @@ const cardsStats = computed<Record<string, UserCardStats>>(() => {
 
 const myCardsCount = computed(() => {
   return cardsStats.value[xid.value]?.count ?? 0
+})
+
+const allOtherUsers = computed(() => {
+  return onlineUsers.value.filter(u => u.xid !== xid.value)
 })
 
 const onlineUsersCardsStats = computed(() => {
@@ -424,16 +459,16 @@ const onCategoryChanged = (pyl: CategoryChangeMessage) => {
 }
 
 const mask = () => {
-  dispatchEvent<MaskEvent>('mask', { mask: !isMasked.value })
+  dispatchEvent<SettingsEvent>('set', { mask: !isMasked.value })
 }
 
 const lock = () => {
-  dispatchEvent<LockEvent>('lock', { lock: !isLocked.value })
+  dispatchEvent<SettingsEvent>('set', { lock: !isLocked.value })
 }
 
 const unlock = () => {
   // only used by "unlock" button in "locked panel"
-  dispatchEvent<LockEvent>('lock', { lock: false })
+  dispatchEvent<SettingsEvent>('set', { lock: false })
 }
 
 const deleteAll = () => {
@@ -603,8 +638,8 @@ const print = async () => {
                             margin: 20px;
                             size: A4 portrait;
                         }
-                        
-                        body { 
+
+                        body {
                             margin: 0;
                             padding: 20px;
                             -webkit-print-color-adjust: exact;
@@ -832,6 +867,7 @@ const onRegisterResponse = (response: RegisterResponse) => {
   // }
   boardName.value = response.boardName
   isOwner.value = response.isBoardOwner
+  isBoardCreator.value = response.isBoardCreator
   isMasked.value = response.boardMasking
   isLocked.value = response.boardLock
   columns.value = response.columns
@@ -882,17 +918,32 @@ const onUserClosingResponse = (response: UserClosingResponse) => {
   }
 }
 
-const onMaskResponse = (response: MaskResponse) => {
+const onSettingsResponse = (response: SettingsResponse) => {
   isMasked.value = response.mask
-}
+  if (response.lock !== isLocked.value) {
+    isLocked.value = response.lock
+    if (isLocked.value && newCardCreationInProgress.value) {
+      // Board lock received when the user is adding new messages.
+      // The message will be forcefully discarded.
+      clearNewCards()
+      notifyForLostMessages({ dueToLock: true })
+    }
+  }
 
-const onLockResponse = (response: LockResponse) => {
-  isLocked.value = response.lock
-  if (isLocked.value && newCardCreationInProgress.value) {
-    // Board lock received when the user is adding new messages.
-    // The message will be forcefully discarded.
-    clearNewCards()
-    notifyForLostMessages({ dueToLock: true })
+  if (response.ownerXid) {
+    const becameOwner = !isOwner.value && response.ownerXid === xid.value
+    const lostOwnership = isOwner.value && response.ownerXid !== xid.value
+
+    isOwner.value = response.ownerXid === xid.value
+    onlineUsers.value.forEach(u => {
+      u.isOwner = u.xid === response.ownerXid
+    })
+
+    if (becameOwner) {
+      toast.success(t('transferOwnership.promotedNotification'))
+    } else if (lostOwnership) {
+      toast.info(t('transferOwnership.demotedNotification'))
+    }
   }
 }
 
@@ -1170,11 +1221,8 @@ const socketOnMessage = (event: MessageEvent<string>) => {
       case 'closing':
         onUserClosingResponse(response)
         break
-      case 'mask':
-        onMaskResponse(response)
-        break
-      case 'lock':
-        onLockResponse(response)
+      case 'set':
+        onSettingsResponse(response)
         break
       case 'msg':
         onSaveMessageResponse(response)
@@ -1476,7 +1524,7 @@ onUnmounted(() => {
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
         <DialogPanel
-          class="w-full max-w-[356px] min-w-[240px] rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl"
+          class="w-full max-w-89 min-w-60 rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl"
         >
           <CategoryEditor
             :categories="mergedCategories"
@@ -1504,6 +1552,51 @@ onUnmounted(() => {
       </div>
     </Dialog>
 
+    <!-- Dialog for Ownership Transfer -->
+    <TransferOwnershipModal
+      :is-open="isTransferOwnershipModalOpen"
+      :preselected-xid="transferOwnershipSelectedXid"
+      :users="allOtherUsers"
+      @close="isTransferOwnershipModalOpen = false"
+      @transfer="onTransferOwnership"
+    />
+
+    <!-- Dialog for Reclaiming Ownership -->
+    <Dialog :open="isReclaimDialogOpen" class="relative z-60" @close="setIsReclaimDialogOpen">
+      <div class="fixed inset-0 bg-black/30 dark:bg-black/60" aria-hidden="true" />
+      <div class="fixed inset-0 flex items-center justify-center p-4">
+        <DialogPanel
+          class="w-full max-w-sm rounded-xl bg-white dark:bg-slate-800 p-6 shadow-xl space-y-6"
+        >
+          <DialogTitle class="text-xl font-medium text-slate-800 dark:text-slate-100">
+            {{ t('transferOwnership.reclaim.title') }}
+          </DialogTitle>
+
+          <div class="space-y-4">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              {{ t('transferOwnership.reclaim.text') }}
+            </label>
+          </div>
+
+          <div class="flex justify-end gap-3 mt-6">
+            <button
+              type="button"
+              class="rounded-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+              @click="setIsReclaimDialogOpen(false)"
+            >
+              {{ t('transferOwnership.cancel') }}
+            </button>
+            <button
+              class="inline-flex justify-center rounded-md border border-transparent bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50"
+              @click="reclaimBoard"
+            >
+              {{ t('transferOwnership.reclaim.confirm') }}
+            </button>
+          </div>
+        </DialogPanel>
+      </div>
+    </Dialog>
+
     <!-- Left Sidebar -->
     <div class="w-16 p-3" :class="{ 'sticky top-0 self-start': isLeftSidebarSticky }">
       <div ref="leftSidebarContentRef">
@@ -1512,7 +1605,9 @@ onUnmounted(() => {
           :time-left-in-seconds="timerExpiresInSeconds"
           :title="t('dashboard.timer.tooltip')"
           class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white ml-auto mx-auto mb-4"
-          :class="isOwner ? 'cursor-pointer' : 'cursor-default'"
+          :class="
+            isOwner ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-default'
+          "
           @click="timerSettings"
           @countdown-progress-update="onCountdownProgressUpdate"
           @one-minute-left-warning="onOneMinuteLeftWarning"
@@ -1526,7 +1621,7 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             @click="share"
           >
             <path
@@ -1538,16 +1633,16 @@ onUnmounted(() => {
         </div>
         <!-- Mask controls -->
         <div
+          v-if="isOwner"
           :title="!isMasked ? t('dashboard.mask.maskTooltip') : t('dashboard.mask.unmaskTooltip')"
         >
           <svg
-            v-if="isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             :class="{ hidden: isMasked }"
             @click="mask"
           >
@@ -1558,13 +1653,12 @@ onUnmounted(() => {
             />
           </svg>
           <svg
-            v-if="isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             :class="{ hidden: !isMasked }"
             @click="mask"
           >
@@ -1582,16 +1676,16 @@ onUnmounted(() => {
         </div>
         <!-- Lock controls -->
         <div
+          v-if="isOwner"
           :title="!isLocked ? t('dashboard.lock.lockTooltip') : t('dashboard.lock.unlockTooltip')"
         >
           <svg
-            v-if="isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             :class="{ hidden: isLocked }"
             @click="lock"
           >
@@ -1602,13 +1696,12 @@ onUnmounted(() => {
             />
           </svg>
           <svg
-            v-if="isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             :class="{ hidden: !isLocked }"
             @click="lock"
           >
@@ -1620,15 +1713,14 @@ onUnmounted(() => {
           </svg>
         </div>
         <!-- Print -->
-        <div :title="t('dashboard.print.tooltip')">
+        <div v-if="isOwner" :title="t('dashboard.print.tooltip')">
           <svg
-            v-if="isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             @click="generateDocument"
           >
             <path
@@ -1638,9 +1730,11 @@ onUnmounted(() => {
             />
           </svg>
         </div>
-        <DarkModeToggle class="w-8 h-8 mx-auto mb-4 cursor-pointer" />
+        <DarkModeToggle
+          class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
+        />
         <!-- Focus -->
-        <div :title="t('dashboard.spotlight.tooltip')" class="w-8 h-8 mx-auto mb-4 cursor-pointer">
+        <div :title="t('dashboard.spotlight.tooltip')">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -1649,6 +1743,7 @@ onUnmounted(() => {
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             @click="openSpotlight"
           >
             <circle cx="12" cy="12" r="3" />
@@ -1666,7 +1761,7 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="2"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             @click="openLanguageDialog"
           >
             <path
@@ -1676,16 +1771,75 @@ onUnmounted(() => {
             />
           </svg>
         </div>
-        <!-- Delete All-->
-        <div :title="t('dashboard.delete.tooltip')">
+        <!-- Transfer ownership -->
+        <div v-if="isOwner" :title="t('transferOwnership.tooltip')">
           <svg
-            v-if="isOwner"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
+            @click="openTransferOwnershipModal"
+          >
+            <path
+              d="M16.051 12.616a1 1 0 0 1 1.909.024l.737 1.452a1 1 0 0 0 .737.535l1.634.256a1 1 0 0 1 .588 1.806l-1.172 1.168a1 1 0 0 0-.282.866l.259 1.613a1 1 0 0 1-1.541 1.134l-1.465-.75a1 1 0 0 0-.912 0l-1.465.75a1 1 0 0 1-1.539-1.133l.258-1.613a1 1 0 0 0-.282-.866l-1.156-1.153a1 1 0 0 1 .572-1.822l1.633-.256a1 1 0 0 0 .737-.535z"
+            />
+            <path d="M8 15H7a4 4 0 0 0-4 4v2" />
+            <circle cx="10" cy="7" r="4" />
+          </svg>
+        </div>
+        <!-- Reclaim ownership-->
+        <div v-if="isBoardCreator && !isOwner" :title="t('transferOwnership.reclaim.tooltip')">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer text-yellow-500 hover:scale-110 transition-transform"
+            @click="openReclaimDialog"
+          >
+            <path
+              d="M16.051 12.616a1 1 0 0 1 1.909.024l.737 1.452a1 1 0 0 0 .737.535l1.634.256a1 1 0 0 1 .588 1.806l-1.172 1.168a1 1 0 0 0-.282.866l.259 1.613a1 1 0 0 1-1.541 1.134l-1.465-.75a1 1 0 0 0-.912 0l-1.465.75a1 1 0 0 1-1.539-1.133l.258-1.613a1 1 0 0 0-.282-.866l-1.156-1.153a1 1 0 0 1 .572-1.822l1.633-.256a1 1 0 0 0 .737-.535z"
+            />
+            <path d="M8 15H7a4 4 0 0 0-4 4v2" />
+            <circle cx="10" cy="7" r="4" />
+          </svg>
+        </div>
+
+        <!-- <div :title="t('transferOwnership.reclaim.tooltip')">
+          <svg
+            v-if="isBoardCreator && !isOwner"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer text-yellow-500 hover:scale-110 transition-transform"
+            @click="reclaimBoard"
+          >
+            <path
+              d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"
+            />
+          </svg>
+        </div> -->
+
+        <!-- Delete All-->
+        <div v-if="isOwner" :title="t('dashboard.delete.tooltip')">
+          <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
             @click="openDeleteAllDialog"
           >
             <path
@@ -1696,7 +1850,11 @@ onUnmounted(() => {
           </svg>
         </div>
         <a href="https://github.com/vijeeshr/quickretro" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" aria-hidden="true" class="h-8 w-8 mx-auto mb-4 fill-slate-100">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            class="h-8 w-8 mx-auto mb-4 fill-slate-100 hover:scale-110 transition-transform"
+          >
             <path
               fill-rule="evenodd"
               clip-rule="evenodd"
@@ -1711,7 +1869,7 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="h-8 w-8 mx-auto"
+            class="h-8 w-8 mx-auto hover:scale-110 transition-transform"
           >
             <path
               stroke-linecap="round"
@@ -1855,6 +2013,10 @@ onUnmounted(() => {
           v-for="onlineUser in onlineUsersCardsStats"
           :key="onlineUser.xid"
           class="relative w-8 h-8 ml-auto mx-auto mb-4"
+          :class="{
+            'cursor-pointer hover:ring-2 hover:ring-white rounded-full transition': isOwner,
+          }"
+          @click="openTransferOwnershipModalForUser(onlineUser.xid)"
         >
           <svg
             v-if="onlineUser.isOwner"
@@ -1890,6 +2052,10 @@ onUnmounted(() => {
             v-for="inactiveUser in inactiveUsersCardsStats"
             :key="inactiveUser.xid"
             class="relative w-8 h-8 ml-auto mx-auto mb-4 opacity-40"
+            :class="{
+              'cursor-pointer hover:ring-2 hover:ring-white rounded-full transition': isOwner,
+            }"
+            @click="openTransferOwnershipModalForUser(inactiveUser.xid)"
           >
             <svg
               v-if="inactiveUser.isOwner"

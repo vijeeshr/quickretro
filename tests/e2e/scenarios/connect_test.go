@@ -11,7 +11,7 @@ import (
 
 func TestConnectHandshake(t *testing.T) {
 
-	_, userA, userB := harness.SetupBoardAndUsers(t)
+	_, userA, userB, _ := harness.SetupBoardAndUsers(t)
 
 	t.Run("Xid should remain same after calling connect multiple times", func(t *testing.T) {
 		var firstReg harness.RegisterResponse

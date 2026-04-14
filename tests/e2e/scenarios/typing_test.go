@@ -8,7 +8,7 @@ import (
 )
 
 func TestTypingIndicator(t *testing.T) {
-	_, userA, userB := harness.SetupTest(t, true)
+	_, userA, userB, _ := harness.SetupTest(t, true)
 
 	t.Run("User A typing should be broadcasted to User B", func(t *testing.T) {
 		// User A sends typing event

@@ -100,4 +100,21 @@ export default {
     autoDeleteScheduleBase: 'Este quadro será automaticamente limpo em {date}',
     autoDeleteScheduleAddon: ', por isso não precisa de se preocupar em eliminá-lo manualmente.',
   },
+  transferOwnership: {
+    tooltip: 'Transferir propriedade do quadro',
+    promotedNotification:
+      'Agora é o proprietário do quadro. Pode gerir definições e participantes.',
+    demotedNotification: 'Propriedade transferida. Já não é o proprietário do quadro.',
+    title: 'Transferir Propriedade',
+    selectLabel: 'Selecionar Novo Proprietário',
+    selectPlaceholder: 'Selecionar Utilizador',
+    cancel: 'Cancelar',
+    confirm: 'Transferir',
+    reclaim: {
+      tooltip: 'Reaver propriedade do quadro',
+      title: 'Reaver Propriedade',
+      text: 'Esta ação tornará novamente o utilizador o proprietário do quadro.',
+      confirm: 'Reaver',
+    },
+  },
 }

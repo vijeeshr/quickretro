@@ -100,4 +100,20 @@ export default {
     autoDeleteScheduleBase: '该看板将于 {date} 自动清理',
     autoDeleteScheduleAddon: '，因此您无需担心手动删除它。',
   },
+  transferOwnership: {
+    tooltip: '转移看板所有权',
+    promotedNotification: '您现在是看板所有者。您可以管理设置和参与者。',
+    demotedNotification: '所有权已转移。您不再是看板所有者。',
+    title: '转移所有权',
+    selectLabel: '选择新所有者',
+    selectPlaceholder: '选择用户',
+    cancel: '取消',
+    confirm: '转移',
+    reclaim: {
+      tooltip: '收回看板所有权',
+      title: '收回所有权',
+      text: '此操作将使您再次成为看板所有者。',
+      confirm: '收回',
+    },
+  },
 }
