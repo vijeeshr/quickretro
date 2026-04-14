@@ -102,4 +102,21 @@ export default {
     autoDeleteScheduleAddon:
       ', donc vous n’avez pas à vous en faire pour le supprimer manuellement.',
   },
+  transferOwnership: {
+    tooltip: 'Transférer la propriété du tableau',
+    promotedNotification:
+      'Vous êtes maintenant le propriétaire du tableau. Vous pouvez gérer les paramètres et les participants.',
+    demotedNotification: 'Propriété transférée. Vous n’êtes plus le propriétaire du tableau.',
+    title: 'Transférer la propriété',
+    selectLabel: 'Sélectionner le nouveau propriétaire',
+    selectPlaceholder: 'Sélectionner un utilisateur',
+    cancel: 'Annuler',
+    confirm: 'Transférer',
+    reclaim: {
+      tooltip: 'Récupérer la propriété du tableau',
+      title: 'Récupérer la propriété',
+      text: 'Cette action fera de vous à nouveau le propriétaire du tableau.',
+      confirm: 'Récupérer',
+    },
+  },
 }

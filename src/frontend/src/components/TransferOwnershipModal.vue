@@ -137,7 +137,7 @@ const getNickname = (xid: string) => {
           </button>
           <button
             :disabled="!selectedXid"
-            class="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            class="inline-flex justify-center rounded-md border border-transparent bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50"
             @click="submit"
           >
             {{ t('transferOwnership.confirm') }}

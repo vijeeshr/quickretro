@@ -102,4 +102,21 @@ export default {
     autoDeleteScheduleBase: 'Este tablero se limpiará automáticamente el {date}',
     autoDeleteScheduleAddon: ', así que no necesitas preocuparte por eliminarlo manualmente.',
   },
+  transferOwnership: {
+    tooltip: 'Transferir la propiedad del tablero',
+    promotedNotification:
+      'Ahora eres el propietario del tablero. Puedes gestionar la configuración y los participantes.',
+    demotedNotification: 'Propiedad transferida. Ya no eres el propietario del tablero.',
+    title: 'Transferir propiedad',
+    selectLabel: 'Seleccionar nuevo propietario',
+    selectPlaceholder: 'Seleccionar usuario',
+    cancel: 'Cancelar',
+    confirm: 'Transferir',
+    reclaim: {
+      tooltip: 'Recuperar la propiedad del tablero',
+      title: 'Recuperar propiedad',
+      text: 'Esta acción te convertirá de nuevo en el propietario del tablero.',
+      confirm: 'Recuperar',
+    },
+  },
 }

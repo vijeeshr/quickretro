@@ -146,21 +146,33 @@ const setIsColumnEditDialogOpen = (value: boolean) => {
 
 const isTransferOwnershipModalOpen = ref(false)
 const transferOwnershipSelectedXid = ref('')
-
 const openTransferOwnershipModalForUser = (selectedXid: string) => {
   if (!isOwner.value) return
   transferOwnershipSelectedXid.value = selectedXid
   isTransferOwnershipModalOpen.value = true
 }
-
 const openTransferOwnershipModal = () => {
   if (!isOwner.value) return
+  transferOwnershipSelectedXid.value = ''
   isTransferOwnershipModalOpen.value = true
 }
-
 const onTransferOwnership = (ownerXid: string) => {
   dispatchEvent<SettingsEvent>('set', { ownerXid })
   isTransferOwnershipModalOpen.value = false
+}
+
+const isReclaimDialogOpen = ref(false)
+const setIsReclaimDialogOpen = (value: boolean) => {
+  isReclaimDialogOpen.value = value
+}
+const openReclaimDialog = () => {
+  if (isBoardCreator.value && !isOwner.value) {
+    isReclaimDialogOpen.value = true
+  }
+}
+const reclaimBoard = () => {
+  dispatchEvent<SettingsEvent>('set', { ownerXid: xid.value })
+  setIsReclaimDialogOpen(false)
 }
 
 const onOneMinuteLeftWarning = () => {
@@ -462,10 +474,6 @@ const unlock = () => {
 const deleteAll = () => {
   dispatchEvent<DeleteAllEvent>('delall', {})
   setIsDeleteAllDialogOpen(false)
-}
-
-const reclaimBoard = () => {
-  dispatchEvent<SettingsEvent>('set', { ownerXid: xid.value })
 }
 
 const onTimerStart = (expiryDurationInSeconds: number) => {
@@ -1516,7 +1524,7 @@ onUnmounted(() => {
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
         <DialogPanel
-          class="w-full max-w-[356px] min-w-[240px] rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl"
+          class="w-full max-w-89 min-w-60 rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl"
         >
           <CategoryEditor
             :categories="mergedCategories"
@@ -1544,7 +1552,7 @@ onUnmounted(() => {
       </div>
     </Dialog>
 
-    <!-- Transfer Ownership Modal -->
+    <!-- Dialog for Ownership Transfer -->
     <TransferOwnershipModal
       :is-open="isTransferOwnershipModalOpen"
       :preselected-xid="transferOwnershipSelectedXid"
@@ -1552,6 +1560,42 @@ onUnmounted(() => {
       @close="isTransferOwnershipModalOpen = false"
       @transfer="onTransferOwnership"
     />
+
+    <!-- Dialog for Reclaiming Ownership -->
+    <Dialog :open="isReclaimDialogOpen" class="relative z-60" @close="setIsReclaimDialogOpen">
+      <div class="fixed inset-0 bg-black/30 dark:bg-black/60" aria-hidden="true" />
+      <div class="fixed inset-0 flex items-center justify-center p-4">
+        <DialogPanel
+          class="w-full max-w-sm rounded-xl bg-white dark:bg-slate-800 p-6 shadow-xl space-y-6"
+        >
+          <DialogTitle class="text-xl font-medium text-slate-800 dark:text-slate-100">
+            {{ t('transferOwnership.reclaim.title') }}
+          </DialogTitle>
+
+          <div class="space-y-4">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              {{ t('transferOwnership.reclaim.text') }}
+            </label>
+          </div>
+
+          <div class="flex justify-end gap-3 mt-6">
+            <button
+              type="button"
+              class="rounded-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+              @click="setIsReclaimDialogOpen(false)"
+            >
+              {{ t('transferOwnership.cancel') }}
+            </button>
+            <button
+              class="inline-flex justify-center rounded-md border border-transparent bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-50"
+              @click="reclaimBoard"
+            >
+              {{ t('transferOwnership.reclaim.confirm') }}
+            </button>
+          </div>
+        </DialogPanel>
+      </div>
+    </Dialog>
 
     <!-- Left Sidebar -->
     <div class="w-16 p-3" :class="{ 'sticky top-0 self-start': isLeftSidebarSticky }">
@@ -1589,10 +1633,10 @@ onUnmounted(() => {
         </div>
         <!-- Mask controls -->
         <div
+          v-if="isOwner"
           :title="!isMasked ? t('dashboard.mask.maskTooltip') : t('dashboard.mask.unmaskTooltip')"
         >
           <svg
-            v-if="isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -1609,7 +1653,6 @@ onUnmounted(() => {
             />
           </svg>
           <svg
-            v-if="isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -1633,10 +1676,10 @@ onUnmounted(() => {
         </div>
         <!-- Lock controls -->
         <div
+          v-if="isOwner"
           :title="!isLocked ? t('dashboard.lock.lockTooltip') : t('dashboard.lock.unlockTooltip')"
         >
           <svg
-            v-if="isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -1653,7 +1696,6 @@ onUnmounted(() => {
             />
           </svg>
           <svg
-            v-if="isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -1671,9 +1713,8 @@ onUnmounted(() => {
           </svg>
         </div>
         <!-- Print -->
-        <div :title="t('dashboard.print.tooltip')">
+        <div v-if="isOwner" :title="t('dashboard.print.tooltip')">
           <svg
-            v-if="isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -1731,9 +1772,8 @@ onUnmounted(() => {
           </svg>
         </div>
         <!-- Transfer ownership -->
-        <div :title="t('transferOwnership.tooltip')">
+        <div v-if="isOwner" :title="t('transferOwnership.tooltip')">
           <svg
-            v-if="isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -1752,7 +1792,27 @@ onUnmounted(() => {
           </svg>
         </div>
         <!-- Reclaim ownership-->
-        <div :title="t('transferOwnership.reclaim.tooltip')">
+        <div v-if="isBoardCreator && !isOwner" :title="t('transferOwnership.reclaim.tooltip')">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-8 h-8 mx-auto mb-4 cursor-pointer text-yellow-500 hover:scale-110 transition-transform"
+            @click="openReclaimDialog"
+          >
+            <path
+              d="M16.051 12.616a1 1 0 0 1 1.909.024l.737 1.452a1 1 0 0 0 .737.535l1.634.256a1 1 0 0 1 .588 1.806l-1.172 1.168a1 1 0 0 0-.282.866l.259 1.613a1 1 0 0 1-1.541 1.134l-1.465-.75a1 1 0 0 0-.912 0l-1.465.75a1 1 0 0 1-1.539-1.133l.258-1.613a1 1 0 0 0-.282-.866l-1.156-1.153a1 1 0 0 1 .572-1.822l1.633-.256a1 1 0 0 0 .737-.535z"
+            />
+            <path d="M8 15H7a4 4 0 0 0-4 4v2" />
+            <circle cx="10" cy="7" r="4" />
+          </svg>
+        </div>
+
+        <!-- <div :title="t('transferOwnership.reclaim.tooltip')">
           <svg
             v-if="isBoardCreator && !isOwner"
             xmlns="http://www.w3.org/2000/svg"
@@ -1769,11 +1829,11 @@ onUnmounted(() => {
               d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"
             />
           </svg>
-        </div>
+        </div> -->
+
         <!-- Delete All-->
-        <div :title="t('dashboard.delete.tooltip')">
+        <div v-if="isOwner" :title="t('dashboard.delete.tooltip')">
           <svg
-            v-if="isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"

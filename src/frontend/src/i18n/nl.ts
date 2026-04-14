@@ -101,4 +101,21 @@ export default {
     autoDeleteScheduleAddon:
       ', dus je hoeft je geen zorgen te maken om het handmatig te verwijderen.',
   },
+  transferOwnership: {
+    tooltip: 'Eigendom van bord overdragen',
+    promotedNotification:
+      'Je bent nu de eigenaar van het bord. Je kunt instellingen en deelnemers beheren.',
+    demotedNotification: 'Eigendom overgedragen. Je bent niet langer de eigenaar van het bord.',
+    title: 'Eigendom overdragen',
+    selectLabel: 'Nieuwe eigenaar selecteren',
+    selectPlaceholder: 'Gebruiker selecteren',
+    cancel: 'Annuleren',
+    confirm: 'Overdragen',
+    reclaim: {
+      tooltip: 'Eigendom van bord terugeisen',
+      title: 'Eigendom terugeisen',
+      text: 'Deze actie maakt je opnieuw de eigenaar van het bord.',
+      confirm: 'Terugeisen',
+    },
+  },
 }

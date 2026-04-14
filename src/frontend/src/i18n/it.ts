@@ -100,4 +100,21 @@ export default {
     autoDeleteScheduleBase: 'Questa board verrà pulita automaticamente il {date}',
     autoDeleteScheduleAddon: ', quindi non devi preoccuparti di eliminarla manualmente.',
   },
+  transferOwnership: {
+    tooltip: 'Trasferisci proprietà della bacheca',
+    promotedNotification:
+      'Ora sei il proprietario della bacheca. Puoi gestire le impostazioni e i partecipanti.',
+    demotedNotification: 'Proprietà trasferita. Non sei più il proprietario della bacheca.',
+    title: 'Trasferisci proprietà',
+    selectLabel: 'Seleziona nuovo proprietario',
+    selectPlaceholder: 'Seleziona utente',
+    cancel: 'Annulla',
+    confirm: 'Trasferisci',
+    reclaim: {
+      tooltip: 'Reclama proprietà della bacheca',
+      title: 'Reclama proprietà',
+      text: 'Questa azione ti renderà nuovamente il proprietario della bacheca.',
+      confirm: 'Reclama',
+    },
+  },
 }

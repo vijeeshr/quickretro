@@ -102,4 +102,21 @@ export default {
     autoDeleteScheduleBase: 'Bảng này sẽ được tự động dọn dẹp vào ngày {date}',
     autoDeleteScheduleAddon: ', nên bạn không cần phải xóa thủ công.',
   },
+  transferOwnership: {
+    tooltip: 'Chuyển nhượng quyền sở hữu bảng',
+    promotedNotification:
+      'Bạn hiện là chủ sở hữu bảng. Bạn có thể quản lý cài đặt và người tham gia.',
+    demotedNotification: 'Đã chuyển nhượng quyền sở hữu. Bạn không còn là chủ sở hữu bảng.',
+    title: 'Chuyển nhượng quyền sở hữu',
+    selectLabel: 'Chọn chủ sở hữu mới',
+    selectPlaceholder: 'Chọn người dùng',
+    cancel: 'Hủy',
+    confirm: 'Chuyển nhượng',
+    reclaim: {
+      tooltip: 'Lấy lại quyền sở hữu bảng',
+      title: 'Lấy lại quyền sở hữu',
+      text: 'Hành động này sẽ giúp bạn trở lại làm chủ sở hữu bảng.',
+      confirm: 'Lấy lại',
+    },
+  },
 }

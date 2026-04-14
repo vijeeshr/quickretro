@@ -101,4 +101,21 @@ export default {
     autoDeleteScheduleBase: 'Dieses Board wird am {date} automatisch bereinigt',
     autoDeleteScheduleAddon: ', sodass du dir keine Sorgen machen musst, es manuell zu löschen.',
   },
+  transferOwnership: {
+    tooltip: 'Board-Eigentümerschaft übertragen',
+    promotedNotification:
+      'Sie sind jetzt der Board-Eigentümer. Sie können Einstellungen und Teilnehmer verwalten.',
+    demotedNotification: 'Eigentümerschaft übertragen. Sie sind nicht mehr der Board-Eigentümer.',
+    title: 'Eigentümerschaft übertragen',
+    selectLabel: 'Neuen Eigentümer auswählen',
+    selectPlaceholder: 'Benutzer auswählen',
+    cancel: 'Abbrechen',
+    confirm: 'Übertragen',
+    reclaim: {
+      tooltip: 'Board-Eigentümerschaft zurückfordern',
+      title: 'Eigentümerschaft zurückfordern',
+      text: 'Diese Aktion macht Sie wieder zum Board-Eigentümer.',
+      confirm: 'Zurückfordern',
+    },
+  },
 }

@@ -103,4 +103,21 @@ export default {
     autoDeleteScheduleBase: 'Ta tablica zostanie automatycznie usunięta dnia {date}',
     autoDeleteScheduleAddon: ', więc nie musisz martwić się o jej ręczne usunięcie.',
   },
+  transferOwnership: {
+    tooltip: 'Przekaż własność tablicy',
+    promotedNotification:
+      'Jesteś teraz właścicielem tablicy. Możesz zarządzać ustawieniami i uczestnikami.',
+    demotedNotification: 'Własność została przekazana. Nie jesteś już właścicielem tablicy.',
+    title: 'Przekaż własność',
+    selectLabel: 'Wybierz nowego właściciela',
+    selectPlaceholder: 'Wybierz użytkownika',
+    cancel: 'Anuluj',
+    confirm: 'Przekaż',
+    reclaim: {
+      tooltip: 'Odzyskaj własność tablicy',
+      title: 'Odzyskaj własność',
+      text: 'Ta czynność sprawi, że ponownie staniesz się właścicielem tablicy.',
+      confirm: 'Odzyskaj',
+    },
+  },
 }

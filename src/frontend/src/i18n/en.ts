@@ -113,6 +113,9 @@ export default {
     confirm: 'Transfer',
     reclaim: {
       tooltip: 'Reclaim board ownership',
+      title: 'Reclaim Ownership',
+      text: 'This action will make you board owner again.',
+      confirm: 'Reclaim',
     },
   },
 }

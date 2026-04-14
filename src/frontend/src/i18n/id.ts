@@ -104,4 +104,21 @@ export default {
     autoDeleteScheduleBase: 'Papan ini akan dibersihkan secara otomatis pada {date}',
     autoDeleteScheduleAddon: ', sehingga Anda tidak perlu khawatir menghapusnya secara manual.',
   },
+  transferOwnership: {
+    tooltip: 'Transfer kepemilikan papan',
+    promotedNotification:
+      'Anda sekarang adalah pemilik papan. Anda dapat mengelola pengaturan dan peserta.',
+    demotedNotification: 'Kepemilikan ditransfer. Anda bukan lagi pemilik papan.',
+    title: 'Transfer Kepemilikan',
+    selectLabel: 'Pilih Pemilik Baru',
+    selectPlaceholder: 'Pilih Pengguna',
+    cancel: 'Batal',
+    confirm: 'Transfer',
+    reclaim: {
+      tooltip: 'Ambil alih kembali kepemilikan papan',
+      title: 'Ambil Alih Kembali Kepemilikan',
+      text: 'Tindakan ini akan membuat Anda menjadi pemilik papan lagi.',
+      confirm: 'Ambil Alih Kembali',
+    },
+  },
 }
