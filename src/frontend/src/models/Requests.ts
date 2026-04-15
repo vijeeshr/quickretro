@@ -70,7 +70,7 @@ export interface RegisterResponse {
   comments: MessageResponse[]
   timerExpiresInSeconds: number
   boardExpiryUtcSeconds: number // Unix Timestamp Seconds
-  notifyNewBoardExpiry: boolean
+  showWelcomePopup: boolean
 }
 
 export interface UserJoiningResponse {

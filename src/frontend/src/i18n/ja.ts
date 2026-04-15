@@ -97,8 +97,15 @@ export default {
     printFooter: '作成者',
     offline: 'オフライン',
     notExists: 'ボードは自動的に削除されたか、作成者によって手動で削除されました。',
-    autoDeleteScheduleBase: 'このボードは {date} に自動的にクリーンアップされます',
-    autoDeleteScheduleAddon: 'ので、手動で削除する必要はありません。',
+    autoDeleteSchedule: 'このボードは {date} に自動的にクリーンアップされます。',
+    welcome: {
+      title: 'ようこそ！',
+      maskInfo:
+        'メッセージはデフォルトでマスクされています。マスクを解除するまで、作成者のみが自分のメッセージを見ることができます。',
+      maskOnLabel: 'カードのマスク：ON',
+      maskOffLabel: 'カード의マスク：OFF',
+      ok: '了解しました！',
+    },
   },
   transferOwnership: {
     tooltip: 'ボードの所有権を譲渡',

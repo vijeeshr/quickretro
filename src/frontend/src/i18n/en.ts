@@ -99,8 +99,15 @@ export default {
     printFooter: 'Created with',
     offline: 'You seem to be offline.',
     notExists: 'Board was either auto-deleted, or manually deleted by its creator.',
-    autoDeleteScheduleBase: 'This board will be cleaned up automatically on {date}',
-    autoDeleteScheduleAddon: ', so you do not need to worry about deleting it manually.',
+    autoDeleteSchedule: 'This board will be cleaned up automatically on {date}.',
+    welcome: {
+      title: 'Welcome!',
+      maskInfo:
+        'Messages are masked by default. Only the author can see their own messages until you unmask.',
+      maskOnLabel: 'Card Masking is ON',
+      maskOffLabel: 'Card Masking is OFF',
+      ok: 'Got it!',
+    },
   },
   transferOwnership: {
     tooltip: 'Transfer board ownership',

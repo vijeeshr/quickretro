@@ -100,8 +100,15 @@ export default {
     printFooter: 'Stworzone za pomocą',
     offline: 'Wygląda na to, że jesteś offline.',
     notExists: 'Tablica została automatycznie usunięta lub ręcznie usunięta przez jej twórcę.',
-    autoDeleteScheduleBase: 'Ta tablica zostanie automatycznie usunięta dnia {date}',
-    autoDeleteScheduleAddon: ', więc nie musisz martwić się o jej ręczne usunięcie.',
+    autoDeleteSchedule: 'Ta tablica zostanie automatycznie usunięta dnia {date}.',
+    welcome: {
+      title: 'Witaj!',
+      maskInfo:
+        'Wiadomości są domyślnie maskowane. Tylko autor może widzieć swoje wiadomości, dopóki nie cofniesz maskowania.',
+      maskOnLabel: 'Maskowanie kart jest WŁĄCZONE',
+      maskOffLabel: 'Maskowanie kart jest WYŁĄCZONE',
+      ok: 'Rozumiem!',
+    },
   },
   transferOwnership: {
     tooltip: 'Przekaż własność tablicy',

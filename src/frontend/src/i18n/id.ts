@@ -101,8 +101,15 @@ export default {
     offline: 'Sepertinya Anda sedang offline.',
     notExists:
       'Papan ini telah dihapus secara otomatis atau dihapus secara manual oleh pembuatnya.',
-    autoDeleteScheduleBase: 'Papan ini akan dibersihkan secara otomatis pada {date}',
-    autoDeleteScheduleAddon: ', sehingga Anda tidak perlu khawatir menghapusnya secara manual.',
+    autoDeleteSchedule: 'Papan ini akan dibersihkan secara otomatis pada {date}.',
+    welcome: {
+      title: 'Selamat Datang!',
+      maskInfo:
+        'Pesan disamarkan secara default. Hanya penulis yang dapat melihat pesan mereka sendiri sampai Anda membuka samarannya.',
+      maskOnLabel: 'Penyamaran Kartu AKTIF',
+      maskOffLabel: 'Penyamaran Kartu NONAKTIF',
+      ok: 'Mengerti!',
+    },
   },
   transferOwnership: {
     tooltip: 'Transfer kepemilikan papan',

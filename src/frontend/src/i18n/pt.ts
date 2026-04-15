@@ -97,8 +97,15 @@ export default {
     printFooter: 'Criado com',
     offline: 'Offline.',
     notExists: 'O quadro foi eliminado automaticamente ou então manualmente pelo seu criador.',
-    autoDeleteScheduleBase: 'Este quadro será automaticamente limpo em {date}',
-    autoDeleteScheduleAddon: ', por isso não precisa de se preocupar em eliminá-lo manualmente.',
+    autoDeleteSchedule: 'Este quadro será automaticamente limpo em {date}.',
+    welcome: {
+      title: 'Bem-vindo!',
+      maskInfo:
+        'As mensagens são ocultadas por predefinição. Apenas o autor pode ver as suas próprias mensagens até que as revele.',
+      maskOnLabel: 'O mascaramento de cartões está ATIVADO',
+      maskOffLabel: 'O mascaramento de cartões está DESATIVADO',
+      ok: 'Percebi!',
+    },
   },
   transferOwnership: {
     tooltip: 'Transferir propriedade do quadro',

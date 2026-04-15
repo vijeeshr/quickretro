@@ -19,11 +19,11 @@ type RegisterResponse struct {
 	Comments                  []MessageResponse `json:"comments"`
 	BoardExpiryTimeUtcSeconds int64             `json:"boardExpiryUtcSeconds"` // Unix Timestamp Seconds
 	TimerExpiresInSeconds     uint16            `json:"timerExpiresInSeconds"` // uint16 since we are restricting timer to max 1 hour (3600 seconds)
-	NotifyNewBoardExpiry      bool              `json:"notifyNewBoardExpiry"`
 	BoardMasking              bool              `json:"boardMasking"`
 	BoardLock                 bool              `json:"boardLock"`
 	IsBoardOwner              bool              `json:"isBoardOwner"`
 	IsBoardCreator            bool              `json:"isBoardCreator"`
+	ShowWelcomePopup          bool              `json:"showWelcomePopup"`
 }
 type BoardColumn struct {
 	Id        string `redis:"id" json:"id"`

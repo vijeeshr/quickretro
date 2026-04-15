@@ -37,7 +37,7 @@ import { DraftMessage } from '../models/DraftMessage'
 import { LikeMessage } from '../models/LikeMessage'
 // import { jsPDF } from 'jspdf';
 // import autoTable from 'jspdf-autotable';
-import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
+import { Dialog, DialogPanel, DialogTitle, Switch } from '@headlessui/vue'
 import CountdownTimer from './CountdownTimer.vue'
 import TimerPanel from './TimerPanel.vue'
 import {
@@ -173,6 +173,14 @@ const openReclaimDialog = () => {
 const reclaimBoard = () => {
   dispatchEvent<SettingsEvent>('set', { ownerXid: xid.value })
   setIsReclaimDialogOpen(false)
+}
+
+const isWelcomeDialogOpen = ref(false)
+const closeWelcomeDialog = () => {
+  isWelcomeDialogOpen.value = false
+}
+const toggleMaskFromWelcome = (value: boolean) => {
+  dispatchEvent<SettingsEvent>('set', { mask: value })
 }
 
 const onOneMinuteLeftWarning = () => {
@@ -884,10 +892,9 @@ const onRegisterResponse = (response: RegisterResponse) => {
   })
   commentsMap.value = map
 
-  // Show expiration notification for newly created board. Show only for board creator/owner
-  if (response.isBoardOwner && response.notifyNewBoardExpiry) {
-    const initialExpiryMsg = `${t('dashboard.autoDeleteScheduleBase', { date: boardExpiryLocalTime.value })}${t('dashboard.autoDeleteScheduleAddon')}`
-    toast.warning(initialExpiryMsg, { duration: 10000 })
+  // Show welcome popup for newly created board owner
+  if (response.isBoardOwner && response.showWelcomePopup) {
+    isWelcomeDialogOpen.value = true
   }
 }
 
@@ -1512,7 +1519,7 @@ onUnmounted(() => {
             v-if="boardExpiryLocalTime !== ''"
             class="flex justify-items-normal mt-4 text-xs text-slate-400 select-none max-w-xs"
           >
-            {{ t('dashboard.autoDeleteScheduleBase', { date: boardExpiryLocalTime }) }}.
+            {{ t('dashboard.autoDeleteSchedule', { date: boardExpiryLocalTime }) }}
           </p>
         </DialogPanel>
       </div>
@@ -1591,6 +1598,56 @@ onUnmounted(() => {
               @click="reclaimBoard"
             >
               {{ t('transferOwnership.reclaim.confirm') }}
+            </button>
+          </div>
+        </DialogPanel>
+      </div>
+    </Dialog>
+
+    <!-- Welcome Dialog for new board owner -->
+    <Dialog :open="isWelcomeDialogOpen" class="relative z-60" @close="closeWelcomeDialog">
+      <div class="fixed inset-0 bg-black/30 dark:bg-black/60" aria-hidden="true" />
+      <div class="fixed inset-0 flex items-center justify-center p-4">
+        <DialogPanel
+          class="w-full max-w-sm rounded-xl bg-white dark:bg-slate-800 p-6 shadow-xl space-y-5"
+        >
+          <DialogTitle class="text-xl font-medium text-slate-800 dark:text-slate-100">
+            {{ t('dashboard.welcome.title') }}
+          </DialogTitle>
+
+          <p v-if="boardExpiryLocalTime !== ''" class="text-sm text-slate-600 dark:text-slate-300">
+            {{ t('dashboard.autoDeleteSchedule', { date: boardExpiryLocalTime }) }}
+          </p>
+
+          <div class="space-y-2">
+            <p class="text-sm text-slate-600 dark:text-slate-300">
+              {{ t('dashboard.welcome.maskInfo') }}
+            </p>
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium text-slate-700 dark:text-slate-200">{{
+                isMasked ? t('dashboard.welcome.maskOnLabel') : t('dashboard.welcome.maskOffLabel')
+              }}</span>
+              <Switch
+                :model-value="isMasked"
+                :class="isMasked ? 'bg-sky-600' : 'bg-gray-300 dark:bg-gray-600'"
+                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
+                @update:model-value="toggleMaskFromWelcome"
+              >
+                <span
+                  :class="isMasked ? 'translate-x-6' : 'translate-x-1'"
+                  class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                />
+              </Switch>
+            </div>
+          </div>
+
+          <div class="flex justify-end">
+            <button
+              type="button"
+              class="inline-flex justify-center rounded-md border border-transparent bg-sky-600 px-5 py-2 text-sm font-medium text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
+              @click="closeWelcomeDialog"
+            >
+              {{ t('dashboard.welcome.ok') }}
             </button>
           </div>
         </DialogPanel>
@@ -1772,7 +1829,7 @@ onUnmounted(() => {
           </svg>
         </div>
         <!-- Transfer ownership -->
-        <div v-if="isOwner" :title="t('transferOwnership.tooltip')">
+        <div v-if="isOwner && allOtherUsers.length > 0" :title="t('transferOwnership.tooltip')">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -1792,7 +1849,10 @@ onUnmounted(() => {
           </svg>
         </div>
         <!-- Reclaim ownership-->
-        <div v-if="isBoardCreator && !isOwner" :title="t('transferOwnership.reclaim.tooltip')">
+        <div
+          v-if="isBoardCreator && !isOwner && allOtherUsers.length > 0"
+          :title="t('transferOwnership.reclaim.tooltip')"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

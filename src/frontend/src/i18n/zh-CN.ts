@@ -97,8 +97,14 @@ export default {
     printFooter: '创建于',
     offline: '离线状态',
     notExists: '看板已被自动删除，或由创建者手动删除。',
-    autoDeleteScheduleBase: '该看板将于 {date} 自动清理',
-    autoDeleteScheduleAddon: '，因此您无需担心手动删除它。',
+    autoDeleteSchedule: '该看板将于 {date} 自动清理。',
+    welcome: {
+      title: '欢迎！',
+      maskInfo: '消息默认被遮罩。在您取消遮罩之前，只有作者可以查看自己的消息。',
+      maskOnLabel: '卡片遮罩已 开启',
+      maskOffLabel: '卡片遮罩已 关闭',
+      ok: '知道了！',
+    },
   },
   transferOwnership: {
     tooltip: '转移看板所有权',

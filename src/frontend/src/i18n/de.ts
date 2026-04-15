@@ -98,8 +98,15 @@ export default {
     offline: 'Offline.',
     notExists:
       'Das Board wurde entweder automatisch gelöscht oder manuell von seinem Ersteller entfernt.',
-    autoDeleteScheduleBase: 'Dieses Board wird am {date} automatisch bereinigt',
-    autoDeleteScheduleAddon: ', sodass du dir keine Sorgen machen musst, es manuell zu löschen.',
+    autoDeleteSchedule: 'Dieses Board wird am {date} automatisch bereinigt.',
+    welcome: {
+      title: 'Willkommen!',
+      maskInfo:
+        'Nachrichten werden standardmäßig maskiert. Nur der Autor kann seine eigenen Nachrichten sehen, bis Sie die Maskierung aufheben.',
+      maskOnLabel: 'Kartenmaskierung ist AN',
+      maskOffLabel: 'Kartenmaskierung ist AUS',
+      ok: 'Verstanden!',
+    },
   },
   transferOwnership: {
     tooltip: 'Board-Eigentümerschaft übertragen',

@@ -97,8 +97,15 @@ export default {
     printFooter: '생성 도구',
     offline: '오프라인 상태',
     notExists: '보드는 자동으로 삭제되었거나 생성자가 수동으로 삭제했습니다.',
-    autoDeleteScheduleBase: '{date}에 이 보드는 자동으로 정리됩니다',
-    autoDeleteScheduleAddon: ', 따라서 직접 삭제할 필요가 없습니다.',
+    autoDeleteSchedule: '{date}에 이 보드는 자동으로 정리됩니다.',
+    welcome: {
+      title: '환영합니다!',
+      maskInfo:
+        '메시지는 기본적으로 마스킹 처리됩니다. 마스킹을 해제하기 전까지는 작성자만 자신의 메시지를 볼 수 있습니다.',
+      maskOnLabel: '카드 마스킹 켜짐 (ON)',
+      maskOffLabel: '카드 마스킹 꺼짐 (OFF)',
+      ok: '확인!',
+    },
   },
   transferOwnership: {
     tooltip: '보드 소유권 이전',

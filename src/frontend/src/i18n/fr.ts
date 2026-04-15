@@ -98,8 +98,15 @@ export default {
     offline: 'Hors ligne.',
     notExists:
       'Le tableau a été soit supprimé automatiquement, soit manuellement par son créateur.',
-    autoDeleteScheduleBase: 'Ce tableau sera automatiquement nettoyé le {date}',
-    autoDeleteScheduleAddon: ', vous n’avez donc pas à vous soucier de le supprimer manuellement.',
+    autoDeleteSchedule: 'Ce tableau sera automatiquement nettoyé le {date}.',
+    welcome: {
+      title: 'Bienvenue !',
+      maskInfo:
+        'Les messages sont masqués par défaut. Seul l’auteur peut voir ses propres messages jusqu’à ce que vous leviez le masquage.',
+      maskOnLabel: 'Le masquage des cartes est ACTIVÉ',
+      maskOffLabel: 'Le masquage des cartes est DÉSACTIVÉ',
+      ok: 'Compris !',
+    },
   },
   transferOwnership: {
     tooltip: 'Transférer la propriété du tableau',

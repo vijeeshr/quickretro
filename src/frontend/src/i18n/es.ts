@@ -99,8 +99,15 @@ export default {
     printFooter: 'Creado con',
     offline: 'Sin conexión.',
     notExists: 'El tablero fue eliminado automáticamente o lo eliminó manualmente su creador.',
-    autoDeleteScheduleBase: 'Este tablero se limpiará automáticamente el {date}',
-    autoDeleteScheduleAddon: ', así que no necesitas preocuparte por eliminarlo manualmente.',
+    autoDeleteSchedule: 'Este tablero se limpiará automáticamente el {date}.',
+    welcome: {
+      title: '¡Bienvenido!',
+      maskInfo:
+        'Los mensajes están ocultos por defecto. Solo el autor puede ver sus propios mensajes hasta que los reveles.',
+      maskOnLabel: 'El enmascaramiento de tarjetas está ACTIVADO',
+      maskOffLabel: 'El enmascaramiento de tarjetas está DESACTIVADO',
+      ok: '¡Entendido!',
+    },
   },
   transferOwnership: {
     tooltip: 'Transferir la propiedad del tablero',

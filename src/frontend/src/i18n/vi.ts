@@ -99,8 +99,15 @@ export default {
     printFooter: 'Được tạo với',
     offline: 'Có vẻ như bạn đang ngoại tuyến.',
     notExists: 'Bảng này đã bị xóa tự động hoặc đã bị người tạo xóa thủ công.',
-    autoDeleteScheduleBase: 'Bảng này sẽ được tự động dọn dẹp vào ngày {date}',
-    autoDeleteScheduleAddon: ', nên bạn không cần phải xóa thủ công.',
+    autoDeleteSchedule: 'Bảng này sẽ được tự động dọn dẹp vào ngày {date}.',
+    welcome: {
+      title: 'Chào mừng!',
+      maskInfo:
+        'Tin nhắn được ẩn theo mặc định. Chỉ tác giả mới có thể xem tin nhắn của chính họ cho đến khi bạn bỏ ẩn.',
+      maskOnLabel: 'Chế độ ẩn thẻ đang BẬT',
+      maskOffLabel: 'Chế độ ẩn thẻ đang TẮT',
+      ok: 'Đã hiểu!',
+    },
   },
   transferOwnership: {
     tooltip: 'Chuyển nhượng quyền sở hữu bảng',

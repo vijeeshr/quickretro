@@ -97,8 +97,15 @@ export default {
     printFooter: 'Creato con',
     offline: 'Disconnesso.',
     notExists: 'La bacheca è stata eliminata automaticamente o manualmente dal suo creatore.',
-    autoDeleteScheduleBase: 'Questa board verrà pulita automaticamente il {date}',
-    autoDeleteScheduleAddon: ', quindi non devi preoccuparti di eliminarla manualmente.',
+    autoDeleteSchedule: 'Questa board verrà pulita automaticamente il {date}.',
+    welcome: {
+      title: 'Benvenuto!',
+      maskInfo:
+        'I messaggi sono mascherati per impostazione predefinita. Solo l’autore può vedere i propri messaggi finché non vengono scoperti.',
+      maskOnLabel: 'Il mascheramento delle schede è ATTIVO',
+      maskOffLabel: 'Il mascheramento delle schede è DISATTIVO',
+      ok: 'Ricevuto!',
+    },
   },
   transferOwnership: {
     tooltip: 'Trasferisci proprietà della bacheca',
