@@ -99,7 +99,6 @@ export default {
     },
     printFooter: 'Stworzone za pomocą',
     offline: 'Wygląda na to, że jesteś offline.',
-    notExists: 'Tablica została automatycznie usunięta lub ręcznie usunięta przez jej twórcę.',
     autoDeleteSchedule: 'Ta tablica zostanie automatycznie usunięta dnia {date}.',
     welcome: {
       title: 'Witaj!',
@@ -108,6 +107,12 @@ export default {
       maskOnLabel: 'Maskowanie kart jest WŁĄCZONE',
       maskOffLabel: 'Maskowanie kart jest WYŁĄCZONE',
       ok: 'Rozumiem!',
+    },
+    notFound: {
+      title: 'Nie znaleziono tablicy',
+      text: 'Tablica, której szukasz, została usunięta automatycznie lub ręcznie przez jej właściciela.',
+      createNewBoard: 'Utwórz nową tablicę',
+      supportText: 'Wesprzyj nas gwiazdką na GitHubie! ⭐',
     },
   },
   transferOwnership: {

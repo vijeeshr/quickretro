@@ -98,7 +98,6 @@ export default {
     },
     printFooter: 'Created with',
     offline: 'You seem to be offline.',
-    notExists: 'Board was either auto-deleted, or manually deleted by its creator.',
     autoDeleteSchedule: 'This board will be cleaned up automatically on {date}.',
     welcome: {
       title: 'Welcome!',
@@ -107,6 +106,12 @@ export default {
       maskOnLabel: 'Card Masking is ON',
       maskOffLabel: 'Card Masking is OFF',
       ok: 'Got it!',
+    },
+    notFound: {
+      title: 'Board not found',
+      text: 'The board you are looking for was either auto-deleted, or manually deleted by its owner.',
+      createNewBoard: 'Create new board',
+      supportText: 'Support us with a star on GitHub! ⭐',
     },
   },
   transferOwnership: {

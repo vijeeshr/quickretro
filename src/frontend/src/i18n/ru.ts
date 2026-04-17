@@ -96,7 +96,6 @@ export default {
     },
     printFooter: 'Создано с',
     offline: 'Офлайн',
-    notExists: 'Доска была удалена автоматически или вручную её создателем.',
     autoDeleteSchedule: 'Эта доска будет автоматически очищена {date}.',
     welcome: {
       title: 'Добро пожаловать!',
@@ -105,6 +104,12 @@ export default {
       maskOnLabel: 'Маскировка карточек ВКЛЮЧЕНА',
       maskOffLabel: 'Маскировка карточек ВЫКЛЮЧЕНА',
       ok: 'Понятно!',
+    },
+    notFound: {
+      title: 'Доска не найдена',
+      text: 'Доска, которую вы ищете, была удалена автоматически или вручную её владельцем.',
+      createNewBoard: 'Создать новую доску',
+      supportText: 'Поддержите нас звездой на GitHub! ⭐',
     },
   },
   transferOwnership: {

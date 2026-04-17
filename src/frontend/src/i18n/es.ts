@@ -98,7 +98,6 @@ export default {
     },
     printFooter: 'Creado con',
     offline: 'Sin conexión.',
-    notExists: 'El tablero fue eliminado automáticamente o lo eliminó manualmente su creador.',
     autoDeleteSchedule: 'Este tablero se limpiará automáticamente el {date}.',
     welcome: {
       title: '¡Bienvenido!',
@@ -107,6 +106,12 @@ export default {
       maskOnLabel: 'El enmascaramiento de tarjetas está ACTIVADO',
       maskOffLabel: 'El enmascaramiento de tarjetas está DESACTIVADO',
       ok: '¡Entendido!',
+    },
+    notFound: {
+      title: 'Tablero no encontrado',
+      text: 'El tablero que estás buscando fue eliminado automáticamente o manualmente por su propietario.',
+      createNewBoard: 'Crear nuevo tablero',
+      supportText: '¡Apóyanos con una estrella en GitHub! ⭐',
     },
   },
   transferOwnership: {

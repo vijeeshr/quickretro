@@ -99,8 +99,6 @@ export default {
     },
     printFooter: 'Dibuat dengan',
     offline: 'Sepertinya Anda sedang offline.',
-    notExists:
-      'Papan ini telah dihapus secara otomatis atau dihapus secara manual oleh pembuatnya.',
     autoDeleteSchedule: 'Papan ini akan dibersihkan secara otomatis pada {date}.',
     welcome: {
       title: 'Selamat Datang!',
@@ -109,6 +107,12 @@ export default {
       maskOnLabel: 'Penyamaran Kartu AKTIF',
       maskOffLabel: 'Penyamaran Kartu NONAKTIF',
       ok: 'Mengerti!',
+    },
+    notFound: {
+      title: 'Papan tidak ditemukan',
+      text: 'Papan yang Anda cari telah dihapus secara otomatis atau dihapus secara manual oleh pemiliknya.',
+      createNewBoard: 'Buat papan baru',
+      supportText: 'Dukung kami dengan bintang di GitHub! ⭐',
     },
   },
   transferOwnership: {

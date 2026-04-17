@@ -98,7 +98,6 @@ export default {
     },
     printFooter: 'Được tạo với',
     offline: 'Có vẻ như bạn đang ngoại tuyến.',
-    notExists: 'Bảng này đã bị xóa tự động hoặc đã bị người tạo xóa thủ công.',
     autoDeleteSchedule: 'Bảng này sẽ được tự động dọn dẹp vào ngày {date}.',
     welcome: {
       title: 'Chào mừng!',
@@ -107,6 +106,12 @@ export default {
       maskOnLabel: 'Chế độ ẩn thẻ đang BẬT',
       maskOffLabel: 'Chế độ ẩn thẻ đang TẮT',
       ok: 'Đã hiểu!',
+    },
+    notFound: {
+      title: 'Không tìm thấy bảng',
+      text: 'Bảng bạn đang tìm kiếm đã bị xóa tự động hoặc bị chủ sở hữu xóa thủ công.',
+      createNewBoard: 'Tạo bảng mới',
+      supportText: 'Hãy ủng hộ chúng tôi bằng một ngôi sao trên GitHub! ⭐',
     },
   },
   transferOwnership: {

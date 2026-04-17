@@ -96,7 +96,6 @@ export default {
     },
     printFooter: 'Creato con',
     offline: 'Disconnesso.',
-    notExists: 'La bacheca è stata eliminata automaticamente o manualmente dal suo creatore.',
     autoDeleteSchedule: 'Questa board verrà pulita automaticamente il {date}.',
     welcome: {
       title: 'Benvenuto!',
@@ -105,6 +104,12 @@ export default {
       maskOnLabel: 'Il mascheramento delle schede è ATTIVO',
       maskOffLabel: 'Il mascheramento delle schede è DISATTIVO',
       ok: 'Ricevuto!',
+    },
+    notFound: {
+      title: 'Bacheca non trovata',
+      text: 'La bacheca che stai cercando è stata eliminata automaticamente o manualmente dal proprietario.',
+      createNewBoard: 'Crea nuova bacheca',
+      supportText: 'Supportaci con una stella su GitHub! ⭐',
     },
   },
   transferOwnership: {

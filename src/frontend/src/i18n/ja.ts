@@ -96,7 +96,6 @@ export default {
     },
     printFooter: '作成者',
     offline: 'オフライン',
-    notExists: 'ボードは自動的に削除されたか、作成者によって手動で削除されました。',
     autoDeleteSchedule: 'このボードは {date} に自動的にクリーンアップされます。',
     welcome: {
       title: 'ようこそ！',
@@ -105,6 +104,12 @@ export default {
       maskOnLabel: 'カードのマスク：ON',
       maskOffLabel: 'カード의マスク：OFF',
       ok: '了解しました！',
+    },
+    notFound: {
+      title: 'ボードが見つかりません',
+      text: 'お探しのボードは、自動削除されたか、オーナーによって手動で削除されました。',
+      createNewBoard: '新しいボードを作成',
+      supportText: 'GitHubでスターを付けて応援してください！ ⭐',
     },
   },
   transferOwnership: {

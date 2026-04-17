@@ -96,8 +96,6 @@ export default {
     },
     printFooter: 'Créé avec',
     offline: 'Hors ligne.',
-    notExists:
-      'Le tableau a été soit supprimé automatiquement, soit manuellement par son créateur.',
     autoDeleteSchedule: 'Ce tableau sera automatiquement nettoyé le {date}.',
     welcome: {
       title: 'Bienvenue !',
@@ -106,6 +104,12 @@ export default {
       maskOnLabel: 'Le masquage des cartes est ACTIVÉ',
       maskOffLabel: 'Le masquage des cartes est DÉSACTIVÉ',
       ok: 'Compris !',
+    },
+    notFound: {
+      title: 'Tableau non trouvé',
+      text: 'Le tableau que vous recherchez a été supprimé automatiquement ou manuellement par son propriétaire.',
+      createNewBoard: 'Créer un nouveau tableau',
+      supportText: 'Soutenez-nous avec une étoile sur GitHub ! ⭐',
     },
   },
   transferOwnership: {

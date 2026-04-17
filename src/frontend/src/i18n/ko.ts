@@ -96,7 +96,6 @@ export default {
     },
     printFooter: '생성 도구',
     offline: '오프라인 상태',
-    notExists: '보드는 자동으로 삭제되었거나 생성자가 수동으로 삭제했습니다.',
     autoDeleteSchedule: '{date}에 이 보드는 자동으로 정리됩니다.',
     welcome: {
       title: '환영합니다!',
@@ -105,6 +104,12 @@ export default {
       maskOnLabel: '카드 마스킹 켜짐 (ON)',
       maskOffLabel: '카드 마스킹 꺼짐 (OFF)',
       ok: '확인!',
+    },
+    notFound: {
+      title: '보드를 찾을 수 없습니다',
+      text: '찾고 계신 보드가 자동 삭제되었거나 소유자에 의해 수동으로 삭제되었습니다.',
+      createNewBoard: '새 보드 만들기',
+      supportText: 'GitHub에서 별을 눌러 저희를 응원해주세요! ⭐',
     },
   },
   transferOwnership: {

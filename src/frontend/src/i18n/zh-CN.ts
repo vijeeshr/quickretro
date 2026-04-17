@@ -96,7 +96,6 @@ export default {
     },
     printFooter: '创建于',
     offline: '离线状态',
-    notExists: '看板已被自动删除，或由创建者手动删除。',
     autoDeleteSchedule: '该看板将于 {date} 自动清理。',
     welcome: {
       title: '欢迎！',
@@ -104,6 +103,12 @@ export default {
       maskOnLabel: '卡片遮罩已 开启',
       maskOffLabel: '卡片遮罩已 关闭',
       ok: '知道了！',
+    },
+    notFound: {
+      title: '未找到看板',
+      text: '您正在寻找的看板已被自动删除，或被其所有者手动删除。',
+      createNewBoard: '创建新看板',
+      supportText: '在 GitHub 上给我们点个星支持我们！ ⭐',
     },
   },
   transferOwnership: {

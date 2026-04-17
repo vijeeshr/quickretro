@@ -96,7 +96,6 @@ export default {
     },
     printFooter: 'Criado com',
     offline: 'Offline.',
-    notExists: 'O quadro foi eliminado automaticamente ou então manualmente pelo seu criador.',
     autoDeleteSchedule: 'Este quadro será automaticamente limpo em {date}.',
     welcome: {
       title: 'Bem-vindo!',
@@ -105,6 +104,12 @@ export default {
       maskOnLabel: 'O mascaramento de cartões está ATIVADO',
       maskOffLabel: 'O mascaramento de cartões está DESATIVADO',
       ok: 'Percebi!',
+    },
+    notFound: {
+      title: 'Quadro não encontrado',
+      text: 'O quadro que está a procurar foi eliminado automaticamente ou manualmente pelo seu proprietário.',
+      createNewBoard: 'Criar novo quadro',
+      supportText: 'Apoie-nos com uma estrela no GitHub! ⭐',
     },
   },
   transferOwnership: {

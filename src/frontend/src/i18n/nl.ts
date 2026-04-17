@@ -96,7 +96,6 @@ export default {
     },
     printFooter: 'Gemaakt met',
     offline: 'Offline.',
-    notExists: 'Het bord is automatisch verwijderd of handmatig door de maker verwijderd.',
     autoDeleteSchedule: 'Dit bord wordt automatisch opgeschoond op {date}.',
     welcome: {
       title: 'Welkom!',
@@ -105,6 +104,12 @@ export default {
       maskOnLabel: 'Kaartmaskering staat AAN',
       maskOffLabel: 'Kaartmaskering staat UIT',
       ok: 'Begrepen!',
+    },
+    notFound: {
+      title: 'Bord niet gevonden',
+      text: 'Het bord dat je zoekt is automatisch verwijderd of handmatig verwijderd door de eigenaar.',
+      createNewBoard: 'Nieuw bord aanmaken',
+      supportText: 'Steun ons met een ster op GitHub! ⭐',
     },
   },
   transferOwnership: {

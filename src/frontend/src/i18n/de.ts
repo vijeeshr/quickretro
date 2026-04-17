@@ -96,8 +96,6 @@ export default {
     },
     printFooter: 'Erstellt mit',
     offline: 'Offline.',
-    notExists:
-      'Das Board wurde entweder automatisch gelöscht oder manuell von seinem Ersteller entfernt.',
     autoDeleteSchedule: 'Dieses Board wird am {date} automatisch bereinigt.',
     welcome: {
       title: 'Willkommen!',
@@ -106,6 +104,12 @@ export default {
       maskOnLabel: 'Kartenmaskierung ist AN',
       maskOffLabel: 'Kartenmaskierung ist AUS',
       ok: 'Verstanden!',
+    },
+    notFound: {
+      title: 'Board nicht gefunden',
+      text: 'Das von Ihnen gesuchte Board wurde entweder automatisch gelöscht oder vom Eigentümer manuell gelöscht.',
+      createNewBoard: 'Neues Board erstellen',
+      supportText: 'Unterstützen Sie uns mit einem Stern auf GitHub! ⭐',
     },
   },
   transferOwnership: {

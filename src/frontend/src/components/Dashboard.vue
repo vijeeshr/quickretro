@@ -62,6 +62,7 @@ import {
   TYPING_ACTIVITY_DISPLAY_TIMEOUT_MS,
   TYPING_ACTIVITY_ENABLED,
 } from '../utils/appConfig'
+import router from '../router'
 
 const { locale, setLocale, languageOptions } = useLanguage()
 const { t } = useI18n()
@@ -84,6 +85,7 @@ const shareLink = `${window.location.href}/join`
 const isSpotlightOn = ref(false)
 const spotlightFor = ref<{ byxid: string; nickname: string } | null>(null)
 const boardExpiryLocalTime = ref('')
+const isBoardNotFoundDialogOpen = ref(false)
 let socket: WebSocket
 
 const cards = ref<MessageResponse[]>([]) // Todo: Rework models
@@ -1185,6 +1187,11 @@ const handleCategorySelectionValidity = (val: boolean) => {
   isCategorySelectionValid.value = val
 }
 
+const navigateToCreate = () => {
+  isBoardNotFoundDialogOpen.value = false
+  router.push('/create')
+}
+
 const dispatchEvent = <T,>(eventType: string, payload: T) => {
   const event: EventRequest<T> = {
     typ: eventType,
@@ -1207,7 +1214,7 @@ const socketOnClose = (event: CloseEvent) => {
   isConnected.value = false
   logMessage('Close received', event)
   if (event.code === 1008 && event.reason === 'BOARDNOTFOUND') {
-    toast.error(t('dashboard.notExists'), { duration: Infinity })
+    isBoardNotFoundDialogOpen.value = true
   }
 }
 const socketOnError = (event: Event) => {
@@ -1654,6 +1661,52 @@ onUnmounted(() => {
       </div>
     </Dialog>
 
+    <!-- Board not found dialog -->
+    <Dialog :open="isBoardNotFoundDialogOpen" class="relative z-60" @close="() => {}">
+      <div class="fixed inset-0 bg-black/30 dark:bg-black/60" aria-hidden="true" />
+
+      <div class="fixed inset-0 flex items-center justify-center p-4">
+        <DialogPanel
+          class="w-full max-w-sm rounded-xl bg-white dark:bg-slate-800 p-6 shadow-xl space-y-6 text-center"
+        >
+          <div class="space-y-2">
+            <DialogTitle class="text-xl font-bold text-slate-800 dark:text-slate-100">
+              {{ t('dashboard.notFound.title') }}
+            </DialogTitle>
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+              {{ t('dashboard.notFound.text') }}
+            </p>
+          </div>
+
+          <div class="flex flex-col space-y-3">
+            <button
+              type="button"
+              class="w-full inline-flex justify-center rounded-md border border-transparent bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 transition-colors"
+              @click="navigateToCreate"
+            >
+              {{ t('dashboard.notFound.createNewBoard') }}
+            </button>
+          </div>
+
+          <hr class="border-slate-200 dark:border-slate-700" />
+
+          <div class="text-xs text-slate-500 dark:text-slate-400">
+            <p>
+              ❤️ QuickRetro?
+              <a
+                href="https://github.com/vijeeshr/quickretro"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-sky-600 dark:text-sky-400 hover:underline font-medium"
+              >
+                {{ t('dashboard.notFound.supportText') }}
+              </a>
+            </p>
+          </div>
+        </DialogPanel>
+      </div>
+    </Dialog>
+
     <!-- Left Sidebar -->
     <div class="w-16 p-3" :class="{ 'sticky top-0 self-start': isLeftSidebarSticky }">
       <div ref="leftSidebarContentRef">
@@ -1849,10 +1902,7 @@ onUnmounted(() => {
           </svg>
         </div>
         <!-- Reclaim ownership-->
-        <div
-          v-if="isBoardCreator && !isOwner && allOtherUsers.length > 0"
-          :title="t('transferOwnership.reclaim.tooltip')"
-        >
+        <div v-if="isBoardCreator && !isOwner" :title="t('transferOwnership.reclaim.tooltip')">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
