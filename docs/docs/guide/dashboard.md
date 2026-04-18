@@ -38,6 +38,8 @@ From <Badge type="tip" text="v1.2.0" />, each participant’s message count is a
 
 From <Badge type="tip" text="v1.6.3" />, each participant’s avatar displays a live pulse animation when the user is typing (for non-anonymous messages or comments).
 
+From <Badge type="tip" text="v1.7.0" />, board owner's avatar will show a small star icon ⭐, and inactive participant's avatar will appear grayed out.
+
 ::: tip
 
 Hover over a user’s avatar to see the full nickname.
@@ -215,6 +217,22 @@ Use the **Lock / Unlock** buttons to control access.
 Any unsaved message edits will be lost when the board is locked.
 
 :::
+
+## Change Ownership
+
+Available from <Badge type="tip" text="v1.7.0" />
+
+The board owner can transfer ownership to any participant.
+
+Click any participant in the right-sidebar, or the board ownership transfer icon in the left-sidebar (_only visible when there is atleast one other participant in the board_) to start the process.
+
+The board owner **looses ownership** when the transfer is complete.
+
+### Reclaim Ownership
+
+Only the **original board creator** can reclaim ownership.
+
+The board creator will be shown a "reclaim ownership" (_yellow colored_) icon in left sidebar to forcefully reclaim ownership.
 
 ## Save as PDF
 
