@@ -18,8 +18,8 @@ This guide is intended to help you get started with running the application loca
 - Node.js version <Badge type="tip" text="24.14.1" />
 - Docker
 - Redis is used as the datastore and for pubsub
-- A text editor, preferably VS Code, and a CLI
-- Recommended VS Code extensions - `golang.go`, `Vue.volar`, `esbenp.prettier-vscode`, `dbaeumer.vscode-eslint`
+- An IDE or text editor, preferably VSCodium / VSCode, and a CLI
+- Recommended VSCodium / VSCode extensions - `golang.go`, `Vue.volar`, `esbenp.prettier-vscode`, `dbaeumer.vscode-eslint`
   ::: info
   The Go app runs as a single binary with the frontend embedded inside it
   :::
