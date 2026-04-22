@@ -1,4 +1,4 @@
-FROM node:24.14.1-alpine AS frontend-builder
+FROM node:24.15.0-alpine3.23 AS frontend-builder
 WORKDIR /app
 # node_modules directory is excluded with .dockerignore
 # Copy package files first for efficient caching
@@ -8,7 +8,7 @@ RUN npm install
 COPY src/frontend/ .
 RUN npm run build
 
-FROM golang:1.26.2-alpine AS backend-builder
+FROM golang:1.26.2-alpine3.23 AS backend-builder
 WORKDIR /app
 # Copy Go module files and download dependencies
 COPY src/go.mod src/go.sum ./
@@ -22,11 +22,18 @@ COPY --from=frontend-builder /app/dist frontend/dist
 # -ldflags "-s -w" removes debugging symbols, reducing binary size
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o retroapp .
 
+FROM alpine:3.23 AS certs
+RUN apk --no-cache add ca-certificates
+
 FROM scratch AS final
-COPY --from=alpine:latest /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 WORKDIR /app
-COPY --from=backend-builder /app/retroapp .
-COPY --from=backend-builder /app/config.toml .
+# Copy files and ensure they are owned by the non-root user
+COPY --from=backend-builder --chown=10001:10001 /app/retroapp .
+COPY --from=backend-builder --chown=10001:10001 /app/config.toml .
+
+# Switch to the non-root user
+USER 10001:10001
 
 EXPOSE 8080
 CMD ["./retroapp"]

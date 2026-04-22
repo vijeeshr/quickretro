@@ -42,6 +42,8 @@ services:
 
   app:
     image: 'vijeesh82/quickretro-app'
+    # Explicitly ensure it runs as the non-root user UID
+    user: '10001:10001'
     restart: unless-stopped
     depends_on:
       - redis
