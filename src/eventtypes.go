@@ -121,36 +121,12 @@ func (p *RegisterEvent) Broadcast(e *Event, m *Message, h *Hub) {
 		if client.id == e.By {
 			regResponse.IsBoardOwner = client.id == board.Owner
 			regResponse.IsBoardCreator = client.id == board.Creator
-			select {
-			case client.send <- regResponse:
-			default:
-				client.hub.unregister <- client
-			}
+			h.SendToClient(client, regResponse)
 			continue
 		}
 
-		select {
-		case client.send <- joinResp:
-		default:
-			client.hub.unregister <- client
-		}
+		h.SendToClient(client, joinResp)
 	}
-
-	// for client := range clients {
-	// 	var payload any
-
-	// 	if client.id == i.By {
-	// 		payload = regResponse
-	// 	} else {
-	// 		payload = joinResp
-	// 	}
-
-	// 	select {
-	// 	case client.send <- payload:
-	// 	default:
-	// 		client.hub.unregister <- client
-	// 	}
-	// }
 }
 
 // Todo: UserClosingEvent is not a clean implementation. Refactor.
@@ -194,11 +170,7 @@ func (p *UserClosingEvent) Broadcast(_ *Event, m *Message, h *Hub) {
 	for client := range clients {
 		// skip sending to the client that is closing
 		if client.id != p.By {
-			select {
-			case client.send <- response:
-			default:
-				client.hub.unregister <- client
-			}
+			h.SendToClient(client, response)
 		}
 	}
 }
@@ -293,11 +265,7 @@ func (p *SettingsEvent) Broadcast(e *Event, m *Message, h *Hub) {
 
 	clients := h.clients[e.Group]
 	for client := range clients {
-		select {
-		case client.send <- response:
-		default:
-			client.hub.unregister <- client
-		}
+		h.SendToClient(client, response)
 	}
 }
 
@@ -419,11 +387,7 @@ func (p *MessageEvent) Broadcast(e *Event, m *Message, h *Hub) {
 		res.Mine = client.id == m.By
 		res.Liked = likedList[i]
 
-		select {
-		case client.send <- res: // Todo: check implications of sending &res to channel and benchmark
-		default:
-			client.hub.unregister <- client
-		}
+		h.SendToClient(client, res)
 	}
 }
 
@@ -471,11 +435,7 @@ func (p *LikeMessageEvent) Broadcast(e *Event, m *Message, h *Hub) {
 		resp := base
 		resp.Liked = likedList[i]
 
-		select {
-		case client.send <- resp: // Todo: check implications of sending &res to channel and benchmark
-		default:
-			client.hub.unregister <- client
-		}
+		h.SendToClient(client, resp)
 	}
 }
 
@@ -530,11 +490,7 @@ func (p *DeleteMessageEvent) Broadcast(e *Event, m *Message, h *Hub) {
 
 	clients := h.clients[m.Group]
 	for client := range clients {
-		select {
-		case client.send <- response:
-		default:
-			client.hub.unregister <- client
-		}
+		h.SendToClient(client, response)
 	}
 }
 
@@ -567,11 +523,7 @@ func (p *DeleteAllEvent) Broadcast(e *Event, m *Message, h *Hub) {
 
 	clients := h.clients[e.Group]
 	for client := range clients {
-		select {
-		case client.send <- response:
-		default:
-			client.hub.unregister <- client
-		}
+		h.SendToClient(client, response)
 	}
 }
 
@@ -642,11 +594,7 @@ func (p *CategoryChangeEvent) Broadcast(e *Event, m *Message, h *Hub) {
 
 	clients := h.clients[e.Group]
 	for client := range clients {
-		select {
-		case client.send <- response:
-		default:
-			client.hub.unregister <- client
-		}
+		h.SendToClient(client, response)
 	}
 }
 
@@ -749,11 +697,7 @@ func (p *TimerEvent) Broadcast(e *Event, m *Message, h *Hub) {
 
 	clients := h.clients[e.Group]
 	for client := range clients {
-		select {
-		case client.send <- response:
-		default:
-			client.hub.unregister <- client
-		}
+		h.SendToClient(client, response)
 	}
 }
 
@@ -821,11 +765,7 @@ func (p *ColumnsChangeEvent) Broadcast(e *Event, m *Message, h *Hub) {
 
 	clients := h.clients[e.Group]
 	for client := range clients {
-		select {
-		case client.send <- response:
-		default:
-			client.hub.unregister <- client
-		}
+		h.SendToClient(client, response)
 	}
 }
 
@@ -848,11 +788,7 @@ func (p *TypedEvent) Broadcast(e *Event, m *Message, h *Hub) {
 			continue
 		}
 
-		select {
-		case client.send <- response:
-		default:
-			client.hub.unregister <- client
-		}
+		h.SendToClient(client, response)
 	}
 }
 

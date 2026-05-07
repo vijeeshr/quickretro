@@ -40,6 +40,23 @@ burst = 20
 # How often one token is added back (format: <number><unit>; units: ms/s/m/h/d)
 refill_interval = "500ms"
 
+# -----------------------------------------------------------------------
+# Board-level write pooling.
+# When enabled, replaces per-client write goroutines with a shared worker
+# pool per board. Reduces goroutine count and provides centralized
+# slow-client eviction with configurable write deadlines.
+# When disabled or commented out, the default per-client write goroutines
+# are used (current behavior).
+# -----------------------------------------------------------------------
+# [websocket.board_writer]
+# enabled = true
+# # Number of worker goroutines per board that consume from the write queue
+# worker_count = 1
+# # Write deadline for each individual socket write (format: <number><unit>; units: ms/s/m/h/d)
+# write_deadline = "5s"
+# # Buffer size for the board-level write channel
+# write_buffer_size = 4096
+
 [frontend]
 # Delay (in milliseconds) before showing "message size limit reached" notification for cards/comments
 content_editable_invalid_debounce_ms = 500

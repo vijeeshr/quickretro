@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"net/http/pprof"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -40,6 +41,12 @@ type Config struct {
 			Burst          int    `toml:"burst"`
 			Enabled        bool   `toml:"enabled"`
 		} `toml:"rate_limit"`
+		BoardWriter struct {
+			Enabled         bool   `toml:"enabled"`
+			WorkerCount     int    `toml:"worker_count"`
+			WriteDeadline   string `toml:"write_deadline"`
+			WriteBufferSize int    `toml:"write_buffer_size"`
+		} `toml:"board_writer"`
 		MaxMessageSizeBytes int64 `toml:"max_message_size_bytes"`
 	} `toml:"websocket"`
 	Frontend struct {
@@ -93,6 +100,19 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Apply board writer defaults when enabled
+	if config.Websocket.BoardWriter.Enabled {
+		if config.Websocket.BoardWriter.WorkerCount <= 0 {
+			config.Websocket.BoardWriter.WorkerCount = 1
+		}
+		if config.Websocket.BoardWriter.WriteDeadline == "" {
+			config.Websocket.BoardWriter.WriteDeadline = "10s"
+		}
+		if config.Websocket.BoardWriter.WriteBufferSize <= 0 {
+			config.Websocket.BoardWriter.WriteBufferSize = 4096
+		}
+	}
+
 	// Load Environment configuration
 	envConfig = LoadEnvironmentConfig()
 
@@ -107,6 +127,17 @@ func main() {
 
 	// Setup routes and handlers
 	router := mux.NewRouter()
+
+	// pprof endpoints (debug mode only)
+	if *debug {
+		router.HandleFunc("/debug/pprof/", pprof.Index)
+		router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+		router.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		router.HandleFunc("/debug/pprof/trace", pprof.Trace)
+		router.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
+		slog.Info("pprof endpoints enabled at /debug/pprof/")
+	}
 
 	router.HandleFunc("/api/board/create", func(w http.ResponseWriter, r *http.Request) {
 		HandleCreateBoard(red, w, r)
@@ -175,6 +206,12 @@ func main() {
 		slog.Info("Websocket rate limiting enabled", "burst", config.Websocket.RateLimit.Burst, "refill", config.Websocket.RateLimit.RefillInterval)
 	} else {
 		slog.Warn("Websocket rate limiting disabled")
+	}
+
+	if config.Websocket.BoardWriter.Enabled {
+		slog.Info("Board writer pool enabled", "workers", config.Websocket.BoardWriter.WorkerCount, "deadline", config.Websocket.BoardWriter.WriteDeadline, "buffer", config.Websocket.BoardWriter.WriteBufferSize)
+	} else {
+		slog.Info("Board writer pool disabled (using per-client write goroutines)")
 	}
 
 	//err := http.ListenAndServe(":8080", nil)

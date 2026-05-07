@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -47,10 +48,11 @@ type Client struct {
 	hub     *Hub
 	conn    *websocket.Conn
 	limiter *ClientRateLimiter
-	send    chan any
-	id      string // This is the user uuid
-	xid     string // The is the externally exposed uuid of the user
-	group   string // This can be a board/room
+	send    chan any    // Used only in legacy mode (board_writer disabled)
+	writeMu sync.Mutex // Serializes socket writes when board_writer is enabled (gorilla/websocket allows only one concurrent writer)
+	id      string     // This is the user uuid
+	xid     string     // The is the externally exposed uuid of the user
+	group   string     // This can be a board/room
 }
 
 func (c *Client) read() {
@@ -182,12 +184,20 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Represent the websocket connection as a "Client".
-	client := &Client{id: user, xid: u.Xid, group: board, conn: conn, send: make(chan any, 256), hub: hub, limiter: wsLimiter}
+	client := &Client{id: user, xid: u.Xid, group: board, conn: conn, hub: hub, limiter: wsLimiter}
+
+	// Only create the per-client send channel and write goroutine when board writer is disabled (legacy mode).
+	// When board writer is enabled, writes are handled by the board's worker pool.
+	if !config.Websocket.BoardWriter.Enabled {
+		client.send = make(chan any, 256)
+	}
 
 	// Register the connection/client with the Hub
 	client.hub.register <- client
 	client.hub.redis.Subscribe(board)
 
 	go client.read()
-	go client.write()
+	if !config.Websocket.BoardWriter.Enabled {
+		go client.write()
+	}
 }
