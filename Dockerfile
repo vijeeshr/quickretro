@@ -3,7 +3,8 @@ WORKDIR /app
 # node_modules directory is excluded with .dockerignore
 # Copy package files first for efficient caching
 COPY src/frontend/package*.json ./
-RUN npm install
+# RUN npm install
+RUN npm ci
 # Copy source code and run the development build
 COPY src/frontend/ .
 RUN npm run build-dev

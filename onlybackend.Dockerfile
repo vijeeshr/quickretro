@@ -1,3 +1,4 @@
+# DEPRECATED
 # docker build -f onlybackend.Dockerfile -t quickretro-app .
 
 FROM golang:1.26.2-alpine3.23 AS backend-builder
