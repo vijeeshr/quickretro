@@ -57,7 +57,7 @@ docker compose up
 ```
 
 This builds and starts a docker container for the app, and another container with Redis.\
-The app starts at http://localhost:8080
+The app starts at http://localhost:8921
 
 ## Setting up for Development
 

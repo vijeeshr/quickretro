@@ -45,7 +45,7 @@ localhost {
     import app_csp
     encode gzip
 
-    reverse_proxy app:8080
+    reverse_proxy app:8921
 }
 
 # Uncomment below block and comment above "localhost" block to use with compose.example.loadbalance.yml
@@ -58,7 +58,7 @@ localhost {
 #    encode gzip
 
 #    reverse_proxy  {
-#        to app:8080 app01:8080
+#        to app:8921 app01:8921
 
 #        lb_policy round_robin
 #        lb_retries 2

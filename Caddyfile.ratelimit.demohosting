@@ -76,15 +76,15 @@ demo.quickretro.app {
     # With Http Rate Limit
     handle /api/board/create {
         import strict_limit
-        reverse_proxy app:8080
+        reverse_proxy app:8921
     }
 
     handle /ws/* {
         import relaxed_limit
-        reverse_proxy app:8080
+        reverse_proxy app:8921
     }
 
     handle {
-        reverse_proxy app:8080
+        reverse_proxy app:8921
     }
 }

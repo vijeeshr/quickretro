@@ -28,5 +28,5 @@ COPY --from=backend-builder --chown=10001:10001 /app/config.toml .
 # Switch to the non-root user
 USER 10001:10001
 
-EXPOSE 8080
+EXPOSE 8921
 CMD ["./retroapp"]

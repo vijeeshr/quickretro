@@ -50,7 +50,7 @@
 ## --------------------------------------------
 #(multi_app_proxy) {
 #    reverse_proxy {
-#        to app:8080 app01:8080
+#        to app:8921 app01:8921
 
 #        lb_policy round_robin
 #        lb_retries 2
@@ -86,16 +86,16 @@ localhost {
 
     handle /api/board/create {
         import strict_limit
-        reverse_proxy app:8080
+        reverse_proxy app:8921
     }
 
     handle /ws/* {
         import relaxed_limit
-        reverse_proxy app:8080
+        reverse_proxy app:8921
     }
 
     handle {
-        reverse_proxy app:8080
+        reverse_proxy app:8921
     }
 }
 

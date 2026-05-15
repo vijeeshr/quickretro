@@ -177,7 +177,7 @@ func main() {
 		slog.Warn("Websocket rate limiting disabled")
 	}
 
-	//err := http.ListenAndServe(":8080", nil)
+	//err := http.ListenAndServe(":8921", nil)
 	logger.Info("Server listening on port " + envConfig.Port)
 	if err := http.ListenAndServe(":"+envConfig.Port, handler); err != nil {
 		logger.Error(err.Error())
@@ -226,7 +226,7 @@ func LoadEnvironmentConfig() EnvironmentConfig {
 	// https://developers.cloudflare.com/turnstile/troubleshooting/testing/
 
 	return EnvironmentConfig{
-		Port:                  getEnv("PORT", "8080"),
+		Port:                  getEnv("PORT", "8921"),
 		RedisConnStr:          getEnv("REDIS_CONNSTR", "redis://localhost:6379/0"),
 		TurnstileEnabled:      getEnv("TURNSTILE_ENABLED", "false") == "true",
 		TurnstileSiteKey:      getEnv("TURNSTILE_SITE_KEY", "1x00000000000000000000AA"),

@@ -57,7 +57,7 @@ services:
       # Load from .env file in same directory as the compose file.
       # To create file, in CLI: echo "REDIS_CONNSTR=redis://redis:6379/0" > .env
       # DO NOT create file from Windows. It creates Unicode text, UTF-16, little-endian text, with CRLF line terminators.
-      - PORT=${PORT:-8080}
+      - PORT=${PORT:-8921}
       - REDIS_CONNSTR=${REDIS_CONNSTR}
       # Default Redis (No Auth or ACL). Outside docker - redis://localhost:6379/0
       # - REDIS_CONNSTR=redis://redis:6379/0
@@ -71,9 +71,9 @@ services:
       - redisnet
       - proxynet
     # ports:
-    #   - "8080:8080"
+    #   - "8921:8921"
     expose:
-      - ${PORT:-8080}
+      - ${PORT:-8921}
 
   caddy:
     ################# No Http Rate Limit #################

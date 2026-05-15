@@ -45,7 +45,7 @@ Navigate back to root directory.
 docker compose up
 ```
 
-Visit http://localhost:8080 to open the Vue app and start creating a board.
+Visit http://localhost:8921 (for older versions, use http://localhost:8080) to open the Vue app and start creating a board.
 
 ## For Frontend Development
 

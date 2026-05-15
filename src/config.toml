@@ -5,8 +5,8 @@
 #     "https://example.com"
 # ]
 allowed_origins = [
-    "http://localhost:8080",
-    "https://localhost:8080",
+    "http://localhost:8921",
+    "https://localhost:8921",
     "http://localhost:5173",
     "https://localhost",
     "https://quickretro.app",
