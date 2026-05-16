@@ -1,7 +1,7 @@
 # DEPRECATED
 # docker build -f onlybackend.Dockerfile -t quickretro-app .
 
-FROM golang:1.26.2-alpine3.23 AS backend-builder
+FROM golang:1.26.3-alpine3.23 AS backend-builder
 WORKDIR /app
 # Copy Go module files and download dependencies
 COPY src/go.mod src/go.sum ./
