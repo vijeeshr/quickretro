@@ -326,7 +326,7 @@ const onKeyDown = (event: KeyboardEvent) => {
                     `text-white`,
                     `dark:bg-${otherCategory.color}-800 dark:hover:bg-${otherCategory.color}-600`,
                     `dark:text-${otherCategory.color}-100`,
-                    'group flex w-full items-center justify-center rounded-md text-xs px-1',
+                    'group flex w-full items-center justify-center rounded-md text-xs px-1 cursor-pointer',
                   ]"
                   @click="changeCategory(otherCategory.id, props.card.cat)"
                 >
