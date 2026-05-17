@@ -18,7 +18,7 @@ As defined in [Configurations](configurations#allowed-origins), update the confi
 
 ## Secure Redis Instance
 
-It is recommended to secure your Redis instance, preferably with ACL enabled. Check out the `redis` directory, and sample docker compose files `compose.yml`, `compose.reverseproxy.yml`, `compose.demohosting.yml` etc in [github repository](https://github.com/vijeeshr/quickretro) for more details.
+It is recommended to secure your Redis instance, preferably with ACL enabled. Check out the `redis` directory, and sample docker compose files `compose.yml`, `compose.local.yml`, `compose.prod.yml` etc in [github repository](https://github.com/vijeeshr/quickretro) for more details.
 
 ## Passing ENV variables with Compose
 
@@ -40,7 +40,7 @@ DO NOT create the file directly from Windows `CMD` if you intend to run the app 
 On Windows, you can create the file in UTF-8 using Git Terminal.
 :::
 
-Check out the sample docker compose files `compose.yml`, `compose.reverseproxy.yml`, `compose.demohosting.yml` etc in [github repository](https://github.com/vijeeshr/quickretro) for more details.
+Check out the sample docker compose files `compose.yml`, `compose.local.yml`, `compose.prod.yml` etc in [github repository](https://github.com/vijeeshr/quickretro) for more details.
 
 ## Frequently Asked Questions
 

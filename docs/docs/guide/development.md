@@ -14,8 +14,8 @@ This guide is intended to help you get started with running the application loca
 
 ## Prerequisites
 
-- Go (project targets) <Badge type="tip" text="v1.26.2" />
-- Node.js version <Badge type="tip" text="24.14.1" />
+- Go (project targets) <Badge type="tip" text="v1.26.3" />
+- Node.js version <Badge type="tip" text="24.15.0" />
 - Docker
 - Redis is used as the datastore and for pubsub
 - An IDE or text editor, preferably VSCodium / VSCode, and a CLI
@@ -59,6 +59,10 @@ docker compose up
 This builds and starts a docker container for the app, and another container with Redis.\
 The app starts at http://localhost:8921
 
+::: tip
+For older versions prior to <Badge type="tip" text="v1.7.1" />, app starts at http://localhost:8080
+:::
+
 ## Setting up for Development
 
 Ensure you have Redis running.
@@ -93,3 +97,15 @@ npm run dev
 
 This starts the Vue app at http://localhost:5173\
 Feel free to make changes to the app.
+
+## Compose files
+
+| File                              |                                Purpose                                 |
+| --------------------------------- | :--------------------------------------------------------------------: |
+| `compose.yml`                     |         Default for local development. Ports exposed to host.          |
+| `compose.install.yml`             |            For local quick install. Ports exposed to host.             |
+| `compose.local.yml`               | Local full-stack Redis + app (built from source) + Caddy reverse proxy |
+| `compose.prod.yml`                |                               Production                               |
+| `compose.example.loadbalance.yml` |                       Load balanced using Caddy.                       |
+| `compose.example.replicas.yml`    |                      Load balanced using Docker.                       |
+| `compose.example.arm64.yml`       |            Local testing of Arm64 image, on Amd64 machine.             |

@@ -27,7 +27,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      # dockerfile: onlybackend.Dockerfile
     # Explicitly ensure it runs as the non-root user UID
     user: '10001:10001'
     restart: unless-stopped
