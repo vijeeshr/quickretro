@@ -32,11 +32,15 @@ services:
     depends_on:
       - redis
     environment:
+      # For running in a different port, refer -
+      # https://quickretro.app/guide/configurations#running-in-a-different-port
       - PORT=8921
       - REDIS_CONNSTR=redis://redis:6379/0
     networks:
       - internal
     ports:
+      # For running in a different port, refer -
+      # https://quickretro.app/guide/configurations#running-in-a-different-port
       - '8921:8921'
 
 volumes:

@@ -1,14 +1,6 @@
 ## Running e2e tests for backend
 
-If you are starting from scratch, build the frontend before running docker compose
-
-```sh
-cd ./src/frontend/
-npm install
-npm run build-dev
-```
-
-Navigate back to root directory, and start local instance
+Navigate to root directory, and start local instance
 
 ```sh
 docker compose up
