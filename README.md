@@ -106,6 +106,4 @@ Visit http://localhost:5173/ to open.
 - Online Presence Display - See participants present in the meeting in realtime.
 - Auto-Delete data - Auto-delete with configurable retention duration.
 
-![dashboard_owner](https://github.com/user-attachments/assets/9f35a7fc-7c91-4b39-b4ef-b338a181cec8)
-
-![dashboard_guest](https://github.com/user-attachments/assets/551886c9-d8e2-44ca-8eaa-28e2a8a16ce5)
+<img width="1446" height="900" alt="QuickRetro Dashboard" src="https://github.com/user-attachments/assets/88aa2564-eca4-4035-a6c4-08bd2bffd12c" />
