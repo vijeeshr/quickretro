@@ -2,6 +2,9 @@
 
 A websocket based app for conducting a quick sprint retro.
 
+<img width="1637" height="866" alt="QuickRetro Dashboard" src="https://github.com/user-attachments/assets/2ce3fc78-0527-467f-b3aa-602ef307bc8c" />
+
+
 ## Live app demo
 
 https://demo.quickretro.app
@@ -105,5 +108,3 @@ Visit http://localhost:5173/ to open.
 - Dark Theme - Easily switch to use a Dark theme.
 - Online Presence Display - See participants present in the meeting in realtime.
 - Auto-Delete data - Auto-delete with configurable retention duration.
-
-<img width="1446" height="900" alt="QuickRetro Dashboard" src="https://github.com/user-attachments/assets/88aa2564-eca4-4035-a6c4-08bd2bffd12c" />
