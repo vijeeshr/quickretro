@@ -53,7 +53,8 @@ cd quickretro
 docker compose up -d
 ```
 
-Visit http://localhost:8921 to open the app.
+Visit http://localhost:8921 to open the app.  
+To run in a different port, check [Running in a different port](configurations#running-in-a-different-port)
 
 ## Install Full-Stack (build from source)
 
