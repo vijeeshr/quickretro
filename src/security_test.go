@@ -16,13 +16,13 @@ func TestIsOriginAllowed_AllowedOrigin(t *testing.T) {
 	origConfig := config
 	t.Cleanup(func() { config = origConfig })
 
-	config.Server.AllowedOrigins = []string{"http://localhost:8080", "https://example.com"}
+	config.Server.AllowedOrigins = []string{"http://localhost:8921", "https://example.com"}
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
-	req.Header.Set("Origin", "http://localhost:8080")
+	req.Header.Set("Origin", "http://localhost:8921")
 
 	if !isOriginAllowed(req) {
-		t.Error("expected origin 'http://localhost:8080' to be allowed")
+		t.Error("expected origin 'http://localhost:8921' to be allowed")
 	}
 }
 
@@ -30,7 +30,7 @@ func TestIsOriginAllowed_DisallowedOrigin(t *testing.T) {
 	origConfig := config
 	t.Cleanup(func() { config = origConfig })
 
-	config.Server.AllowedOrigins = []string{"http://localhost:8080"}
+	config.Server.AllowedOrigins = []string{"http://localhost:8921"}
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	req.Header.Set("Origin", "https://evil-site.com")
@@ -44,7 +44,7 @@ func TestIsOriginAllowed_EmptyOrigin(t *testing.T) {
 	origConfig := config
 	t.Cleanup(func() { config = origConfig })
 
-	config.Server.AllowedOrigins = []string{"http://localhost:8080"}
+	config.Server.AllowedOrigins = []string{"http://localhost:8921"}
 
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	// No Origin header set

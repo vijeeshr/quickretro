@@ -2,6 +2,9 @@
 
 A websocket based app for conducting a quick sprint retro.
 
+<img width="1637" height="866" alt="QuickRetro Dashboard" src="https://github.com/user-attachments/assets/2ce3fc78-0527-467f-b3aa-602ef307bc8c" />
+
+
 ## Live app demo
 
 https://demo.quickretro.app
@@ -14,7 +17,39 @@ https://quickretro.app
 
 https://quickretro.app/guide/getting-started
 
-## Running the app locally
+## Installation
+
+The recommended way to install QuickRetro is by using Docker.
+
+Ensure you have Docker Desktop OR Docker Engine with Compose plugin ready, and choose any of the below installation choices.
+
+### Quick Install (using pre-built image)
+
+This creates containers for the `app` (with the latest [`vijeesh82/quickretro-app:latest`](https://hub.docker.com/r/vijeesh82/quickretro-app/tags?name=latest) image from DockerHub), and `redis`, using the [`compose.install.yml`](https://github.com/vijeeshr/quickretro/blob/main/compose.install.yml) file.
+
+#### Linux / MacOS / Windows (with git bash)
+
+```sh
+# Download compose file to local directory
+curl -LO https://raw.githubusercontent.com/vijeeshr/quickretro/main/compose.install.yml
+
+# Run in detached mode in background
+docker compose -f compose.install.yml up -d
+```
+
+#### Windows PowerShell
+
+```powershell
+# Download compose file to local directory
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/vijeeshr/quickretro/main/compose.install.yml" -OutFile "compose.install.yml"
+
+# Run in detached mode in background
+docker compose -f compose.install.yml up -d
+```
+
+Visit http://localhost:8921 to open the app.
+
+## Setup for local development
 
 Ensure Go, Nodejs and Docker are installed.
 
@@ -45,7 +80,7 @@ Navigate back to root directory.
 docker compose up
 ```
 
-Visit http://localhost:8080 to open the Vue app and start creating a board.
+Visit http://localhost:8921 (for older versions, use http://localhost:8080) to open the Vue app and start creating a board.
 
 ## For Frontend Development
 
@@ -73,7 +108,3 @@ Visit http://localhost:5173/ to open.
 - Dark Theme - Easily switch to use a Dark theme.
 - Online Presence Display - See participants present in the meeting in realtime.
 - Auto-Delete data - Auto-delete with configurable retention duration.
-
-![dashboard_owner](https://github.com/user-attachments/assets/9f35a7fc-7c91-4b39-b4ef-b338a181cec8)
-
-![dashboard_guest](https://github.com/user-attachments/assets/551886c9-d8e2-44ca-8eaa-28e2a8a16ce5)

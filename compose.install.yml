@@ -1,0 +1,50 @@
+# QuickRetro - Quick Install
+# A lightweight real-time retrospective board for agile teams.
+#
+# Requirements:
+#   - Docker Desktop OR Docker Engine with Compose plugin
+#
+# Start (in detached mode):
+#   docker compose -f compose.install.yml up -d
+#
+# Visit:
+#   http://localhost:8921
+#
+# Stop:
+#   docker compose -f compose.install.yml down
+#
+# Remove everything including Redis data:
+#   docker compose -f compose.install.yml down --volumes --rmi all
+
+services:
+  redis:
+    image: 'redis:8.0.1-alpine'
+    restart: unless-stopped
+    networks:
+      - internal
+    volumes:
+      - redis_data:/data
+
+  app:
+    image: 'vijeesh82/quickretro-app:latest'
+    user: '10001:10001'
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      # For running in a different port, refer -
+      # https://quickretro.app/guide/configurations#running-in-a-different-port
+      - PORT=8921
+      - REDIS_CONNSTR=redis://redis:6379/0
+    networks:
+      - internal
+    ports:
+      # For running in a different port, refer -
+      # https://quickretro.app/guide/configurations#running-in-a-different-port
+      - '8921:8921'
+
+volumes:
+  redis_data:
+
+networks:
+  internal:

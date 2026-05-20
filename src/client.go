@@ -31,15 +31,6 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
-		// slog.Info("Origin information", "Origin", origin)
-
-		// switch origin {
-		// case "http://localhost:8080", "https://localhost:8080", "http://localhost:5173",
-		// 	"https://localhost", "https://quickretro.app", "https://demo.quickretro.app":
-		// 	return true
-		// default:
-		// 	return false
-		// }
 		return origin != "" && slices.Contains(config.Server.AllowedOrigins, origin)
 	},
 }

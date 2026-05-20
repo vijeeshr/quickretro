@@ -151,7 +151,11 @@ export default defineConfig({
           }
         }
         // Development
-        if (item.url === 'guide/development' || item.url === 'guide/getting-started') {
+        if (
+          item.url === 'guide/development' ||
+          item.url === 'guide/getting-started' ||
+          item.url === 'guide/installation'
+        ) {
           item.priority = 0.9
         }
       })
@@ -190,6 +194,7 @@ export default defineConfig({
       {
         // text: 'Development',
         items: [
+          { text: 'Installation', link: '/guide/installation' },
           { text: 'Development', link: '/guide/development' },
           { text: 'Configurations', link: '/guide/configurations' },
         ],

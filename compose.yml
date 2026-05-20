@@ -26,8 +26,7 @@ services:
   app:
     build:
       context: .
-      # dockerfile: Dockerfile
-      dockerfile: onlybackend.Dockerfile
+      dockerfile: Dockerfile
     # Explicitly ensure it runs as the non-root user UID
     user: '10001:10001'
     restart: unless-stopped
@@ -37,7 +36,7 @@ services:
       # Load from .env file in same directory as the compose file.
       # To create file, in CLI: echo "REDIS_CONNSTR=redis://redis:6379/0" > .env
       # DO NOT create file from Windows. It creates Unicode text, UTF-16, little-endian text, with CRLF line terminators.
-      - PORT=${PORT:-8080}
+      - PORT=${PORT:-8921}
       - REDIS_CONNSTR=${REDIS_CONNSTR}
       # Default Redis (No Auth or ACL). Outside docker - redis://localhost:6379/0
       # - REDIS_CONNSTR=redis://redis:6379/0
@@ -50,7 +49,7 @@ services:
     networks:
       - redisnet
     ports:
-      - '${PORT:-8080}:${PORT:-8080}'
+      - '${PORT:-8921}:${PORT:-8921}'
 
 networks:
   redisnet:

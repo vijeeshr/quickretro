@@ -3,12 +3,13 @@ WORKDIR /app
 # node_modules directory is excluded with .dockerignore
 # Copy package files first for efficient caching
 COPY src/frontend/package*.json ./
-RUN npm install
+# RUN npm install
+RUN npm ci
 # Copy source code and run the development build
 COPY src/frontend/ .
 RUN npm run build-dev
 
-FROM golang:1.26.2-alpine3.23 AS backend-builder
+FROM golang:1.26.3-alpine3.23 AS backend-builder
 WORKDIR /app
 # Copy Go module files and download dependencies
 COPY src/go.mod src/go.sum ./
@@ -35,5 +36,5 @@ COPY --from=backend-builder --chown=10001:10001 /app/config.toml .
 # Switch to the non-root user
 USER 10001:10001
 
-EXPOSE 8080
+EXPOSE 8921
 CMD ["./retroapp"]

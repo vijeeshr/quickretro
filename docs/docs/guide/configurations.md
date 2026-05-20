@@ -71,8 +71,8 @@ You will typically update this setting when [self-hosting](self-hosting).
 #     "https://example.com"
 # ]
 allowed_origins = [
-    "http://localhost:8080",
-    "https://localhost:8080",
+    "http://localhost:8921",
+    "https://localhost:8921",
     "http://localhost:5173",
     "https://localhost",
     "https://quickretro.app",
@@ -82,7 +82,7 @@ allowed_origins = [
 
 ## Running in a different Port
 
-By default, the app starts at port `8080`  
+By default, the app starts at port `8921`  
 To run in a different port, for e.g. 9090, change the value of `ENV` variable named `PORT` in `.env` file
 
 ```ini{1}
@@ -129,7 +129,7 @@ VITE_API_BASE_URL=http://localhost:9090
 :::
 
 ::: tip
-The repo has some examples with CaddyFile, which uses 8080. If using CaddyServer, remember to update it to 9090 as well.
+The repo has some examples with CaddyFile, which uses 8921. If using CaddyServer, remember to update it to 9090 as well.
 :::
 
 ## Connecting to Redis
@@ -146,7 +146,7 @@ Turnstile is a smart CAPTCHA alternative from Cloudflare used to prevent bots. I
 To enable it, set the `TURNSTILE_ENABLED`, `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` environment variables.
 
 ```ini{4-6}
-PORT=8080
+PORT=8921
 REDIS_CONNSTR=<YOUR_REDIS_CONNECTION_STRING>
 ENABLE_SECURITY_HEADERS=false
 TURNSTILE_ENABLED=true
@@ -167,7 +167,7 @@ It is better to delegate it to a proxy.
 If you still want the app to directly add security headers in responses, set `ENABLE_SECURITY_HEADERS` ENV var to true.
 
 ```ini{3}
-PORT=8080
+PORT=8921
 REDIS_CONNSTR=<YOUR_REDIS_CONNECTION_STRING>
 ENABLE_SECURITY_HEADERS=false
 TURNSTILE_ENABLED=true
@@ -211,7 +211,7 @@ enabled = true
 # Automatically disable dispatch of "typing" events in the frontend when
 # the number of other active users(excluding current user) in a board exceeds this value.
 # Set to 0 (or a negative value) to disable this limit. (only used by frontend)
-auto_disable_after_count = 15
+auto_disable_after_count = 10
 # Minimum time (in milliseconds) between consecutive "typing" events emitted by the same client. (only used by frontend)
 # This acts as a throttle to:
 # - Reduce WebSocket noise
