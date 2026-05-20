@@ -32,7 +32,7 @@ The left sidebar for a guest user has fewer controls.
   loading="lazy"
 />
 
-The right sidebar shows a real-time display of all participants currently in the meeting.
+The right sidebar shows a real-time display of all participants in the meeting.
 
 From <Badge type="tip" text="v1.2.0" />, each participant’s message count is also displayed.
 
