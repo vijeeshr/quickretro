@@ -51,6 +51,7 @@ export default {
       helpTip: '+/-または矢印キーで調整 最大1時間',
       invalid: '無効な時間です（1秒～60分）',
       tooltip: 'カウントダウンタイマー',
+      presets: 'プリセット',
     },
     share: {
       title: 'URLを共有',

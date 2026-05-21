@@ -51,6 +51,7 @@ export default {
       helpTip: '+ - 또는 방향키로 시간 조절. 최대 1시간.',
       invalid: '유효하지 않은 시간 (1초 ~ 60분)',
       tooltip: '카운트다운 타이머',
+      presets: '프리셋',
     },
     share: {
       title: '링크 공유',

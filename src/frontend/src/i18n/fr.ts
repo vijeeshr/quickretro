@@ -51,6 +51,7 @@ export default {
       helpTip: 'Ajustez les minutes/secondes avec +/- ou flèches. Maximum 1 heure.',
       invalid: 'Valeurs invalides. Plage autorisée : 1 seconde à 60 minutes.',
       tooltip: 'Minuteur',
+      presets: 'Préréglages',
     },
     share: {
       title: "Copier et partager l'URL",

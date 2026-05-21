@@ -51,6 +51,7 @@ export default {
       helpTip: 'Regola minuti/secondi con + - o frecce. Massimo 1 ora.',
       invalid: 'Valori non validi (1 secondo - 60 minuti)',
       tooltip: 'Timer conto alla rovescia',
+      presets: 'Preimpostazioni',
     },
     share: {
       title: 'Copia e condividi il link',

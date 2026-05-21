@@ -51,6 +51,7 @@ export default {
       helpTip: '使用+ -或方向键调整时间，最长1小时',
       invalid: '无效时间，允许范围：1秒至60分钟',
       tooltip: '倒计时器',
+      presets: '预设',
     },
     share: {
       title: '复制并分享链接',

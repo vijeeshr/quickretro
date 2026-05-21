@@ -31,6 +31,12 @@ const stop = () => {
   emit('stop')
 }
 
+const startPreset = (mins: number) => {
+  minutes.value = mins
+  seconds.value = 0
+  emit('start', mins * 60)
+}
+
 const incrementMinutes = () => {
   if (minutes.value >= 60) minutes.value = 60
   else minutes.value += 1
@@ -52,10 +58,32 @@ const decrementSeconds = () => {
 </script>
 
 <template>
-  <div class="flex justify-evenly items-center w-full">
+  <div
+    v-if="!isCountdownInProgress"
+    class="flex flex-col w-full my-2 border-b border-slate-300 dark:border-slate-700 pb-4 pt-2"
+  >
+    <span
+      class="block mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 select-none"
+    >
+      {{ t('dashboard.timer.presets') }}
+    </span>
+    <div class="flex justify-center gap-3">
+      <button
+        v-for="preset in [1, 5, 10, 15]"
+        :key="preset"
+        type="button"
+        class="px-4 py-2 text-sm w-full shadow-xs font-semibold rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white hover:border-transparent dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 select-none focus:outline-hidden focus:ring-0 cursor-pointer active:scale-95"
+        @click="startPreset(preset)"
+      >
+        {{ preset }}m
+      </button>
+    </div>
+  </div>
+
+  <div v-if="!isCountdownInProgress" class="flex justify-evenly items-center w-full">
     <!-- https://www.material-tailwind.com/docs/html/input-number#input-amount-buttons -->
     <!-- Mins Input Start -->
-    <div class="w-40 max-w-sm relative mt-4 pr-1">
+    <div class="w-40 max-w-sm relative mt-2 pr-1">
       <label class="block mb-1 text-sm text-slate-600 dark:text-slate-300 select-none">{{
         t('common.minutes')
       }}</label>
@@ -104,7 +132,7 @@ const decrementSeconds = () => {
     <!-- Mins Input End -->
 
     <!-- Seconds Input Start -->
-    <div class="w-40 max-w-sm relative mt-4 pl-1">
+    <div v-if="!isCountdownInProgress" class="w-40 max-w-sm relative mt-2 pl-1">
       <label class="block mb-1 text-sm text-slate-600 dark:text-slate-300 select-none">{{
         t('common.seconds')
       }}</label>
@@ -153,11 +181,15 @@ const decrementSeconds = () => {
     <!-- Seconds Input End -->
   </div>
 
-  <p class="flex justify-items-normal mt-2 text-xs text-slate-400 select-none max-w-xs">
+  <p
+    v-if="!isCountdownInProgress"
+    class="flex justify-items-normal mt-2 text-xs text-slate-400 select-none max-w-xs"
+  >
     {{ t('dashboard.timer.helpTip') }}
   </p>
 
   <p
+    v-if="!isCountdownInProgress"
     v-show="!isTimeValid"
     name="invalid-time"
     class="text-sm text-red-600 dark:text-red-300 mt-2 select-none max-w-xs"
@@ -179,7 +211,7 @@ const decrementSeconds = () => {
     <button
       v-if="isCountdownInProgress"
       type="button"
-      class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-red-100 hover:bg-red-400 border-red-300 text-red-600 hover:text-white hover:border-transparent dark:bg-red-800 dark:hover:bg-red-600 dark:border-red-700 dark:text-red-100 select-none focus:outline-hidden focus:ring-0"
+      class="min-w-70 px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-red-100 hover:bg-red-400 border-red-300 text-red-600 hover:text-white hover:border-transparent dark:bg-red-800 dark:hover:bg-red-600 dark:border-red-700 dark:text-red-100 select-none focus:outline-hidden focus:ring-0"
       @click="stop"
     >
       {{ t('common.stop') }}

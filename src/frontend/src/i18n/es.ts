@@ -53,6 +53,7 @@ export default {
         'Ajusta minutos y segundos con los controles + - o flechas del teclado. Máximo: 1 hora.',
       invalid: 'Valores inválidos. Rango permitido: 1 segundo a 60 minutos.',
       tooltip: 'Temporizador regresivo',
+      presets: 'Preajustes',
     },
     share: {
       title: 'Copia y comparte esta URL con participantes',

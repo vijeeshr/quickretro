@@ -51,6 +51,7 @@ export default {
       helpTip: 'Ajustez avec les boutons + - ou flèches. Maximum 1 heure.',
       invalid: 'Valeurs invalides (1 seconde à 60 minutes)',
       tooltip: 'Minuterie décompte',
+      presets: 'Préréglages',
     },
     share: {
       title: 'Copier et partager le lien',
