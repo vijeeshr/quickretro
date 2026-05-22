@@ -53,7 +53,6 @@ export default {
       invalid:
         'Please enter valid minutes/seconds values. Allowed range is 1 second to 60 minutes.',
       tooltip: 'Countdown Timer',
-      presets: 'Presets',
     },
     share: {
       title: 'Copy and share below url to participants',

@@ -37,7 +37,15 @@ import { DraftMessage } from '../models/DraftMessage'
 import { LikeMessage } from '../models/LikeMessage'
 // import { jsPDF } from 'jspdf';
 // import autoTable from 'jspdf-autotable';
-import { Dialog, DialogPanel, DialogTitle, Switch } from '@headlessui/vue'
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Switch,
+} from '@headlessui/vue'
 import CountdownTimer from './CountdownTimer.vue'
 import TimerPanel from './TimerPanel.vue'
 import {
@@ -825,10 +833,22 @@ const openDeleteAllDialog = () => {
   isDeleteAllDialogOpen.value = true
 }
 
-const timerSettings = () => {
-  if (isOwner.value) {
-    isTimerDialogOpen.value = true
-  }
+const onTimerPresetStart = (mins: number, closeFn: () => void) => {
+  dispatchEvent<TimerEvent>('timer', {
+    expiryDurationInSeconds: mins * 60,
+    stop: false,
+  })
+  closeFn()
+}
+
+const openTimerDialogFromPopover = (closeFn: () => void) => {
+  isTimerDialogOpen.value = true
+  closeFn()
+}
+
+const onTimerStopFromPopover = (closeFn: () => void) => {
+  dispatchEvent<TimerEvent>('timer', { expiryDurationInSeconds: 0, stop: true })
+  closeFn()
 }
 
 const openColumnEditDialog = () => {
@@ -1711,14 +1731,88 @@ onUnmounted(() => {
     <div class="w-16 p-3" :class="{ 'sticky top-0 self-start': isLeftSidebarSticky }">
       <div ref="leftSidebarContentRef">
         <!-- Timer -->
+        <Popover v-if="isOwner" class="relative mx-auto mb-4">
+          <PopoverButton as="div" class="focus:outline-none">
+            <CountdownTimer
+              :time-left-in-seconds="timerExpiresInSeconds"
+              :title="t('dashboard.timer.tooltip')"
+              class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white cursor-pointer hover:scale-110 transition-transform"
+              @countdown-progress-update="onCountdownProgressUpdate"
+              @one-minute-left-warning="onOneMinuteLeftWarning"
+              @countdown-completed="onCountdownCompleted"
+            />
+          </PopoverButton>
+          <teleport to="body">
+            <PopoverPanel
+              v-slot="{ close }"
+              class="absolute left-15 top-8 -translate-y-1/2 ml-2 z-61"
+            >
+              <div
+                class="flex items-center gap-1 bg-gray-900/95 backdrop-blur-sm border border-gray-700 dark:border-gray-500 rounded-lg p-1.5 shadow-xl whitespace-nowrap"
+              >
+                <!-- Preset buttons when timer is NOT running -->
+                <template v-if="!isTimerCountdownInProgress">
+                  <button
+                    v-for="preset in [1, 5, 10, 15]"
+                    :key="preset"
+                    type="button"
+                    class="px-2 py-1 text-xs font-semibold rounded-md bg-sky-600/20 text-sky-300 hover:bg-sky-500 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    @click="onTimerPresetStart(preset, close)"
+                  >
+                    {{ preset }}m
+                  </button>
+                </template>
+                <!-- Stop button when timer IS running -->
+                <template v-else>
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-md bg-red-600/20 text-red-400 hover:bg-red-500 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    :title="t('common.stop')"
+                    @click="onTimerStopFromPopover(close)"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                    >
+                      <path
+                        d="M5.25 3A2.25 2.25 0 0 0 3 5.25v9.5A2.25 2.25 0 0 0 5.25 17h9.5A2.25 2.25 0 0 0 17 14.75v-9.5A2.25 2.25 0 0 0 14.75 3h-9.5Z"
+                      />
+                    </svg>
+                  </button>
+                </template>
+                <!-- Divider -->
+                <div class="w-px h-5 bg-gray-600 mx-0.5"></div>
+                <!-- Clock icon to open full timer dialog -->
+                <button
+                  type="button"
+                  class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                  :title="t('dashboard.timer.title')"
+                  @click="openTimerDialogFromPopover(close)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    class="w-4 h-4"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </PopoverPanel>
+          </teleport>
+        </Popover>
         <CountdownTimer
+          v-else
           :time-left-in-seconds="timerExpiresInSeconds"
           :title="t('dashboard.timer.tooltip')"
-          class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white ml-auto mx-auto mb-4"
-          :class="
-            isOwner ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-default'
-          "
-          @click="timerSettings"
+          class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white ml-auto mx-auto mb-4 cursor-default"
           @countdown-progress-update="onCountdownProgressUpdate"
           @one-minute-left-warning="onOneMinuteLeftWarning"
           @countdown-completed="onCountdownCompleted"

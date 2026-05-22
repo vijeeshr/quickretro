@@ -51,7 +51,6 @@ export default {
       helpTip: 'Pas tijd aan met +/- of pijltjes. Maximaal 1 uur.',
       invalid: 'Ongeldige tijd (1 seconde - 60 minuten)',
       tooltip: 'Countdown-timer',
-      presets: 'Voorinstellingen',
     },
     share: {
       title: 'Deel deze link',

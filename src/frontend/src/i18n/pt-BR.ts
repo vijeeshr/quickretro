@@ -51,7 +51,6 @@ export default {
       helpTip: 'Ajuste minutos/segundos com os botões + - ou teclas direcionais. Máximo de 1 hora.',
       invalid: 'Valores inválidos. Intervalo permitido: 1 segundo a 60 minutos.',
       tooltip: 'Temporizador regressivo',
-      presets: 'Predefinições',
     },
     share: {
       title: 'Copie e compartilhe o link abaixo',

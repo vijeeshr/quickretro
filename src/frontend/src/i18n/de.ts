@@ -51,7 +51,6 @@ export default {
       helpTip: 'Minuten/Sekunden mit +/- oder Pfeiltasten einstellen. Maximal 1 Stunde.',
       invalid: 'Ungültige Werte. Erlaubt: 1 Sekunde bis 60 Minuten.',
       tooltip: 'Countdown-Timer',
-      presets: 'Voreinstellungen',
     },
     share: {
       title: 'URL an Teilnehmer kopieren',

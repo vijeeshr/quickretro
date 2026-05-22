@@ -53,7 +53,6 @@ export default {
         'Điều chỉnh phút và giây bằng nút + và -, hoặc phím mũi tên Lên và Xuống trên bàn phím. Thời gian tối đa là 1 giờ.',
       invalid: 'Vui lòng nhập giá trị phút/giây hợp lệ. Phạm vi cho phép là từ 1 giây đến 60 phút.',
       tooltip: 'Bộ đếm ngược',
-      presets: 'Cài đặt trước',
     },
     share: {
       title: 'Sao chép và chia sẻ liên kết bên dưới cho người tham gia',

@@ -51,7 +51,6 @@ export default {
       helpTip: 'Ajuste minutos/segundos com + - ou setas. Máx 1 hora.',
       invalid: 'Valores inválidos. Permitido: 1 segundo a 60 minutos.',
       tooltip: 'Temporizador',
-      presets: 'Predefinições',
     },
     share: {
       title: 'Compartilhe esta URL',

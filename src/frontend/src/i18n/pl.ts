@@ -54,7 +54,6 @@ export default {
       invalid:
         'Proszę wprowadzić prawidłowe wartości minut/sekund. Dozwolony zakres to od 1 sekundy do 60 minut.',
       tooltip: 'Timer odliczania',
-      presets: 'Ustawienia wstępne',
     },
     share: {
       title: 'Skopiuj i udostępnij poniższy link uczestnikom',

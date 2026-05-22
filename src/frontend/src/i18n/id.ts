@@ -54,7 +54,6 @@ export default {
       invalid:
         'Silakan masukkan nilai menit/detik yang valid. Rentang yang diizinkan adalah 1 detik hingga 60 menit.',
       tooltip: 'Timer Hitung Mundur',
-      presets: 'Prasetel',
     },
     share: {
       title: 'Salin dan bagikan URL di bawah ini kepada peserta',
