@@ -48,6 +48,8 @@ docker compose -f compose.install.yml up -d
 
 Visit http://localhost:8921 to open the app.
 
+To install by building from source, refer the [installation docs](https://quickretro.app/guide/installation)
+
 ## Setup for local development
 
 Ensure Go, Nodejs and Docker are installed.
