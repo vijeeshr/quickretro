@@ -1364,7 +1364,10 @@ onUnmounted(() => {
       v-if="isSpotlightOn && usersWithCards.length > 0"
       class="fixed flex items-center gap-2 top-4 left-1/2 transform -translate-x-1/2 text-white bg-black/50 border border-gray-500 px-4 py-2 rounded-lg shadow-md z-60"
     >
-      <button class="rounded-md hover:bg-gray-200 hover:text-gray-600" @click="prevSpotlight">
+      <button
+        class="rounded-md hover:bg-gray-200 hover:text-gray-600 cursor-pointer"
+        @click="prevSpotlight"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -1393,7 +1396,10 @@ onUnmounted(() => {
           t('common.anonymous')
         }}</span>
       </div>
-      <button class="rounded-md hover:bg-gray-200 hover:text-gray-700 mr-3" @click="nextSpotlight">
+      <button
+        class="rounded-md hover:bg-gray-200 hover:text-gray-700 mr-3 cursor-pointer"
+        @click="nextSpotlight"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -1409,7 +1415,7 @@ onUnmounted(() => {
         </svg>
       </button>
       <button
-        class="rounded-md hover:bg-gray-200 hover:text-gray-700 ml-auto"
+        class="rounded-md hover:bg-gray-200 hover:text-gray-700 ml-auto cursor-pointer"
         @click="closeSpotlight"
       >
         <svg
@@ -1802,6 +1808,28 @@ onUnmounted(() => {
                       d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z"
                       clip-rule="evenodd"
                     />
+                  </svg>
+                </button>
+                <!-- Divider -->
+                <div class="w-px h-5 bg-gray-600 mx-0.5"></div>
+                <!-- Close button -->
+                <button
+                  type="button"
+                  class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                  @click="close"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="w-4 h-4"
+                  >
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
                   </svg>
                 </button>
               </div>
