@@ -51,18 +51,27 @@ export default {
       helpTip: '+/-または矢印キーで調整 最大1時間',
       invalid: '無効な時間です（1秒～60分）',
       tooltip: 'カウントダウンタイマー',
+      shortText: 'タイマー',
     },
     share: {
       title: 'URLを共有',
       toolTip: 'ボードを共有',
+      shortText: '共有',
+    },
+    theme: {
+      shortText: 'テーマ',
     },
     mask: {
       maskTooltip: 'メッセージを非表示',
+      maskShortText: '非表示',
       unmaskTooltip: 'メッセージを表示',
+      unmaskShortText: '表示',
     },
     lock: {
       lockTooltip: 'ボードをロック',
+      lockShortText: 'ロック',
       unlockTooltip: 'ロック解除',
+      unlockShortText: '解除',
       message: 'ボードがロックされています',
       discardChanges: 'ボードがロックされました！保存されていないメッセージは破棄されました',
       unlockButton: 'ロック解除',
@@ -70,12 +79,15 @@ export default {
     spotlight: {
       noCardsToFocus: 'カードがありません',
       tooltip: 'カードをフォーカス',
+      shortText: '集中',
     },
     print: {
       tooltip: '印刷',
+      shortText: '印刷',
     },
     language: {
       tooltip: '言語を変更',
+      shortText: '言語',
     },
     delete: {
       title: '削除の確認',
@@ -83,6 +95,7 @@ export default {
       tooltip: 'このボードを削除',
       continueDelete: 'はい',
       cancelDelete: 'いいえ',
+      shortText: '削除',
     },
     columns: {
       col01: '良かった点',
@@ -111,6 +124,9 @@ export default {
       createNewBoard: '新しいボードを作成',
       supportText: 'GitHubでスターを付けて応援してください！ ⭐',
     },
+    help: {
+      shortText: 'ヘルプ',
+    },
   },
   transferOwnership: {
     tooltip: 'ボードの所有権を譲渡',
@@ -121,11 +137,13 @@ export default {
     selectPlaceholder: 'ユーザーを選択',
     cancel: 'キャンセル',
     confirm: '譲渡',
+    shortText: '譲渡',
     reclaim: {
       tooltip: 'ボードの所有権を取り戻す',
       title: '所有権の取り戻し',
       text: 'この操作により、あなたが再びボードの所有者になります。',
       confirm: '取り戻す',
+      shortText: '回収',
     },
   },
 }

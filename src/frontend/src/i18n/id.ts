@@ -54,18 +54,27 @@ export default {
       invalid:
         'Silakan masukkan nilai menit/detik yang valid. Rentang yang diizinkan adalah 1 detik hingga 60 menit.',
       tooltip: 'Timer Hitung Mundur',
+      shortText: 'Waktu',
     },
     share: {
       title: 'Salin dan bagikan URL di bawah ini kepada peserta',
       toolTip: 'Bagikan papan dengan orang lain',
+      shortText: 'Bagikan',
+    },
+    theme: {
+      shortText: 'Tema',
     },
     mask: {
       maskTooltip: 'Sembunyikan pesan',
+      maskShortText: 'Sembuny',
       unmaskTooltip: 'Tampilkan pesan',
+      unmaskShortText: 'Tampil',
     },
     lock: {
       lockTooltip: 'Kunci papan',
+      lockShortText: 'Kunci',
       unlockTooltip: 'Buka kunci papan',
+      unlockShortText: 'Buka',
       message: 'Tidak dapat menambah atau memperbarui. Papan dikunci oleh pemilik.',
       discardChanges: 'Papan dikunci! Pesan yang belum disimpan dibuang',
       unlockButton: 'Buka kunci',
@@ -73,12 +82,15 @@ export default {
     spotlight: {
       noCardsToFocus: 'Tidak ada kartu untuk difokuskan',
       tooltip: 'Fokuskan kartu',
+      shortText: 'Fokus',
     },
     print: {
       tooltip: 'Cetak',
+      shortText: 'Cetak',
     },
     language: {
       tooltip: 'Ganti bahasa',
+      shortText: 'Bahasa',
     },
     delete: {
       title: 'Konfirmasi penghapusan',
@@ -86,6 +98,7 @@ export default {
       tooltip: 'Hapus papan ini',
       continueDelete: 'Ya',
       cancelDelete: 'Tidak',
+      shortText: 'Hapus',
     },
     columns: {
       col01: 'Hal yang berjalan dengan baik',
@@ -114,6 +127,9 @@ export default {
       createNewBoard: 'Buat papan baru',
       supportText: 'Dukung kami dengan bintang di GitHub! ⭐',
     },
+    help: {
+      shortText: 'Bantuan',
+    },
   },
   transferOwnership: {
     tooltip: 'Transfer kepemilikan papan',
@@ -125,11 +141,13 @@ export default {
     selectPlaceholder: 'Pilih Pengguna',
     cancel: 'Batal',
     confirm: 'Transfer',
+    shortText: 'Transfer',
     reclaim: {
       tooltip: 'Ambil alih kembali kepemilikan papan',
       title: 'Ambil Alih Kembali Kepemilikan',
       text: 'Tindakan ini akan membuat Anda menjadi pemilik papan lagi.',
       confirm: 'Ambil Alih Kembali',
+      shortText: 'Ambil',
     },
   },
 }

@@ -51,18 +51,27 @@ export default {
       helpTip: 'Ajuste minutos/segundos com + - ou setas. Máx 1 hora.',
       invalid: 'Valores inválidos. Permitido: 1 segundo a 60 minutos.',
       tooltip: 'Temporizador',
+      shortText: 'Timer',
     },
     share: {
       title: 'Compartilhe esta URL',
       toolTip: 'Compartilhar quadro',
+      shortText: 'Partilhar',
+    },
+    theme: {
+      shortText: 'Tema',
     },
     mask: {
       maskTooltip: 'Ocultar mensagens',
+      maskShortText: 'Ocultar',
       unmaskTooltip: 'Mostrar mensagens',
+      unmaskShortText: 'Mostrar',
     },
     lock: {
       lockTooltip: 'Bloquear quadro',
+      lockShortText: 'Bloquear',
       unlockTooltip: 'Desbloquear quadro',
+      unlockShortText: 'Desbloq',
       message: 'Quadro bloqueado.',
       discardChanges: 'Quadro bloqueado! Mensagens não guardadas foram descartadas',
       unlockButton: 'Desbloquear',
@@ -70,12 +79,15 @@ export default {
     spotlight: {
       noCardsToFocus: 'Nenhum cartão para focar',
       tooltip: 'Focar cartões',
+      shortText: 'Foco',
     },
     print: {
       tooltip: 'Imprimir',
+      shortText: 'Imprimir',
     },
     language: {
       tooltip: 'Mudar idioma',
+      shortText: 'Idioma',
     },
     delete: {
       title: 'Confirmar eliminação',
@@ -83,6 +95,7 @@ export default {
       tooltip: 'Eliminar este quadro',
       continueDelete: 'Sim',
       cancelDelete: 'Não',
+      shortText: 'Apagar',
     },
     columns: {
       col01: 'O que deu certo',
@@ -111,6 +124,9 @@ export default {
       createNewBoard: 'Criar novo quadro',
       supportText: 'Apoie-nos com uma estrela no GitHub! ⭐',
     },
+    help: {
+      shortText: 'Ajuda',
+    },
   },
   transferOwnership: {
     tooltip: 'Transferir propriedade do quadro',
@@ -122,11 +138,13 @@ export default {
     selectPlaceholder: 'Selecionar Utilizador',
     cancel: 'Cancelar',
     confirm: 'Transferir',
+    shortText: 'Transferir',
     reclaim: {
       tooltip: 'Reaver propriedade do quadro',
       title: 'Reaver Propriedade',
       text: 'Esta ação tornará novamente o utilizador o proprietário do quadro.',
       confirm: 'Reaver',
+      shortText: 'Reaver',
     },
   },
 }

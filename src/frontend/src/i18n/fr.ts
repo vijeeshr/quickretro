@@ -51,18 +51,27 @@ export default {
       helpTip: 'Ajustez les minutes/secondes avec +/- ou flèches. Maximum 1 heure.',
       invalid: 'Valeurs invalides. Plage autorisée : 1 seconde à 60 minutes.',
       tooltip: 'Minuteur',
+      shortText: 'Minuteur',
     },
     share: {
       title: "Copier et partager l'URL",
       toolTip: 'Partager le tableau',
+      shortText: 'Partager',
+    },
+    theme: {
+      shortText: 'Thème',
     },
     mask: {
-      maskTooltip: 'Masquer messages',
-      unmaskTooltip: 'Afficher messages',
+      maskTooltip: 'Masquer les messages',
+      maskShortText: 'Masquer',
+      unmaskTooltip: 'Afficher les messages',
+      unmaskShortText: 'Afficher',
     },
     lock: {
       lockTooltip: 'Verrouiller tableau',
+      lockShortText: 'Verrou',
       unlockTooltip: 'Déverrouiller tableau',
+      unlockShortText: 'Déverr',
       message: 'Tableau verrouillé.',
       discardChanges: 'Tableau verrouillé ! Messages non enregistrés supprimés',
       unlockButton: 'Déverrouiller',
@@ -70,12 +79,15 @@ export default {
     spotlight: {
       noCardsToFocus: 'Aucune carte à focaliser',
       tooltip: 'Mettre en avant',
+      shortText: 'Focus',
     },
     print: {
       tooltip: 'Imprimer',
+      shortText: 'Imprimer',
     },
     language: {
       tooltip: 'Changer de langue',
+      shortText: 'Langue',
     },
     delete: {
       title: 'Confirmer la suppression',
@@ -83,6 +95,7 @@ export default {
       tooltip: 'Supprimer ce tableau',
       continueDelete: 'Oui',
       cancelDelete: 'Non',
+      shortText: 'Suppr',
     },
     columns: {
       col01: 'Ce qui a bien fonctionné',
@@ -111,6 +124,9 @@ export default {
       createNewBoard: 'Créer un nouveau tableau',
       supportText: 'Soutenez-nous avec une étoile sur GitHub ! ⭐',
     },
+    help: {
+      shortText: 'Aide',
+    },
   },
   transferOwnership: {
     tooltip: 'Transférer la propriété du tableau',
@@ -122,11 +138,13 @@ export default {
     selectPlaceholder: 'Sélectionner un utilisateur',
     cancel: 'Annuler',
     confirm: 'Transférer',
+    shortText: 'Transfert',
     reclaim: {
       tooltip: 'Récupérer la propriété du tableau',
       title: 'Récupérer la propriété',
       text: 'Cette action fera de vous à nouveau le propriétaire du tableau.',
       confirm: 'Récupérer',
+      shortText: 'Reprendre',
     },
   },
 }

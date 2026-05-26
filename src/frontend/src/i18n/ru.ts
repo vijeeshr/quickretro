@@ -51,18 +51,27 @@ export default {
       helpTip: 'Используйте +/- или стрелки. Макс. 1 час.',
       invalid: 'Недопустимое время (1 сек - 60 мин)',
       tooltip: 'Таймер обратного отсчёта',
+      shortText: 'Таймер',
     },
     share: {
       title: 'Скопируйте и поделитесь ссылкой',
       toolTip: 'Поделиться доской',
+      shortText: 'Поделиться',
+    },
+    theme: {
+      shortText: 'Тема',
     },
     mask: {
       maskTooltip: 'Скрыть сообщения',
+      maskShortText: 'Скрыть',
       unmaskTooltip: 'Показать сообщения',
+      unmaskShortText: 'Показ',
     },
     lock: {
       lockTooltip: 'Заблокировать доску',
+      lockShortText: 'Блок',
       unlockTooltip: 'Разблокировать доску',
+      unlockShortText: 'Разблок',
       message: 'Доска заблокирована',
       discardChanges: 'Доска заблокирована! Несохранённые сообщения удалены',
       unlockButton: 'Разблокировать',
@@ -70,12 +79,15 @@ export default {
     spotlight: {
       noCardsToFocus: 'Нет карточек',
       tooltip: 'Выделить карточки',
+      shortText: 'Фокус',
     },
     print: {
       tooltip: 'Печать',
+      shortText: 'Печать',
     },
     language: {
       tooltip: 'Сменить язык',
+      shortText: 'Язык',
     },
     delete: {
       title: 'Подтвердите удаление',
@@ -83,6 +95,7 @@ export default {
       tooltip: 'Удалить эту доску',
       continueDelete: 'Да',
       cancelDelete: 'Нет',
+      shortText: 'Удалить',
     },
     columns: {
       col01: 'Что прошло хорошо',
@@ -111,6 +124,9 @@ export default {
       createNewBoard: 'Создать новую доску',
       supportText: 'Поддержите нас звездой на GitHub! ⭐',
     },
+    help: {
+      shortText: 'Помощь',
+    },
   },
   transferOwnership: {
     tooltip: 'Передать права владельца доски',
@@ -122,11 +138,13 @@ export default {
     selectPlaceholder: 'Выберите пользователя',
     cancel: 'Отмена',
     confirm: 'Передать',
+    shortText: 'Передача',
     reclaim: {
       tooltip: 'Вернуть права владельца доски',
       title: 'Вернуть права владения',
       text: 'Это действие снова сделает вас владельцем доски.',
       confirm: 'Вернуть',
+      shortText: 'Вернуть',
     },
   },
 }

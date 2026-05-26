@@ -53,18 +53,27 @@ export default {
         'Ajusta minutos y segundos con los controles + - o flechas del teclado. Máximo: 1 hora.',
       invalid: 'Valores inválidos. Rango permitido: 1 segundo a 60 minutos.',
       tooltip: 'Temporizador regresivo',
+      shortText: 'Reloj',
     },
     share: {
       title: 'Copia y comparte esta URL con participantes',
       toolTip: 'Compartir tablero',
+      shortText: 'Compartir',
+    },
+    theme: {
+      shortText: 'Tema',
     },
     mask: {
-      maskTooltip: 'Ocultar mensajes',
-      unmaskTooltip: 'Mostrar mensajes',
+      maskTooltip: 'Ocultar los mensajes',
+      maskShortText: 'Ocultar',
+      unmaskTooltip: 'Mostrar los mensajes',
+      unmaskShortText: 'Mostrar',
     },
     lock: {
       lockTooltip: 'Bloquear tablero',
+      lockShortText: 'Bloquear',
       unlockTooltip: 'Desbloquear tablero',
+      unlockShortText: 'Desbloq',
       message: 'Tablero bloqueado por el propietario.',
       discardChanges: '¡Tablero bloqueado! Los mensajes no guardados se han descartado',
       unlockButton: 'Desbloquear',
@@ -72,12 +81,15 @@ export default {
     spotlight: {
       noCardsToFocus: 'No hay tarjetas para enfocar',
       tooltip: 'Enfocar tarjetas',
+      shortText: 'Foco',
     },
     print: {
       tooltip: 'Imprimir',
+      shortText: 'Imprimir',
     },
     language: {
       tooltip: 'Cambiar idioma',
+      shortText: 'Idioma',
     },
     delete: {
       title: 'Confirmar eliminación',
@@ -85,6 +97,7 @@ export default {
       tooltip: 'Eliminar este tablero',
       continueDelete: 'Sí',
       cancelDelete: 'No',
+      shortText: 'Eliminar',
     },
     columns: {
       col01: 'Lo que salió bien',
@@ -113,6 +126,9 @@ export default {
       createNewBoard: 'Crear nuevo tablero',
       supportText: '¡Apóyanos con una estrella en GitHub! ⭐',
     },
+    help: {
+      shortText: 'Ayuda',
+    },
   },
   transferOwnership: {
     tooltip: 'Transferir la propiedad del tablero',
@@ -124,11 +140,13 @@ export default {
     selectPlaceholder: 'Seleccionar usuario',
     cancel: 'Cancelar',
     confirm: 'Transferir',
+    shortText: 'Transferir',
     reclaim: {
       tooltip: 'Recuperar la propiedad del tablero',
       title: 'Recuperar propiedad',
       text: 'Esta acción te convertirá de nuevo en el propietario del tablero.',
       confirm: 'Recuperar',
+      shortText: 'Reclamar',
     },
   },
 }

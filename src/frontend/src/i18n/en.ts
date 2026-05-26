@@ -53,18 +53,27 @@ export default {
       invalid:
         'Please enter valid minutes/seconds values. Allowed range is 1 second to 60 minutes.',
       tooltip: 'Countdown Timer',
+      shortText: 'Timer',
     },
     share: {
       title: 'Copy and share below url to participants',
       toolTip: 'Share board with others',
+      shortText: 'Share',
+    },
+    theme: {
+      shortText: 'Theme',
     },
     mask: {
-      maskTooltip: 'Mask messages',
-      unmaskTooltip: 'Unmask messages',
+      maskTooltip: 'Hide messages',
+      maskShortText: 'Hide',
+      unmaskTooltip: 'Show messages',
+      unmaskShortText: 'Show',
     },
     lock: {
       lockTooltip: 'Lock board',
+      lockShortText: 'Lock',
       unlockTooltip: 'Unlock board',
+      unlockShortText: 'Unlock',
       message: 'Board locked. No changes allowed.',
       discardChanges: 'Board locked! Unsaved messages discarded',
       unlockButton: 'Unlock',
@@ -72,12 +81,15 @@ export default {
     spotlight: {
       noCardsToFocus: 'There are no cards to focus',
       tooltip: 'Focus cards',
+      shortText: 'Focus',
     },
     print: {
       tooltip: 'Print',
+      shortText: 'Print',
     },
     language: {
       tooltip: 'Change language',
+      shortText: 'Lang',
     },
     delete: {
       title: 'Confirm deletion',
@@ -85,6 +97,7 @@ export default {
       tooltip: 'Delete this Board',
       continueDelete: 'Yes',
       cancelDelete: 'No',
+      shortText: 'Delete',
     },
     columns: {
       col01: 'What went well',
@@ -113,6 +126,9 @@ export default {
       createNewBoard: 'Create new board',
       supportText: 'Support us with a star on GitHub! ⭐',
     },
+    help: {
+      shortText: 'Help',
+    },
   },
   transferOwnership: {
     tooltip: 'Transfer board ownership',
@@ -123,11 +139,13 @@ export default {
     selectPlaceholder: 'Select User',
     cancel: 'Cancel',
     confirm: 'Transfer',
+    shortText: 'Transfer',
     reclaim: {
       tooltip: 'Reclaim board ownership',
       title: 'Reclaim Ownership',
       text: 'This action will make you board owner again.',
       confirm: 'Reclaim',
+      shortText: 'Reclaim',
     },
   },
 }

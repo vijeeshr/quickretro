@@ -51,31 +51,43 @@ export default {
       helpTip: 'Minuten/Sekunden mit +/- oder Pfeiltasten einstellen. Maximal 1 Stunde.',
       invalid: 'Ungültige Werte. Erlaubt: 1 Sekunde bis 60 Minuten.',
       tooltip: 'Countdown-Timer',
+      shortText: 'Timer',
     },
     share: {
       title: 'URL an Teilnehmer kopieren',
       toolTip: 'Board teilen',
+      shortText: 'Teilen',
+    },
+    theme: {
+      shortText: 'Thema',
     },
     mask: {
-      maskTooltip: 'Nachrichten verdecken',
-      unmaskTooltip: 'Nachrichten zeigen',
+      maskTooltip: 'Nachrichten ausblenden',
+      maskShortText: 'Verberg',
+      unmaskTooltip: 'Nachrichten einblenden',
+      unmaskShortText: 'Zeigen',
     },
     lock: {
       lockTooltip: 'Board sperren',
+      lockShortText: 'Sperren',
       unlockTooltip: 'Board entsperren',
+      unlockShortText: 'Entsperren',
       message: 'Board ist gesperrt.',
       discardChanges: 'Board gesperrt! Ungespeicherte Nachrichten verworfen',
-      unlockButton: 'Entsperren',
+      unlockButton: 'Öffnen',
     },
     spotlight: {
       noCardsToFocus: 'Keine Karten vorhanden',
       tooltip: 'Karten fokussieren',
+      shortText: 'Fokus',
     },
     print: {
       tooltip: 'Drucken',
+      shortText: 'Drucken',
     },
     language: {
       tooltip: 'Sprache ändern',
+      shortText: 'Sprache',
     },
     delete: {
       title: 'Löschen bestätigen',
@@ -83,6 +95,7 @@ export default {
       tooltip: 'Dieses Board löschen',
       continueDelete: 'Ja',
       cancelDelete: 'Nein',
+      shortText: 'Löschen',
     },
     columns: {
       col01: 'Was gut lief',
@@ -111,6 +124,9 @@ export default {
       createNewBoard: 'Neues Board erstellen',
       supportText: 'Unterstützen Sie uns mit einem Stern auf GitHub! ⭐',
     },
+    help: {
+      shortText: 'Hilfe',
+    },
   },
   transferOwnership: {
     tooltip: 'Board-Eigentümerschaft übertragen',
@@ -122,11 +138,13 @@ export default {
     selectPlaceholder: 'Benutzer auswählen',
     cancel: 'Abbrechen',
     confirm: 'Übertragen',
+    shortText: 'Übergeben',
     reclaim: {
       tooltip: 'Board-Eigentümerschaft zurückfordern',
       title: 'Eigentümerschaft zurückfordern',
       text: 'Diese Aktion macht Sie wieder zum Board-Eigentümer.',
       confirm: 'Zurückfordern',
+      shortText: 'Zurück',
     },
   },
 }

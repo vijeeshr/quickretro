@@ -51,18 +51,27 @@ export default {
       helpTip: 'Regola minuti/secondi con + - o frecce. Massimo 1 ora.',
       invalid: 'Valori non validi (1 secondo - 60 minuti)',
       tooltip: 'Timer conto alla rovescia',
+      shortText: 'Timer',
     },
     share: {
       title: 'Copia e condividi il link',
       toolTip: 'Condividi bacheca',
+      shortText: 'Condiv',
+    },
+    theme: {
+      shortText: 'Tema',
     },
     mask: {
       maskTooltip: 'Nascondi messaggi',
+      maskShortText: 'Nascondi',
       unmaskTooltip: 'Mostra messaggi',
+      unmaskShortText: 'Mostra',
     },
     lock: {
       lockTooltip: 'Blocca bacheca',
+      lockShortText: 'Blocca',
       unlockTooltip: 'Sblocca bacheca',
+      unlockShortText: 'Sblocca',
       message: 'Bacheca bloccata.',
       discardChanges: 'Bacheca bloccata! Messaggi non salvati eliminati',
       unlockButton: 'Sbloccare',
@@ -70,12 +79,15 @@ export default {
     spotlight: {
       noCardsToFocus: 'Nessuna carta da focalizzare',
       tooltip: 'Evidenzia carte',
+      shortText: 'Focus',
     },
     print: {
       tooltip: 'Stampa',
+      shortText: 'Stampa',
     },
     language: {
       tooltip: 'Cambia lingua',
+      shortText: 'Lingua',
     },
     delete: {
       title: 'Conferma eliminazione',
@@ -83,6 +95,7 @@ export default {
       tooltip: 'Elimina questa bacheca',
       continueDelete: 'Sì',
       cancelDelete: 'No',
+      shortText: 'Elimina',
     },
     columns: {
       col01: 'Cosa ha funzionato',
@@ -111,6 +124,9 @@ export default {
       createNewBoard: 'Crea nuova bacheca',
       supportText: 'Supportaci con una stella su GitHub! ⭐',
     },
+    help: {
+      shortText: 'Aiuto',
+    },
   },
   transferOwnership: {
     tooltip: 'Trasferisci proprietà della bacheca',
@@ -122,11 +138,13 @@ export default {
     selectPlaceholder: 'Seleziona utente',
     cancel: 'Annulla',
     confirm: 'Trasferisci',
+    shortText: 'Trasfer',
     reclaim: {
       tooltip: 'Reclama proprietà della bacheca',
       title: 'Reclama proprietà',
       text: 'Questa azione ti renderà nuovamente il proprietario della bacheca.',
       confirm: 'Reclama',
+      shortText: 'Reclama',
     },
   },
 }
