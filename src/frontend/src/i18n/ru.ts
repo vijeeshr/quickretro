@@ -85,6 +85,12 @@ export default {
       tooltip: 'Печать',
       shortText: 'Печать',
     },
+    filter: {
+      tooltip: 'Показывать карточки с лайками/комментариями сверху',
+      shortText: 'Сорт.',
+      likesMiniTooltip: 'Карточки с наибольшим числом лайков сверху',
+      commentsMiniTooltip: 'Карточки с наибольшим числом комментариев сверху',
+    },
     language: {
       tooltip: 'Сменить язык',
       shortText: 'Язык',

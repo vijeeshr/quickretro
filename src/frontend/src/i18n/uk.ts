@@ -81,6 +81,12 @@ export default {
       tooltip: 'Фокусувати картки',
       shortText: 'Фокус',
     },
+    filter: {
+      tooltip: 'Показувати картки з лайками/коментарями зверху',
+      shortText: 'Сортув.',
+      likesMiniTooltip: 'Картки з найбільшою кількістю лайків зверху',
+      commentsMiniTooltip: 'Картки з найбільшою кількістю коментарів зверху',
+    },
     print: {
       tooltip: 'Друк',
       shortText: 'Друк',

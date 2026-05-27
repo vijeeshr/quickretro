@@ -81,6 +81,12 @@ export default {
       tooltip: 'Mettre en avant',
       shortText: 'Focus',
     },
+    filter: {
+      tooltip: "Afficher les cartes avec j'aime/commentaires en haut",
+      shortText: 'Trier',
+      likesMiniTooltip: 'Cartes les plus aimées en haut',
+      commentsMiniTooltip: 'Cartes les plus commentées en haut',
+    },
     print: {
       tooltip: 'Imprimer',
       shortText: 'Imprimer',

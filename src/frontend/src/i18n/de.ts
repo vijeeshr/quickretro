@@ -81,6 +81,12 @@ export default {
       tooltip: 'Karten fokussieren',
       shortText: 'Fokus',
     },
+    filter: {
+      tooltip: 'Karten mit Likes/Kommentaren oben anzeigen',
+      shortText: 'Sortieren',
+      likesMiniTooltip: 'Beliebteste Karten oben',
+      commentsMiniTooltip: 'Meistkommentierte Karten oben',
+    },
     print: {
       tooltip: 'Drucken',
       shortText: 'Drucken',

@@ -84,6 +84,12 @@ export default {
       tooltip: 'Skup się na kartach',
       shortText: 'Fokus',
     },
+    filter: {
+      tooltip: 'Pokaż karty z polubieniami/komentarzami na górze',
+      shortText: 'Sortuj',
+      likesMiniTooltip: 'Najbardziej polubione karty na górze',
+      commentsMiniTooltip: 'Najbardziej komentowane karty na górze',
+    },
     print: {
       tooltip: 'Drukuj',
       shortText: 'Druk',

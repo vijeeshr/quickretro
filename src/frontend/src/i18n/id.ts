@@ -84,6 +84,12 @@ export default {
       tooltip: 'Fokuskan kartu',
       shortText: 'Fokus',
     },
+    filter: {
+      tooltip: 'Tampilkan kartu dengan suka/komentar di atas',
+      shortText: 'Urutkan',
+      likesMiniTooltip: 'Kartu paling banyak disukai di atas',
+      commentsMiniTooltip: 'Kartu paling banyak dikomentari di atas',
+    },
     print: {
       tooltip: 'Cetak',
       shortText: 'Cetak',

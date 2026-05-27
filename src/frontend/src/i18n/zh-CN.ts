@@ -81,6 +81,12 @@ export default {
       tooltip: '聚焦卡片',
       shortText: '聚焦',
     },
+    filter: {
+      tooltip: '在顶部显示获赞/有评论 my 的卡片',
+      shortText: '排序',
+      likesMiniTooltip: '获赞最多的卡片排在顶部',
+      commentsMiniTooltip: '评论最多的卡片排在顶部',
+    },
     print: {
       tooltip: '打印',
       shortText: '打印',

@@ -81,6 +81,12 @@ export default {
       tooltip: 'Focar cartões',
       shortText: 'Foco',
     },
+    filter: {
+      tooltip: 'Mostrar cartões com gostos/comentários no topo',
+      shortText: 'Ordenar',
+      likesMiniTooltip: 'Cartões com mais gostos no topo',
+      commentsMiniTooltip: 'Cartões com mais comentários no topo',
+    },
     print: {
       tooltip: 'Imprimir',
       shortText: 'Imprimir',

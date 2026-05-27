@@ -83,6 +83,12 @@ export default {
       tooltip: 'Focus cards',
       shortText: 'Focus',
     },
+    filter: {
+      tooltip: 'Show cards with likes/comments on top',
+      shortText: 'Sort',
+      likesMiniTooltip: 'Most liked cards on top',
+      commentsMiniTooltip: 'Most commented cards on top',
+    },
     print: {
       tooltip: 'Print',
       shortText: 'Print',

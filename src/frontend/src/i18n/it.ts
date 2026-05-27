@@ -81,6 +81,12 @@ export default {
       tooltip: 'Evidenzia carte',
       shortText: 'Focus',
     },
+    filter: {
+      tooltip: 'Mostra le schede con mi piace/commenti in alto',
+      shortText: 'Ordina',
+      likesMiniTooltip: 'Schede con più mi piace in alto',
+      commentsMiniTooltip: 'Schede con più commenti in alto',
+    },
     print: {
       tooltip: 'Stampa',
       shortText: 'Stampa',

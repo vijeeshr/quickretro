@@ -83,6 +83,12 @@ export default {
       tooltip: 'Tập trung vào thẻ',
       shortText: 'Tậptrung',
     },
+    filter: {
+      tooltip: 'Hiển thị các thẻ có lượt thích/bình luận ở trên cùng',
+      shortText: 'Lọc',
+      likesMiniTooltip: 'Các thẻ được thích nhiều nhất ở trên cùng',
+      commentsMiniTooltip: 'Các thẻ được bình luận nhiều nhất ở trên cùng',
+    },
     print: {
       tooltip: 'In',
       shortText: 'In',

@@ -81,6 +81,12 @@ export default {
       tooltip: 'Destacar cards',
       shortText: 'Foco',
     },
+    filter: {
+      tooltip: 'Mostrar cartões com curtidas/comentários no topo',
+      shortText: 'Ordenar',
+      likesMiniTooltip: 'Cartões mais curtidos no topo',
+      commentsMiniTooltip: 'Cartões mais comentados no topo',
+    },
     print: {
       tooltip: 'Imprimir',
       shortText: 'Imprimir',

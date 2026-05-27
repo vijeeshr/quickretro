@@ -85,6 +85,12 @@ export default {
       tooltip: 'Afdrukken',
       shortText: 'Afdrukken',
     },
+    filter: {
+      tooltip: 'Kaarten med likes/reacties bovenaan tonen',
+      shortText: 'Sorteren',
+      likesMiniTooltip: 'Meest gelikete kaarten bovenaan',
+      commentsMiniTooltip: 'Meest becommentarieerde kaarten bovenaan',
+    },
     language: {
       tooltip: 'Taal wijzigen',
       shortText: 'Taal',

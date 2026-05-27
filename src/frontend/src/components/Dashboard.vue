@@ -206,8 +206,69 @@ const onLanguageSelect = (localeCode: AvailableLocales) => {
   setIsLanguageDialogOpen(false)
 }
 
+const getInitialSort = (): 'likes' | 'comments' | 'none' => {
+  const saved = sessionStorage.getItem('quickretro_sort_by')
+  return saved === 'likes' || saved === 'comments' ? saved : 'none'
+}
+const activeSort = ref<'likes' | 'comments' | 'none'>(getInitialSort())
+
+const setSort = (sortType: 'likes' | 'comments' | 'none') => {
+  activeSort.value = sortType
+  sessionStorage.setItem('quickretro_sort_by', sortType)
+}
+
+// Circular state rotater for the primary filter button
+const cycleSortOrder = () => {
+  if (activeSort.value === 'none') {
+    setSort('likes')
+  } else if (activeSort.value === 'likes') {
+    setSort('comments')
+  } else {
+    setSort('none')
+  }
+}
+
+const toggleSortByLikes = () => {
+  if (activeSort.value === 'likes') {
+    setSort('none')
+  } else {
+    setSort('likes')
+  }
+}
+
+const toggleSortByComments = () => {
+  if (activeSort.value === 'comments') {
+    setSort('none')
+  } else {
+    setSort('comments')
+  }
+}
+
+const hasLikedCards = computed(() => {
+  return cards.value.some(card => card.likes > 0)
+})
+
+const hasCommentedCards = computed(() => {
+  for (const comments of commentsMap.value.values()) {
+    if (comments && comments.length > 0) {
+      return true
+    }
+  }
+  return false
+})
+
 const filterCards = (category: string) => {
-  return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase())
+  const filtered = cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase())
+  if (activeSort.value === 'likes') {
+    filtered.sort((a, b) => b.likes - a.likes)
+  } else if (activeSort.value === 'comments') {
+    filtered.sort((a, b) => {
+      const aCount = commentsMap.value.get(a.id)?.length ?? 0
+      const bCount = commentsMap.value.get(b.id)?.length ?? 0
+      return bCount - aCount
+    })
+  }
+  return filtered
 }
 
 const filterComments = (messageId: string): MessageResponse[] => {
@@ -2048,6 +2109,90 @@ onUnmounted(() => {
           <span
             class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
             >{{ t('dashboard.spotlight.shortText') }}</span
+          >
+        </div>
+
+        <!-- Sort -->
+        <div
+          v-if="hasLikedCards || hasCommentedCards"
+          class="flex flex-col items-center mb-3 group"
+        >
+          <button
+            type="button"
+            class="transition-all select-none focus:outline-none cursor-pointer group-hover:scale-110"
+            :title="t('dashboard.filter.tooltip')"
+            @click="cycleSortOrder"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-8 h-8 mx-auto transition-transform duration-200"
+              :class="{
+                'text-red-500': activeSort === 'likes',
+                'text-sky-500': activeSort === 'comments',
+              }"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12"
+              />
+            </svg>
+          </button>
+          <div class="grid grid-cols-2">
+            <!-- Sort by Likes Button -->
+            <button
+              type="button"
+              class="transition-colors select-none focus:outline-none cursor-pointer"
+              :title="t('dashboard.filter.likesMiniTooltip')"
+              @click="toggleSortByLikes"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                class="w-4 h-4 transition-colors duration-200"
+                :class="{
+                  'text-red-500': activeSort === 'likes',
+                  'text-gray-300 hover:text-white': activeSort !== 'likes',
+                }"
+              >
+                <path
+                  d="M2.09 15a1 1 0 0 0 1-1V8a1 1 0 1 0-2 0v6a1 1 0 0 0 1 1ZM5.765 13H4.09V8c.663 0 1.218-.466 1.556-1.037a4.02 4.02 0 0 1 1.358-1.377c.478-.292.907-.706.989-1.26V4.32a9.03 9.03 0 0 0 0-2.642c-.028-.194.048-.394.224-.479A2 2 0 0 1 11.09 3c0 .812-.08 1.605-.235 2.371a.521.521 0 0 0 .502.629h1.733c1.104 0 2.01.898 1.901 1.997a19.831 19.831 0 0 1-1.081 4.788c-.27.747-.998 1.215-1.793 1.215H9.414c-.215 0-.428-.035-.632-.103l-2.384-.794A2.002 2.002 0 0 0 5.765 13Z"
+                />
+              </svg>
+            </button>
+            <!-- Sort by Comments Button -->
+            <button
+              type="button"
+              class="transition-colors select-none focus:outline-none cursor-pointer"
+              :title="t('dashboard.filter.commentsMiniTooltip')"
+              @click="toggleSortByComments"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                class="w-4 h-4 transition-colors duration-200"
+                :class="{
+                  'text-sky-500': activeSort === 'comments',
+                  'text-gray-300 hover:text-white': activeSort !== 'comments',
+                }"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M1 8c0-3.43 3.262-6 7-6s7 2.57 7 6-3.262 6-7 6c-.423 0-.838-.032-1.241-.094-.9.574-1.941.948-3.06 1.06a.75.75 0 0 1-.713-1.14c.232-.378.395-.804.469-1.26C1.979 11.486 1 9.86 1 8Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
+            >{{ t('dashboard.filter.shortText') }}</span
           >
         </div>
 

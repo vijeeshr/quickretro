@@ -81,6 +81,12 @@ export default {
       tooltip: 'カードをフォーカス',
       shortText: '集中',
     },
+    filter: {
+      tooltip: '「いいね」やコメントのあるカードを上に表示',
+      shortText: '並べ替え',
+      likesMiniTooltip: '「いいね」の多いカードを上に表示',
+      commentsMiniTooltip: 'コメントの多いカードを上に表示',
+    },
     print: {
       tooltip: '印刷',
       shortText: '印刷',

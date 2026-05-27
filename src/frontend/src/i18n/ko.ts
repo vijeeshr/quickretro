@@ -85,6 +85,12 @@ export default {
       tooltip: '인쇄',
       shortText: '인쇄',
     },
+    filter: {
+      tooltip: '좋아요/댓글이 있는 카드를 상단에 표시',
+      shortText: '정렬',
+      likesMiniTooltip: '좋아요가 가장 많은 카드를 상단에 표시',
+      commentsMiniTooltip: '댓글이 가장 많은 카드를 상단에 표시',
+    },
     language: {
       tooltip: '언어 변경',
       shortText: '언어',

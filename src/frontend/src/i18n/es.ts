@@ -83,6 +83,12 @@ export default {
       tooltip: 'Enfocar tarjetas',
       shortText: 'Foco',
     },
+    filter: {
+      tooltip: 'Mostrar tarjetas con me gusta/comentarios arriba',
+      shortText: 'Ordenar',
+      likesMiniTooltip: 'Tarjetas con más me gusta arriba',
+      commentsMiniTooltip: 'Tarjetas con más comentarios arriba',
+    },
     print: {
       tooltip: 'Imprimir',
       shortText: 'Imprimir',
