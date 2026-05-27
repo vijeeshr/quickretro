@@ -1798,7 +1798,7 @@ onUnmounted(() => {
     <div class="w-16 p-3" :class="{ 'sticky top-0 self-start': isLeftSidebarSticky }">
       <div ref="leftSidebarContentRef">
         <!-- Timer -->
-        <Popover v-if="isOwner" class="relative flex flex-col items-center mx-auto mb-3">
+        <Popover v-if="isOwner" class="relative flex flex-col items-center mx-auto mb-2">
           <PopoverButton
             as="div"
             class="flex flex-col items-center focus:outline-none group cursor-pointer"
@@ -1908,7 +1908,7 @@ onUnmounted(() => {
           v-else
           :time-left-in-seconds="timerExpiresInSeconds"
           :title="t('dashboard.timer.tooltip')"
-          class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white ml-auto mx-auto mb-4 cursor-default"
+          class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white ml-auto mx-auto mb-2 cursor-default"
           @countdown-progress-update="onCountdownProgressUpdate"
           @one-minute-left-warning="onOneMinuteLeftWarning"
           @countdown-completed="onCountdownCompleted"
@@ -1917,7 +1917,7 @@ onUnmounted(() => {
         <!-- Share -->
         <div
           :title="t('dashboard.share.toolTip')"
-          class="flex flex-col items-center mb-3 group cursor-pointer"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
           @click="share"
         >
           <svg
@@ -1944,24 +1944,9 @@ onUnmounted(() => {
         <div
           v-if="isOwner"
           :title="!isMasked ? t('dashboard.mask.maskTooltip') : t('dashboard.mask.unmaskTooltip')"
-          class="flex flex-col items-center mb-3 group cursor-pointer"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
           @click="mask"
         >
-          <!-- <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
-            :class="{ hidden: isMasked }"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 1-4.243-4.243m4.242 4.242L9.88 9.88"
-            />
-          </svg> -->
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -2007,7 +1992,7 @@ onUnmounted(() => {
         <div
           v-if="isOwner"
           :title="!isLocked ? t('dashboard.lock.lockTooltip') : t('dashboard.lock.unlockTooltip')"
-          class="flex flex-col items-center mb-3 group cursor-pointer"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
           @click="lock"
         >
           <svg
@@ -2052,7 +2037,7 @@ onUnmounted(() => {
         <div
           v-if="isOwner"
           :title="t('dashboard.print.tooltip')"
-          class="flex flex-col items-center mb-3 group cursor-pointer"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
           @click="generateDocument"
         >
           <svg
@@ -2076,7 +2061,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Theme -->
-        <div class="flex flex-col items-center mb-3 group cursor-pointer">
+        <div class="flex flex-col items-center mb-2 group cursor-pointer">
           <DarkModeToggle class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform" />
           <span
             class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
@@ -2087,7 +2072,7 @@ onUnmounted(() => {
         <!-- Focus -->
         <div
           :title="t('dashboard.spotlight.tooltip')"
-          class="flex flex-col items-center mb-3 group cursor-pointer"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
           @click="openSpotlight"
         >
           <svg
@@ -2115,7 +2100,7 @@ onUnmounted(() => {
         <!-- Sort -->
         <div
           v-if="hasLikedCards || hasCommentedCards"
-          class="flex flex-col items-center mb-3 group"
+          class="flex flex-col items-center mb-2 group"
         >
           <button
             type="button"
@@ -2157,7 +2142,7 @@ onUnmounted(() => {
                 class="w-4 h-4 transition-colors duration-200"
                 :class="{
                   'text-red-500': activeSort === 'likes',
-                  'text-gray-300 hover:text-white': activeSort !== 'likes',
+                  'text-gray-400 hover:text-white': activeSort !== 'likes',
                 }"
               >
                 <path
@@ -2179,7 +2164,7 @@ onUnmounted(() => {
                 class="w-4 h-4 transition-colors duration-200"
                 :class="{
                   'text-sky-500': activeSort === 'comments',
-                  'text-gray-300 hover:text-white': activeSort !== 'comments',
+                  'text-gray-400 hover:text-white': activeSort !== 'comments',
                 }"
               >
                 <path
@@ -2199,7 +2184,7 @@ onUnmounted(() => {
         <!-- Language picker -->
         <div
           :title="t('dashboard.language.tooltip')"
-          class="flex flex-col items-center mb-3 group cursor-pointer"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
           @click="openLanguageDialog"
         >
           <svg
@@ -2225,7 +2210,7 @@ onUnmounted(() => {
         <!-- Transfer ownership -->
         <div
           v-if="isOwner && allOtherUsers.length > 0"
-          class="flex flex-col items-center mb-3 group cursor-pointer"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
           :title="t('transferOwnership.tooltip')"
           @click="openTransferOwnershipModal"
         >
@@ -2255,7 +2240,7 @@ onUnmounted(() => {
         <div
           v-if="isBoardCreator && !isOwner"
           :title="t('transferOwnership.reclaim.tooltip')"
-          class="flex flex-col items-center mb-3 group cursor-pointer"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
           @click="openReclaimDialog"
         >
           <svg
@@ -2266,44 +2251,26 @@ onUnmounted(() => {
             stroke-width="1.5"
             stroke-linecap="round"
             stroke-linejoin="round"
-            class="w-8 h-8 mx-auto text-yellow-500 group-hover:scale-110 transition-transform"
+            class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
           >
             <path
+              class="text-yellow-500"
               d="M16.051 12.616a1 1 0 0 1 1.909.024l.737 1.452a1 1 0 0 0 .737.535l1.634.256a1 1 0 0 1 .588 1.806l-1.172 1.168a1 1 0 0 0-.282.866l.259 1.613a1 1 0 0 1-1.541 1.134l-1.465-.75a1 1 0 0 0-.912 0l-1.465.75a1 1 0 0 1-1.539-1.133l.258-1.613a1 1 0 0 0-.282-.866l-1.156-1.153a1 1 0 0 1 .572-1.822l1.633-.256a1 1 0 0 0 .737-.535z"
             />
             <path d="M8 15H7a4 4 0 0 0-4 4v2" />
             <circle cx="10" cy="7" r="4" />
           </svg>
           <span
-            class="text-[9px] uppercase font-semibold tracking-wider text-yellow-500 group-hover:text-yellow-200 mt-0.5 select-none text-center"
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
             >{{ t('transferOwnership.reclaim.shortText') }}</span
           >
         </div>
-
-        <!-- <div :title="t('transferOwnership.reclaim.tooltip')">
-          <svg
-            v-if="isBoardCreator && !isOwner"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer text-yellow-500 hover:scale-110 transition-transform"
-            @click="reclaimBoard"
-          >
-            <path
-              d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"
-            />
-          </svg>
-        </div> -->
 
         <!-- Delete All-->
         <div
           v-if="isOwner"
           :title="t('dashboard.delete.tooltip')"
-          class="flex flex-col items-center mb-3 group cursor-pointer"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
           @click="openDeleteAllDialog"
         >
           <svg
@@ -2331,7 +2298,7 @@ onUnmounted(() => {
           href="https://quickretro.app/guide/dashboard"
           target="_blank"
           rel="noopener noreferrer"
-          class="flex flex-col items-center mb-3 group cursor-pointer"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
