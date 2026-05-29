@@ -90,6 +90,9 @@ export default {
     print: {
       tooltip: '印刷',
       shortText: '印刷',
+      withNamesTooltip: '印刷（名前を含める）',
+      withCommentsTooltip: '印刷（コメントを含める）',
+      withAllTooltip: '印刷（名前とコメントを含める）',
     },
     language: {
       tooltip: '言語を変更',

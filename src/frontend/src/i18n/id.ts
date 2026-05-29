@@ -93,6 +93,9 @@ export default {
     print: {
       tooltip: 'Cetak',
       shortText: 'Cetak',
+      withNamesTooltip: 'Cetak (sertakan nama)',
+      withCommentsTooltip: 'Cetak (sertakan komentar)',
+      withAllTooltip: 'Cetak (sertakan nama dan komentar)',
     },
     language: {
       tooltip: 'Ganti bahasa',

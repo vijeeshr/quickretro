@@ -84,6 +84,9 @@ export default {
     print: {
       tooltip: '인쇄',
       shortText: '인쇄',
+      withNamesTooltip: '인쇄 (이름 포함)',
+      withCommentsTooltip: '인쇄 (댓글 포함)',
+      withAllTooltip: '인쇄 (이름 및 댓글 포함)',
     },
     filter: {
       tooltip: '좋아요/댓글이 있는 카드를 상단에 표시',

@@ -93,6 +93,9 @@ export default {
     print: {
       tooltip: 'Drukuj',
       shortText: 'Druk',
+      withNamesTooltip: 'Drukuj (dołącz nazwy)',
+      withCommentsTooltip: 'Drukuj (dołącz komentarze)',
+      withAllTooltip: 'Drukuj (dołącz nazwy i komentarze)',
     },
     language: {
       tooltip: 'Zmień język',

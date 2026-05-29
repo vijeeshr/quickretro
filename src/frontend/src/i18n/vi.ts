@@ -92,6 +92,9 @@ export default {
     print: {
       tooltip: 'In',
       shortText: 'In',
+      withNamesTooltip: 'In (bao gồm tên)',
+      withCommentsTooltip: 'In (bao gồm bình luận)',
+      withAllTooltip: 'In (bao gồm tên và bình luận)',
     },
     language: {
       tooltip: 'Đổi ngôn ngữ',

@@ -84,6 +84,9 @@ export default {
     print: {
       tooltip: 'Печать',
       shortText: 'Печать',
+      withNamesTooltip: 'Печать (включая имена)',
+      withCommentsTooltip: 'Печать (включая комментарии)',
+      withAllTooltip: 'Печать (включая имена и комментарии)',
     },
     filter: {
       tooltip: 'Показывать карточки с лайками/комментариями сверху',

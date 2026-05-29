@@ -92,6 +92,9 @@ export default {
     print: {
       tooltip: 'Print',
       shortText: 'Print',
+      withNamesTooltip: 'Print (include names)',
+      withCommentsTooltip: 'Print (include comments)',
+      withAllTooltip: 'Print (include names and comments)',
     },
     language: {
       tooltip: 'Change language',

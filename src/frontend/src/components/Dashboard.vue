@@ -633,71 +633,11 @@ const getHexizedColor = (color: string): string => {
   }
 }
 
-const generateDocument = () => {
-  // if (locale.value === 'zhCN' || locale.value === 'ja' || locale.value === 'ko' || locale.value === 'ru' || locale.value === 'uk') {
-  //     print()
-  // } else {
-  //     download()
-  // }
-  print()
+const generateDocument = (includeComments = false, includeNames = false) => {
+  print(includeComments, includeNames)
 }
 
-// const download = async () => {
-//     try {
-//         const { default: jsPDF } = await import('jspdf')
-//         const { default: autoTable } = await import('jspdf-autotable')
-
-//         const doc = new jsPDF({
-//             orientation: "portrait",
-//             unit: "in",
-//             format: "letter"
-//         })
-
-//         // text is placed using x, y coordinates
-//         doc.setFontSize(16).text(`${t('common.board')} - ${boardName.value}`, 0.5, 1.0)
-//         // create a line under heading
-//         doc.setLineWidth(0.01).line(0.5, 1.1, 8.0, 1.1)
-
-//         for (const col of columns.value) {
-//             const headerText = col.isDefault ? t(`dashboard.columns.${col.id}`) : col.text
-//             const itemsForExport = cards.value.filter(c => c.cat.toLowerCase() === col.id.toLowerCase())
-//                 .map(c => [c.msg])
-
-//             // Using autoTable plugin
-//             autoTable(doc, {
-//                 head: [[headerText]],
-//                 body: itemsForExport,
-//                 headStyles: { fillColor: getRGBizedColor(col.color) },
-//                 margin: { left: 0.5, top: 1.25 },
-//             })
-//         }
-
-//         // Footer
-//         doc
-//             .setFont("times")
-//             .setFontSize(11)
-//             .setTextColor("gray")
-//             .text(
-//                 `${t('dashboard.printFooter')} QuickRetro ( https://quickretro.app )`,
-//                 doc.internal.pageSize.width / 2, // Center horizontally
-//                 doc.internal.pageSize.height - 0.5, // Position vertically
-//                 { align: "center" }
-//             )
-
-//         doc.save(`quickretro.pdf`)
-
-//         // Using array of sentences
-//         // doc
-//         //     .setFont("helvetica")
-//         //     .setFontSize(12)
-//         //     .text(moreText, 0.5, 3.5, { align: "left", maxWidth: 7.5 });
-//     } catch (error) {
-//         // toast.error(t('dashboard.download.error'))
-//         console.error('PDF download failed:', error)
-//     }
-// }
-
-const print = async () => {
+const print = async (includeComments: boolean, includeNames: boolean) => {
   const printWindow = window.open('', '_blank')
   if (!printWindow) return
 
@@ -770,13 +710,14 @@ const print = async () => {
                         }
 
                         .print-card {
-                            padding: 0.25rem;
+                            padding: 0.5rem;
                             page-break-inside: avoid;
                             color: #505050;
                             font-size: 1rem;
                             word-break: break-word;
                             overflow-wrap: anywhere;
                             line-height: 1.4;
+                            border-bottom: 1px dashed #e2e8f0;
                         }
 
                         .print-card:nth-child(even) {
@@ -785,6 +726,22 @@ const print = async () => {
 
                         .print-card:nth-child(odd) {
                             background-color: #ffffff;
+                        }
+                        
+                        .print-card-content {
+                            font-weight: 500;
+                        }
+
+                        .print-comments-container {
+                            margin-top: 0.25rem;
+                            padding-left: 1rem;
+                            // border-left: 2px solid #cbd5e1;
+                        }
+
+                        .print-comment {
+                            font-size: 0.9rem;
+                            color: #64748b;
+                            margin-top: 0.15rem;
                         }
 
                         .print-footer {
@@ -808,7 +765,9 @@ const print = async () => {
                       .map(
                         col => `
                     <div class="print-column">
-                        <div class="print-category" style="background-color:${getHexizedColor(col.color)};color:white">${col.isDefault ? t(`dashboard.columns.${col.id}`) : sanitize(col.text)}</div>
+                        <div class="print-category" style="background-color:${getHexizedColor(col.color)};color:white">
+                            ${col.isDefault ? t(`dashboard.columns.${col.id}`) : sanitize(col.text)}
+                        </div>
                         ${cards.value
                           .filter(
                             c =>
@@ -816,7 +775,51 @@ const print = async () => {
                               c.msg &&
                               c.msg.trim() !== ''
                           )
-                          .map(c => `<div class="print-card">${sanitize(c.msg)}</div>`)
+                          .map(c => {
+                            // Handle Name associated formatting
+                            let textContent = sanitize(c.msg)
+                            if (includeNames) {
+                              const prefix = c.anon
+                                ? t('common.anonymous')
+                                : sanitize(c.nickname) || t('common.anonymous')
+                              textContent = `<strong>${sanitize(prefix)}:</strong> ${textContent}`
+                            }
+
+                            // Render comments conditionally
+                            let commentsHtml = ''
+                            if (includeComments) {
+                              const cardComments = commentsMap.value.get(c.id) || []
+                              if (cardComments.length > 0) {
+                                const listItems = cardComments
+                                  .map(comment => {
+                                    let authorPrefix = ''
+
+                                    // Consider names for comments
+                                    if (includeNames) {
+                                      const name = comment.anon
+                                        ? t('common.anonymous')
+                                        : sanitize(comment.nickname) || t('common.anonymous')
+                                      authorPrefix = `<strong>${sanitize(name)}:</strong> `
+                                    }
+
+                                    return `
+                                      <div class="print-comment">
+                                        ↳ ${authorPrefix}${sanitize(comment.msg)}
+                                      </div>
+                                    `
+                                  })
+                                  .join('')
+                                commentsHtml = `<div class="print-comments-container" style="border-left: 2px solid ${getHexizedColor(col.color)};">${listItems}</div>`
+                              }
+                            }
+
+                            return `
+                              <div class="print-card">
+                                <div class="print-card-content">${textContent}</div>
+                                ${commentsHtml}
+                              </div>
+                            `
+                          })
                           .join('')}
                     </div>
                     `
@@ -861,7 +864,6 @@ const print = async () => {
       printWindow.print()
     }
   } catch (error) {
-    // toast.error(t('dashboard.download.error'))
     console.error('Print failed:', error)
   } finally {
     setTimeout(() => {
@@ -2033,27 +2035,127 @@ onUnmounted(() => {
           >
         </div>
 
-        <!-- Print -->
-        <div
-          v-if="isOwner"
-          :title="t('dashboard.print.tooltip')"
-          class="flex flex-col items-center mb-2 group cursor-pointer"
-          @click="generateDocument"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
+        <!-- Print (with mini popover menu) -->
+        <div v-if="isOwner" class="relative flex flex-col items-center mb-2 group">
+          <button
+            type="button"
+            class="transition-all select-none focus:outline-none cursor-pointer group-hover:scale-110"
+            :title="t('dashboard.print.tooltip')"
+            @click="generateDocument(false, false)"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
-            />
-          </svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-8 h-8"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+              />
+            </svg>
+          </button>
+
+          <Popover v-slot="{ open }" class="relative w-8">
+            <PopoverButton
+              class="flex items-center justify-center w-8 h-4 rounded-b text-gray-400 hover:text-white hover:bg-gray-700 transition cursor-pointer focus:outline-none"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                class="w-4 h-4 transform transition-transform duration-200"
+                :class="{ 'rotate-180': open }"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </PopoverButton>
+
+            <transition
+              enter-active-class="transition duration-100 ease-out"
+              enter-from-class="transform scale-95 opacity-0"
+              enter-to-class="transform scale-100 opacity-100"
+              leave-active-class="transition duration-75 ease-in"
+              leave-from-class="transform scale-100 opacity-100"
+              leave-to-class="transform scale-95 opacity-0"
+            >
+              <PopoverPanel
+                v-slot="{ close }"
+                class="absolute left-0 mt-1 w-8 bg-gray-900 border border-gray-700 rounded shadow-xl flex flex-col items-center gap-1 p-1 z-50"
+              >
+                <button
+                  type="button"
+                  class="flex items-center justify-center w-6 h-6 rounded transition cursor-pointer hover:scale-110 text-gray-400 hover:text-white"
+                  :title="t('dashboard.print.withNamesTooltip')"
+                  @click="(generateDocument(false, true), close())"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    class="w-4 h-4"
+                  >
+                    <path
+                      d="M8.5 4.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0ZM10.9 12.006c.11.542-.348.994-.9.994H2c-.553 0-1.01-.452-.902-.994a5.002 5.002 0 0 1 9.803 0ZM14.002 12h-1.59a2.556 2.556 0 0 0-.04-.29 6.476 6.476 0 0 0-1.167-2.603 3.002 3.002 0 0 1 3.633 1.911c.18.522-.283.982-.836.982ZM12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
+                    />
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  class="flex items-center justify-center w-6 h-6 rounded transition cursor-pointer hover:scale-110 text-gray-400 hover:text-white"
+                  :title="t('dashboard.print.withCommentsTooltip')"
+                  @click="(generateDocument(true, false), close())"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    class="w-4 h-4"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M1 8c0-3.43 3.262-6 7-6s7 2.57 7 6-3.262 6-7 6c-.423 0-.838-.032-1.241-.094-.9.574-1.941.948-3.06 1.06a.75.75 0 0 1-.713-1.14c.232-.378.395-.804.469-1.26C1.979 11.486 1 9.86 1 8Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  class="flex items-center justify-center w-6 h-6 rounded transition cursor-pointer hover:scale-110 text-gray-400 hover:text-white"
+                  :title="t('dashboard.print.withAllTooltip')"
+                  @click="(generateDocument(true, true), close())"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="w-4 h-4"
+                  >
+                    <path
+                      d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"
+                    />
+                    <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+                    <path d="M10 9H8" />
+                    <path d="M16 13H8" />
+                    <path d="M16 17H8" />
+                  </svg>
+                </button>
+              </PopoverPanel>
+            </transition>
+          </Popover>
           <span
             class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
             >{{ t('dashboard.print.shortText') }}</span
@@ -2116,7 +2218,7 @@ onUnmounted(() => {
               stroke="currentColor"
               class="w-8 h-8 mx-auto transition-transform duration-200"
               :class="{
-                'text-red-500': activeSort === 'likes',
+                'text-red-400': activeSort === 'likes',
                 'text-sky-500': activeSort === 'comments',
               }"
             >
@@ -2141,7 +2243,7 @@ onUnmounted(() => {
                 fill="currentColor"
                 class="w-4 h-4 transition-colors duration-200"
                 :class="{
-                  'text-red-500': activeSort === 'likes',
+                  'text-red-400': activeSort === 'likes',
                   'text-gray-400 hover:text-white': activeSort !== 'likes',
                 }"
               >

@@ -90,6 +90,9 @@ export default {
     print: {
       tooltip: 'Друк',
       shortText: 'Друк',
+      withNamesTooltip: 'Друк (включно з іменами)',
+      withCommentsTooltip: 'Друк (включно з коментарями)',
+      withAllTooltip: 'Друк (включно з іменами та коментарями)',
     },
     language: {
       tooltip: 'Змінити мову',

@@ -90,6 +90,9 @@ export default {
     print: {
       tooltip: '打印',
       shortText: '打印',
+      withNamesTooltip: '打印（包含姓名）',
+      withCommentsTooltip: '打印（包含评论）',
+      withAllTooltip: '打印（包含姓名和评论）',
     },
     language: {
       tooltip: '更改语言',

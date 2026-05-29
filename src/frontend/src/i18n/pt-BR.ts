@@ -90,6 +90,9 @@ export default {
     print: {
       tooltip: 'Imprimir',
       shortText: 'Imprimir',
+      withNamesTooltip: 'Imprimir (incluir nomes)',
+      withCommentsTooltip: 'Imprimir (incluir comentários)',
+      withAllTooltip: 'Imprimir (incluir nomes e comentários)',
     },
     language: {
       tooltip: 'Mudar idioma',

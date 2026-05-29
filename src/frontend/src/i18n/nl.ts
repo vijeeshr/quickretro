@@ -84,6 +84,9 @@ export default {
     print: {
       tooltip: 'Afdrukken',
       shortText: 'Afdrukken',
+      withNamesTooltip: 'Afdrukken (inclusief namen)',
+      withCommentsTooltip: 'Afdrukken (inclusief opmerkingen)',
+      withAllTooltip: 'Afdrukken (inclusief namen en opmerkingen)',
     },
     filter: {
       tooltip: 'Kaarten med likes/reacties bovenaan tonen',
