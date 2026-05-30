@@ -1821,7 +1821,8 @@ onUnmounted(() => {
           <teleport to="body">
             <PopoverPanel
               v-slot="{ close }"
-              class="absolute left-15 top-8 -translate-y-1/2 ml-2 z-61"
+              :class="{ fixed: isLeftSidebarSticky, absolute: !isLeftSidebarSticky }"
+              class="left-15 top-8 -translate-y-1/2 ml-2 z-61"
             >
               <div
                 class="flex items-center gap-1 bg-gray-900/95 backdrop-blur-sm border border-gray-700 dark:border-gray-500 rounded-lg p-1.5 shadow-xl whitespace-nowrap"
