@@ -178,7 +178,17 @@ Only the board owner can start or stop the timer.
 - The countdown stops automatically
 - To stop early, reopen the timer and click **Stop**
 
-### Quick Video
+From <Badge type="tip" text="v1.8.0" />, a sub-menu with preset shortcuts has been introduced for quickly starting and stopping the timer.
+
+<img
+  src="/timer-submenu.png"
+  class="shadow-img"
+  alt="Timer presets submenu"
+  width="312"
+  loading="lazy"
+/>
+
+### Quick Video (older versions)
 
 <video class="video-play" controls width="640">
   <source src="/videos/start-stop-timer.mp4" type="video/webm" />
@@ -251,6 +261,34 @@ For long-term usage, consider self-hosting.
 :::
 
 To save messages as PDF, use the **Download** button to open the print dialog.
+
+From <Badge type="tip" text="v1.8.0" />, the print button now features a sub-menu allowing you to optionally include **comments** and/or message author **names** in your printed output.
+
+Click the **>>** symbol below the icon to open the sub-menu.
+
+Names are never printed for anonymous cards.
+
+<img
+  src="/print-submenu.png"
+  class="shadow-img"
+  alt="Print options submenu"
+  width="200"
+  loading="lazy"
+/>
+
+## Sort by most Likes/Comments
+
+Available from <Badge type="tip" text="v1.8.0" />
+
+The 3-way toggle button in the left sidebar allows you to instantly sort cards to the top based on likes or comments locally.
+
+<img
+  src="/sort-likes-comments.png"
+  class="shadow-img"
+  alt="Sort by comments or likes"
+  width="200"
+  loading="lazy"
+/>
 
 ## Dark Theme
 
