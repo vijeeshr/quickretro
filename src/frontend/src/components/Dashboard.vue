@@ -279,6 +279,26 @@ const getCommentIds = (messageId: string): string[] => {
   return commentsMap.value.get(messageId)?.map(c => c.id) ?? []
 }
 
+// Hack for filter popover horizontal positioning
+const filterButtonRef = ref<HTMLElement | null>(null)
+const filterPopoverPanelStyle = ref({ top: '0px' })
+const calcFilterPopoverPosition = () => {
+  if (filterButtonRef.value) {
+    const rect = filterButtonRef.value.getBoundingClientRect()
+
+    let topPosition = rect.top
+    if (!isLeftSidebarSticky.value) {
+      // When absolute, add the current scroll distance so it anchors
+      // accurately to its parent container rather than the viewport tracking
+      topPosition += window.scrollY
+    }
+
+    filterPopoverPanelStyle.value = {
+      top: `${topPosition - 8}px`,
+    }
+  }
+}
+
 const add = (category: string, anonymous: boolean) => {
   if (isLocked.value) {
     toast.warning(t('dashboard.lock.message'))
@@ -2036,8 +2056,161 @@ onUnmounted(() => {
           >
         </div>
 
-        <!-- Print (with mini popover menu) -->
+        <!-- Print (horizontal mini-popover menu) -->
         <div v-if="isOwner" class="relative flex flex-col items-center mb-2 group">
+          <button
+            type="button"
+            class="transition-all select-none focus:outline-none cursor-pointer group-hover:scale-110"
+            :title="t('dashboard.print.tooltip')"
+            @click="generateDocument(false, false)"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-8 h-8"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+              />
+            </svg>
+          </button>
+
+          <Popover v-if="isOwner">
+            <div ref="filterButtonRef" class="relative w-8">
+              <PopoverButton
+                v-slot="{ open }"
+                as="div"
+                class="flex flex-col items-center focus:outline-none group cursor-pointer w-8 h-4 rounded-b text-gray-400 hover:text-white hover:bg-gray-700"
+                @click="calcFilterPopoverPosition"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  class="w-4 h-4 transform transition-transform duration-200"
+                  :class="{ 'rotate-180': open }"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M12.78 7.595a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06l2.72-2.72-2.72-2.72a.75.75 0 0 1 1.06-1.06l3.25 3.25Zm-8.25-3.25 3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06l2.72-2.72-2.72-2.72a.75.75 0 0 1 1.06-1.06Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </PopoverButton>
+            </div>
+            <teleport to="body">
+              <PopoverPanel
+                v-slot="{ close }"
+                :class="{ fixed: isLeftSidebarSticky, absolute: !isLeftSidebarSticky }"
+                class="left-15 top-8 -translate-y-1/2 ml-2 z-61"
+                :style="filterPopoverPanelStyle"
+              >
+                <div
+                  class="flex items-center gap-1 bg-gray-900/95 backdrop-blur-sm border border-gray-700 dark:border-gray-500 rounded-lg p-1.5 shadow-xl whitespace-nowrap"
+                >
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    :title="t('dashboard.print.withNamesTooltip')"
+                    @click="(generateDocument(false, true), close())"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                    >
+                      <path
+                        d="M8.5 4.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0ZM10.9 12.006c.11.542-.348.994-.9.994H2c-.553 0-1.01-.452-.902-.994a5.002 5.002 0 0 1 9.803 0ZM14.002 12h-1.59a2.556 2.556 0 0 0-.04-.29 6.476 6.476 0 0 0-1.167-2.603 3.002 3.002 0 0 1 3.633 1.911c.18.522-.283.982-.836.982ZM12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    :title="t('dashboard.print.withCommentsTooltip')"
+                    @click="(generateDocument(true, false), close())"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M1 8c0-3.43 3.262-6 7-6s7 2.57 7 6-3.262 6-7 6c-.423 0-.838-.032-1.241-.094-.9.574-1.941.948-3.06 1.06a.75.75 0 0 1-.713-1.14c.232-.378.395-.804.469-1.26C1.979 11.486 1 9.86 1 8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    :title="t('dashboard.print.withAllTooltip')"
+                    @click="(generateDocument(true, true), close())"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="w-4 h-4"
+                    >
+                      <path
+                        d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"
+                      />
+                      <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+                      <path d="M10 9H8" />
+                      <path d="M16 13H8" />
+                      <path d="M16 17H8" />
+                    </svg>
+                  </button>
+                  <!-- Divider -->
+                  <div class="w-px h-5 bg-gray-600 mx-0.5"></div>
+                  <!-- Close button -->
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    @click="close"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="w-4 h-4"
+                    >
+                      <path d="M18 6 6 18" />
+                      <path d="m6 6 12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </PopoverPanel>
+            </teleport>
+          </Popover>
+
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.75 select-none text-center"
+            >{{ t('dashboard.print.shortText') }}</span
+          >
+        </div>
+
+        <!-- Print (vertical mini-popover menu) -->
+        <!-- <div v-if="isOwner" class="relative flex flex-col items-center mb-2 group">
           <button
             type="button"
             class="transition-all select-none focus:outline-none cursor-pointer group-hover:scale-110"
@@ -2161,7 +2334,7 @@ onUnmounted(() => {
             class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
             >{{ t('dashboard.print.shortText') }}</span
           >
-        </div>
+        </div> -->
 
         <!-- Theme -->
         <div class="flex flex-col items-center mb-2 group cursor-pointer">
