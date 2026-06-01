@@ -63,12 +63,12 @@ func (e *Event) GetHandler() (EventHandler, error) {
 }
 
 func (e *Event) Handle(h *Hub) {
-	// // Recover from any potential panics within handlers
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		slog.Error("Recovered from panic in Handle", "type", e.Type, "err", r)
-	// 	}
-	// }()
+	// Recover from any potential panics within handlers
+	defer func() {
+		if r := recover(); r != nil {
+			slog.Error("Recovered from panic in Handle", "type", e.Type, "err", r, "stack", string(debug.Stack()))
+		}
+	}()
 
 	handler, err := e.GetHandler()
 	if err != nil {

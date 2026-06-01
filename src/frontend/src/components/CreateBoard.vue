@@ -258,7 +258,7 @@ onMounted(() => {
           <div class="w-full">
             <LanguageSelector />
           </div>
-          <div v-if="isTurnstileEnabled" class="min-w-[300px] flex items-center justify-center">
+          <div v-if="isTurnstileEnabled" class="min-w-75 flex items-center justify-center">
             <TurnstileWidget
               v-if="isTurnstileEnabled"
               ref="turnstileRef"

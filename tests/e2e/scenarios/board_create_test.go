@@ -75,6 +75,32 @@ func TestBoardCreation(t *testing.T) {
 		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
 	})
 
+	t.Run("Validation: Columns has single null item", func(t *testing.T) {
+		// json from client is "columns": [ null ]
+		payload := validPayload()
+
+		payload["columns"] = []any{nil}
+
+		resp, _ := sendCreateRequest(t, payload)
+		defer resp.Body.Close()
+
+		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
+
+	t.Run("Validation: Columns contains atleast one null item", func(t *testing.T) {
+		payload := validPayload()
+
+		payload["columns"] = []any{
+			validColumns[0],
+			nil,
+		}
+
+		resp, _ := sendCreateRequest(t, payload)
+		defer resp.Body.Close()
+
+		require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	})
+
 	t.Run("Validation: Too many columns", func(t *testing.T) {
 		payload := validPayload()
 		cols := make([]map[string]any, 6)

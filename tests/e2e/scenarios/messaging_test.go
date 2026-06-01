@@ -1286,6 +1286,23 @@ func TestColumnEditing(t *testing.T) {
 		require.NoError(t, userA.ChangeColumns([]*harness.BoardColumn{}))
 		require.NoError(t, userB.MustNotReceiveEvent("colreset"))
 
+		// Null column validation (single null column passed)
+		require.NoError(t, userA.ChangeColumns([]*harness.BoardColumn{nil}))
+		require.NoError(t, userB.MustNotReceiveEvent("colreset"))
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Null column validation (atleast one column is null)", func(t *testing.T) {
+		newCols := []*harness.BoardColumn{
+			{Id: "col01", Text: "Start", Color: "green", Position: 1, IsDefault: false},
+			nil,
+		}
+
+		require.NoError(t, userA.ChangeColumns(newCols))
+		require.NoError(t, userB.MustNotReceiveEvent("colreset"))
+
 		userA.FlushEvents()
 		userB.FlushEvents()
 	})
