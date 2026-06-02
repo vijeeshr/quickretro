@@ -5,7 +5,6 @@ interface Props {
   timeLeftInSeconds?: number
 }
 
-// const props = defineProps<Props>()
 const props = withDefaults(defineProps<Props>(), {
   timeLeftInSeconds: 0,
 })
@@ -14,6 +13,9 @@ const emit = defineEmits(['CountdownProgressUpdate', 'OneMinuteLeftWarning', 'Co
 
 let interval: ReturnType<typeof setInterval> | null = null
 const remainingTime = ref(props.timeLeftInSeconds)
+
+// Track when the timer is supposed to end in absolute time
+let endTime = 0
 
 const formattedRemainingTime = computed(() => {
   const minutes = Math.floor(remainingTime.value / 60)
@@ -28,25 +30,32 @@ const startCountdown = () => {
 
   emit('CountdownProgressUpdate', true)
 
+  // Calculate the exact timestamp when this timer should hit 0
+  endTime = Date.now() + remainingTime.value * 1000
+
   interval = setInterval(() => {
-    if (remainingTime.value <= 0) {
-      // Todo: On first run/load, interval can be undefined|null. cleanInterval(interval) doesn't seem to error out. Check behaviour in browsers.
-      // ..Chrome seems fine. Should we try a check for interval object before clearing it. Doesn't seem necessary.
-      if (interval !== null) {
-        clearInterval(interval)
-        interval = null
+    // Calculate remaining seconds based on the actual current time
+    // Using Math.ceil instead of Math.round for ticks at 1000ms. Use Math.round for smaller intervals.
+    const exactRemainingTime = Math.max(0, Math.ceil((endTime - Date.now()) / 1000))
+
+    // Only proceed if the second has actually ticked down
+    if (exactRemainingTime !== remainingTime.value) {
+      remainingTime.value = exactRemainingTime
+
+      if (remainingTime.value === 60) {
+        emit('OneMinuteLeftWarning')
       }
-      emit('CountdownProgressUpdate', false)
-      emit('CountdownCompleted') // Keeping a separate event for notifying the user that time's up. Can probably reuse "CountdownProgressUpdate", but not sure of it may end up being fired multiple times?
-      return
     }
-    remainingTime.value--
-    if (remainingTime.value === 60) emit('OneMinuteLeftWarning')
+
+    // Handle countdown completion
+    if (remainingTime.value <= 0) {
+      stopCountdown()
+      emit('CountdownCompleted')
+    }
   }, 1000)
 }
 
 const stopCountdown = () => {
-  // Todo: Check for interval truthyness?
   if (interval !== null) {
     clearInterval(interval)
     interval = null
@@ -84,7 +93,4 @@ onUnmounted(() => {
   <div class="select-none" :class="remainingTime > 0 ? 'bg-red-700' : 'border-2 border-white-600'">
     {{ formattedRemainingTime }}
   </div>
-  <!-- <div
-        class="inline-flex items-center justify-center overflow-hidden rounded-full w-8 h-8 text-[0.625rem] leading-3.5 font-bold text-white border-2 border-white-600 ml-auto mx-auto mb-4 cursor-default">
-        {{ formattedRemainingTime }}</div> -->
 </template>

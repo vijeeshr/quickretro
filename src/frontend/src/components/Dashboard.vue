@@ -37,7 +37,15 @@ import { DraftMessage } from '../models/DraftMessage'
 import { LikeMessage } from '../models/LikeMessage'
 // import { jsPDF } from 'jspdf';
 // import autoTable from 'jspdf-autotable';
-import { Dialog, DialogPanel, DialogTitle, Switch } from '@headlessui/vue'
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Switch,
+} from '@headlessui/vue'
 import CountdownTimer from './CountdownTimer.vue'
 import TimerPanel from './TimerPanel.vue'
 import {
@@ -198,8 +206,69 @@ const onLanguageSelect = (localeCode: AvailableLocales) => {
   setIsLanguageDialogOpen(false)
 }
 
+const getInitialSort = (): 'likes' | 'comments' | 'none' => {
+  const saved = sessionStorage.getItem('quickretro_sort_by')
+  return saved === 'likes' || saved === 'comments' ? saved : 'none'
+}
+const activeSort = ref<'likes' | 'comments' | 'none'>(getInitialSort())
+
+const setSort = (sortType: 'likes' | 'comments' | 'none') => {
+  activeSort.value = sortType
+  sessionStorage.setItem('quickretro_sort_by', sortType)
+}
+
+// Circular state rotater for the primary filter button
+const cycleSortOrder = () => {
+  if (activeSort.value === 'none') {
+    setSort('likes')
+  } else if (activeSort.value === 'likes') {
+    setSort('comments')
+  } else {
+    setSort('none')
+  }
+}
+
+const toggleSortByLikes = () => {
+  if (activeSort.value === 'likes') {
+    setSort('none')
+  } else {
+    setSort('likes')
+  }
+}
+
+const toggleSortByComments = () => {
+  if (activeSort.value === 'comments') {
+    setSort('none')
+  } else {
+    setSort('comments')
+  }
+}
+
+const hasLikedCards = computed(() => {
+  return cards.value.some(card => card.likes > 0)
+})
+
+const hasCommentedCards = computed(() => {
+  for (const comments of commentsMap.value.values()) {
+    if (comments && comments.length > 0) {
+      return true
+    }
+  }
+  return false
+})
+
 const filterCards = (category: string) => {
-  return cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase())
+  const filtered = cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase())
+  if (activeSort.value === 'likes') {
+    filtered.sort((a, b) => b.likes - a.likes)
+  } else if (activeSort.value === 'comments') {
+    filtered.sort((a, b) => {
+      const aCount = commentsMap.value.get(a.id)?.length ?? 0
+      const bCount = commentsMap.value.get(b.id)?.length ?? 0
+      return bCount - aCount
+    })
+  }
+  return filtered
 }
 
 const filterComments = (messageId: string): MessageResponse[] => {
@@ -208,6 +277,26 @@ const filterComments = (messageId: string): MessageResponse[] => {
 
 const getCommentIds = (messageId: string): string[] => {
   return commentsMap.value.get(messageId)?.map(c => c.id) ?? []
+}
+
+// Hack for filter popover horizontal positioning
+const filterButtonRef = ref<HTMLElement | null>(null)
+const filterPopoverPanelStyle = ref({ top: '0px' })
+const calcFilterPopoverPosition = () => {
+  if (filterButtonRef.value) {
+    const rect = filterButtonRef.value.getBoundingClientRect()
+
+    let topPosition = rect.top
+    if (!isLeftSidebarSticky.value) {
+      // When absolute, add the current scroll distance so it anchors
+      // accurately to its parent container rather than the viewport tracking
+      topPosition += window.scrollY
+    }
+
+    filterPopoverPanelStyle.value = {
+      top: `${topPosition - 8}px`,
+    }
+  }
 }
 
 const add = (category: string, anonymous: boolean) => {
@@ -564,71 +653,11 @@ const getHexizedColor = (color: string): string => {
   }
 }
 
-const generateDocument = () => {
-  // if (locale.value === 'zhCN' || locale.value === 'ja' || locale.value === 'ko' || locale.value === 'ru' || locale.value === 'uk') {
-  //     print()
-  // } else {
-  //     download()
-  // }
-  print()
+const generateDocument = (includeComments = false, includeNames = false) => {
+  print(includeComments, includeNames)
 }
 
-// const download = async () => {
-//     try {
-//         const { default: jsPDF } = await import('jspdf')
-//         const { default: autoTable } = await import('jspdf-autotable')
-
-//         const doc = new jsPDF({
-//             orientation: "portrait",
-//             unit: "in",
-//             format: "letter"
-//         })
-
-//         // text is placed using x, y coordinates
-//         doc.setFontSize(16).text(`${t('common.board')} - ${boardName.value}`, 0.5, 1.0)
-//         // create a line under heading
-//         doc.setLineWidth(0.01).line(0.5, 1.1, 8.0, 1.1)
-
-//         for (const col of columns.value) {
-//             const headerText = col.isDefault ? t(`dashboard.columns.${col.id}`) : col.text
-//             const itemsForExport = cards.value.filter(c => c.cat.toLowerCase() === col.id.toLowerCase())
-//                 .map(c => [c.msg])
-
-//             // Using autoTable plugin
-//             autoTable(doc, {
-//                 head: [[headerText]],
-//                 body: itemsForExport,
-//                 headStyles: { fillColor: getRGBizedColor(col.color) },
-//                 margin: { left: 0.5, top: 1.25 },
-//             })
-//         }
-
-//         // Footer
-//         doc
-//             .setFont("times")
-//             .setFontSize(11)
-//             .setTextColor("gray")
-//             .text(
-//                 `${t('dashboard.printFooter')} QuickRetro ( https://quickretro.app )`,
-//                 doc.internal.pageSize.width / 2, // Center horizontally
-//                 doc.internal.pageSize.height - 0.5, // Position vertically
-//                 { align: "center" }
-//             )
-
-//         doc.save(`quickretro.pdf`)
-
-//         // Using array of sentences
-//         // doc
-//         //     .setFont("helvetica")
-//         //     .setFontSize(12)
-//         //     .text(moreText, 0.5, 3.5, { align: "left", maxWidth: 7.5 });
-//     } catch (error) {
-//         // toast.error(t('dashboard.download.error'))
-//         console.error('PDF download failed:', error)
-//     }
-// }
-
-const print = async () => {
+const print = async (includeComments: boolean, includeNames: boolean) => {
   const printWindow = window.open('', '_blank')
   if (!printWindow) return
 
@@ -701,13 +730,14 @@ const print = async () => {
                         }
 
                         .print-card {
-                            padding: 0.25rem;
+                            padding: 0.5rem;
                             page-break-inside: avoid;
                             color: #505050;
                             font-size: 1rem;
                             word-break: break-word;
                             overflow-wrap: anywhere;
                             line-height: 1.4;
+                            border-bottom: 1px dashed #e2e8f0;
                         }
 
                         .print-card:nth-child(even) {
@@ -716,6 +746,22 @@ const print = async () => {
 
                         .print-card:nth-child(odd) {
                             background-color: #ffffff;
+                        }
+                        
+                        .print-card-content {
+                            font-weight: 500;
+                        }
+
+                        .print-comments-container {
+                            margin-top: 0.25rem;
+                            padding-left: 1rem;
+                            // border-left: 2px solid #cbd5e1;
+                        }
+
+                        .print-comment {
+                            font-size: 0.9rem;
+                            color: #64748b;
+                            margin-top: 0.15rem;
                         }
 
                         .print-footer {
@@ -739,7 +785,9 @@ const print = async () => {
                       .map(
                         col => `
                     <div class="print-column">
-                        <div class="print-category" style="background-color:${getHexizedColor(col.color)};color:white">${col.isDefault ? t(`dashboard.columns.${col.id}`) : sanitize(col.text)}</div>
+                        <div class="print-category" style="background-color:${getHexizedColor(col.color)};color:white">
+                            ${col.isDefault ? t(`dashboard.columns.${col.id}`) : sanitize(col.text)}
+                        </div>
                         ${cards.value
                           .filter(
                             c =>
@@ -747,7 +795,51 @@ const print = async () => {
                               c.msg &&
                               c.msg.trim() !== ''
                           )
-                          .map(c => `<div class="print-card">${sanitize(c.msg)}</div>`)
+                          .map(c => {
+                            // Handle Name associated formatting
+                            let textContent = sanitize(c.msg)
+                            if (includeNames) {
+                              const prefix = c.anon
+                                ? t('common.anonymous')
+                                : sanitize(c.nickname) || t('common.anonymous')
+                              textContent = `<strong>${sanitize(prefix)}:</strong> ${textContent}`
+                            }
+
+                            // Render comments conditionally
+                            let commentsHtml = ''
+                            if (includeComments) {
+                              const cardComments = commentsMap.value.get(c.id) || []
+                              if (cardComments.length > 0) {
+                                const listItems = cardComments
+                                  .map(comment => {
+                                    let authorPrefix = ''
+
+                                    // Consider names for comments
+                                    if (includeNames) {
+                                      const name = comment.anon
+                                        ? t('common.anonymous')
+                                        : sanitize(comment.nickname) || t('common.anonymous')
+                                      authorPrefix = `<strong>${sanitize(name)}:</strong> `
+                                    }
+
+                                    return `
+                                      <div class="print-comment">
+                                        ↳ ${authorPrefix}${sanitize(comment.msg)}
+                                      </div>
+                                    `
+                                  })
+                                  .join('')
+                                commentsHtml = `<div class="print-comments-container" style="border-left: 2px solid ${getHexizedColor(col.color)};">${listItems}</div>`
+                              }
+                            }
+
+                            return `
+                              <div class="print-card">
+                                <div class="print-card-content">${textContent}</div>
+                                ${commentsHtml}
+                              </div>
+                            `
+                          })
                           .join('')}
                     </div>
                     `
@@ -792,7 +884,6 @@ const print = async () => {
       printWindow.print()
     }
   } catch (error) {
-    // toast.error(t('dashboard.download.error'))
     console.error('Print failed:', error)
   } finally {
     setTimeout(() => {
@@ -825,10 +916,22 @@ const openDeleteAllDialog = () => {
   isDeleteAllDialogOpen.value = true
 }
 
-const timerSettings = () => {
-  if (isOwner.value) {
-    isTimerDialogOpen.value = true
-  }
+const onTimerPresetStart = (mins: number, closeFn: () => void) => {
+  dispatchEvent<TimerEvent>('timer', {
+    expiryDurationInSeconds: mins * 60,
+    stop: false,
+  })
+  closeFn()
+}
+
+const openTimerDialogFromPopover = (closeFn: () => void) => {
+  isTimerDialogOpen.value = true
+  closeFn()
+}
+
+const onTimerStopFromPopover = (closeFn: () => void) => {
+  dispatchEvent<TimerEvent>('timer', { expiryDurationInSeconds: 0, stop: true })
+  closeFn()
 }
 
 const openColumnEditDialog = () => {
@@ -1344,7 +1447,10 @@ onUnmounted(() => {
       v-if="isSpotlightOn && usersWithCards.length > 0"
       class="fixed flex items-center gap-2 top-4 left-1/2 transform -translate-x-1/2 text-white bg-black/50 border border-gray-500 px-4 py-2 rounded-lg shadow-md z-60"
     >
-      <button class="rounded-md hover:bg-gray-200 hover:text-gray-600" @click="prevSpotlight">
+      <button
+        class="rounded-md hover:bg-gray-200 hover:text-gray-600 cursor-pointer"
+        @click="prevSpotlight"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -1373,7 +1479,10 @@ onUnmounted(() => {
           t('common.anonymous')
         }}</span>
       </div>
-      <button class="rounded-md hover:bg-gray-200 hover:text-gray-700 mr-3" @click="nextSpotlight">
+      <button
+        class="rounded-md hover:bg-gray-200 hover:text-gray-700 mr-3 cursor-pointer"
+        @click="nextSpotlight"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -1389,7 +1498,7 @@ onUnmounted(() => {
         </svg>
       </button>
       <button
-        class="rounded-md hover:bg-gray-200 hover:text-gray-700 ml-auto"
+        class="rounded-md hover:bg-gray-200 hover:text-gray-700 ml-auto cursor-pointer"
         @click="closeSpotlight"
       >
         <svg
@@ -1711,28 +1820,136 @@ onUnmounted(() => {
     <div class="w-16 p-3" :class="{ 'sticky top-0 self-start': isLeftSidebarSticky }">
       <div ref="leftSidebarContentRef">
         <!-- Timer -->
+        <Popover v-if="isOwner" class="relative flex flex-col items-center mx-auto mb-2">
+          <PopoverButton
+            as="div"
+            class="flex flex-col items-center focus:outline-none group cursor-pointer"
+          >
+            <CountdownTimer
+              :time-left-in-seconds="timerExpiresInSeconds"
+              :title="t('dashboard.timer.tooltip')"
+              class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white cursor-pointer group-hover:scale-110 transition-transform"
+              @countdown-progress-update="onCountdownProgressUpdate"
+              @one-minute-left-warning="onOneMinuteLeftWarning"
+              @countdown-completed="onCountdownCompleted"
+            />
+            <span
+              class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.75 select-none text-center"
+              >{{ t('dashboard.timer.shortText') }}</span
+            >
+          </PopoverButton>
+          <teleport to="body">
+            <PopoverPanel
+              v-slot="{ close }"
+              :class="{ fixed: isLeftSidebarSticky, absolute: !isLeftSidebarSticky }"
+              class="left-15 top-8 -translate-y-1/2 ml-2 z-61"
+            >
+              <div
+                class="flex items-center gap-1 bg-gray-900/95 backdrop-blur-sm border border-gray-700 dark:border-gray-500 rounded-lg p-1.5 shadow-xl whitespace-nowrap"
+              >
+                <!-- Preset buttons when timer is NOT running -->
+                <template v-if="!isTimerCountdownInProgress">
+                  <button
+                    v-for="preset in [1, 5, 10, 15]"
+                    :key="preset"
+                    type="button"
+                    class="px-2 py-1 text-xs font-semibold rounded-md bg-sky-600/20 text-sky-300 hover:bg-sky-500 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    @click="onTimerPresetStart(preset, close)"
+                  >
+                    {{ preset }}m
+                  </button>
+                </template>
+                <!-- Stop button when timer IS running -->
+                <template v-else>
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-md bg-red-600/20 text-red-400 hover:bg-red-500 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    :title="t('common.stop')"
+                    @click="onTimerStopFromPopover(close)"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                    >
+                      <path
+                        d="M5.25 3A2.25 2.25 0 0 0 3 5.25v9.5A2.25 2.25 0 0 0 5.25 17h9.5A2.25 2.25 0 0 0 17 14.75v-9.5A2.25 2.25 0 0 0 14.75 3h-9.5Z"
+                      />
+                    </svg>
+                  </button>
+                </template>
+                <!-- Divider -->
+                <div class="w-px h-5 bg-gray-600 mx-0.5"></div>
+                <!-- Clock icon to open full timer dialog -->
+                <button
+                  type="button"
+                  class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                  :title="t('dashboard.timer.title')"
+                  @click="openTimerDialogFromPopover(close)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    class="w-4 h-4"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </button>
+                <!-- Divider -->
+                <div class="w-px h-5 bg-gray-600 mx-0.5"></div>
+                <!-- Close button -->
+                <button
+                  type="button"
+                  class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                  @click="close"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="w-4 h-4"
+                  >
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                  </svg>
+                </button>
+              </div>
+            </PopoverPanel>
+          </teleport>
+        </Popover>
         <CountdownTimer
+          v-else
           :time-left-in-seconds="timerExpiresInSeconds"
           :title="t('dashboard.timer.tooltip')"
-          class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white ml-auto mx-auto mb-4"
-          :class="
-            isOwner ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-default'
-          "
-          @click="timerSettings"
+          class="inline-flex items-center justify-center overflow-hidden rounded-full w-10 h-10 text-[0.825rem] leading-4 font-bold text-white ml-auto mx-auto mb-2 cursor-default"
           @countdown-progress-update="onCountdownProgressUpdate"
           @one-minute-left-warning="onOneMinuteLeftWarning"
           @countdown-completed="onCountdownCompleted"
         />
+
         <!-- Share -->
-        <div :title="t('dashboard.share.toolTip')">
+        <div
+          :title="t('dashboard.share.toolTip')"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
+          @click="share"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
-            @click="share"
+            class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
           >
             <path
               stroke-linecap="round"
@@ -1740,27 +1957,35 @@ onUnmounted(() => {
               d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
             />
           </svg>
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
+            >{{ t('dashboard.share.shortText') }}</span
+          >
         </div>
+
         <!-- Mask controls -->
         <div
           v-if="isOwner"
           :title="!isMasked ? t('dashboard.mask.maskTooltip') : t('dashboard.mask.unmaskTooltip')"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
+          @click="mask"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            fill="none"
             viewBox="0 0 24 24"
-            stroke-width="1.5"
+            fill="none"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
             :class="{ hidden: isMasked }"
-            @click="mask"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"
-            />
+            <path d="m15 18-.722-3.25" />
+            <path d="M2 8a10.645 10.645 0 0 0 20 0" />
+            <path d="m20 15-1.726-2.05" />
+            <path d="m4 15 1.726-2.05" />
+            <path d="m9 18 .722-3.25" />
           </svg>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -1768,26 +1993,30 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
+            class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
             :class="{ hidden: !isMasked }"
-            @click="mask"
           >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
               d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
             />
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-            />
+            <circle cx="12" cy="12" r="3" />
           </svg>
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
+            >{{
+              isMasked ? t('dashboard.mask.unmaskShortText') : t('dashboard.mask.maskShortText')
+            }}</span
+          >
         </div>
+
         <!-- Lock controls -->
         <div
           v-if="isOwner"
           :title="!isLocked ? t('dashboard.lock.lockTooltip') : t('dashboard.lock.unlockTooltip')"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
+          @click="lock"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -1795,9 +2024,8 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
+            class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
             :class="{ hidden: isLocked }"
-            @click="lock"
           >
             <path
               stroke-linecap="round"
@@ -1811,9 +2039,8 @@ onUnmounted(() => {
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
+            class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
             :class="{ hidden: !isLocked }"
-            @click="lock"
           >
             <path
               stroke-linecap="round"
@@ -1821,30 +2048,309 @@ onUnmounted(() => {
               d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
             />
           </svg>
-        </div>
-        <!-- Print -->
-        <div v-if="isOwner" :title="t('dashboard.print.tooltip')">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
-            @click="generateDocument"
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
+            >{{
+              isLocked ? t('dashboard.lock.unlockShortText') : t('dashboard.lock.lockShortText')
+            }}</span
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
-            />
-          </svg>
         </div>
-        <DarkModeToggle
-          class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
-        />
+
+        <!-- Print (horizontal mini-popover menu) -->
+        <div v-if="isOwner" class="relative flex flex-col items-center mb-2 group">
+          <button
+            type="button"
+            class="transition-all select-none focus:outline-none cursor-pointer group-hover:scale-110"
+            :title="t('dashboard.print.tooltip')"
+            @click="generateDocument(false, false)"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-8 h-8"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+              />
+            </svg>
+          </button>
+
+          <Popover v-if="isOwner">
+            <div ref="filterButtonRef" class="relative w-8">
+              <PopoverButton
+                v-slot="{ open }"
+                as="div"
+                class="flex flex-col items-center focus:outline-none group cursor-pointer w-8 h-4 rounded-b text-gray-400 hover:text-white hover:bg-gray-700"
+                @click="calcFilterPopoverPosition"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  class="w-4 h-4 transform transition-transform duration-200"
+                  :class="{ 'rotate-180': open }"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M12.78 7.595a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06l2.72-2.72-2.72-2.72a.75.75 0 0 1 1.06-1.06l3.25 3.25Zm-8.25-3.25 3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06l2.72-2.72-2.72-2.72a.75.75 0 0 1 1.06-1.06Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </PopoverButton>
+            </div>
+            <teleport to="body">
+              <PopoverPanel
+                v-slot="{ close }"
+                :class="{ fixed: isLeftSidebarSticky, absolute: !isLeftSidebarSticky }"
+                class="left-15 top-8 -translate-y-1/2 ml-2 z-61"
+                :style="filterPopoverPanelStyle"
+              >
+                <div
+                  class="flex items-center gap-1 bg-gray-900/95 backdrop-blur-sm border border-gray-700 dark:border-gray-500 rounded-lg p-1.5 shadow-xl whitespace-nowrap"
+                >
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    :title="t('dashboard.print.withNamesTooltip')"
+                    @click="(generateDocument(false, true), close())"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                    >
+                      <path
+                        d="M8.5 4.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0ZM10.9 12.006c.11.542-.348.994-.9.994H2c-.553 0-1.01-.452-.902-.994a5.002 5.002 0 0 1 9.803 0ZM14.002 12h-1.59a2.556 2.556 0 0 0-.04-.29 6.476 6.476 0 0 0-1.167-2.603 3.002 3.002 0 0 1 3.633 1.911c.18.522-.283.982-.836.982ZM12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    :title="t('dashboard.print.withCommentsTooltip')"
+                    @click="(generateDocument(true, false), close())"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 16 16"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M1 8c0-3.43 3.262-6 7-6s7 2.57 7 6-3.262 6-7 6c-.423 0-.838-.032-1.241-.094-.9.574-1.941.948-3.06 1.06a.75.75 0 0 1-.713-1.14c.232-.378.395-.804.469-1.26C1.979 11.486 1 9.86 1 8Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    :title="t('dashboard.print.withAllTooltip')"
+                    @click="(generateDocument(true, true), close())"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="w-4 h-4"
+                    >
+                      <path
+                        d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"
+                      />
+                      <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+                      <path d="M10 9H8" />
+                      <path d="M16 13H8" />
+                      <path d="M16 17H8" />
+                    </svg>
+                  </button>
+                  <!-- Divider -->
+                  <div class="w-px h-5 bg-gray-600 mx-0.5"></div>
+                  <!-- Close button -->
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    @click="close"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="w-4 h-4"
+                    >
+                      <path d="M18 6 6 18" />
+                      <path d="m6 6 12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </PopoverPanel>
+            </teleport>
+          </Popover>
+
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.75 select-none text-center"
+            >{{ t('dashboard.print.shortText') }}</span
+          >
+        </div>
+
+        <!-- Print (vertical mini-popover menu) -->
+        <!-- <div v-if="isOwner" class="relative flex flex-col items-center mb-2 group">
+          <button
+            type="button"
+            class="transition-all select-none focus:outline-none cursor-pointer group-hover:scale-110"
+            :title="t('dashboard.print.tooltip')"
+            @click="generateDocument(false, false)"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-8 h-8"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+              />
+            </svg>
+          </button>
+
+          <Popover v-slot="{ open }" class="relative w-8">
+            <PopoverButton
+              class="flex items-center justify-center w-8 h-4 rounded-b text-gray-400 hover:text-white hover:bg-gray-700 transition cursor-pointer focus:outline-none"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                class="w-4 h-4 transform transition-transform duration-200"
+                :class="{ 'rotate-180': open }"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </PopoverButton>
+
+            <transition
+              enter-active-class="transition duration-100 ease-out"
+              enter-from-class="transform scale-95 opacity-0"
+              enter-to-class="transform scale-100 opacity-100"
+              leave-active-class="transition duration-75 ease-in"
+              leave-from-class="transform scale-100 opacity-100"
+              leave-to-class="transform scale-95 opacity-0"
+            >
+              <PopoverPanel
+                v-slot="{ close }"
+                class="absolute left-0 mt-1 w-8 bg-gray-900 border border-gray-700 rounded shadow-xl flex flex-col items-center gap-1 p-1 z-50"
+              >
+                <button
+                  type="button"
+                  class="flex items-center justify-center w-6 h-6 rounded transition cursor-pointer hover:scale-110 text-gray-400 hover:text-white"
+                  :title="t('dashboard.print.withNamesTooltip')"
+                  @click="(generateDocument(false, true), close())"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    class="w-4 h-4"
+                  >
+                    <path
+                      d="M8.5 4.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0ZM10.9 12.006c.11.542-.348.994-.9.994H2c-.553 0-1.01-.452-.902-.994a5.002 5.002 0 0 1 9.803 0ZM14.002 12h-1.59a2.556 2.556 0 0 0-.04-.29 6.476 6.476 0 0 0-1.167-2.603 3.002 3.002 0 0 1 3.633 1.911c.18.522-.283.982-.836.982ZM12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
+                    />
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  class="flex items-center justify-center w-6 h-6 rounded transition cursor-pointer hover:scale-110 text-gray-400 hover:text-white"
+                  :title="t('dashboard.print.withCommentsTooltip')"
+                  @click="(generateDocument(true, false), close())"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    class="w-4 h-4"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M1 8c0-3.43 3.262-6 7-6s7 2.57 7 6-3.262 6-7 6c-.423 0-.838-.032-1.241-.094-.9.574-1.941.948-3.06 1.06a.75.75 0 0 1-.713-1.14c.232-.378.395-.804.469-1.26C1.979 11.486 1 9.86 1 8Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  class="flex items-center justify-center w-6 h-6 rounded transition cursor-pointer hover:scale-110 text-gray-400 hover:text-white"
+                  :title="t('dashboard.print.withAllTooltip')"
+                  @click="(generateDocument(true, true), close())"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="w-4 h-4"
+                  >
+                    <path
+                      d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"
+                    />
+                    <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+                    <path d="M10 9H8" />
+                    <path d="M16 13H8" />
+                    <path d="M16 17H8" />
+                  </svg>
+                </button>
+              </PopoverPanel>
+            </transition>
+          </Popover>
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
+            >{{ t('dashboard.print.shortText') }}</span
+          >
+        </div> -->
+
+        <!-- Theme -->
+        <div class="flex flex-col items-center mb-2 group cursor-pointer">
+          <DarkModeToggle class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform" />
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
+            >{{ t('dashboard.theme.shortText') }}</span
+          >
+        </div>
+
         <!-- Focus -->
-        <div :title="t('dashboard.spotlight.tooltip')">
+        <div
+          :title="t('dashboard.spotlight.tooltip')"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
+          @click="openSpotlight"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -1853,8 +2359,7 @@ onUnmounted(() => {
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
-            @click="openSpotlight"
+            class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
           >
             <circle cx="12" cy="12" r="3" />
             <path d="M3 7V5a2 2 0 0 1 2-2h2" />
@@ -1862,17 +2367,109 @@ onUnmounted(() => {
             <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
             <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
           </svg>
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
+            >{{ t('dashboard.spotlight.shortText') }}</span
+          >
         </div>
+
+        <!-- Sort -->
+        <div
+          v-if="hasLikedCards || hasCommentedCards"
+          class="flex flex-col items-center mb-2 group"
+        >
+          <button
+            type="button"
+            class="transition-all select-none focus:outline-none cursor-pointer group-hover:scale-110"
+            :title="t('dashboard.filter.tooltip')"
+            @click="cycleSortOrder"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-8 h-8 mx-auto transition-transform duration-200"
+              :class="{
+                'text-red-400': activeSort === 'likes',
+                'text-sky-500': activeSort === 'comments',
+              }"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12"
+              />
+            </svg>
+          </button>
+          <div class="grid grid-cols-2">
+            <!-- Sort by Likes Button -->
+            <button
+              type="button"
+              class="transition-colors select-none focus:outline-none cursor-pointer"
+              :title="t('dashboard.filter.likesMiniTooltip')"
+              @click="toggleSortByLikes"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                class="w-4 h-4 transition-colors duration-200"
+                :class="{
+                  'text-red-400': activeSort === 'likes',
+                  'text-gray-400 hover:text-white': activeSort !== 'likes',
+                }"
+              >
+                <path
+                  d="M2.09 15a1 1 0 0 0 1-1V8a1 1 0 1 0-2 0v6a1 1 0 0 0 1 1ZM5.765 13H4.09V8c.663 0 1.218-.466 1.556-1.037a4.02 4.02 0 0 1 1.358-1.377c.478-.292.907-.706.989-1.26V4.32a9.03 9.03 0 0 0 0-2.642c-.028-.194.048-.394.224-.479A2 2 0 0 1 11.09 3c0 .812-.08 1.605-.235 2.371a.521.521 0 0 0 .502.629h1.733c1.104 0 2.01.898 1.901 1.997a19.831 19.831 0 0 1-1.081 4.788c-.27.747-.998 1.215-1.793 1.215H9.414c-.215 0-.428-.035-.632-.103l-2.384-.794A2.002 2.002 0 0 0 5.765 13Z"
+                />
+              </svg>
+            </button>
+            <!-- Sort by Comments Button -->
+            <button
+              type="button"
+              class="transition-colors select-none focus:outline-none cursor-pointer"
+              :title="t('dashboard.filter.commentsMiniTooltip')"
+              @click="toggleSortByComments"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                class="w-4 h-4 transition-colors duration-200"
+                :class="{
+                  'text-sky-500': activeSort === 'comments',
+                  'text-gray-400 hover:text-white': activeSort !== 'comments',
+                }"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M1 8c0-3.43 3.262-6 7-6s7 2.57 7 6-3.262 6-7 6c-.423 0-.838-.032-1.241-.094-.9.574-1.941.948-3.06 1.06a.75.75 0 0 1-.713-1.14c.232-.378.395-.804.469-1.26C1.979 11.486 1 9.86 1 8Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
+            >{{ t('dashboard.filter.shortText') }}</span
+          >
+        </div>
+
         <!-- Language picker -->
-        <div :title="t('dashboard.language.tooltip')">
+        <div
+          :title="t('dashboard.language.tooltip')"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
+          @click="openLanguageDialog"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke-width="2"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
-            @click="openLanguageDialog"
+            class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
           >
             <path
               stroke-linecap="round"
@@ -1880,77 +2477,85 @@ onUnmounted(() => {
               d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802"
             />
           </svg>
-        </div>
-        <!-- Transfer ownership -->
-        <div v-if="isOwner && allOtherUsers.length > 0" :title="t('transferOwnership.tooltip')">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
-            @click="openTransferOwnershipModal"
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
+            >{{ t('dashboard.language.shortText') }}</span
           >
-            <path
-              d="M16.051 12.616a1 1 0 0 1 1.909.024l.737 1.452a1 1 0 0 0 .737.535l1.634.256a1 1 0 0 1 .588 1.806l-1.172 1.168a1 1 0 0 0-.282.866l.259 1.613a1 1 0 0 1-1.541 1.134l-1.465-.75a1 1 0 0 0-.912 0l-1.465.75a1 1 0 0 1-1.539-1.133l.258-1.613a1 1 0 0 0-.282-.866l-1.156-1.153a1 1 0 0 1 .572-1.822l1.633-.256a1 1 0 0 0 .737-.535z"
-            />
-            <path d="M8 15H7a4 4 0 0 0-4 4v2" />
-            <circle cx="10" cy="7" r="4" />
-          </svg>
-        </div>
-        <!-- Reclaim ownership-->
-        <div v-if="isBoardCreator && !isOwner" :title="t('transferOwnership.reclaim.tooltip')">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer text-yellow-500 hover:scale-110 transition-transform"
-            @click="openReclaimDialog"
-          >
-            <path
-              d="M16.051 12.616a1 1 0 0 1 1.909.024l.737 1.452a1 1 0 0 0 .737.535l1.634.256a1 1 0 0 1 .588 1.806l-1.172 1.168a1 1 0 0 0-.282.866l.259 1.613a1 1 0 0 1-1.541 1.134l-1.465-.75a1 1 0 0 0-.912 0l-1.465.75a1 1 0 0 1-1.539-1.133l.258-1.613a1 1 0 0 0-.282-.866l-1.156-1.153a1 1 0 0 1 .572-1.822l1.633-.256a1 1 0 0 0 .737-.535z"
-            />
-            <path d="M8 15H7a4 4 0 0 0-4 4v2" />
-            <circle cx="10" cy="7" r="4" />
-          </svg>
         </div>
 
-        <!-- <div :title="t('transferOwnership.reclaim.tooltip')">
+        <!-- Transfer ownership -->
+        <div
+          v-if="isOwner && allOtherUsers.length > 0"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
+          :title="t('transferOwnership.tooltip')"
+          @click="openTransferOwnershipModal"
+        >
           <svg
-            v-if="isBoardCreator && !isOwner"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
-            stroke-width="2"
+            stroke-width="1.5"
             stroke-linecap="round"
             stroke-linejoin="round"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer text-yellow-500 hover:scale-110 transition-transform"
-            @click="reclaimBoard"
+            class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
           >
             <path
-              d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"
+              d="M16.051 12.616a1 1 0 0 1 1.909.024l.737 1.452a1 1 0 0 0 .737.535l1.634.256a1 1 0 0 1 .588 1.806l-1.172 1.168a1 1 0 0 0-.282.866l.259 1.613a1 1 0 0 1-1.541 1.134l-1.465-.75a1 1 0 0 0-.912 0l-1.465.75a1 1 0 0 1-1.539-1.133l.258-1.613a1 1 0 0 0-.282-.866l-1.156-1.153a1 1 0 0 1 .572-1.822l1.633-.256a1 1 0 0 0 .737-.535z"
             />
+            <path d="M8 15H7a4 4 0 0 0-4 4v2" />
+            <circle cx="10" cy="7" r="4" />
           </svg>
-        </div> -->
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
+            >{{ t('transferOwnership.shortText') }}</span
+          >
+        </div>
+
+        <!-- Reclaim ownership-->
+        <div
+          v-if="isBoardCreator && !isOwner"
+          :title="t('transferOwnership.reclaim.tooltip')"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
+          @click="openReclaimDialog"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
+          >
+            <path
+              class="text-yellow-500"
+              d="M16.051 12.616a1 1 0 0 1 1.909.024l.737 1.452a1 1 0 0 0 .737.535l1.634.256a1 1 0 0 1 .588 1.806l-1.172 1.168a1 1 0 0 0-.282.866l.259 1.613a1 1 0 0 1-1.541 1.134l-1.465-.75a1 1 0 0 0-.912 0l-1.465.75a1 1 0 0 1-1.539-1.133l.258-1.613a1 1 0 0 0-.282-.866l-1.156-1.153a1 1 0 0 1 .572-1.822l1.633-.256a1 1 0 0 0 .737-.535z"
+            />
+            <path d="M8 15H7a4 4 0 0 0-4 4v2" />
+            <circle cx="10" cy="7" r="4" />
+          </svg>
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
+            >{{ t('transferOwnership.reclaim.shortText') }}</span
+          >
+        </div>
 
         <!-- Delete All-->
-        <div v-if="isOwner" :title="t('dashboard.delete.tooltip')">
+        <div
+          v-if="isOwner"
+          :title="t('dashboard.delete.tooltip')"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
+          @click="openDeleteAllDialog"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="w-8 h-8 mx-auto mb-4 cursor-pointer hover:scale-110 transition-transform"
-            @click="openDeleteAllDialog"
+            class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
           >
             <path
               stroke-linecap="round"
@@ -1958,34 +2563,51 @@ onUnmounted(() => {
               d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
             />
           </svg>
-        </div>
-        <a href="https://github.com/vijeeshr/quickretro" target="_blank" rel="noopener noreferrer">
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            class="h-8 w-8 mx-auto mb-4 fill-slate-100 hover:scale-110 transition-transform"
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
+            >{{ t('dashboard.delete.shortText') }}</span
           >
-            <path
-              fill-rule="evenodd"
-              clip-rule="evenodd"
-              d="M12 2C6.477 2 2 6.463 2 11.97c0 4.404 2.865 8.14 6.839 9.458.5.092.682-.216.682-.48 0-.236-.008-.864-.013-1.695-2.782.602-3.369-1.337-3.369-1.337-.454-1.151-1.11-1.458-1.11-1.458-.908-.618.069-.606.069-.606 1.003.07 1.531 1.027 1.531 1.027.892 1.524 2.341 1.084 2.91.828.092-.643.35-1.083.636-1.332-2.22-.251-4.555-1.107-4.555-4.927 0-1.088.39-1.979 1.029-2.675-.103-.252-.446-1.266.098-2.638 0 0 .84-.268 2.75 1.022A9.607 9.607 0 0 1 12 6.82c.85.004 1.705.114 2.504.336 1.909-1.29 2.747-1.022 2.747-1.022.546 1.372.202 2.386.1 2.638.64.696 1.028 1.587 1.028 2.675 0 3.83-2.339 4.673-4.566 4.92.359.307.678.915.678 1.846 0 1.332-.012 2.407-.012 2.734 0 .267.18.577.688.48 3.97-1.32 6.833-5.054 6.833-9.458C22 6.463 17.522 2 12 2Z"
-            ></path>
-          </svg>
-        </a>
-        <a href="https://quickretro.app/guide/dashboard" target="_blank" rel="noopener noreferrer">
+        </div>
+
+        <!-- Help docs -->
+        <a
+          href="https://quickretro.app/guide/dashboard"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex flex-col items-center mb-2 group cursor-pointer"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             stroke-width="1.5"
             stroke="currentColor"
-            class="h-8 w-8 mx-auto hover:scale-110 transition-transform"
+            class="h-8 w-8 mx-auto group-hover:scale-110 transition-transform"
           >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
               d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"
             />
+          </svg>
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
+            >{{ t('dashboard.help.shortText') }}</span
+          >
+        </a>
+
+        <!-- Source -->
+        <a href="https://github.com/vijeeshr/quickretro" target="_blank" rel="noopener noreferrer">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            class="h-8 w-8 mx-auto fill-slate-100 hover:scale-110 transition-transform"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M12 2C6.477 2 2 6.463 2 11.97c0 4.404 2.865 8.14 6.839 9.458.5.092.682-.216.682-.48 0-.236-.008-.864-.013-1.695-2.782.602-3.369-1.337-3.369-1.337-.454-1.151-1.11-1.458-1.11-1.458-.908-.618.069-.606.069-.606 1.003.07 1.531 1.027 1.531 1.027.892 1.524 2.341 1.084 2.91.828.092-.643.35-1.083.636-1.332-2.22-.251-4.555-1.107-4.555-4.927 0-1.088.39-1.979 1.029-2.675-.103-.252-.446-1.266.098-2.638 0 0 .84-.268 2.75 1.022A9.607 9.607 0 0 1 12 6.82c.85.004 1.705.114 2.504.336 1.909-1.29 2.747-1.022 2.747-1.022.546 1.372.202 2.386.1 2.638.64.696 1.028 1.587 1.028 2.675 0 3.83-2.339 4.673-4.566 4.92.359.307.678.915.678 1.846 0 1.332-.012 2.407-.012 2.734 0 .267.18.577.688.48 3.97-1.32 6.833-5.054 6.833-9.458C22 6.463 17.522 2 12 2Z"
+            ></path>
           </svg>
         </a>
       </div>

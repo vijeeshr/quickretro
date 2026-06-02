@@ -51,18 +51,27 @@ export default {
       helpTip: '+ - 또는 방향키로 시간 조절. 최대 1시간.',
       invalid: '유효하지 않은 시간 (1초 ~ 60분)',
       tooltip: '카운트다운 타이머',
+      shortText: '타이머',
     },
     share: {
       title: '링크 공유',
       toolTip: '보드 공유',
+      shortText: '공유',
+    },
+    theme: {
+      shortText: '테마',
     },
     mask: {
       maskTooltip: '메시지 숨기기',
+      maskShortText: '숨김',
       unmaskTooltip: '메시지 표시',
+      unmaskShortText: '표시',
     },
     lock: {
       lockTooltip: '보드 잠금',
+      lockShortText: '잠금',
       unlockTooltip: '잠금 해제',
+      unlockShortText: '해제',
       message: '보드가 잠겨 있습니다',
       discardChanges: '보드 잠김! 저장되지 않은 메시지가 삭제되었습니다',
       unlockButton: '잠금 해제',
@@ -70,12 +79,24 @@ export default {
     spotlight: {
       noCardsToFocus: '포커스할 카드 없음',
       tooltip: '카드 강조',
+      shortText: '집중',
     },
     print: {
       tooltip: '인쇄',
+      shortText: '인쇄',
+      withNamesTooltip: '인쇄 (이름 포함)',
+      withCommentsTooltip: '인쇄 (댓글 포함)',
+      withAllTooltip: '인쇄 (이름 및 댓글 포함)',
+    },
+    filter: {
+      tooltip: '좋아요/댓글이 있는 카드를 상단에 표시',
+      shortText: '정렬',
+      likesMiniTooltip: '좋아요가 가장 많은 카드를 상단에 표시',
+      commentsMiniTooltip: '댓글이 가장 많은 카드를 상단에 표시',
     },
     language: {
       tooltip: '언어 변경',
+      shortText: '언어',
     },
     delete: {
       title: '삭제 확인',
@@ -83,6 +104,7 @@ export default {
       tooltip: '이 보드 삭제',
       continueDelete: '예',
       cancelDelete: '아니오',
+      shortText: '삭제',
     },
     columns: {
       col01: '잘된 점',
@@ -111,6 +133,9 @@ export default {
       createNewBoard: '새 보드 만들기',
       supportText: 'GitHub에서 별을 눌러 저희를 응원해주세요! ⭐',
     },
+    help: {
+      shortText: '도움말',
+    },
   },
   transferOwnership: {
     tooltip: '보드 소유권 이전',
@@ -121,11 +146,13 @@ export default {
     selectPlaceholder: '사용자 선택',
     cancel: '취소',
     confirm: '이전',
+    shortText: '전달',
     reclaim: {
       tooltip: '보드 소유권 회수',
       title: '소유권 회수',
       text: '이 작업을 수행하면 다시 보드 소유자가 됩니다.',
       confirm: '회수',
+      shortText: '회수',
     },
   },
 }

@@ -71,7 +71,7 @@ type GetBoardRes struct {
 	IsOwner bool   `json:"isOwner"`
 }
 
-// isOriginAllowed checks if the request Origin header is in the configured allowed origins list.
+// Check if the request Origin header is in the configured allowed origins list.
 func isOriginAllowed(r *http.Request) bool {
 	origin := r.Header.Get("Origin")
 	return origin != "" && slices.Contains(config.Server.AllowedOrigins, origin)
@@ -137,6 +137,11 @@ func HandleCreateBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request
 	}
 
 	for _, col := range createReq.Columns {
+		if col == nil {
+			slog.Error("CreateBoardRequest contains nil column definition")
+			http.Error(w, "Invalid columns data", http.StatusBadRequest)
+			return
+		}
 		textLen := utf8.RuneCountInString(col.Text)
 		if len(col.Id) > MaxColumnIdSizeBytes || len(col.Color) > MaxColorSizeBytes || textLen > config.Data.MaxCategoryTextLength {
 			slog.Error("Column info exceeds limit in create board request payload", "col", col.Id, "len", textLen, "len-color", len(col.Color))

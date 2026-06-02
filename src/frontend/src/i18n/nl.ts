@@ -51,18 +51,27 @@ export default {
       helpTip: 'Pas tijd aan met +/- of pijltjes. Maximaal 1 uur.',
       invalid: 'Ongeldige tijd (1 seconde - 60 minuten)',
       tooltip: 'Countdown-timer',
+      shortText: 'Timer',
     },
     share: {
       title: 'Deel deze link',
       toolTip: 'Bord delen',
+      shortText: 'Delen',
+    },
+    theme: {
+      shortText: 'Thema',
     },
     mask: {
       maskTooltip: 'Berichten verbergen',
+      maskShortText: 'Verberg',
       unmaskTooltip: 'Berichten tonen',
+      unmaskShortText: 'Tonen',
     },
     lock: {
       lockTooltip: 'Bord vergrendelen',
+      lockShortText: 'Vergr',
       unlockTooltip: 'Bord ontgrendelen',
+      unlockShortText: 'Ontgr',
       message: 'Bord is vergrendeld.',
       discardChanges: 'Board vergrendeld! Niet-opgeslagen berichten verwijderd',
       unlockButton: 'Ontgrendelen',
@@ -70,12 +79,24 @@ export default {
     spotlight: {
       noCardsToFocus: 'Geen kaarten om te focussen',
       tooltip: 'Focus kaarten',
+      shortText: 'Focus',
     },
     print: {
       tooltip: 'Afdrukken',
+      shortText: 'Afdrukken',
+      withNamesTooltip: 'Afdrukken (inclusief namen)',
+      withCommentsTooltip: 'Afdrukken (inclusief opmerkingen)',
+      withAllTooltip: 'Afdrukken (inclusief namen en opmerkingen)',
+    },
+    filter: {
+      tooltip: 'Kaarten med likes/reacties bovenaan tonen',
+      shortText: 'Sorteren',
+      likesMiniTooltip: 'Meest gelikete kaarten bovenaan',
+      commentsMiniTooltip: 'Meest becommentarieerde kaarten bovenaan',
     },
     language: {
       tooltip: 'Taal wijzigen',
+      shortText: 'Taal',
     },
     delete: {
       title: 'Verwijderen bevestigen',
@@ -83,6 +104,7 @@ export default {
       tooltip: 'Dit bord verwijderen',
       continueDelete: 'Ja',
       cancelDelete: 'Nee',
+      shortText: 'Wis',
     },
     columns: {
       col01: 'Wat ging goed',
@@ -111,6 +133,9 @@ export default {
       createNewBoard: 'Nieuw bord aanmaken',
       supportText: 'Steun ons met een ster op GitHub! ⭐',
     },
+    help: {
+      shortText: 'Hulp',
+    },
   },
   transferOwnership: {
     tooltip: 'Eigendom van bord overdragen',
@@ -122,11 +147,13 @@ export default {
     selectPlaceholder: 'Gebruiker selecteren',
     cancel: 'Annuleren',
     confirm: 'Overdragen',
+    shortText: 'Overdr',
     reclaim: {
       tooltip: 'Eigendom van bord terugeisen',
       title: 'Eigendom terugeisen',
       text: 'Deze actie maakt je opnieuw de eigenaar van het bord.',
       confirm: 'Terugeisen',
+      shortText: 'Herstel',
     },
   },
 }

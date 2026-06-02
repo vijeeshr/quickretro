@@ -51,18 +51,27 @@ export default {
       helpTip: 'Ajustez avec les boutons + - ou flèches. Maximum 1 heure.',
       invalid: 'Valeurs invalides (1 seconde à 60 minutes)',
       tooltip: 'Minuterie décompte',
+      shortText: 'Minuteur',
     },
     share: {
       title: 'Copier et partager le lien',
       toolTip: 'Partager le tableau',
+      shortText: 'Partager',
+    },
+    theme: {
+      shortText: 'Thème',
     },
     mask: {
       maskTooltip: 'Masquer les messages',
+      maskShortText: 'Masquer',
       unmaskTooltip: 'Afficher les messages',
+      unmaskShortText: 'Afficher',
     },
     lock: {
       lockTooltip: 'Verrouiller le tableau',
+      lockShortText: 'Verrou',
       unlockTooltip: 'Déverrouiller le tableau',
+      unlockShortText: 'Déverr',
       message: 'Tableau verrouillé par le propriétaire.',
       discardChanges: 'Tableau verrouillé ! Messages non sauvegardés supprimés',
       unlockButton: 'Déverrouiller',
@@ -70,12 +79,24 @@ export default {
     spotlight: {
       noCardsToFocus: 'Aucune carte à mettre en évidence',
       tooltip: 'Mettre en évidence',
+      shortText: 'Focus',
+    },
+    filter: {
+      tooltip: "Afficher les cartes avec mentions j'aime/commentaires en haut",
+      shortText: 'Trier',
+      likesMiniTooltip: 'Cartes les plus aimées en haut',
+      commentsMiniTooltip: 'Cartes les plus commentées en haut',
     },
     print: {
       tooltip: 'Imprimer',
+      shortText: 'Imprimer',
+      withNamesTooltip: 'Imprimer (inclure les noms)',
+      withCommentsTooltip: 'Imprimer (inclure les commentaires)',
+      withAllTooltip: 'Imprimer (inclure les noms et les commentaires)',
     },
     language: {
       tooltip: 'Changer de langue',
+      shortText: 'Langue',
     },
     delete: {
       title: 'Confirmer la suppression',
@@ -83,6 +104,7 @@ export default {
       tooltip: 'Supprimer ce tableau',
       continueDelete: 'Oui',
       cancelDelete: 'Non',
+      shortText: 'Suppr',
     },
     columns: {
       col01: 'Ce qui a bien fonctionné',
@@ -111,6 +133,9 @@ export default {
       createNewBoard: 'Créer un nouveau tableau',
       supportText: 'Soutenez-nous avec une étoile sur GitHub ! ⭐',
     },
+    help: {
+      shortText: 'Aide',
+    },
   },
   transferOwnership: {
     tooltip: 'Transférer la propriété du tableau',
@@ -122,11 +147,13 @@ export default {
     selectPlaceholder: 'Sélectionner un utilisateur',
     cancel: 'Annuler',
     confirm: 'Transférer',
+    shortText: 'Transfert',
     reclaim: {
       tooltip: 'Récupérer la propriété du tableau',
       title: 'Récupérer la propriété',
       text: 'Cette action fera de vous à nouveau le propriétaire du tableau.',
       confirm: 'Récupérer',
+      shortText: 'Reprendre',
     },
   },
 }

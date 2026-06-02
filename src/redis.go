@@ -409,6 +409,9 @@ func (c *RedisConnector) GetBoardColumns(boardId string) ([]*BoardColumn, bool) 
 			slog.Error("Failed to get/map column definition from Redis", "err", err, "boardId", boardId)
 			continue
 		}
+		if c.Id == "" {
+			continue // Skip expired or non-existent column
+		}
 		cols = append(cols, &c)
 	}
 
@@ -555,6 +558,9 @@ func (c *RedisConnector) GetUsersPresence(boardId string) ([]*User, bool) {
 			slog.Error("Failed getting/mapping users from Redis", "err", err, "boardId", boardId)
 			continue
 		}
+		if u.Id == "" {
+			continue // Skip expired or non-existent user
+		}
 		users = append(users, &u)
 	}
 
@@ -632,6 +638,9 @@ func (c *RedisConnector) GetMessagesByIds(ids []string, boardId string) ([]*Mess
 		if err := cmd.(*redis.MapStringStringCmd).Scan(&m); err != nil {
 			slog.Error("Failed getting/mapping message from Redis", "err", err, "boardId", boardId)
 			continue
+		}
+		if m.Id == "" {
+			continue // Skip expired or non-existent message
 		}
 		messages = append(messages, &m)
 	}
@@ -1068,25 +1077,25 @@ func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregate
 
 	for _, cmd := range colCmds {
 		var c BoardColumn
-		if err := cmd.Scan(&c); err == nil {
+		if err := cmd.Scan(&c); err == nil && c.Id != "" {
 			data.Columns = append(data.Columns, &c)
 		}
 	}
 	for _, cmd := range userCmds {
 		var u User
-		if err := cmd.Scan(&u); err == nil {
+		if err := cmd.Scan(&u); err == nil && u.Id != "" {
 			data.Users = append(data.Users, &u)
 		}
 	}
 	for _, cmd := range msgCmds {
 		var m Message
-		if err := cmd.Scan(&m); err == nil {
+		if err := cmd.Scan(&m); err == nil && m.Id != "" {
 			data.Messages = append(data.Messages, &m)
 		}
 	}
 	for _, cmd := range cmtCmds {
 		var m Message
-		if err := cmd.Scan(&m); err == nil {
+		if err := cmd.Scan(&m); err == nil && m.Id != "" {
 			data.Comments = append(data.Comments, &m)
 		}
 	}

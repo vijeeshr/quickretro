@@ -54,18 +54,27 @@ export default {
       invalid:
         'Proszę wprowadzić prawidłowe wartości minut/sekund. Dozwolony zakres to od 1 sekundy do 60 minut.',
       tooltip: 'Timer odliczania',
+      shortText: 'Timer',
     },
     share: {
       title: 'Skopiuj i udostępnij poniższy link uczestnikom',
       toolTip: 'Udostępnij tablicę innym',
+      shortText: 'Udostępn',
+    },
+    theme: {
+      shortText: 'Motyw',
     },
     mask: {
-      maskTooltip: 'Zamaskuj wiadomości',
-      unmaskTooltip: 'Odkryj wiadomości',
+      maskTooltip: 'Ukryj wiadomości',
+      maskShortText: 'Ukryj',
+      unmaskTooltip: 'Pokaż wiadomości',
+      unmaskShortText: 'Pokaż',
     },
     lock: {
       lockTooltip: 'Zablokuj tablicę',
+      lockShortText: 'Blok',
       unlockTooltip: 'Odblokuj tablicę',
+      unlockShortText: 'Odblok',
       message: 'Nie można dodać ani zaktualizować. Tablica jest zablokowana przez właściciela.',
       discardChanges: 'Tablica zablokowana! Niezapisane wiadomości zostały odrzucone',
       unlockButton: 'Odblokuj',
@@ -73,12 +82,24 @@ export default {
     spotlight: {
       noCardsToFocus: 'Brak kart do wyświetlenia',
       tooltip: 'Skup się na kartach',
+      shortText: 'Fokus',
+    },
+    filter: {
+      tooltip: 'Pokaż karty z polubieniami/komentarzami na górze',
+      shortText: 'Sortuj',
+      likesMiniTooltip: 'Najbardziej polubione karty na górze',
+      commentsMiniTooltip: 'Najbardziej komentowane karty na górze',
     },
     print: {
       tooltip: 'Drukuj',
+      shortText: 'Druk',
+      withNamesTooltip: 'Drukuj (dołącz nazwy)',
+      withCommentsTooltip: 'Drukuj (dołącz komentarze)',
+      withAllTooltip: 'Drukuj (dołącz nazwy i komentarze)',
     },
     language: {
       tooltip: 'Zmień język',
+      shortText: 'Język',
     },
     delete: {
       title: 'Potwierdź usunięcie',
@@ -86,6 +107,7 @@ export default {
       tooltip: 'Usuń tę tablicę',
       continueDelete: 'Tak',
       cancelDelete: 'Nie',
+      shortText: 'Usuń',
     },
     columns: {
       col01: 'Co poszło dobrze',
@@ -114,6 +136,9 @@ export default {
       createNewBoard: 'Utwórz nową tablicę',
       supportText: 'Wesprzyj nas gwiazdką na GitHubie! ⭐',
     },
+    help: {
+      shortText: 'Pomoc',
+    },
   },
   transferOwnership: {
     tooltip: 'Przekaż własność tablicy',
@@ -125,11 +150,13 @@ export default {
     selectPlaceholder: 'Wybierz użytkownika',
     cancel: 'Anuluj',
     confirm: 'Przekaż',
+    shortText: 'Przekaż',
     reclaim: {
       tooltip: 'Odzyskaj własność tablicy',
       title: 'Odzyskaj własność',
       text: 'Ta czynność sprawi, że ponownie staniesz się właścicielem tablicy.',
       confirm: 'Odzyskaj',
+      shortText: 'Odzysk',
     },
   },
 }

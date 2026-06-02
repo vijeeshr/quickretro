@@ -51,18 +51,27 @@ export default {
       helpTip: '使用+ -或方向键调整时间，最长1小时',
       invalid: '无效时间，允许范围：1秒至60分钟',
       tooltip: '倒计时器',
+      shortText: '定时',
     },
     share: {
       title: '复制并分享链接',
       toolTip: '分享看板',
+      shortText: '分享',
+    },
+    theme: {
+      shortText: '主题',
     },
     mask: {
       maskTooltip: '隐藏消息',
+      maskShortText: '隐藏',
       unmaskTooltip: '显示消息',
+      unmaskShortText: '显示',
     },
     lock: {
       lockTooltip: '锁定看板',
+      lockShortText: '锁定',
       unlockTooltip: '解锁看板',
+      unlockShortText: '解锁',
       message: '看板已被锁定',
       discardChanges: '看板已锁定！未保存的消息已丢弃',
       unlockButton: '解锁',
@@ -70,12 +79,24 @@ export default {
     spotlight: {
       noCardsToFocus: '没有可聚焦的卡片',
       tooltip: '聚焦卡片',
+      shortText: '聚焦',
+    },
+    filter: {
+      tooltip: '在顶部显示获赞/有评论 my 的卡片',
+      shortText: '排序',
+      likesMiniTooltip: '获赞最多的卡片排在顶部',
+      commentsMiniTooltip: '评论最多的卡片排在顶部',
     },
     print: {
       tooltip: '打印',
+      shortText: '打印',
+      withNamesTooltip: '打印（包含姓名）',
+      withCommentsTooltip: '打印（包含评论）',
+      withAllTooltip: '打印（包含姓名和评论）',
     },
     language: {
       tooltip: '更改语言',
+      shortText: '语言',
     },
     delete: {
       title: '确认删除',
@@ -83,6 +104,7 @@ export default {
       tooltip: '删除此看板',
       continueDelete: '是',
       cancelDelete: '否',
+      shortText: '删除',
     },
     columns: {
       col01: '做得好的',
@@ -110,6 +132,9 @@ export default {
       createNewBoard: '创建新看板',
       supportText: '在 GitHub 上给我们点个星支持我们！ ⭐',
     },
+    help: {
+      shortText: '帮助',
+    },
   },
   transferOwnership: {
     tooltip: '转移看板所有权',
@@ -120,11 +145,13 @@ export default {
     selectPlaceholder: '选择用户',
     cancel: '取消',
     confirm: '转移',
+    shortText: '转让',
     reclaim: {
       tooltip: '收回看板所有权',
       title: '收回所有权',
       text: '此操作将使您再次成为看板所有者。',
       confirm: '收回',
+      shortText: '收回',
     },
   },
 }

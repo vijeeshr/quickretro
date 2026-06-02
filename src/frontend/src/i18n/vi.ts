@@ -53,18 +53,27 @@ export default {
         'Điều chỉnh phút và giây bằng nút + và -, hoặc phím mũi tên Lên và Xuống trên bàn phím. Thời gian tối đa là 1 giờ.',
       invalid: 'Vui lòng nhập giá trị phút/giây hợp lệ. Phạm vi cho phép là từ 1 giây đến 60 phút.',
       tooltip: 'Bộ đếm ngược',
+      shortText: 'Hẹngiờ',
     },
     share: {
       title: 'Sao chép và chia sẻ liên kết bên dưới cho người tham gia',
       toolTip: 'Chia sẻ bảng với người khác',
+      shortText: 'Chiasẻ',
+    },
+    theme: {
+      shortText: 'Chủđề',
     },
     mask: {
-      maskTooltip: 'Ẩn nội dung',
-      unmaskTooltip: 'Hiện nội dung',
+      maskTooltip: 'Ẩn tin nhắn',
+      maskShortText: 'Ẩn',
+      unmaskTooltip: 'Hiện tin nhắn',
+      unmaskShortText: 'Hiện',
     },
     lock: {
       lockTooltip: 'Khóa bảng',
+      lockShortText: 'Khóa',
       unlockTooltip: 'Mở khóa bảng',
+      unlockShortText: 'Mở',
       message: 'Không thể thêm hoặc cập nhật. Bảng đã bị khóa bởi người tạo.',
       discardChanges: 'Bảng đã bị khóa! Các nội dung chưa lưu đã bị hủy',
       unlockButton: 'Mở khóa',
@@ -72,12 +81,24 @@ export default {
     spotlight: {
       noCardsToFocus: 'Không có thẻ nào để tập trung',
       tooltip: 'Tập trung vào thẻ',
+      shortText: 'Tậptrung',
+    },
+    filter: {
+      tooltip: 'Hiển thị các thẻ có lượt thích/bình luận ở trên cùng',
+      shortText: 'Lọc',
+      likesMiniTooltip: 'Các thẻ được thích nhiều nhất ở trên cùng',
+      commentsMiniTooltip: 'Các thẻ được bình luận nhiều nhất ở trên cùng',
     },
     print: {
       tooltip: 'In',
+      shortText: 'In',
+      withNamesTooltip: 'In (bao gồm tên)',
+      withCommentsTooltip: 'In (bao gồm bình luận)',
+      withAllTooltip: 'In (bao gồm tên và bình luận)',
     },
     language: {
       tooltip: 'Đổi ngôn ngữ',
+      shortText: 'Ng.ngữ',
     },
     delete: {
       title: 'Xác nhận xóa',
@@ -85,6 +106,7 @@ export default {
       tooltip: 'Xóa bảng này',
       continueDelete: 'Có',
       cancelDelete: 'Không',
+      shortText: 'Xóa',
     },
     columns: {
       col01: 'Điều làm tốt',
@@ -113,6 +135,9 @@ export default {
       createNewBoard: 'Tạo bảng mới',
       supportText: 'Hãy ủng hộ chúng tôi bằng một ngôi sao trên GitHub! ⭐',
     },
+    help: {
+      shortText: 'Trợgiúp',
+    },
   },
   transferOwnership: {
     tooltip: 'Chuyển nhượng quyền sở hữu bảng',
@@ -124,11 +149,13 @@ export default {
     selectPlaceholder: 'Chọn người dùng',
     cancel: 'Hủy',
     confirm: 'Chuyển nhượng',
+    shortText: 'Chuyển',
     reclaim: {
       tooltip: 'Lấy lại quyền sở hữu bảng',
       title: 'Lấy lại quyền sở hữu',
       text: 'Hành động này sẽ giúp bạn trở lại làm chủ sở hữu bảng.',
       confirm: 'Lấy lại',
+      shortText: 'Lấylại',
     },
   },
 }

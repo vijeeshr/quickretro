@@ -52,7 +52,7 @@ const decrementSeconds = () => {
 </script>
 
 <template>
-  <div class="flex justify-evenly items-center w-full">
+  <div v-if="!isCountdownInProgress" class="flex justify-evenly items-center w-full">
     <!-- https://www.material-tailwind.com/docs/html/input-number#input-amount-buttons -->
     <!-- Mins Input Start -->
     <div class="w-40 max-w-sm relative mt-4 pr-1">
@@ -104,7 +104,7 @@ const decrementSeconds = () => {
     <!-- Mins Input End -->
 
     <!-- Seconds Input Start -->
-    <div class="w-40 max-w-sm relative mt-4 pl-1">
+    <div v-if="!isCountdownInProgress" class="w-40 max-w-sm relative mt-4 pl-1">
       <label class="block mb-1 text-sm text-slate-600 dark:text-slate-300 select-none">{{
         t('common.seconds')
       }}</label>
@@ -153,11 +153,15 @@ const decrementSeconds = () => {
     <!-- Seconds Input End -->
   </div>
 
-  <p class="flex justify-items-normal mt-2 text-xs text-slate-400 select-none max-w-xs">
+  <p
+    v-if="!isCountdownInProgress"
+    class="flex justify-items-normal mt-2 text-xs text-slate-400 select-none max-w-xs"
+  >
     {{ t('dashboard.timer.helpTip') }}
   </p>
 
   <p
+    v-if="!isCountdownInProgress"
     v-show="!isTimeValid"
     name="invalid-time"
     class="text-sm text-red-600 dark:text-red-300 mt-2 select-none max-w-xs"
@@ -179,7 +183,7 @@ const decrementSeconds = () => {
     <button
       v-if="isCountdownInProgress"
       type="button"
-      class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-red-100 hover:bg-red-400 border-red-300 text-red-600 hover:text-white hover:border-transparent dark:bg-red-800 dark:hover:bg-red-600 dark:border-red-700 dark:text-red-100 select-none focus:outline-hidden focus:ring-0"
+      class="min-w-70 px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-red-100 hover:bg-red-400 border-red-300 text-red-600 hover:text-white hover:border-transparent dark:bg-red-800 dark:hover:bg-red-600 dark:border-red-700 dark:text-red-100 select-none focus:outline-hidden focus:ring-0"
       @click="stop"
     >
       {{ t('common.stop') }}

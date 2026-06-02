@@ -51,18 +51,27 @@ export default {
       helpTip: 'Користуйтеся + - або стрілками. Максимум 1 година.',
       invalid: 'Невірні значення (1 секунда - 60 хвилин)',
       tooltip: 'Таймер зворотного відліку',
+      shortText: 'Таймер',
     },
     share: {
       title: 'Скопіюйте та поділіться посиланням',
       toolTip: 'Поділитися дошкою',
+      shortText: 'Поділит',
+    },
+    theme: {
+      shortText: 'Тема',
     },
     mask: {
       maskTooltip: 'Приховати повідомлення',
+      maskShortText: 'Сховати',
       unmaskTooltip: 'Показати повідомлення',
+      unmaskShortText: 'Показ',
     },
     lock: {
       lockTooltip: 'Заблокувати дошку',
+      lockShortText: 'Блок',
       unlockTooltip: 'Розблокувати дошку',
+      unlockShortText: 'Розблок',
       message: 'Дошка заблокована власником.',
       discardChanges: 'Дошку заблоковано! Незбережені повідомлення видалено',
       unlockButton: 'Розблокувати',
@@ -70,12 +79,24 @@ export default {
     spotlight: {
       noCardsToFocus: 'Немає карток для фокусування',
       tooltip: 'Фокусувати картки',
+      shortText: 'Фокус',
+    },
+    filter: {
+      tooltip: 'Показувати картки з лайками/коментарями зверху',
+      shortText: 'Сортув.',
+      likesMiniTooltip: 'Картки з найбільшою кількістю лайків зверху',
+      commentsMiniTooltip: 'Картки з найбільшою кількістю коментарів зверху',
     },
     print: {
       tooltip: 'Друк',
+      shortText: 'Друк',
+      withNamesTooltip: 'Друк (включно з іменами)',
+      withCommentsTooltip: 'Друк (включно з коментарями)',
+      withAllTooltip: 'Друк (включно з іменами та коментарями)',
     },
     language: {
       tooltip: 'Змінити мову',
+      shortText: 'Мова',
     },
     delete: {
       title: 'Підтвердження видалення',
@@ -83,6 +104,7 @@ export default {
       tooltip: 'Видалити цю дошку',
       continueDelete: 'Так',
       cancelDelete: 'Ні',
+      shortText: 'Видал',
     },
     columns: {
       col01: 'Що вдалося',
@@ -111,6 +133,9 @@ export default {
       createNewBoard: 'Створити нову дошку',
       supportText: 'Підтримайте нас зіркою на GitHub! ⭐',
     },
+    help: {
+      shortText: 'Допом',
+    },
   },
   transferOwnership: {
     tooltip: 'Передати право власності на дошку',
@@ -122,11 +147,13 @@ export default {
     selectPlaceholder: 'Оберіть користувача',
     cancel: 'Скасувати',
     confirm: 'Передати',
+    shortText: 'Передача',
     reclaim: {
       tooltip: 'Повернути право власності на дошку',
       title: 'Повернути право власності',
       text: 'Ця дія знову зробить вас власником дошки.',
       confirm: 'Повернути',
+      shortText: 'Поверн',
     },
   },
 }

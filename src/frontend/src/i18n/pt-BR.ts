@@ -51,18 +51,27 @@ export default {
       helpTip: 'Ajuste minutos/segundos com os botões + - ou teclas direcionais. Máximo de 1 hora.',
       invalid: 'Valores inválidos. Intervalo permitido: 1 segundo a 60 minutos.',
       tooltip: 'Temporizador regressivo',
+      shortText: 'Timer',
     },
     share: {
       title: 'Copie e compartilhe o link abaixo',
       toolTip: 'Compartilhar quadro',
+      shortText: 'Compart',
+    },
+    theme: {
+      shortText: 'Tema',
     },
     mask: {
       maskTooltip: 'Ocultar mensagens',
-      unmaskTooltip: 'Exibir mensagens',
+      maskShortText: 'Ocultar',
+      unmaskTooltip: 'Mostrar mensagens',
+      unmaskShortText: 'Mostrar',
     },
     lock: {
       lockTooltip: 'Bloquear quadro',
+      lockShortText: 'Bloquear',
       unlockTooltip: 'Desbloquear quadro',
+      unlockShortText: 'Destrav',
       message: 'Quadro bloqueado pelo dono.',
       discardChanges: 'Quadro bloqueado! Mensagens não salvas descartadas',
       unlockButton: 'Desbloquear',
@@ -70,12 +79,24 @@ export default {
     spotlight: {
       noCardsToFocus: 'Nenhum card para destacar',
       tooltip: 'Destacar cards',
+      shortText: 'Foco',
+    },
+    filter: {
+      tooltip: 'Mostrar cartões com curtidas/comentários no topo',
+      shortText: 'Ordenar',
+      likesMiniTooltip: 'Cartões mais curtidos no topo',
+      commentsMiniTooltip: 'Cartões mais comentados no topo',
     },
     print: {
       tooltip: 'Imprimir',
+      shortText: 'Imprimir',
+      withNamesTooltip: 'Imprimir (incluir nomes)',
+      withCommentsTooltip: 'Imprimir (incluir comentários)',
+      withAllTooltip: 'Imprimir (incluir nomes e comentários)',
     },
     language: {
       tooltip: 'Mudar idioma',
+      shortText: 'Idioma',
     },
     delete: {
       title: 'Confirmar exclusão',
@@ -83,6 +104,7 @@ export default {
       tooltip: 'Excluir este quadro',
       continueDelete: 'Sim',
       cancelDelete: 'Não',
+      shortText: 'Excluir',
     },
     columns: {
       col01: 'O que funcionou bem',
@@ -111,6 +133,9 @@ export default {
       createNewBoard: 'Criar novo quadro',
       supportText: 'Apoie-nos com uma estrela no GitHub! ⭐',
     },
+    help: {
+      shortText: 'Ajuda',
+    },
   },
   transferOwnership: {
     tooltip: 'Transferir propriedade do quadro',
@@ -122,11 +147,13 @@ export default {
     selectPlaceholder: 'Selecionar Usuário',
     cancel: 'Cancelar',
     confirm: 'Transferir',
+    shortText: 'Transfer',
     reclaim: {
       tooltip: 'Retomar propriedade do quadro',
       title: 'Retomar Propriedade',
       text: 'Esta ação tornará você o proprietário do quadro novamente.',
       confirm: 'Retomar',
+      shortText: 'Retomar',
     },
   },
 }

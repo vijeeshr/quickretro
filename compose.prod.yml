@@ -21,6 +21,13 @@
 #   docker compose -f compose.prod.yml down --rmi "all" --volumes
 #   docker compose -f compose.prod.yml up
 
+x-logging: &default-logging
+  logging:
+    driver: 'local'
+    options:
+      max-size: '10m'
+      max-file: '3'
+
 services:
   redis:
     image: 'redis:8.0.1-alpine'
@@ -31,6 +38,7 @@ services:
     # # command: ["redis-server", "--aclfile", "/usr/local/etc/redis/users.acl"]
     ############## Redis ACL ##############
     restart: always
+    <<: *default-logging
     networks:
       - redisnet
     # ports:
@@ -45,6 +53,7 @@ services:
     # Explicitly ensure it runs as the non-root user UID
     user: '10001:10001'
     restart: unless-stopped
+    <<: *default-logging
     depends_on:
       - redis
     environment:
@@ -98,6 +107,7 @@ services:
     #   dockerfile: caddy.ratelimit.Dockerfile
     ################# Http Rate Limit ####################
     restart: unless-stopped
+    <<: *default-logging
     ports:
       - '80:80'
       - '443:443'

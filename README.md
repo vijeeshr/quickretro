@@ -2,8 +2,7 @@
 
 A websocket based app for conducting a quick sprint retro.
 
-<img width="1637" height="866" alt="QuickRetro Dashboard" src="https://github.com/user-attachments/assets/2ce3fc78-0527-467f-b3aa-602ef307bc8c" />
-
+<img width="1797" height="942" alt="QuickRetro Dashboard" src="https://github.com/user-attachments/assets/12145787-6971-41a3-9455-5415fbbb3567" />
 
 ## Live app demo
 
@@ -48,6 +47,8 @@ docker compose -f compose.install.yml up -d
 ```
 
 Visit http://localhost:8921 to open the app.
+
+To install by building from source, refer the [installation docs](https://quickretro.app/guide/installation)
 
 ## Setup for local development
 

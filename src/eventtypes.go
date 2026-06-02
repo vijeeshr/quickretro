@@ -714,6 +714,10 @@ func (p *ColumnsChangeEvent) Handle(e *Event, h *Hub) {
 		return
 	}
 	for _, col := range p.Columns {
+		if col == nil {
+			slog.Warn("ColumnsChangeEvent contains nil column definition", "board", e.Group)
+			return
+		}
 		textLen := utf8.RuneCountInString(col.Text)
 		if len(col.Id) > MaxColumnIdSizeBytes || len(col.Color) > MaxColorSizeBytes || textLen > config.Data.MaxCategoryTextLength {
 			slog.Warn("Columns info exceeds limit in ColumnsChangeEvent", "col", col.Id, "len", textLen, "len-color", len(col.Color))
