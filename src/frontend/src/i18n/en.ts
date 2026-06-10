@@ -138,6 +138,15 @@ export default {
     help: {
       shortText: 'Help',
     },
+    offlineLikes: {
+      text: 'Offline votes / likes',
+      showPanelTooltip: 'Show offline likes panel',
+      hidePanelTooltop: 'Hide offline likes panel',
+    },
+    settings: {
+      tooltip: 'Open settings panel',
+      shortText: 'Settings',
+    },
   },
   transferOwnership: {
     tooltip: 'Transfer board ownership',

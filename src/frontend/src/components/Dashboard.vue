@@ -66,6 +66,7 @@ import { defaultCategories } from '../constants/defaultCategories'
 import { env } from '../env'
 import AvatarActivity from './AvatarActivity.vue'
 import {
+  OFFLINE_LIKES_PANEL_ENABLED,
   TYPING_ACTIVITY_AUTO_DISABLE_AFTER_COUNT,
   TYPING_ACTIVITY_DISPLAY_TIMEOUT_MS,
   TYPING_ACTIVITY_ENABLED,
@@ -245,7 +246,7 @@ const toggleSortByComments = () => {
 }
 
 const hasLikedCards = computed(() => {
-  return cards.value.some(card => card.likes > 0)
+  return cards.value.some(card => card.likes + card.offline_likes > 0)
 })
 
 const hasCommentedCards = computed(() => {
@@ -260,7 +261,11 @@ const hasCommentedCards = computed(() => {
 const filterCards = (category: string) => {
   const filtered = cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase())
   if (activeSort.value === 'likes') {
-    filtered.sort((a, b) => b.likes - a.likes)
+    filtered.sort((a, b) => {
+      const aCount = a.likes + a.offline_likes
+      const bCount = b.likes + b.offline_likes
+      return bCount - aCount
+    })
   } else if (activeSort.value === 'comments') {
     filtered.sort((a, b) => {
       const aCount = commentsMap.value.get(a.id)?.length ?? 0
@@ -296,6 +301,43 @@ const calcFilterPopoverPosition = () => {
     filterPopoverPanelStyle.value = {
       top: `${topPosition - 8}px`,
     }
+  }
+}
+
+// Hack for settings popover horizontal positioning
+const settingsButtonRef = ref<HTMLElement | null>(null)
+const settingsPopoverPanelStyle = ref({ top: '0px' })
+const calcSettingsPopoverPosition = () => {
+  if (settingsButtonRef.value) {
+    const rect = settingsButtonRef.value.getBoundingClientRect()
+
+    let topPosition = rect.top
+    if (!isLeftSidebarSticky.value) {
+      // When absolute, add the current scroll distance so it anchors
+      // accurately to its parent container rather than the viewport tracking
+      topPosition += window.scrollY
+    }
+
+    settingsPopoverPanelStyle.value = {
+      top: `${topPosition + 20}px`,
+    }
+  }
+}
+
+// Check if sessionStorage key exists
+const cachedOfflineLikes = sessionStorage.getItem('offlineLikesPanel')
+// Fallback to OFFLINE_LIKES_PANEL_ENABLED if key isn't present
+const showOfflineLikesPanel = ref<boolean>(
+  cachedOfflineLikes !== null ? cachedOfflineLikes === 'true' : OFFLINE_LIKES_PANEL_ENABLED
+)
+const toggleOfflineLikesPanel = () => {
+  showOfflineLikesPanel.value = !showOfflineLikesPanel.value
+  sessionStorage.setItem('offlineLikesPanel', showOfflineLikesPanel.value.toString())
+}
+
+const onOfflineLikesChanged = (msgId: string, newValue: number) => {
+  if (isOwner.value) {
+    dispatchEvent<LikeMessageEvent>('like', { msgId, like: false, offline_likes: newValue })
   }
 }
 
@@ -1154,6 +1196,7 @@ const onLikeMessageResponse = (response: LikeMessageResponse) => {
     // Todo: Should whole card be updated? cards.value[index] = response. Or just the properties.
     cards.value[index].liked = response.liked
     cards.value[index].likes = response.likes
+    cards.value[index].offline_likes = response.offline_likes
   }
 }
 
@@ -2011,8 +2054,154 @@ onUnmounted(() => {
           >
         </div>
 
-        <!-- Lock controls -->
+        <!-- Settings -->
         <div
+          v-if="isOwner"
+          class="relative flex flex-col items-center mb-2 group cursor-pointer"
+          :title="t('dashboard.settings.tooltip')"
+        >
+          <Popover v-if="isOwner">
+            <div ref="settingsButtonRef" class="relative w-8">
+              <PopoverButton
+                as="div"
+                class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
+                @click="calcSettingsPopoverPosition"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.25"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="w-8 h-8"
+                >
+                  <path d="M14 17H5" />
+                  <path d="M19 7h-9" />
+                  <circle cx="17" cy="17" r="3" />
+                  <circle cx="7" cy="7" r="3" />
+                </svg>
+              </PopoverButton>
+            </div>
+            <teleport to="body">
+              <PopoverPanel
+                v-slot="{ close }"
+                :class="{ fixed: isLeftSidebarSticky, absolute: !isLeftSidebarSticky }"
+                class="left-15 top-8 -translate-y-1/2 ml-2 z-61"
+                :style="settingsPopoverPanelStyle"
+              >
+                <div
+                  class="flex items-center gap-1 bg-gray-900/95 backdrop-blur-sm border border-gray-700 dark:border-gray-500 rounded-lg p-1.5 shadow-xl whitespace-nowrap"
+                >
+                  <!-- Lock controls -->
+                  <button
+                    v-if="isOwner"
+                    :title="
+                      !isLocked
+                        ? t('dashboard.lock.lockTooltip')
+                        : t('dashboard.lock.unlockTooltip')
+                    "
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    @click="lock"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                      :class="{ hidden: isLocked }"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                      :class="{ hidden: !isLocked }"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M14.5 1A4.5 4.5 0 0 0 10 5.5V9H3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1.5V5.5a3 3 0 1 1 6 0v2.75a.75.75 0 0 0 1.5 0V5.5A4.5 4.5 0 0 0 14.5 1Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Offline likes control toggle -->
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    :title="
+                      showOfflineLikesPanel
+                        ? t('dashboard.offlineLikes.hidePanelTooltop')
+                        : t('dashboard.offlineLikes.showPanelTooltip')
+                    "
+                    @click="toggleOfflineLikesPanel"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                      :class="{ 'text-yellow-500': !showOfflineLikesPanel }"
+                    >
+                      <path
+                        d="M1 8.25a1.25 1.25 0 1 1 2.5 0v7.5a1.25 1.25 0 1 1-2.5 0v-7.5ZM11 3V1.7c0-.268.14-.526.395-.607A2 2 0 0 1 14 3c0 .995-.182 1.948-.514 2.826-.204.54.166 1.174.744 1.174h2.52c1.243 0 2.261 1.01 2.146 2.247a23.864 23.864 0 0 1-1.341 5.974C17.153 16.323 16.072 17 14.9 17h-3.192a3 3 0 0 1-1.341-.317l-2.734-1.366A3 3 0 0 0 6.292 15H5V8h.963c.685 0 1.258-.483 1.612-1.068a4.011 4.011 0 0 1 2.166-1.73c.432-.143.853-.386 1.011-.814.16-.432.248-.9.248-1.388Z"
+                      />
+                      <line
+                        v-if="showOfflineLikesPanel"
+                        x1="4"
+                        y1="20"
+                        x2="20"
+                        y2="1"
+                        stroke="red"
+                        stroke-width="2"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Divider -->
+                  <div class="w-px h-5 bg-gray-600 mx-0.5"></div>
+                  <!-- Close button -->
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    @click="close"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="w-4 h-4"
+                    >
+                      <path d="M18 6 6 18" />
+                      <path d="m6 6 12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </PopoverPanel>
+            </teleport>
+          </Popover>
+
+          <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.75 select-none text-center"
+            >{{ t('dashboard.settings.shortText') }}</span
+          >
+        </div>
+
+        <!-- Lock controls -->
+        <!-- <div
           v-if="isOwner"
           :title="!isLocked ? t('dashboard.lock.lockTooltip') : t('dashboard.lock.unlockTooltip')"
           class="flex flex-col items-center mb-2 group cursor-pointer"
@@ -2054,7 +2243,7 @@ onUnmounted(() => {
               isLocked ? t('dashboard.lock.unlockShortText') : t('dashboard.lock.lockShortText')
             }}</span
           >
-        </div>
+        </div> -->
 
         <!-- Print (horizontal mini-popover menu) -->
         <div v-if="isOwner" class="relative flex flex-col items-center mb-2 group">
@@ -2687,6 +2876,7 @@ onUnmounted(() => {
             :can-manage="isOwner"
             :categories="columns"
             :locked="isLocked"
+            :show-offline-likes-panel="showOfflineLikesPanel"
             :class="{
               'bg-white dark:bg-gray-400 opacity-10 z-51 pointer-events-none':
                 isSpotlightOn && usersWithCards.length > 0 && card.byxid !== spotlightFor?.byxid,
@@ -2706,6 +2896,7 @@ onUnmounted(() => {
             @comment-discard="notifyForLostMessages({ dueToLock: true })"
             @comment-invalid-content="onCommentInvalidContent"
             @typing="onTyping"
+            @offline-likes-changed="onOfflineLikesChanged"
           />
         </Category>
       </div>

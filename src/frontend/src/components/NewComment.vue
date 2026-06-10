@@ -7,7 +7,7 @@ import { useTypingTrigger } from '../composables/useTypingTrigger'
 const props = defineProps<{
   parentId: string
   category: string
-  locked: boolean
+  locked: boolean // Todo: Probably not needed here. Parent can control the display.
   nickname: string
 }>()
 const emit = defineEmits(['added', 'invalidContent', 'typing'])

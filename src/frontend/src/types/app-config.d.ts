@@ -36,6 +36,10 @@ declare interface AppConfig {
     emitThrottleMs: number
     displayTimeoutMs: number
   }
+  offlineLikes: {
+    panelEnabled: boolean
+    maxCount: number
+  }
 }
 
 declare interface Window {

@@ -1,11 +1,19 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import Avatar from './Avatar.vue'
 import { MessageResponse } from '../models/Requests'
 import { DraftMessage } from '../models/DraftMessage'
 import { LikeMessage } from '../models/LikeMessage'
 import { logMessage } from '../utils'
-import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
+import {
+  Menu,
+  MenuButton,
+  MenuItems,
+  MenuItem,
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+} from '@headlessui/vue'
 import { BoardColumn } from '../models/BoardColumn'
 import { CategoryChangeMessage } from '../models/CategoryChangeMessage'
 import { useI18n } from 'vue-i18n'
@@ -13,6 +21,7 @@ import NewComment from './NewComment.vue'
 import Comment from './Comment.vue'
 import { useContentEditableLimiter } from '../composables/useContentEditableLimiter'
 import { useTypingTrigger } from '../composables/useTypingTrigger'
+import { OFFLINE_LIKES_MAX_COUNT } from '../utils/appConfig'
 
 // "currentUserNickname", "card.cat" only used to calculate message size in bytes. "category" already passed with "card.cat".
 // Message size calc and trimming only done when editing.
@@ -25,6 +34,7 @@ interface Props {
   locked: boolean
   currentUserNickname: string // Only used for message size calc
   categories: BoardColumn[]
+  showOfflineLikesPanel: boolean
 }
 const props = defineProps<Props>()
 const emit = defineEmits([
@@ -41,12 +51,24 @@ const emit = defineEmits([
   'comment-discard',
   'comment-invalidContent',
   'typing',
+  'offlineLikesChanged',
 ])
 
 const { t } = useI18n()
 
 const editing = ref(false)
 const showComments = ref(false)
+
+const offlineLikeCount = ref(props.card.offline_likes)
+const totalLikes = computed(() => props.card.likes + props.card.offline_likes)
+const hasOfflineLikes = computed(() => props.card.offline_likes > 0)
+
+watch(
+  () => props.card.offline_likes,
+  newValue => {
+    offlineLikeCount.value = newValue
+  }
+)
 
 const manageable = computed(() => props.card.mine || props.canManage)
 
@@ -137,6 +159,54 @@ const toggleLike = () => {
 
 const toggleComments = () => {
   showComments.value = !showComments.value
+}
+
+const isIncrementDisabled = computed(() => {
+  return props.locked || offlineLikeCount.value >= OFFLINE_LIKES_MAX_COUNT
+})
+
+const incrementOfflineLikes = () => {
+  if (props.locked) {
+    logMessage('Locked! Cannot change offline likes.')
+    return
+  }
+  offlineLikeCount.value++
+  triggerDebouncedEmitForOfflineLikeCount()
+}
+
+const decrementOfflineLikes = () => {
+  if (props.locked) {
+    logMessage('Locked! Cannot change offline likes.')
+    return
+  }
+  if (offlineLikeCount.value > 0) {
+    offlineLikeCount.value--
+    triggerDebouncedEmitForOfflineLikeCount()
+  }
+}
+
+const eraseAllOfflineLikes = () => {
+  if (props.locked) {
+    logMessage('Locked! Cannot change offline likes.')
+    return
+  }
+  offlineLikeCount.value = 0
+  emit('offlineLikesChanged', props.card.id, offlineLikeCount.value)
+}
+
+// Custom debounce tracker
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+const triggerDebouncedEmitForOfflineLikeCount = () => {
+  // Clear any existing pending emits while the user is actively clicking
+  if (debounceTimer) clearTimeout(debounceTimer)
+
+  // Wait 200ms after the last click before notifying the parent component
+  debounceTimer = setTimeout(() => {
+    if (offlineLikeCount.value !== props.card.offline_likes) {
+      emit('offlineLikesChanged', props.card.id, offlineLikeCount.value)
+    }
+  }, 200)
 }
 
 const remove = () => {
@@ -239,10 +309,10 @@ const onKeyDown = (event: KeyboardEvent) => {
           ></path>
         </svg>
         <span
-          :class="{ invisible: card.likes == 0 }"
+          :class="{ invisible: totalLikes == 0 }"
           class="absolute -top-0.5 -left-1.5 cursor-default bg-red-400 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none"
         >
-          {{ card.likes }}
+          {{ totalLikes }}
         </span>
       </div>
 
@@ -375,9 +445,147 @@ const onKeyDown = (event: KeyboardEvent) => {
       </div>
     </div>
 
+    <!-- Offline likes panel -->
+    <div
+      v-if="props.canManage && props.showOfflineLikesPanel"
+      class="flex items-center relative text-gray-500"
+    >
+      <Popover class="relative inline-flex min-w-0 shrink">
+        <PopoverButton
+          v-slot="{ open }"
+          class="focus:outline-hidden group w-6 h-3 flex items-center justify-center cursor-pointer"
+        >
+          <!-- Chevron Arrow -->
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 2 16 12"
+            fill="currentColor"
+            class="w-6 h-3 transform transition-transform duration-100 group-hover:text-gray-400"
+            :class="{ 'rotate-180': open, 'text-yellow-500': hasOfflineLikes }"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M7.47 12.78a.75.75 0 0 0 1.06 0l3.25-3.25a.75.75 0 0 0-1.06-1.06L8 11.19 5.28 8.47a.75.75 0 0 0-1.06 1.06l3.25 3.25ZM4.22 4.53l3.25 3.25a.75.75 0 0 0 1.06 0l3.25-3.25a.75.75 0 0 0-1.06-1.06L8 6.19 5.28 3.47a.75.75 0 0 0-1.06 1.06Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </PopoverButton>
+
+        <transition
+          enter-active-class="transition duration-100 ease-out"
+          enter-from-class="transform scale-95 opacity-0"
+          enter-to-class="transform scale-100 opacity-100"
+          leave-active-class="transition duration-75 ease-in"
+          leave-from-class="transform scale-100 opacity-100"
+          leave-to-class="transform scale-95 opacity-0"
+        >
+          <PopoverPanel
+            v-slot="{ close }"
+            class="absolute top-full mt-1 left-0 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-2 shadow-xl flex flex-col items-center"
+          >
+            <!-- Controls -->
+            <div class="flex items-center">
+              <!-- Reduce offline count -->
+              <button
+                :disabled="offlineLikeCount == 0 || props.locked"
+                class="w-6 h-6 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-200 font-bold focus:outline-hidden text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed mr-2"
+                @click="decrementOfflineLikes"
+              >
+                -
+              </button>
+
+              <!-- Offline likes -->
+              <div class="flex items-center mr-2 select-none">
+                <div class="relative inline-flex min-w-0 shrink">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="w-6 h-6"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 10.203 4.167 9.75 5 9.75h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z"
+                    ></path>
+                  </svg>
+                  <span
+                    :class="{ invisible: props.card.offline_likes == 0 }"
+                    class="absolute -top-0.5 -left-1.5 cursor-default bg-yellow-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center select-none"
+                  >
+                    {{ props.card.offline_likes }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Increase offline count -->
+              <button
+                :disabled="isIncrementDisabled"
+                class="w-6 h-6 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-200 font-bold focus:outline-hidden text-sm mr-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                @click="incrementOfflineLikes"
+              >
+                +
+              </button>
+
+              <!-- Divider -->
+              <div class="w-px h-6 bg-gray-200 dark:bg-gray-600"></div>
+
+              <!-- Erase all offline count -->
+              <button
+                v-if="hasOfflineLikes"
+                :disabled="props.locked"
+                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-hidden cursor-pointer ml-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                @click="eraseAllOfflineLikes"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  class="w-5 h-5"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+
+              <!-- Close offline like panel -->
+              <button
+                class="ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-hidden cursor-pointer"
+                @click="close()"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                  class="w-5 h-5"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Footer text -->
+            <span
+              class="mt-1 text-center text-[9px] font-semibold uppercase tracking-wider text-gray-400 select-none"
+            >
+              {{ t('dashboard.offlineLikes.text') }}
+            </span>
+          </PopoverPanel>
+        </transition>
+      </Popover>
+    </div>
+
     <!-- Comments panel -->
     <div v-if="showComments" class="border-t border-gray-200 mt-2 pt-2 space-y-2">
       <NewComment
+        v-if="!props.locked"
         :parent-id="props.card.id"
         :category="props.card.cat"
         :locked="locked"

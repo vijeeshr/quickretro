@@ -184,17 +184,18 @@ func TestMessageLifecycle(t *testing.T) {
 	msgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userA.Id)
 
 	want := harness.MessageResponse{
-		Type:       "msg",
-		Id:         msgId,
-		ParentId:   "",
-		ByXid:      "1",
-		ByNickname: userA.Nickname,
-		Content:    content,
-		Category:   category,
-		Likes:      int64(0),
-		Liked:      false,
-		Mine:       false,
-		Anonymous:  false,
+		Type:         "msg",
+		Id:           msgId,
+		ParentId:     "",
+		ByXid:        "1",
+		ByNickname:   userA.Nickname,
+		Content:      content,
+		Category:     category,
+		Likes:        int64(0),
+		Liked:        false,
+		Mine:         false,
+		Anonymous:    false,
+		OfflineLikes: int64(0),
 	}
 
 	t.Run("New message received by all", func(t *testing.T) {
@@ -1174,18 +1175,55 @@ func TestLikes(t *testing.T) {
 		userB.FlushEvents()
 	})
 
-	// Todo this needs to be fixed server side.
-	// t.Run("Should NOT toggle likes in a locked board", func(t *testing.T) {
-	// 	require.NoError(t, userA.LockBoard(true))
-	// 	userA.FlushEvents()
-	// 	userB.FlushEvents()
+	t.Run("Should NOT toggle likes in a locked board", func(t *testing.T) {
+		require.NoError(t, userA.LockBoard(true))
+		userA.FlushEvents()
+		userB.FlushEvents()
 
-	// 	require.NoError(t, userB.LikeMessage(rootMsgId, liked))
-	// 	require.NoError(t, userB.MustNotReceiveAnyEvent())
+		require.NoError(t, userB.LikeMessage(rootMsgId, liked))
+		require.NoError(t, userB.MustNotReceiveAnyEvent())
 
-	// 	userA.FlushEvents()
-	// 	userB.FlushEvents()
-	// })
+		// cleanup
+		require.NoError(t, userA.LockBoard(false))
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Offline likes", func(t *testing.T) {
+		// Set offline likes
+		require.NoError(t, userA.RecordOfflineLikes(rootMsgId, liked, int64(3)))
+		// assert
+		var likeRes harness.LikeMessageResponse
+		userB.MustWaitForEvent(t, "like", &likeRes)
+		require.Equal(t, int64(3), likeRes.OfflineLikes)
+
+		// Reset offline likes back to zero
+		require.NoError(t, userA.RecordOfflineLikes(rootMsgId, liked, int64(0)))
+		// assert
+		userB.MustWaitForEvent(t, "like", &likeRes)
+		require.Equal(t, int64(0), likeRes.OfflineLikes)
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+
+		// Cannot set more than max allowed count (current config value is 50)
+		// Todo: Remove hardcode
+		require.NoError(t, userA.RecordOfflineLikes(rootMsgId, liked, int64(51)))
+		// assert
+		require.NoError(t, userB.MustNotReceiveAnyEvent())
+
+		// Non-owner cannot set offline likes
+		require.NoError(t, userB.RecordOfflineLikes(rootMsgId, liked, int64(2)))
+		// assert
+		require.NoError(t, userB.MustNotReceiveAnyEvent())
+
+		// Cannot set offline likes in locked board
+		require.NoError(t, userA.LockBoard(true))
+		userA.FlushEvents()
+		userB.FlushEvents()
+		require.NoError(t, userA.RecordOfflineLikes(rootMsgId, liked, int64(7)))
+		require.NoError(t, userB.MustNotReceiveAnyEvent())
+	})
 }
 
 func TestColumnEditing(t *testing.T) {
