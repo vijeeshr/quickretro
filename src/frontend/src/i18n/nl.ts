@@ -136,6 +136,15 @@ export default {
     help: {
       shortText: 'Hulp',
     },
+    offlineLikes: {
+      text: 'Offline stemmen / likes',
+      showPanelTooltip: 'Offline likes-paneel tonen',
+      hidePanelTooltip: 'Offline likes-paneel verbergen',
+    },
+    settings: {
+      tooltip: 'Meer opties...',
+      shortText: 'Opties',
+    },
   },
   transferOwnership: {
     tooltip: 'Eigendom van bord overdragen',

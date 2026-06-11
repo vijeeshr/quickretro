@@ -1224,6 +1224,26 @@ func TestLikes(t *testing.T) {
 		require.NoError(t, userA.RecordOfflineLikes(rootMsgId, liked, int64(7)))
 		require.NoError(t, userB.MustNotReceiveAnyEvent())
 	})
+
+	t.Run("Updating a message should NOT reset its offline likes", func(t *testing.T) {
+		updatedOfflineLikes := int64(7)
+
+		// Update offline likes
+		require.NoError(t, userA.LockBoard(false))
+		require.NoError(t, userA.RecordOfflineLikes(rootMsgId, liked, updatedOfflineLikes))
+		userA.FlushEvents()
+		userB.FlushEvents()
+		// Send update message
+		require.NoError(t, userB.SendMessage(rootMsgId, "Message from Bob to test likes..updated", category))
+		var msgRes harness.MessageResponse
+		userB.MustWaitForEvent(t, "msg", &msgRes)
+
+		// assert
+		require.Equal(t, updatedOfflineLikes, msgRes.OfflineLikes)
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
 }
 
 func TestColumnEditing(t *testing.T) {

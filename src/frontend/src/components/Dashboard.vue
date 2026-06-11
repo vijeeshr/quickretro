@@ -284,12 +284,14 @@ const getCommentIds = (messageId: string): string[] => {
   return commentsMap.value.get(messageId)?.map(c => c.id) ?? []
 }
 
-// Hack for filter popover horizontal positioning
-const filterButtonRef = ref<HTMLElement | null>(null)
-const filterPopoverPanelStyle = ref({ top: '0px' })
-const calcFilterPopoverPosition = () => {
-  if (filterButtonRef.value) {
-    const rect = filterButtonRef.value.getBoundingClientRect()
+// Shared helper for calculating popover vertical positioning
+const updatePopoverPosition = (
+  buttonEl: HTMLElement | null,
+  styleRef: typeof filterPopoverPanelStyle,
+  offset: number
+) => {
+  if (buttonEl) {
+    const rect = buttonEl.getBoundingClientRect()
 
     let topPosition = rect.top
     if (!isLeftSidebarSticky.value) {
@@ -298,30 +300,24 @@ const calcFilterPopoverPosition = () => {
       topPosition += window.scrollY
     }
 
-    filterPopoverPanelStyle.value = {
-      top: `${topPosition - 8}px`,
+    styleRef.value = {
+      top: `${topPosition + offset}px`,
     }
   }
+}
+
+// Hack for filter popover horizontal positioning
+const filterButtonRef = ref<HTMLElement | null>(null)
+const filterPopoverPanelStyle = ref({ top: '0px' })
+const calcFilterPopoverPosition = () => {
+  updatePopoverPosition(filterButtonRef.value, filterPopoverPanelStyle, -8)
 }
 
 // Hack for settings popover horizontal positioning
 const settingsButtonRef = ref<HTMLElement | null>(null)
 const settingsPopoverPanelStyle = ref({ top: '0px' })
 const calcSettingsPopoverPosition = () => {
-  if (settingsButtonRef.value) {
-    const rect = settingsButtonRef.value.getBoundingClientRect()
-
-    let topPosition = rect.top
-    if (!isLeftSidebarSticky.value) {
-      // When absolute, add the current scroll distance so it anchors
-      // accurately to its parent container rather than the viewport tracking
-      topPosition += window.scrollY
-    }
-
-    settingsPopoverPanelStyle.value = {
-      top: `${topPosition + 20}px`,
-    }
-  }
+  updatePopoverPosition(settingsButtonRef.value, settingsPopoverPanelStyle, 20)
 }
 
 // Check if sessionStorage key exists
@@ -789,7 +785,7 @@ const print = async (includeComments: boolean, includeNames: boolean) => {
                         .print-card:nth-child(odd) {
                             background-color: #ffffff;
                         }
-                        
+
                         .print-card-content {
                             font-weight: 500;
                         }
@@ -1944,12 +1940,10 @@ onUnmounted(() => {
                     />
                   </svg>
                 </button>
-                <!-- Divider -->
-                <div class="w-px h-5 bg-gray-600 mx-0.5"></div>
                 <!-- Close button -->
                 <button
                   type="button"
-                  class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                  class="absolute -top-2 -right-2 w-4 h-4 flex items-center justify-center rounded-full bg-gray-800 border border-gray-600 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors focus:outline-none cursor-pointer shadow-md"
                   @click="close"
                 >
                   <svg
@@ -2054,154 +2048,8 @@ onUnmounted(() => {
           >
         </div>
 
-        <!-- Settings -->
-        <div
-          v-if="isOwner"
-          class="relative flex flex-col items-center mb-2 group cursor-pointer"
-          :title="t('dashboard.settings.tooltip')"
-        >
-          <Popover v-if="isOwner">
-            <div ref="settingsButtonRef" class="relative w-8">
-              <PopoverButton
-                as="div"
-                class="w-8 h-8 mx-auto group-hover:scale-110 transition-transform"
-                @click="calcSettingsPopoverPosition"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.25"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="w-8 h-8"
-                >
-                  <path d="M14 17H5" />
-                  <path d="M19 7h-9" />
-                  <circle cx="17" cy="17" r="3" />
-                  <circle cx="7" cy="7" r="3" />
-                </svg>
-              </PopoverButton>
-            </div>
-            <teleport to="body">
-              <PopoverPanel
-                v-slot="{ close }"
-                :class="{ fixed: isLeftSidebarSticky, absolute: !isLeftSidebarSticky }"
-                class="left-15 top-8 -translate-y-1/2 ml-2 z-61"
-                :style="settingsPopoverPanelStyle"
-              >
-                <div
-                  class="flex items-center gap-1 bg-gray-900/95 backdrop-blur-sm border border-gray-700 dark:border-gray-500 rounded-lg p-1.5 shadow-xl whitespace-nowrap"
-                >
-                  <!-- Lock controls -->
-                  <button
-                    v-if="isOwner"
-                    :title="
-                      !isLocked
-                        ? t('dashboard.lock.lockTooltip')
-                        : t('dashboard.lock.unlockTooltip')
-                    "
-                    type="button"
-                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
-                    @click="lock"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      class="w-4 h-4"
-                      :class="{ hidden: isLocked }"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      class="w-4 h-4"
-                      :class="{ hidden: !isLocked }"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M14.5 1A4.5 4.5 0 0 0 10 5.5V9H3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1.5V5.5a3 3 0 1 1 6 0v2.75a.75.75 0 0 0 1.5 0V5.5A4.5 4.5 0 0 0 14.5 1Z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                  </button>
-
-                  <!-- Offline likes control toggle -->
-                  <button
-                    type="button"
-                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
-                    :title="
-                      showOfflineLikesPanel
-                        ? t('dashboard.offlineLikes.hidePanelTooltop')
-                        : t('dashboard.offlineLikes.showPanelTooltip')
-                    "
-                    @click="toggleOfflineLikesPanel"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      class="w-4 h-4"
-                      :class="{ 'text-yellow-500': !showOfflineLikesPanel }"
-                    >
-                      <path
-                        d="M1 8.25a1.25 1.25 0 1 1 2.5 0v7.5a1.25 1.25 0 1 1-2.5 0v-7.5ZM11 3V1.7c0-.268.14-.526.395-.607A2 2 0 0 1 14 3c0 .995-.182 1.948-.514 2.826-.204.54.166 1.174.744 1.174h2.52c1.243 0 2.261 1.01 2.146 2.247a23.864 23.864 0 0 1-1.341 5.974C17.153 16.323 16.072 17 14.9 17h-3.192a3 3 0 0 1-1.341-.317l-2.734-1.366A3 3 0 0 0 6.292 15H5V8h.963c.685 0 1.258-.483 1.612-1.068a4.011 4.011 0 0 1 2.166-1.73c.432-.143.853-.386 1.011-.814.16-.432.248-.9.248-1.388Z"
-                      />
-                      <line
-                        v-if="showOfflineLikesPanel"
-                        x1="4"
-                        y1="20"
-                        x2="20"
-                        y2="1"
-                        stroke="red"
-                        stroke-width="2"
-                      />
-                    </svg>
-                  </button>
-
-                  <!-- Divider -->
-                  <div class="w-px h-5 bg-gray-600 mx-0.5"></div>
-                  <!-- Close button -->
-                  <button
-                    type="button"
-                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
-                    @click="close"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="w-4 h-4"
-                    >
-                      <path d="M18 6 6 18" />
-                      <path d="m6 6 12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </PopoverPanel>
-            </teleport>
-          </Popover>
-
-          <span
-            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.75 select-none text-center"
-            >{{ t('dashboard.settings.shortText') }}</span
-          >
-        </div>
-
         <!-- Lock controls -->
-        <!-- <div
+        <div
           v-if="isOwner"
           :title="!isLocked ? t('dashboard.lock.lockTooltip') : t('dashboard.lock.unlockTooltip')"
           class="flex flex-col items-center mb-2 group cursor-pointer"
@@ -2243,7 +2091,7 @@ onUnmounted(() => {
               isLocked ? t('dashboard.lock.unlockShortText') : t('dashboard.lock.lockShortText')
             }}</span
           >
-        </div> -->
+        </div>
 
         <!-- Print (horizontal mini-popover menu) -->
         <div v-if="isOwner" class="relative flex flex-col items-center mb-2 group">
@@ -2365,12 +2213,10 @@ onUnmounted(() => {
                       <path d="M16 17H8" />
                     </svg>
                   </button>
-                  <!-- Divider -->
-                  <div class="w-px h-5 bg-gray-600 mx-0.5"></div>
                   <!-- Close button -->
                   <button
                     type="button"
-                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    class="absolute -top-2 -right-2 w-4 h-4 flex items-center justify-center rounded-full bg-gray-800 border border-gray-600 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors focus:outline-none cursor-pointer shadow-md"
                     @click="close"
                   >
                     <svg
@@ -2732,7 +2578,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Delete All-->
-        <div
+        <!-- <div
           v-if="isOwner"
           :title="t('dashboard.delete.tooltip')"
           class="flex flex-col items-center mb-2 group cursor-pointer"
@@ -2756,6 +2602,192 @@ onUnmounted(() => {
             class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.5 select-none text-center"
             >{{ t('dashboard.delete.shortText') }}</span
           >
+        </div> -->
+
+        <!-- Settings -->
+        <div
+          v-if="isOwner"
+          class="relative flex flex-col items-center mb-2 group cursor-pointer"
+          :title="t('dashboard.settings.tooltip')"
+        >
+          <Popover v-if="isOwner">
+            <div ref="settingsButtonRef" class="relative w-8">
+              <PopoverButton
+                as="div"
+                class="flex flex-col items-center w-8"
+                @click="calcSettingsPopoverPosition"
+              >
+                <div
+                  class="w-8 h-8 flex items-center justify-center group-hover:scale-110 transition-transform"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.25"
+                    stroke="currentColor"
+                    class="w-8 h-8"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M21.75 6.75a4.5 4.5 0 0 1-4.884 4.484c-1.076-.091-2.264.071-2.95.904l-7.152 8.684a2.548 2.548 0 1 1-3.586-3.586l8.684-7.152c.833-.686.995-1.874.904-2.95a4.5 4.5 0 0 1 6.336-4.486l-3.276 3.276a3.004 3.004 0 0 0 2.25 2.25l3.276-3.276c.256.565.398 1.192.398 1.852Z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M4.867 19.125h.008v.008h-.008v-.008Z"
+                    />
+                  </svg>
+                </div>
+                <span
+                  class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.75 select-none text-center"
+                >
+                  {{ t('dashboard.settings.shortText') }}
+                </span>
+              </PopoverButton>
+            </div>
+            <teleport to="body">
+              <PopoverPanel
+                v-slot="{ close }"
+                :class="{ fixed: isLeftSidebarSticky, absolute: !isLeftSidebarSticky }"
+                class="left-15 top-8 -translate-y-1/2 ml-2 z-61"
+                :style="settingsPopoverPanelStyle"
+              >
+                <div
+                  class="flex items-center gap-1 bg-gray-900/95 backdrop-blur-sm border border-gray-700 dark:border-gray-500 rounded-lg p-1.5 shadow-xl whitespace-nowrap"
+                >
+                  <!-- Lock controls -->
+                  <!-- <button
+                    v-if="isOwner"
+                    :title="
+                      !isLocked
+                        ? t('dashboard.lock.lockTooltip')
+                        : t('dashboard.lock.unlockTooltip')
+                    "
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    @click="lock"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                      :class="{ hidden: isLocked }"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                      :class="{ hidden: !isLocked }"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M14.5 1A4.5 4.5 0 0 0 10 5.5V9H3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1.5V5.5a3 3 0 1 1 6 0v2.75a.75.75 0 0 0 1.5 0V5.5A4.5 4.5 0 0 0 14.5 1Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button> -->
+
+                  <!-- Delete All -->
+                  <button
+                    v-if="isOwner"
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    :title="t('dashboard.delete.tooltip')"
+                    @click="openDeleteAllDialog"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Offline likes control toggle -->
+                  <button
+                    v-if="isOwner"
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    :title="
+                      showOfflineLikesPanel
+                        ? t('dashboard.offlineLikes.hidePanelTooltip')
+                        : t('dashboard.offlineLikes.showPanelTooltip')
+                    "
+                    @click="toggleOfflineLikesPanel"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                    >
+                      <path
+                        d="M1 8.25a1.25 1.25 0 1 1 2.5 0v7.5a1.25 1.25 0 1 1-2.5 0v-7.5ZM11 3V1.7c0-.268.14-.526.395-.607A2 2 0 0 1 14 3c0 .995-.182 1.948-.514 2.826-.204.54.166 1.174.744 1.174h2.52c1.243 0 2.261 1.01 2.146 2.247a23.864 23.864 0 0 1-1.341 5.974C17.153 16.323 16.072 17 14.9 17h-3.192a3 3 0 0 1-1.341-.317l-2.734-1.366A3 3 0 0 0 6.292 15H5V8h.963c.685 0 1.258-.483 1.612-1.068a4.011 4.011 0 0 1 2.166-1.73c.432-.143.853-.386 1.011-.814.16-.432.248-.9.248-1.388Z"
+                      />
+                      <line
+                        v-if="showOfflineLikesPanel"
+                        x1="4"
+                        y1="20"
+                        x2="20"
+                        y2="1"
+                        stroke="red"
+                        stroke-width="2"
+                      />
+                      <circle
+                        :class="{ 'text-yellow-500': !showOfflineLikesPanel }"
+                        cx="5"
+                        cy="3"
+                        r="2.5"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Close button -->
+                  <button
+                    type="button"
+                    class="absolute -top-2 -right-2 w-4 h-4 flex items-center justify-center rounded-full bg-gray-800 border border-gray-600 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors focus:outline-none cursor-pointer shadow-md"
+                    @click="close"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="w-4 h-4"
+                    >
+                      <path d="M18 6 6 18" />
+                      <path d="m6 6 12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </PopoverPanel>
+            </teleport>
+          </Popover>
+
+          <!-- <span
+            class="text-[9px] uppercase font-semibold tracking-wider text-gray-300 group-hover:text-white mt-0.75 select-none text-center"
+            >{{ t('dashboard.settings.shortText') }}</span
+          > -->
         </div>
 
         <!-- Help docs -->

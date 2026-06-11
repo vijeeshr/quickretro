@@ -141,11 +141,11 @@ export default {
     offlineLikes: {
       text: 'Offline votes / likes',
       showPanelTooltip: 'Show offline likes panel',
-      hidePanelTooltop: 'Hide offline likes panel',
+      hidePanelTooltip: 'Hide offline likes panel',
     },
     settings: {
-      tooltip: 'Open settings panel',
-      shortText: 'Settings',
+      tooltip: 'More options...',
+      shortText: 'Options',
     },
   },
   transferOwnership: {

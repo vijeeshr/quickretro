@@ -15,6 +15,7 @@ type Message struct {
 }
 
 func (p *MessageEvent) ToMessage(by, xid, group string) *Message {
+	// "OfflineLikes" aren't mapped here. Watch out for gotchas.
 	return &Message{
 		Id: p.Id, By: by, ByXid: xid, ByNickname: p.ByNickname, Group: group, Content: p.Content, Category: p.Category, Anonymous: p.Anonymous, ParentId: p.ParentId}
 }

@@ -331,6 +331,9 @@ func (p *MessageEvent) Handle(e *Event, h *Hub) {
 		return
 	}
 
+	// "OfflineLikes" aren't mapped here. Watch out for gotchas.
+	// Its fine when creating new messages where its populated to default value of 0.
+	// When updating existing messages, handleUpdate() takes care of it by just updating existing message's content field. Other fields are never changed.
 	msg := p.ToMessage(e.By, e.Xid, e.Group)
 
 	existing, exists := h.redis.GetMessage(msg.Id)

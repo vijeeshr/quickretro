@@ -136,6 +136,15 @@ export default {
     help: {
       shortText: 'Ajuda',
     },
+    offlineLikes: {
+      text: 'Votos / Curtidas offline',
+      showPanelTooltip: 'Mostrar painel de curtidas offline',
+      hidePanelTooltip: 'Ocultar painel de curtidas offline',
+    },
+    settings: {
+      tooltip: 'Mais opções...',
+      shortText: 'Opções',
+    },
   },
   transferOwnership: {
     tooltip: 'Transferir propriedade do quadro',
