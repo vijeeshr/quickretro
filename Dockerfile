@@ -1,4 +1,4 @@
-FROM node:24.15.0-alpine3.23 AS frontend-builder
+FROM node:24.16.0-alpine3.24 AS frontend-builder
 WORKDIR /app
 # node_modules directory is excluded with .dockerignore
 # Copy package files first for efficient caching
@@ -9,7 +9,7 @@ RUN npm ci
 COPY src/frontend/ .
 RUN npm run build-dev
 
-FROM golang:1.26.3-alpine3.23 AS backend-builder
+FROM golang:1.26.4-alpine3.24 AS backend-builder
 WORKDIR /app
 # Copy Go module files and download dependencies
 COPY src/go.mod src/go.sum ./
@@ -23,7 +23,7 @@ COPY --from=frontend-builder /app/dist frontend/dist
 # -ldflags "-s -w" removes debugging symbols, reducing binary size
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o retroapp .
 
-FROM alpine:3.23 AS certs
+FROM alpine:3.24 AS certs
 RUN apk --no-cache add ca-certificates
 
 FROM scratch AS final
