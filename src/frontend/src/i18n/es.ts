@@ -147,6 +147,9 @@ export default {
       tooltip: 'Más opciones...',
       shortText: 'Opciones',
     },
+    download: {
+      jsonTooltip: 'Descargar como JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Transferir la propiedad del tablero',

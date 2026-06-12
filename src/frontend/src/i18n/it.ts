@@ -145,6 +145,9 @@ export default {
       tooltip: 'Altre opzioni...',
       shortText: 'Opzioni',
     },
+    download: {
+      jsonTooltip: 'Scarica come JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Trasferisci proprietà della bacheca',

@@ -145,6 +145,9 @@ export default {
       tooltip: 'Додаткові опції...',
       shortText: 'Опції',
     },
+    download: {
+      jsonTooltip: 'Завантажити як JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Передати право власності на дошку',

@@ -147,6 +147,9 @@ export default {
       tooltip: 'Thêm tùy chọn...',
       shortText: 'Tùy chọn',
     },
+    download: {
+      jsonTooltip: 'Tải xuống dưới dạng JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Chuyển nhượng quyền sở hữu bảng',

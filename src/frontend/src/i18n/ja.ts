@@ -145,6 +145,9 @@ export default {
       tooltip: 'その他のオプション...',
       shortText: '設定',
     },
+    download: {
+      jsonTooltip: 'JSONとしてダウンロード',
+    },
   },
   transferOwnership: {
     tooltip: 'ボードの所有権を譲渡',

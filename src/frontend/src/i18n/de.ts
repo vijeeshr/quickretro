@@ -145,6 +145,9 @@ export default {
       tooltip: 'Weitere Optionen...',
       shortText: 'Optionen',
     },
+    download: {
+      jsonTooltip: 'Als JSON herunterladen',
+    },
   },
   transferOwnership: {
     tooltip: 'Board-Eigentümerschaft übertragen',

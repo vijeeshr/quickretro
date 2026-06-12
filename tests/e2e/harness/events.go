@@ -17,6 +17,7 @@ type RegisterResponse struct {
 	Users                     []UserDetails     `json:"users"`
 	Messages                  []MessageResponse `json:"messages"`
 	Comments                  []MessageResponse `json:"comments"`
+	BoardCreatedAtUtcSeconds  int64             `json:"boardCreatedAtUtcSeconds"`
 	BoardExpiryTimeUtcSeconds int64             `json:"boardExpiryUtcSeconds"` // Unix Timestamp Seconds
 	TimerExpiresInSeconds     uint16            `json:"timerExpiresInSeconds"` // uint16 since we are restricting timer to max 1 hour (3600 seconds)
 	BoardMasking              bool              `json:"boardMasking"`

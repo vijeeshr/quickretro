@@ -145,6 +145,9 @@ export default {
       tooltip: 'Mais opções...',
       shortText: 'Opções',
     },
+    download: {
+      jsonTooltip: 'Baixar como JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Transferir propriedade do quadro',

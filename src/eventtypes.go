@@ -94,6 +94,7 @@ func (p *RegisterEvent) Broadcast(e *Event, m *Message, h *Hub) {
 		Comments:                  commentDetails,
 		TimerExpiresInSeconds:     uint16(remainingTimeInSeconds), // This shouldn't error out since we will restrict expiry to max 1 hour (3600 seconds) future time, when saving "board.TimerExpiresAtUtc".
 		BoardExpiryTimeUtcSeconds: board.AutoDeleteAtUtc,
+		BoardCreatedAtUtcSeconds:  board.CreatedAtUtc,
 		ShowWelcomePopup:          (nowUnix - board.CreatedAtUtc) < 10, // Show welcome popup for new board (less than 10 seconds)
 	}
 	// Prepare UserJoiningResponse

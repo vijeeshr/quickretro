@@ -145,6 +145,9 @@ export default {
       tooltip: 'Дополнительные параметры...',
       shortText: 'Параметры',
     },
+    download: {
+      jsonTooltip: 'Скачать как JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Передать права владельца доски',

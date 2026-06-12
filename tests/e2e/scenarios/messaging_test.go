@@ -45,6 +45,7 @@ func TestRegistration(t *testing.T) {
 			}, got.BoardColumns)
 			require.Equal(t, LockedDefault, got.BoardLock)
 			require.Equal(t, MaskedDefault, got.BoardMasking)
+			require.Greater(t, got.BoardCreatedAtUtcSeconds, int64(0))
 		})
 
 		t.Run("Bob receives joining event for Alice", func(t *testing.T) {

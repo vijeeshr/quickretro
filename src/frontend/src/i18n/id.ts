@@ -148,6 +148,9 @@ export default {
       tooltip: 'Opsi lainnya...',
       shortText: 'Opsi',
     },
+    download: {
+      jsonTooltip: 'Unduh sebagai JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Transfer kepemilikan papan',

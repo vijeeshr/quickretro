@@ -145,6 +145,9 @@ export default {
       tooltip: "Plus d'options...",
       shortText: 'Options',
     },
+    download: {
+      jsonTooltip: 'Télécharger au format JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Transférer la propriété du tableau',

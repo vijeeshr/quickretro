@@ -71,6 +71,7 @@ export interface RegisterResponse {
   comments: MessageResponse[]
   timerExpiresInSeconds: number
   boardExpiryUtcSeconds: number // Unix Timestamp Seconds
+  boardCreatedAtUtcSeconds: number // Unix Timestamp Seconds
   showWelcomePopup: boolean
 }
 

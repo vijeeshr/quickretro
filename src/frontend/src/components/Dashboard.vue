@@ -90,6 +90,8 @@ const nickname = localStorage.getItem('nickname') || ''
 const xid = ref('')
 const isConnected = ref(false)
 const boardName = ref('')
+const boardTeam = ref('')
+const boardCreatedAtUtcSeconds = ref(0)
 const shareLink = `${window.location.href}/join`
 const isSpotlightOn = ref(false)
 const spotlightFor = ref<{ byxid: string; nickname: string } | null>(null)
@@ -695,6 +697,56 @@ const generateDocument = (includeComments = false, includeNames = false) => {
   print(includeComments, includeNames)
 }
 
+const downloadJson = () => {
+  const data = {
+    version: 1,
+    board: {
+      id: board,
+      name: boardName.value,
+      team: boardTeam.value || '',
+      url: `${window.location.origin}/board/${board}`,
+      createdDateUtcSeconds: boardCreatedAtUtcSeconds.value,
+    },
+    messages: cards.value.map(card => {
+      const col = columns.value.find(c => c.id === card.cat)
+      const columnText = col
+        ? col.isDefault
+          ? t(`dashboard.columns.${col.id}`)
+          : col.text
+        : card.cat || ''
+      const cardComments = commentsMap.value.get(card.id) || []
+
+      return {
+        // id: card.id,
+        column: {
+          id: card.cat,
+          text: columnText,
+        },
+        content: card.msg,
+        user: card.anon ? t(`common.anonymous`) : card.nickname || '',
+        likes: card.likes,
+        offlineLikes: card.offline_likes,
+        comments: cardComments.map(comment => ({
+          content: comment.msg,
+          user: comment.anon ? t(`common.anonymous`) : comment.nickname || '',
+        })),
+      }
+    }),
+  }
+
+  const jsonStr = JSON.stringify(data, null, 2)
+  const blob = new Blob([jsonStr], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `QuickRetro_${board}.json`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  // URL.revokeObjectURL(url)
+  setTimeout(() => URL.revokeObjectURL(url), 100)
+}
+
 const print = async (includeComments: boolean, includeNames: boolean) => {
   const printWindow = window.open('', '_blank')
   if (!printWindow) return
@@ -1017,6 +1069,8 @@ const onRegisterResponse = (response: RegisterResponse) => {
   //     commentsMap.value = map
   // }
   boardName.value = response.boardName
+  boardTeam.value = response.boardTeam
+  boardCreatedAtUtcSeconds.value = response.boardCreatedAtUtcSeconds
   isOwner.value = response.isBoardOwner
   isBoardCreator.value = response.isBoardCreator
   isMasked.value = response.boardMasking
@@ -2755,6 +2809,29 @@ onUnmounted(() => {
                         cy="3"
                         r="2.5"
                         fill="currentColor"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Download as JSON -->
+                  <button
+                    v-if="isOwner"
+                    type="button"
+                    class="p-1.5 rounded-md text-gray-400 hover:bg-gray-700 hover:text-white transition-colors select-none focus:outline-none cursor-pointer"
+                    :title="t('dashboard.download.jsonTooltip')"
+                    @click="downloadJson"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      class="w-4 h-4"
+                    >
+                      <path
+                        d="M10.75 2.75a.75.75 0 0 0-1.5 0v8.614L6.295 8.235a.75.75 0 1 0-1.09 1.03l4.25 4.5a.75.75 0 0 0 1.09 0l4.25-4.5a.75.75 0 0 0-1.09-1.03l-2.955 3.129V2.75Z"
+                      />
+                      <path
+                        d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z"
                       />
                     </svg>
                   </button>
