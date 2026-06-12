@@ -138,6 +138,15 @@ export default {
     help: {
       shortText: 'Ayuda',
     },
+    offlineLikes: {
+      text: 'Votos / Me gusta sin conexión',
+      showPanelTooltip: 'Mostrar panel de Me gusta sin conexión',
+      hidePanelTooltip: 'Ocultar panel de Me gusta sin conexión',
+    },
+    settings: {
+      tooltip: 'Más opciones...',
+      shortText: 'Opciones',
+    },
   },
   transferOwnership: {
     tooltip: 'Transferir la propiedad del tablero',

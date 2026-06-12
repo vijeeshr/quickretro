@@ -136,6 +136,15 @@ export default {
     help: {
       shortText: 'Помощь',
     },
+    offlineLikes: {
+      text: 'Офлайн-голоса / лайки',
+      showPanelTooltip: 'Показать панель офлайн-лайков',
+      hidePanelTooltip: 'Скрыть панель офлайн-лайков',
+    },
+    settings: {
+      tooltip: 'Дополнительные параметры...',
+      shortText: 'Параметры',
+    },
   },
   transferOwnership: {
     tooltip: 'Передать права владельца доски',

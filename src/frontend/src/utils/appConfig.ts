@@ -11,3 +11,5 @@ export const TYPING_ACTIVITY_AUTO_DISABLE_AFTER_COUNT =
   appConfig?.typingActivity.autoDisableAfterCount ?? 0
 export const TYPING_ACTIVITY_EMIT_THROTTLE_MS = appConfig?.typingActivity.emitThrottleMs ?? 3000
 export const TYPING_ACTIVITY_DISPLAY_TIMEOUT_MS = appConfig?.typingActivity.displayTimeoutMs ?? 2500
+export const OFFLINE_LIKES_PANEL_ENABLED = appConfig?.offlineLikes.panelEnabled ?? false
+export const OFFLINE_LIKES_MAX_COUNT = appConfig?.offlineLikes.maxCount ?? 50

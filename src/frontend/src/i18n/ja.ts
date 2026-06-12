@@ -136,6 +136,15 @@ export default {
     help: {
       shortText: 'ヘルプ',
     },
+    offlineLikes: {
+      text: 'オフライン投票 / いいね',
+      showPanelTooltip: 'オフラインいいねパネルを表示',
+      hidePanelTooltip: 'オフラインいいねパネルを非表示',
+    },
+    settings: {
+      tooltip: 'その他のオプション...',
+      shortText: '設定',
+    },
   },
   transferOwnership: {
     tooltip: 'ボードの所有権を譲渡',

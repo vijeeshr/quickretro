@@ -741,6 +741,7 @@ func (c *RedisConnector) Save(msg *Message, modes ...SaveMode) bool {
 			"category", msg.Category,
 			"anon", msg.Anonymous,
 			"pid", msg.ParentId,
+			"offline_likes", msg.OfflineLikes,
 		)
 		pipe.Expire(c.ctx, key, c.timeToLive) // Todo: We can try to expire this earlier by looking at Board.AutoDeleteAtUtc. But requires a call to get board details. Skipping it for now.
 
@@ -768,6 +769,15 @@ func (c *RedisConnector) Save(msg *Message, modes ...SaveMode) bool {
 		return false
 	}
 
+	return true
+}
+
+func (c *RedisConnector) SaveOfflineLikes(msgId string, offlineLikes int64) bool {
+	key := msgKey(msgId)
+	if _, err := c.client.HSet(c.ctx, key, "offline_likes", offlineLikes).Result(); err != nil {
+		slog.Error("Failed to update offline likes in Redis", "err", err, "msgId", msgId)
+		return false
+	}
 	return true
 }
 

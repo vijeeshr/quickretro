@@ -135,6 +135,15 @@ export default {
     help: {
       shortText: '帮助',
     },
+    offlineLikes: {
+      text: '线下投票 / 点赞',
+      showPanelTooltip: '显示线下点赞面板',
+      hidePanelTooltip: '隐藏线下点赞面板',
+    },
+    settings: {
+      tooltip: '更多选项...',
+      shortText: '选项',
+    },
   },
   transferOwnership: {
     tooltip: '转移看板所有权',

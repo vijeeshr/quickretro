@@ -2,32 +2,35 @@ package main
 
 // Store
 type Message struct {
-	Id         string `redis:"id"`
-	By         string `redis:"by"`
-	ByXid      string `redis:"byxid"`
-	ByNickname string `redis:"nickname"`
-	Group      string `redis:"group"`
-	Content    string `redis:"content"`
-	Category   string `redis:"category"`
-	ParentId   string `redis:"pid"` // For top-level "Message" this will be empty. For a message treated as "Comment", it will be the parent MessageId.
-	Anonymous  bool   `redis:"anon"`
+	Id           string `redis:"id"`
+	By           string `redis:"by"`
+	ByXid        string `redis:"byxid"`
+	ByNickname   string `redis:"nickname"`
+	Group        string `redis:"group"`
+	Content      string `redis:"content"`
+	Category     string `redis:"category"`
+	ParentId     string `redis:"pid"` // For top-level "Message" this will be empty. For a message treated as "Comment", it will be the parent MessageId.
+	Anonymous    bool   `redis:"anon"`
+	OfflineLikes int64  `redis:"offline_likes"`
 }
 
 func (p *MessageEvent) ToMessage(by, xid, group string) *Message {
+	// "OfflineLikes" aren't mapped here. Watch out for gotchas.
 	return &Message{
 		Id: p.Id, By: by, ByXid: xid, ByNickname: p.ByNickname, Group: group, Content: p.Content, Category: p.Category, Anonymous: p.Anonymous, ParentId: p.ParentId}
 }
 
 func (m *Message) NewMessageResponse() MessageResponse {
 	return MessageResponse{
-		Type:       "msg",
-		Id:         m.Id,
-		ByXid:      m.ByXid,
-		ByNickname: m.ByNickname,
-		Content:    m.Content,
-		Category:   m.Category,
-		Anonymous:  m.Anonymous,
-		ParentId:   m.ParentId,
+		Type:         "msg",
+		Id:           m.Id,
+		ByXid:        m.ByXid,
+		ByNickname:   m.ByNickname,
+		Content:      m.Content,
+		Category:     m.Category,
+		Anonymous:    m.Anonymous,
+		ParentId:     m.ParentId,
+		OfflineLikes: m.OfflineLikes,
 	}
 }
 func (m *Message) NewDeleteResponse() DeleteMessageResponse {
@@ -38,8 +41,9 @@ func (m *Message) NewDeleteResponse() DeleteMessageResponse {
 }
 func (m *Message) NewLikeResponse() LikeMessageResponse {
 	return LikeMessageResponse{
-		Type: "like",
-		Id:   m.Id,
+		Type:         "like",
+		Id:           m.Id,
+		OfflineLikes: m.OfflineLikes,
 	}
 }
 

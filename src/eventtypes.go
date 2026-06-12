@@ -331,6 +331,9 @@ func (p *MessageEvent) Handle(e *Event, h *Hub) {
 		return
 	}
 
+	// "OfflineLikes" aren't mapped here. Watch out for gotchas.
+	// Its fine when creating new messages where its populated to default value of 0.
+	// When updating existing messages, handleUpdate() takes care of it by just updating existing message's content field. Other fields are never changed.
 	msg := p.ToMessage(e.By, e.Xid, e.Group)
 
 	existing, exists := h.redis.GetMessage(msg.Id)
@@ -428,17 +431,45 @@ func (p *MessageEvent) Broadcast(e *Event, m *Message, h *Hub) {
 }
 
 type LikeMessageEvent struct {
-	MessageId string `json:"msgId"`
-	Like      bool   `json:"like"`
+	MessageId    string `json:"msgId"`
+	Like         bool   `json:"like"`
+	OfflineLikes *int64 `json:"offline_likes,omitempty"`
 }
 
 func (p *LikeMessageEvent) Handle(e *Event, h *Hub) {
 	// Validate
+	if h.redis.IsBoardLocked(e.Group) {
+		slog.Warn("Cannot update likes in read-only board", "board", e.Group)
+		return
+	}
+
 	msg, exists := h.redis.GetMessage(p.MessageId) // Todo: Check if fetching a message is needed for a like. Can avoid extra calls. Also BroadcastArgs.Message may not be needed here if removed.
 	if !exists {
 		slog.Warn("Message doesn't exist in LikeMessageEvent handle", "msgId", p.MessageId)
 		return
 	}
+
+	if p.OfflineLikes != nil {
+		// Only board owner can set offline likes
+		if !h.redis.IsBoardOwner(e.Group, e.By) {
+			slog.Warn("Non-owner trying to update offline likes", "board", e.Group, "user", e.By)
+			return
+		}
+		if *p.OfflineLikes >= config.OfflineLikes.MaxCount {
+			slog.Warn("Offline likes count limit hit", "msgId", msg.Id)
+			return
+		}
+		// Update offline likes in Redis
+		msg.OfflineLikes = *p.OfflineLikes
+		if !h.redis.SaveOfflineLikes(msg.Id, msg.OfflineLikes) {
+			slog.Warn("Failed to save offline likes in Redis", "msgId", msg.Id)
+			return
+		}
+		// Publish to Redis (for broadcasting)
+		h.redis.Publish(msg.Group, &BroadcastArgs{Message: msg, Event: e})
+		return
+	}
+
 	// Execute
 	liked := h.redis.Like(p.MessageId, e.By, p.Like)
 	if !liked {

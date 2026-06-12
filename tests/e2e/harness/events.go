@@ -57,17 +57,18 @@ type MessageEvent struct {
 	Anonymous  bool   `json:"anon"`
 }
 type MessageResponse struct {
-	Type       string `json:"typ"`
-	Id         string `json:"id"`
-	ParentId   string `json:"pid"`
-	ByXid      string `json:"byxid"`
-	ByNickname string `json:"nickname"`
-	Content    string `json:"msg"`
-	Category   string `json:"cat"`
-	Likes      int64  `json:"likes"`
-	Liked      bool   `json:"liked"` // True if receiving user has liked this message.
-	Mine       bool   `json:"mine"`
-	Anonymous  bool   `json:"anon"`
+	Type         string `json:"typ"`
+	Id           string `json:"id"`
+	ParentId     string `json:"pid"`
+	ByXid        string `json:"byxid"`
+	ByNickname   string `json:"nickname"`
+	Content      string `json:"msg"`
+	Category     string `json:"cat"`
+	Likes        int64  `json:"likes"`
+	Liked        bool   `json:"liked"` // True if receiving user has liked this message.
+	Mine         bool   `json:"mine"`
+	Anonymous    bool   `json:"anon"`
+	OfflineLikes int64  `json:"offline_likes"`
 }
 
 type DeleteMessageEvent struct {
@@ -108,14 +109,16 @@ type CategoryChangeResponse struct {
 }
 
 type LikeMessageEvent struct {
-	MessageId string `json:"msgId"`
-	Like      bool   `json:"like"`
+	MessageId    string `json:"msgId"`
+	Like         bool   `json:"like"`
+	OfflineLikes *int64 `json:"offline_likes,omitempty"`
 }
 type LikeMessageResponse struct {
-	Type  string `json:"typ"`
-	Id    string `json:"id"`
-	Likes int64  `json:"likes"`
-	Liked bool   `json:"liked"` // True if receiving user has liked this message.
+	Type         string `json:"typ"`
+	Id           string `json:"id"`
+	Likes        int64  `json:"likes"`
+	Liked        bool   `json:"liked"` // True if receiving user has liked this message.
+	OfflineLikes int64  `json:"offline_likes"`
 }
 
 type TimerEvent struct {
