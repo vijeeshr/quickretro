@@ -432,9 +432,9 @@ func (p *MessageEvent) Broadcast(e *Event, m *Message, h *Hub) {
 }
 
 type LikeMessageEvent struct {
+	OfflineLikes *int64 `json:"offline_likes,omitempty"`
 	MessageId    string `json:"msgId"`
 	Like         bool   `json:"like"`
-	OfflineLikes *int64 `json:"offline_likes,omitempty"`
 }
 
 func (p *LikeMessageEvent) Handle(e *Event, h *Hub) {
