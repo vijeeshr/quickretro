@@ -70,6 +70,16 @@ services:
       - TURNSTILE_ENABLED=${TURNSTILE_ENABLED}
       - TURNSTILE_SITE_KEY=${TURNSTILE_SITE_KEY}
       - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY}
+    ################# OVERRIDE DEFAULT CONFIG #################
+    # # 1. Stop and remove existing compose created items. Skip this step if starting fresh.
+    # # 2. Uncomment "volumes:" section below.
+    # # 3. Ensure custom config.toml is in the correct path.
+    # # 4.  docker compose -f compose.prod.yml up
+    # # 5. To update config anytime later, make the change in the bound config.toml, and restart the container to apply updated config
+    # #     docker compose -f compose.prod.yml restart app
+    # volumes:
+    #   - ./src/config.toml:/app/config.toml:ro
+    ################# OVERRIDE DEFAULT CONFIG #################
     networks:
       - redisnet
       - proxynet
