@@ -63,6 +63,9 @@ const offlineLikeCount = ref(props.card.offline_likes)
 const totalLikes = computed(() => props.card.likes + props.card.offline_likes)
 const hasOfflineLikes = computed(() => props.card.offline_likes > 0)
 
+const isPlusActive = ref(false)
+const isMinusActive = ref(false)
+
 watch(
   () => props.card.offline_likes,
   newValue => {
@@ -171,6 +174,7 @@ const incrementOfflineLikes = () => {
     return
   }
   offlineLikeCount.value++
+  isPlusActive.value = true
   triggerDebouncedEmitForOfflineLikeCount()
 }
 
@@ -181,6 +185,7 @@ const decrementOfflineLikes = () => {
   }
   if (offlineLikeCount.value > 0) {
     offlineLikeCount.value--
+    isMinusActive.value = true
     triggerDebouncedEmitForOfflineLikeCount()
   }
 }
@@ -203,6 +208,9 @@ const triggerDebouncedEmitForOfflineLikeCount = () => {
 
   // Wait 200ms after the last click before notifying the parent component
   debounceTimer = setTimeout(() => {
+    isPlusActive.value = false
+    isMinusActive.value = false
+
     if (offlineLikeCount.value !== props.card.offline_likes) {
       emit('offlineLikesChanged', props.card.id, offlineLikeCount.value)
     }
@@ -481,18 +489,25 @@ const onKeyDown = (event: KeyboardEvent) => {
         >
           <PopoverPanel
             v-slot="{ close }"
-            class="absolute top-full mt-1 left-0 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-2 shadow-xl flex flex-col items-center"
+            class="absolute top-full mt-1 left-0 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-2 pb-1 shadow-xl flex flex-col items-center"
           >
             <!-- Controls -->
             <div class="flex items-center">
               <!-- Reduce offline count -->
-              <button
-                :disabled="offlineLikeCount == 0 || props.locked"
-                class="w-6 h-6 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-200 font-bold focus:outline-hidden text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed mr-2"
-                @click="decrementOfflineLikes"
-              >
-                -
-              </button>
+              <div class="relative mr-2">
+                <button
+                  :disabled="offlineLikeCount == 0 || props.locked"
+                  class="w-6 h-6 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-200 font-bold focus:outline-hidden text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  @click="decrementOfflineLikes"
+                >
+                  -
+                </button>
+                <span
+                  v-if="isMinusActive"
+                  class="absolute -top-1 -left-0.75 flex h-2 w-2 rounded-full bg-red-400 shadow-md"
+                >
+                </span>
+              </div>
 
               <!-- Offline likes -->
               <div class="flex items-center mr-2 select-none">
@@ -521,13 +536,20 @@ const onKeyDown = (event: KeyboardEvent) => {
               </div>
 
               <!-- Increase offline count -->
-              <button
-                :disabled="isIncrementDisabled"
-                class="w-6 h-6 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-200 font-bold focus:outline-hidden text-sm mr-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                @click="incrementOfflineLikes"
-              >
-                +
-              </button>
+              <div class="relative mr-3">
+                <button
+                  :disabled="isIncrementDisabled"
+                  class="w-6 h-6 rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-200 font-bold focus:outline-hidden text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  @click="incrementOfflineLikes"
+                >
+                  +
+                </button>
+                <span
+                  v-if="isPlusActive"
+                  class="absolute -top-1 -right-0.5 flex h-2 w-2 rounded-full bg-emerald-400 shadow-md"
+                >
+                </span>
+              </div>
 
               <!-- Divider -->
               <div class="w-px h-6 bg-gray-200 dark:bg-gray-600"></div>

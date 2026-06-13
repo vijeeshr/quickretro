@@ -456,8 +456,8 @@ func (p *LikeMessageEvent) Handle(e *Event, h *Hub) {
 			slog.Warn("Non-owner trying to update offline likes", "board", e.Group, "user", e.By)
 			return
 		}
-		if *p.OfflineLikes >= config.OfflineLikes.MaxCount {
-			slog.Warn("Offline likes count limit hit", "msgId", msg.Id)
+		if *p.OfflineLikes > config.OfflineLikes.MaxCount || *p.OfflineLikes < 0 {
+			slog.Warn("Offline likes count out of range", "msgId", msg.Id)
 			return
 		}
 		// Update offline likes in Redis
