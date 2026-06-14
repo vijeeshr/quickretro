@@ -456,8 +456,16 @@ func (p *LikeMessageEvent) Handle(e *Event, h *Hub) {
 			slog.Warn("Non-owner trying to update offline likes", "board", e.Group, "user", e.By)
 			return
 		}
-		if *p.OfflineLikes > config.OfflineLikes.MaxCount || *p.OfflineLikes < 0 {
-			slog.Warn("Offline likes count out of range", "msgId", msg.Id)
+
+		newCount := *p.OfflineLikes
+		oldCount := msg.OfflineLikes
+		// If it's increasing, it must obey the new max cap.
+		// If it exceeds the max but is strictly decreasing, allow it so users can wind it down gracefully.
+		// Allow graceful step-downs for older recorded count, when MaxCount config is reduced.
+		isIncreasing := newCount > oldCount
+
+		if newCount < 0 || (isIncreasing && newCount > config.OfflineLikes.MaxCount) {
+			slog.Warn("Offline likes count out of range", "msgId", msg.Id, "attempted", newCount, "max", config.OfflineLikes.MaxCount)
 			return
 		}
 		// Update offline likes in Redis
