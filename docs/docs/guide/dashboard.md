@@ -420,6 +420,6 @@ No. Anonymous message / card creators will always remain anonymous.
 
 No. Anonymous comments aren't yet supported. Only anonymous messages / cards can be added.
 
-### How do enter likes/votes for physical participants?
+### How to enter likes/votes for physical participants?
 
-Use the [Offline Likes](#offline-likes) feature to record likes/votes on behalf of participants who are physically present in the meeting and are not connected to QuickRetro.
+Use the [Offline Likes](#offline-likes) feature to record likes/votes on behalf of participants who are physically present in the meeting and not connected to QuickRetro.
