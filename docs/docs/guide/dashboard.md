@@ -121,6 +121,47 @@ The board owner can delete any message.
 
 Use the **Like** button on a card to toggle likes.
 
+### Offline Likes
+
+Available from <Badge type="tip" text="v1.9.0" />
+
+Offline Likes allow the board owner to record likes/votes on behalf of participants who are physically present in the room and not connected to the board.
+
+<img
+  src="/offline-likes-panel.png"
+  class="shadow-img"
+  alt="Offline likes panel"
+  width="270"
+  loading="lazy"
+/>
+
+This is not enabled by default. To turn it on, open the "Options" sub-menu in left sidebar and use the Offline likes toggle button.
+
+<img
+  src="/options-submenu.png"
+  class="shadow-img"
+  alt="Options submenu"
+  width="200"
+  loading="lazy"
+/>
+
+Once enabled, a small chevron icon appears below the "like" icon on each card. Use it to open the offline likes recording panel.
+
+::: tip
+
+Previously recorded **offline likes are retained even if the feature is later turned off**.
+
+Update `panel_enabled` to `true` in config.toml to **enable offline likes by default**.
+More details in [offline like configuration](configurations#offline-likes).
+
+:::
+
+::: info NOTE
+
+Only board owner can update offline likes.
+
+:::
+
 ## Move Message Across Columns
 
 Available from <Badge type="tip" text="v1.2.0" />
@@ -276,6 +317,26 @@ Names are never printed for anonymous cards.
   loading="lazy"
 />
 
+## Save as JSON
+
+::: info NOTE
+
+Only available to board owner.
+
+:::
+
+Available from <Badge type="tip" text="v1.9.0" />
+
+<img
+  src="/options-submenu.png"
+  class="shadow-img"
+  alt="Options submenu"
+  width="200"
+  loading="lazy"
+/>
+
+Use the "Options" submenu to download the board as JSON.
+
 ## Sort by most Likes/Comments
 
 Available from <Badge type="tip" text="v1.8.0" />
@@ -329,15 +390,17 @@ Use the **Language** button to change the current language.
 
 Available from <Badge type="tip" text="v1.5.3" />
 
+From <Badge type="warning" text="v1.9.0" />, this button has been moved to "Options" sub-menu.
+
+Use the **Delete Board** button to permanently remove the board and all its data.
+
+⚠️ This action cannot be undone.
+
 ::: info NOTE
 
 Only available to the board owner.
 
 :::
-
-Use the **Delete Board** button to permanently remove the board and all its data.
-
-⚠️ This action cannot be undone.
 
 ## Frequently Asked Questions
 
@@ -356,3 +419,7 @@ No. Anonymous message / card creators will always remain anonymous.
 ### Can I post anonymous comments?
 
 No. Anonymous comments aren't yet supported. Only anonymous messages / cards can be added.
+
+### How do enter likes/votes for physical participants?
+
+Use the [Offline Likes](#offline-likes) feature to record likes/votes on behalf of participants who are physically present in the meeting and are not connected to QuickRetro.

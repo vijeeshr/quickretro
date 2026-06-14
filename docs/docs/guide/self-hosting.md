@@ -20,6 +20,38 @@ As defined in [Configurations](configurations#allowed-origins), update the confi
 
 It is recommended to secure your Redis instance, preferably with ACL enabled. Check out the `redis` directory, and sample docker compose files `compose.yml`, `compose.local.yml`, `compose.prod.yml` etc in [github repository](https://github.com/vijeeshr/quickretro) for more details.
 
+## Using Custom Config.toml
+
+The default `config.toml` is baked right into the docker images. To use your config.toml with custom values, bind mount the toml file from host to your container.
+
+`compose.yml`, `compose.local.yml` and `compose.prod.yml` in the repo already have the `volumes:` section, but is commented out by default.
+
+Below steps are for `compose.yml`
+
+```sh
+# Stop and remove existing compose created items.
+# Skip this if starting fresh.
+docker compose down --rmi "all" --volumes
+```
+
+```yml
+# For the "app" service in compose.yml file
+# Uncomment "volumes:" section, or add if doesn't exist.
+# Ensure custom config.toml is in the correct path in your host.
+volumes:
+  - ./src/config.toml:/app/config.toml:ro
+```
+
+```sh
+# Run with volume mount
+docker compose up
+
+# To update config anytime later.
+# Make the change in the bound config.toml,
+# and restart app container to apply updated config
+docker compose restart app
+```
+
 ## Passing ENV variables with Compose
 
 Environment variables are passed using `.env` file which is present in the same directory as `compose\*.yml` files.\
