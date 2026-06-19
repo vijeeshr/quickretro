@@ -136,6 +136,18 @@ export default {
     help: {
       shortText: 'Допом',
     },
+    offlineLikes: {
+      text: 'Офлайн-голоси / лайки',
+      showPanelTooltip: 'Показати панель офлайн-лайків',
+      hidePanelTooltip: 'Приховати панель офлайн-лайков',
+    },
+    settings: {
+      tooltip: 'Додаткові опції...',
+      shortText: 'Опції',
+    },
+    download: {
+      jsonTooltip: 'Завантажити як JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Передати право власності на дошку',

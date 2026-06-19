@@ -228,6 +228,15 @@ func (u *TestUser) LikeMessage(msgId string, like bool) error {
 	return u.SendEvent("like", likeEv)
 }
 
+func (u *TestUser) RecordOfflineLikes(msgId string, like bool, offlineLikes int64) error {
+	likeEv := LikeMessageEvent{
+		MessageId:    msgId,
+		Like:         like,
+		OfflineLikes: &offlineLikes,
+	}
+	return u.SendEvent("like", likeEv)
+}
+
 func (u *TestUser) StartTimer(expiryDurationInSeconds uint16) error {
 	timerEv := TimerEvent{
 		ExpiryDurationInSeconds: expiryDurationInSeconds,

@@ -139,6 +139,18 @@ export default {
     help: {
       shortText: 'Pomoc',
     },
+    offlineLikes: {
+      text: 'Głosy / polubienia offline',
+      showPanelTooltip: 'Pokaż panel polubień offline',
+      hidePanelTooltip: 'Ukryj panel polubień offline',
+    },
+    settings: {
+      tooltip: 'Więcej opcji...',
+      shortText: 'Opcje',
+    },
+    download: {
+      jsonTooltip: 'Pobierz jako JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Przekaż własność tablicy',

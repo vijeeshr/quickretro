@@ -80,3 +80,10 @@ emit_throttle_ms = 3000
 # Time (in milliseconds) after which the typing indicator is automatically cleared if no new typing event is received. (only used by frontend)
 # This controls how long the activity ring stays visible on the user's avatar after they stop typing.
 display_timeout_ms = 2000
+
+[offline_likes]
+# Default value to control the display of "offline likes" recording panel that appears below each like icon in a card. (only used by frontend)
+# This is ignored when board owner manually switches it on/off (saved in browser sessionStorage) using the "Settings/Options" sub-menu in left sidebar.
+panel_enabled = false
+# Max allowed offline likes. (also used by frontend)
+max_count = 50

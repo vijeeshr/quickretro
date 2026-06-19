@@ -58,6 +58,10 @@ type Config struct {
 		DisplayTimeoutMs      int  `toml:"display_timeout_ms"`
 		Enabled               bool `toml:"enabled"`
 	} `toml:"typing_activity"`
+	OfflineLikes struct {
+		MaxCount     int64 `toml:"max_count"`
+		PanelEnabled bool  `toml:"panel_enabled"`
+	} `toml:"offline_likes"`
 }
 
 type EnvironmentConfig struct {
@@ -171,7 +175,8 @@ func main() {
 		data:{maxCategoryTextLength:%d,maxTextLength:%d},
 		websocket:{maxMessageSizeBytes:%d},
 		frontend:{contentEditableInvalidDebounceMs:%d},
-		typingActivity:{enabled:%t,autoDisableAfterCount:%d,emitThrottleMs:%d,displayTimeoutMs:%d}
+		typingActivity:{enabled:%t,autoDisableAfterCount:%d,emitThrottleMs:%d,displayTimeoutMs:%d},
+		offlineLikes:{panelEnabled:%t,maxCount:%d}
 		};`,
 			turnstileEnabled,
 			turnstileSiteKey,
@@ -183,6 +188,8 @@ func main() {
 			config.TypingActivityConfig.AutoDisableAfterCount,
 			config.TypingActivityConfig.EmitThrottleMs,
 			config.TypingActivityConfig.DisplayTimeoutMs,
+			config.OfflineLikes.PanelEnabled,
+			config.OfflineLikes.MaxCount,
 		)
 
 		_, _ = w.Write([]byte(js))

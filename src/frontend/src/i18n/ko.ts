@@ -136,6 +136,18 @@ export default {
     help: {
       shortText: '도움말',
     },
+    offlineLikes: {
+      text: '오프라인 투표 / 좋아요',
+      showPanelTooltip: '오프라인 좋아요 패널 표시',
+      hidePanelTooltip: '오프라인 좋아요 패널 숨기기',
+    },
+    settings: {
+      tooltip: '추가 옵션...',
+      shortText: '옵션',
+    },
+    download: {
+      jsonTooltip: 'JSON으로 다운로드',
+    },
   },
   transferOwnership: {
     tooltip: '보드 소유권 이전',

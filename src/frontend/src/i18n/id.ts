@@ -139,6 +139,18 @@ export default {
     help: {
       shortText: 'Bantuan',
     },
+    offlineLikes: {
+      text: 'Suara / Suka offline',
+      showPanelTooltip: 'Tampilkan panel suka offline',
+      hidePanelTooltip: 'Sembunyikan panel suka offline',
+    },
+    settings: {
+      tooltip: 'Opsi lainnya...',
+      shortText: 'Opsi',
+    },
+    download: {
+      jsonTooltip: 'Unduh sebagai JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Transfer kepemilikan papan',

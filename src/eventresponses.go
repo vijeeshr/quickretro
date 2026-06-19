@@ -15,8 +15,9 @@ type RegisterResponse struct {
 	Xid                       string            `json:"xid"`
 	BoardColumns              []*BoardColumn    `json:"columns"` // Using same BoardColumn struct that is used for request and redis store. Todo - refactor later.
 	Users                     []UserDetails     `json:"users"`
-	Messages                  []MessageResponse `json:"messages"`              // Todo: Change to *MessageResponse
-	Comments                  []MessageResponse `json:"comments"`              // Todo: Change to *MessageResponse
+	Messages                  []MessageResponse `json:"messages"` // Todo: Change to *MessageResponse
+	Comments                  []MessageResponse `json:"comments"` // Todo: Change to *MessageResponse
+	BoardCreatedAtUtcSeconds  int64             `json:"boardCreatedAtUtcSeconds"`
 	BoardExpiryTimeUtcSeconds int64             `json:"boardExpiryUtcSeconds"` // Unix Timestamp Seconds
 	TimerExpiresInSeconds     uint16            `json:"timerExpiresInSeconds"` // uint16 since we are restricting timer to max 1 hour (3600 seconds)
 	BoardMasking              bool              `json:"boardMasking"`
@@ -46,24 +47,26 @@ type SettingsResponse struct {
 }
 
 type MessageResponse struct {
-	Type       string `json:"typ"`
-	Id         string `json:"id"`
-	ParentId   string `json:"pid"`
-	ByXid      string `json:"byxid"`
-	ByNickname string `json:"nickname"`
-	Content    string `json:"msg"`
-	Category   string `json:"cat"`
-	Likes      int64  `json:"likes"`
-	Liked      bool   `json:"liked"` // True if receiving user has liked this message.
-	Mine       bool   `json:"mine"`
-	Anonymous  bool   `json:"anon"`
+	Type         string `json:"typ"`
+	Id           string `json:"id"`
+	ParentId     string `json:"pid"`
+	ByXid        string `json:"byxid"`
+	ByNickname   string `json:"nickname"`
+	Content      string `json:"msg"`
+	Category     string `json:"cat"`
+	Likes        int64  `json:"likes"`
+	Liked        bool   `json:"liked"` // True if receiving user has liked this message.
+	Mine         bool   `json:"mine"`
+	Anonymous    bool   `json:"anon"`
+	OfflineLikes int64  `json:"offline_likes"`
 }
 
 type LikeMessageResponse struct {
-	Type  string `json:"typ"`
-	Id    string `json:"id"`
-	Likes int64  `json:"likes"`
-	Liked bool   `json:"liked"` // True if receiving user has liked this message.
+	Type         string `json:"typ"`
+	Id           string `json:"id"`
+	Likes        int64  `json:"likes"`
+	Liked        bool   `json:"liked"` // True if receiving user has liked this message.
+	OfflineLikes int64  `json:"offline_likes"`
 }
 
 type DeleteMessageResponse struct {

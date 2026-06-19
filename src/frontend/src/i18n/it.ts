@@ -136,6 +136,18 @@ export default {
     help: {
       shortText: 'Aiuto',
     },
+    offlineLikes: {
+      text: 'Voti / Mi piace offline',
+      showPanelTooltip: 'Mostra pannello dei Mi piace offline',
+      hidePanelTooltip: 'Nascondi pannello dei Mi piace offline',
+    },
+    settings: {
+      tooltip: 'Altre opzioni...',
+      shortText: 'Opzioni',
+    },
+    download: {
+      jsonTooltip: 'Scarica come JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Trasferisci proprietà della bacheca',

@@ -136,6 +136,18 @@ export default {
     help: {
       shortText: 'Aide',
     },
+    offlineLikes: {
+      text: "Votes / Mentions J'aime hors ligne",
+      showPanelTooltip: "Afficher le panneau des mentions J'aime hors ligne",
+      hidePanelTooltip: "Masquer le panneau des mentions J'aime hors ligne",
+    },
+    settings: {
+      tooltip: "Plus d'options...",
+      shortText: 'Options',
+    },
+    download: {
+      jsonTooltip: 'Télécharger en format JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Transférer la propriété du tableau',

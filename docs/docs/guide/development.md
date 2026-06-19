@@ -14,8 +14,8 @@ This guide is intended to help you get started with running the application loca
 
 ## Prerequisites
 
-- Go (project targets) <Badge type="tip" text="v1.26.3" />
-- Node.js version <Badge type="tip" text="24.15.0" />
+- Go (project targets) <Badge type="tip" text="v1.26.4" />
+- Node.js version <Badge type="tip" text="24.16.0" />
 - Docker
 - Redis is used as the datastore and for pubsub
 - An IDE or text editor, preferably VSCodium / VSCode, and a CLI

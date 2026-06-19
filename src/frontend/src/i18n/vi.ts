@@ -138,6 +138,18 @@ export default {
     help: {
       shortText: 'Trợgiúp',
     },
+    offlineLikes: {
+      text: 'Bình chọn / Lượt thích ngoại tuyến',
+      showPanelTooltip: 'Hiển thị bảng lượt thích ngoại tuyến',
+      hidePanelTooltip: 'Ẩn bảng lượt thích ngoại tuyến',
+    },
+    settings: {
+      tooltip: 'Thêm tùy chọn...',
+      shortText: 'Tùy chọn',
+    },
+    download: {
+      jsonTooltip: 'Tải xuống dưới dạng JSON',
+    },
   },
   transferOwnership: {
     tooltip: 'Chuyển nhượng quyền sở hữu bảng',

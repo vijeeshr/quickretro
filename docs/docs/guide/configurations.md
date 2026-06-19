@@ -221,6 +221,19 @@ emit_throttle_ms = 3000
 display_timeout_ms = 2000
 ```
 
+## Offline Likes
+
+Available from <Badge type="tip" text="v1.9.0" />
+
+```toml{4,6}
+[offline_likes]
+# Default value to control the display of "offline likes" recording panel that appears below each like icon in a card. (only used by frontend)
+# This is ignored when board owner manually switches it on/off (saved in browser sessionStorage) using the "Settings/Options" sub-menu in left sidebar.
+panel_enabled = false
+# Max allowed offline likes. (also used by frontend)
+max_count = 50
+```
+
 ## Rate-Limiting
 
 Available from <Badge type="tip" text="v1.6.6" />
