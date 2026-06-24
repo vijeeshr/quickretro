@@ -39,8 +39,23 @@ func (hub *Hub) run() {
 					close(client.send)
 
 					// Broadcast departure
-					// We do this here so it's guaranteed to fire exactly once per disconnect
-					hub.broadcastUserLeft(client)
+					// Check if this user still has another active connection on this board
+					// Mostly happens when the same board is opened in multiple browser tabs
+					hasOtherActive := false
+					for activeClient := range connections {
+						if activeClient.id == client.id {
+							hasOtherActive = true
+							break
+						}
+					}
+
+					// Broadcast departure, and only if it was the last connection
+					if !hasOtherActive {
+						// We do this here so it's guaranteed to fire exactly once per disconnect
+						hub.broadcastUserLeft(client)
+					} else {
+						slog.Debug("User closed a tab but still has other active connection(s)", "user", client.id, "board", client.group)
+					}
 
 					// Cleanup group if empty
 					// len(connections) works here because connections points to the same underlying memory as the map(a reference type) stored in the hub.clients registry

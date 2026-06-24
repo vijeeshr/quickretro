@@ -123,3 +123,43 @@ func TestConnectHandshake(t *testing.T) {
 		userB.FlushEvents()
 	})
 }
+
+func TestMultipleConnectionsForSameUser(t *testing.T) {
+	boardId, userA1, userB, _ := harness.SetupBoardAndUsers(t)
+
+	// Bob connects and registers
+	require.NoError(t, userB.Connect(harness.BaseURL))
+	require.NoError(t, userB.Register())
+	userB.FlushEvents()
+
+	// Alice connection 1 (Tab 1) connects and registers
+	require.NoError(t, userA1.Connect(harness.BaseURL))
+	require.NoError(t, userA1.Register())
+
+	// Bob should receive joining for Alice (Tab 1)
+	var joinRes harness.UserJoiningResponse
+	userB.MustWaitForEvent(t, "joining", &joinRes)
+
+	// Alice connection 2 (Tab 2) connects and registers using same credentials
+	userA2 := harness.NewUser(userA1.Id, userA1.Nickname, boardId)
+	require.NoError(t, userA2.Connect(harness.BaseURL))
+	require.NoError(t, userA2.Register())
+
+	// Flush any events on Bob's side
+	userB.FlushEvents()
+
+	// Close Alice Tab 2 connection
+	userA2.Close()
+
+	// Bob should NOT receive a "closing" event for Alice because Alice Tab 1 is still active
+	err := userB.MustNotReceiveEvent("closing")
+	require.NoError(t, err, "Bob should not receive closing event while one tab of Alice is still active")
+
+	// Now close Alice Tab 1 connection
+	userA1.Close()
+
+	// Since this is the last connection, Bob should now receive a "closing" event for Alice
+	var closingRes harness.UserClosingResponse
+	userB.MustWaitForEvent(t, "closing", &closingRes)
+	require.Equal(t, joinRes.Xid, closingRes.Xid, "Closing xid should match original joining xid")
+}

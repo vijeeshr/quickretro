@@ -148,6 +148,10 @@ func handleWebSocket(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Todo: Should duplicate connection attempts (from multiple tabs in same browser) to same board be strictly forbidden?
+	// If yes, and doing it before upgrading, send w.WriteHeader(http.StatusConflict)...
+	// ... Or upgrade and send a custom close code
+
 	u, ok := hub.redis.EnsureUser(board, user, nickname)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
