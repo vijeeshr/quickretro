@@ -9,7 +9,7 @@ RUN npm ci
 COPY src/frontend/ .
 RUN npm run build
 
-FROM --platform=$BUILDPLATFORM golang:1.26.4-alpine3.24 AS backend-builder
+FROM --platform=$BUILDPLATFORM golang:1.26.5-alpine3.24 AS backend-builder
 # TARGETOS and TARGETARCH are automatically set by Docker Buildx
 # Using --platform=$BUILDPLATFORM runs the Go compiler natively (fast),
 # then cross-compiles to the target via GOOS/GOARCH (instead of running
@@ -32,9 +32,13 @@ FROM alpine:3.24 AS certs
 RUN apk --no-cache add ca-certificates
 
 FROM scratch AS final
-LABEL org.opencontainers.image.source="https://github.com/vijeeshr/quickretro"
-LABEL org.opencontainers.image.description="QuickRetro is a free and open-source sprint retrospective app for agile teams. Self-hosted, real-time, mobile-friendly, and privacy-first."
-LABEL org.opencontainers.image.licenses="AGPL-3.0"
+LABEL org.opencontainers.image.title="QuickRetro" \
+      org.opencontainers.image.source="https://github.com/vijeeshr/quickretro" \
+      org.opencontainers.image.url="https://quickretro.app" \
+      org.opencontainers.image.documentation="https://quickretro.app/guide/getting-started" \
+      org.opencontainers.image.description="QuickRetro is a free and open-source sprint retrospective app for agile teams. Self-hosted, real-time, mobile-friendly, and privacy-first." \
+      org.opencontainers.image.licenses="AGPL-3.0"
+
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 WORKDIR /app
 # Copy files and ensure they are owned by the non-root user
