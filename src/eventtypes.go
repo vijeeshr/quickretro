@@ -31,7 +31,7 @@ func (p *RegisterEvent) Broadcast(e *Event, m *Message, h *Hub) {
 		return
 	}
 
-	board, cols, users, activeUserIds, messages, comments := data.Board, data.Columns, data.Users, data.ActiveUserIds, data.Messages, data.Comments
+	board, cols, users, activeUserIds, messages, comments, pinnedMessageIds := data.Board, data.Columns, data.Users, data.ActiveUserIds, data.Messages, data.Comments, data.PinnedMessageIds
 
 	// Prepare user details
 	userDetails := make([]UserDetails, len(users)) // Preallocate length instead of capacity. len == cap == len(users), so can index directly.
@@ -92,6 +92,7 @@ func (p *RegisterEvent) Broadcast(e *Event, m *Message, h *Hub) {
 		Users:                     userDetails,
 		Messages:                  messagesDetails,
 		Comments:                  commentDetails,
+		Pins:                      pinnedMessageIds,
 		TimerExpiresInSeconds:     uint16(remainingTimeInSeconds), // This shouldn't error out since we will restrict expiry to max 1 hour (3600 seconds) future time, when saving "board.TimerExpiresAtUtc".
 		BoardExpiryTimeUtcSeconds: board.AutoDeleteAtUtc,
 		BoardCreatedAtUtcSeconds:  board.CreatedAtUtc,
@@ -519,13 +520,68 @@ func (p *LikeMessageEvent) Broadcast(e *Event, m *Message, h *Hub) {
 	}
 }
 
+type PinMessageEvent struct {
+	MessageId string `json:"msgId"`
+	Pin       bool   `json:"pin"`
+}
+
+func (p *PinMessageEvent) Handle(e *Event, h *Hub) {
+	// Validate
+	b, ok := h.redis.GetBoard(e.Group)
+	if !ok {
+		slog.Warn("Cannot find board when handling PinMessageEvent", "board", e.Group)
+		return
+	}
+
+	if b.Lock {
+		slog.Warn("Cannot pin in read-only board", "board", e.Group)
+		return
+	}
+
+	if b.Owner != e.By {
+		slog.Warn("Non-owner cannot pin", "board", e.Group, "user", e.By)
+		return
+	}
+
+	msg, exists := h.redis.GetMessage(p.MessageId) // Todo: Check if fetching a message is needed for a pin. Can avoid extra calls. Also BroadcastArgs.Message may not be needed here if removed.
+	if !exists {
+		slog.Warn("Message doesn't exist in PinMessageEvent handle", "msgId", p.MessageId)
+		return
+	}
+
+	// Execute
+	pinned := h.redis.UpdateMessagePin(b.Id, msg.Id, p.Pin)
+	if !pinned {
+		return
+	}
+	// Publish to Redis (for broadcasting)
+	if pinned {
+		h.redis.Publish(msg.Group, &BroadcastArgs{Message: msg, Event: e})
+	}
+}
+func (p *PinMessageEvent) Broadcast(e *Event, m *Message, h *Hub) {
+	response := &PinMessageResponse{
+		Type: "pin",
+		Id:   p.MessageId,
+		Pin:  p.Pin,
+	}
+
+	clients := h.clients[e.Group]
+	for client := range clients {
+		select {
+		case client.send <- response:
+		default:
+			client.hub.unregister <- client
+		}
+	}
+}
+
 type DeleteMessageEvent struct {
 	MessageId  string   `json:"msgId"`      // MessageId or CommentId
 	CommentIds []string `json:"commentIds"` // Only used when deleting a top-level message i.e. when MessageId represents a message and not a comment.
 }
 
 func (p *DeleteMessageEvent) Handle(e *Event, h *Hub) {
-
 	// Validate
 	if h.redis.IsBoardLocked(e.Group) {
 		slog.Warn("Cannot delete data in read-only board", "board", e.Group)

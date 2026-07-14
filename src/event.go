@@ -8,7 +8,7 @@ import (
 )
 
 type Event struct {
-	Type string `json:"typ"` // Values can be one of "reg", "msg", "del", "delall", "like", "mask", "timer", "catchng". "closing" is not initiated from UI.
+	Type string `json:"typ"` // Values can be one of "reg", "msg", "del", "delall", "like", "t", "timer", "catchng", "set", "pin". "closing" is not initiated from UI.
 
 	// "Group", "By", "Xid" are ignored when sent from client. Each client's read goroutine overwrites them all the time.
 	// This is intended for allowing json marshalling/unmarshalling for redis pubsub. With `json:"-"` those fields will loose values during pubsub.
@@ -31,6 +31,7 @@ var registry = map[string]eventFactory{
 	"reg":      makeFactory[RegisterEvent](),
 	"msg":      makeFactory[MessageEvent](),
 	"like":     makeFactory[LikeMessageEvent](),
+	"pin":      makeFactory[PinMessageEvent](),
 	"del":      makeFactory[DeleteMessageEvent](),
 	"delall":   makeFactory[DeleteAllEvent](),
 	"catchng":  makeFactory[CategoryChangeEvent](),

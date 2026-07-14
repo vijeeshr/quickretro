@@ -17,6 +17,7 @@ type RegisterResponse struct {
 	Users                     []UserDetails     `json:"users"`
 	Messages                  []MessageResponse `json:"messages"` // Todo: Change to *MessageResponse
 	Comments                  []MessageResponse `json:"comments"` // Todo: Change to *MessageResponse
+	Pins                      []string          `json:"pins"`     // Pinned list of messageIds
 	BoardCreatedAtUtcSeconds  int64             `json:"boardCreatedAtUtcSeconds"`
 	BoardExpiryTimeUtcSeconds int64             `json:"boardExpiryUtcSeconds"` // Unix Timestamp Seconds
 	TimerExpiresInSeconds     uint16            `json:"timerExpiresInSeconds"` // uint16 since we are restricting timer to max 1 hour (3600 seconds)
@@ -59,6 +60,12 @@ type MessageResponse struct {
 	Mine         bool   `json:"mine"`
 	Anonymous    bool   `json:"anon"`
 	OfflineLikes int64  `json:"offline_likes"`
+}
+
+type PinMessageResponse struct {
+	Type string `json:"typ"`
+	Id   string `json:"id"`
+	Pin  bool   `json:"pin"`
 }
 
 type LikeMessageResponse struct {
