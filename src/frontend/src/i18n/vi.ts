@@ -56,7 +56,6 @@ export default {
       shortText: 'Hẹngiờ',
     },
     share: {
-      title: 'Sao chép và chia sẻ liên kết bên dưới cho người tham gia',
       toolTip: 'Chia sẻ bảng với người khác',
       shortText: 'Chiasẻ',
     },

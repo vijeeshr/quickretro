@@ -57,7 +57,6 @@ export default {
       shortText: 'Timer',
     },
     share: {
-      title: 'Skopiuj i udostępnij poniższy link uczestnikom',
       toolTip: 'Udostępnij tablicę innym',
       shortText: 'Udostępn',
     },

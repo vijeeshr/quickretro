@@ -54,7 +54,6 @@ export default {
       shortText: 'Timer',
     },
     share: {
-      title: 'URL an Teilnehmer kopieren',
       toolTip: 'Board teilen',
       shortText: 'Teilen',
     },

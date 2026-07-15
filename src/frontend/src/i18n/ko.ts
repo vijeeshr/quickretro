@@ -54,7 +54,6 @@ export default {
       shortText: '타이머',
     },
     share: {
-      title: '링크 공유',
       toolTip: '보드 공유',
       shortText: '공유',
     },

@@ -54,7 +54,6 @@ export default {
       shortText: 'Таймер',
     },
     share: {
-      title: 'Скопіюйте та поділіться посиланням',
       toolTip: 'Поділитися дошкою',
       shortText: 'Поділит',
     },

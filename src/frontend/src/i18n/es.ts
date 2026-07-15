@@ -56,7 +56,6 @@ export default {
       shortText: 'Reloj',
     },
     share: {
-      title: 'Copia y comparte esta URL con participantes',
       toolTip: 'Compartir tablero',
       shortText: 'Compartir',
     },

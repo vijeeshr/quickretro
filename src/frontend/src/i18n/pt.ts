@@ -54,7 +54,6 @@ export default {
       shortText: 'Timer',
     },
     share: {
-      title: 'Compartilhe esta URL',
       toolTip: 'Compartilhar quadro',
       shortText: 'Partilhar',
     },

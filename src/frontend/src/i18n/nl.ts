@@ -54,7 +54,6 @@ export default {
       shortText: 'Timer',
     },
     share: {
-      title: 'Deel deze link',
       toolTip: 'Bord delen',
       shortText: 'Delen',
     },

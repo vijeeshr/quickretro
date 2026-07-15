@@ -130,11 +130,6 @@ const updateLeftSidebarSticky = () =>
 const updateRightSidebarSticky = () =>
   updateSidebarSticky(rightSidebarContentRef, isRightSidebarSticky)
 
-const isShareDialogOpen = ref(false)
-const setIsShareDialogOpen = (value: boolean) => {
-  isShareDialogOpen.value = value
-}
-
 const isTimerDialogOpen = ref(false)
 const setIsTimerDialogOpen = (value: boolean) => {
   isTimerDialogOpen.value = value
@@ -992,15 +987,10 @@ const print = async (includeComments: boolean, includeNames: boolean) => {
   }
 }
 
-const share = () => {
-  isShareDialogOpen.value = true
-}
-
 const copyShareLink = async () => {
   try {
     await navigator.clipboard.writeText(shareLink)
     toast.success(t('common.share.linkCopied'))
-    setIsShareDialogOpen(false)
   } catch {
     toast.error(t('common.share.linkCopyError'))
   }
@@ -1655,37 +1645,6 @@ onUnmounted(() => {
       </div>
     </Dialog>
 
-    <!-- Dialog to share url -->
-    <Dialog :open="isShareDialogOpen" class="relative z-60" @close="setIsShareDialogOpen">
-      <!-- The backdrop, rendered as a fixed sibling to the panel container -->
-      <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
-      <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
-        <DialogPanel
-          class="max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl"
-        >
-          <DialogTitle
-            as="h3"
-            class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200 select-none"
-            >{{ t('dashboard.share.title') }}
-          </DialogTitle>
-          <article
-            class="select-all break-all bg-slate-100 dark:bg-slate-700 dark:text-gray-100 my-6 rounded-xs"
-          >
-            {{ shareLink }}
-          </article>
-          <div class="mt-4">
-            <button
-              type="button"
-              class="px-4 py-2 text-sm w-full shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-hidden focus:ring-0"
-              @click="copyShareLink"
-            >
-              {{ t('common.copy') }}
-            </button>
-          </div>
-        </DialogPanel>
-      </div>
-    </Dialog>
-
     <!-- Dialog for Language selection -->
     <Dialog :open="isLanguageDialogOpen" class="relative z-60" @close="setIsLanguageDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
@@ -2053,7 +2012,7 @@ onUnmounted(() => {
         <div
           :title="t('dashboard.share.toolTip')"
           class="flex flex-col items-center mb-2 group cursor-pointer"
-          @click="share"
+          @click="copyShareLink"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

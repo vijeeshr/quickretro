@@ -54,7 +54,6 @@ export default {
       shortText: '定时',
     },
     share: {
-      title: '复制并分享链接',
       toolTip: '分享看板',
       shortText: '分享',
     },

@@ -54,7 +54,6 @@ export default {
       shortText: 'Minuteur',
     },
     share: {
-      title: 'Copier et partager le lien',
       toolTip: 'Partager le tableau',
       shortText: 'Partager',
     },

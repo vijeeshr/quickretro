@@ -54,7 +54,6 @@ export default {
       shortText: 'タイマー',
     },
     share: {
-      title: 'URLを共有',
       toolTip: 'ボードを共有',
       shortText: '共有',
     },

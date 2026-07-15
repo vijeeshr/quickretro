@@ -57,7 +57,6 @@ export default {
       shortText: 'Waktu',
     },
     share: {
-      title: 'Salin dan bagikan URL di bawah ini kepada peserta',
       toolTip: 'Bagikan papan dengan orang lain',
       shortText: 'Bagikan',
     },
