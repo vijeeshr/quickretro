@@ -326,7 +326,7 @@ const onKeyDown = (event: KeyboardEvent) => {
       </button>
       <div
         v-else-if="props.isPinned"
-        class="bg-white dark:bg-gray-700 border border-blue-400 dark:border-sky-500 rounded-full p-1 shadow-md text-blue-500 dark:text-sky-400 flex items-center justify-center"
+        class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full p-1 shadow-md text-blue-500 dark:text-sky-400 flex items-center justify-center"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
