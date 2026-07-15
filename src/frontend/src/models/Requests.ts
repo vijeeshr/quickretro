@@ -29,6 +29,11 @@ export interface LikeMessageEvent {
   offline_likes?: number
 }
 
+export interface PinMessageEvent {
+  msgId: string
+  pin: boolean
+}
+
 export interface DeleteMessageEvent {
   msgId: string
   commentIds: string[]
@@ -69,6 +74,7 @@ export interface RegisterResponse {
   users: OnlineUser[]
   messages: MessageResponse[]
   comments: MessageResponse[]
+  pins: string[]
   timerExpiresInSeconds: number
   boardExpiryUtcSeconds: number // Unix Timestamp Seconds
   boardCreatedAtUtcSeconds: number // Unix Timestamp Seconds
@@ -116,6 +122,12 @@ export interface LikeMessageResponse {
   offline_likes: number
 }
 
+export interface PinMessageResponse {
+  typ: 'pin'
+  id: string
+  pin: boolean
+}
+
 export interface DeleteMessageResponse {
   typ: 'del'
   id: string
@@ -151,6 +163,7 @@ export type SocketResponse =
   | SettingsResponse
   | MessageResponse
   | LikeMessageResponse
+  | PinMessageResponse
   | DeleteMessageResponse
   | DeleteAllResponse
   | CategoryChangeResponse
@@ -172,6 +185,8 @@ export function toSocketResponse(json: unknown): SocketResponse | null {
         return obj as unknown as MessageResponse
       case 'like':
         return obj as unknown as LikeMessageResponse
+      case 'pin':
+        return obj as unknown as PinMessageResponse
       case 'del':
         return obj as unknown as DeleteMessageResponse
       case 'delall':

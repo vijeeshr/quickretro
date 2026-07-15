@@ -228,6 +228,14 @@ func (u *TestUser) LikeMessage(msgId string, like bool) error {
 	return u.SendEvent("like", likeEv)
 }
 
+func (u *TestUser) PinMessage(msgId string, pin bool) error {
+	pinEv := PinMessageEvent{
+		MessageId: msgId,
+		Pin:       pin,
+	}
+	return u.SendEvent("pin", pinEv)
+}
+
 func (u *TestUser) RecordOfflineLikes(msgId string, like bool, offlineLikes int64) error {
 	likeEv := LikeMessageEvent{
 		MessageId:    msgId,

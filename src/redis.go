@@ -492,6 +492,35 @@ func (c *RedisConnector) EnsureUser(boardId, userId, nickname string) (*User, bo
 	return &user, true
 }
 
+func (c *RedisConnector) UpdateMessagePin(boardId, msgId string, pin bool) bool {
+	boardPinsKey := boardPinnedMsgsKey(boardId)
+
+	var err error
+
+	if pin {
+		_, err = c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
+			pipe.SAdd(c.ctx, boardPinsKey, msgId)
+			pipe.Expire(c.ctx, boardPinsKey, c.timeToLive)
+			return nil
+		})
+	} else {
+		err = c.client.SRem(c.ctx, boardPinsKey, msgId).Err()
+	}
+
+	if err != nil {
+		slog.Error(
+			"Failed updating pin in Redis",
+			"boardId", boardId,
+			"msgId", msgId,
+			"pin", pin,
+			"err", err,
+		)
+		return false
+	}
+
+	return true
+}
+
 func (c *RedisConnector) CommitUserPresence(boardId string, userId string) bool {
 	boardUsersKey := boardUsersPresenceKey(boardId)
 
@@ -821,19 +850,22 @@ func (c *RedisConnector) DeleteMessage(group string, msgId string, commentIds []
 		---------------------
 		1. Delete HASH msg:{messageId}
 		2. Delete SET msg:likes:{messageId}
-		3. Remove messageId entry from SET board:msg:{boardId}
-		4. For each associated comment:
-			4.1. Delete HASH msg:{commentId}
-			4.2. Remove commentId entry from SET board:cmts:{boardId}
+		3. Remove messageId from SET board:msg:{boardId}
+		4. Remove messageId from SET board:pins:{boardId}
+		5. For each associated comment:
+			5.1. Delete HASH msg:{commentId}
+			5.2. Remove commentId from SET board:cmts:{boardId}
 	*/
 	key := msgKey(msgId)
 	likesKey := msgLikesKey(msgId)
+	pinsKey := boardPinnedMsgsKey(group)
 	messagesKey := boardMsgsKey(group)
 	commentsKey := boardCmtsKey(group)
 
 	_, err := c.client.Pipelined(c.ctx, func(pipe redis.Pipeliner) error {
 		// Delete the top-level message and other related data
 		pipe.Del(c.ctx, key, likesKey)
+		pipe.SRem(c.ctx, pinsKey, msgId)
 		pipe.SRem(c.ctx, messagesKey, msgId)
 		for _, cid := range commentIds {
 			cKey := msgKey(cid)
@@ -890,8 +922,9 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 		Board
 		(KEY)board:{boardId}					(VALUE)board					Board - Redis Hash. The board details. Owned by single user.
 
-		Messages, Comments, Likes
+		Messages, Comments, Likes, Pins
 		(KEY)board:msg:{boardId}				(VALUE)[messageIds] 			Board-wise Messages - Redis Set. Useful for fetching list of messages.
+		(KEY)board:pins:{boardId}				(VALUE)[messageIds] 			Board-wise pinned messages - Redis Set. Useful for fetching list of "pinned" messages.
 		(KEY)board:cmts:{boardId}      			(VALUE)[commentIds]      		Board-wise Comments - Redis Set. For fetching all comments.
 		(KEY)msg:{messageId}					(VALUE)message					Message - Redis Hash. Useful for fetch/add/update for an individual message.
 		(KEY)msg:likes:{messageId}				(VALUE)[userIds]				Likes - Redis Set. For recording likes/votes for a message
@@ -909,6 +942,7 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 	ctx := c.ctx
 
 	boardMsgsKey := boardMsgsKey(boardId)
+	boardPinsKey := boardPinnedMsgsKey(boardId)
 	boardCommsKey := boardCmtsKey(boardId)
 	boardUsersKey := boardUsersPresenceKey(boardId)
 	boardAllUsersKey := boardAllUsersKey(boardId)
@@ -937,13 +971,14 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 	// Pipeline Deletes (write phase)
 	_, err := c.client.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 
-		// Delete messages + likes
+		// Delete messages + likes, pinned messages
 		for _, msgId := range messageIds {
 			likesKey := msgLikesKey(msgId)
 			msgKey := msgKey(msgId)
 			pipe.Del(ctx, likesKey, msgKey)
 		}
 		pipe.Del(ctx, boardMsgsKey)
+		pipe.Del(ctx, boardPinsKey)
 
 		// Delete comments
 		for _, cid := range commentIds {
@@ -1004,12 +1039,13 @@ func (c *RedisConnector) UpdateCategory(category string, msgId string, commentId
 
 // Store helper - DTO
 type BoardAggregatedData struct {
-	Board         *Board
-	Columns       []*BoardColumn
-	Users         []*User
-	ActiveUserIds map[string]struct{}
-	Messages      []*Message
-	Comments      []*Message
+	Board            *Board
+	Columns          []*BoardColumn
+	Users            []*User
+	ActiveUserIds    map[string]struct{}
+	PinnedMessageIds []string
+	Messages         []*Message
+	Comments         []*Message
 }
 
 func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregatedData, bool) {
@@ -1020,6 +1056,7 @@ func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregate
 	allUserIdsCmd := pipe.SMembers(c.ctx, boardAllUsersKey(boardId))
 	activeUserIdsCmd := pipe.SMembers(c.ctx, boardUsersPresenceKey(boardId))
 	msgIdsCmd := pipe.SMembers(c.ctx, boardMsgsKey(boardId))
+	pinnedMsgIdsCmd := pipe.SMembers(c.ctx, boardPinnedMsgsKey(boardId))
 	cmtIdsCmd := pipe.SMembers(c.ctx, boardCmtsKey(boardId))
 
 	if _, err := pipe.Exec(c.ctx); err != nil {
@@ -1040,6 +1077,7 @@ func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregate
 	allUserIds := allUserIdsCmd.Val()
 	activeUserIds := activeUserIdsCmd.Val()
 	msgIds := msgIdsCmd.Val()
+	pinnedMsgIds := pinnedMsgIdsCmd.Val()
 	cmtIds := cmtIdsCmd.Val()
 
 	// Build active user lookup set
@@ -1077,12 +1115,13 @@ func (c *RedisConnector) GetBoardAggregatedData(boardId string) (*BoardAggregate
 	}
 
 	data := &BoardAggregatedData{
-		Board:         &b,
-		Columns:       make([]*BoardColumn, 0, len(colIds)),
-		Users:         make([]*User, 0, len(allUserIds)),
-		ActiveUserIds: activeUserSet,
-		Messages:      make([]*Message, 0, len(msgIds)),
-		Comments:      make([]*Message, 0, len(cmtIds)),
+		Board:            &b,
+		Columns:          make([]*BoardColumn, 0, len(colIds)),
+		Users:            make([]*User, 0, len(allUserIds)),
+		ActiveUserIds:    activeUserSet,
+		Messages:         make([]*Message, 0, len(msgIds)),
+		Comments:         make([]*Message, 0, len(cmtIds)),
+		PinnedMessageIds: pinnedMsgIds,
 	}
 
 	for _, cmd := range colCmds {

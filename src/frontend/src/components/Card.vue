@@ -35,6 +35,7 @@ interface Props {
   currentUserNickname: string // Only used for message size calc
   categories: BoardColumn[]
   showOfflineLikesPanel: boolean
+  isPinned: boolean
 }
 const props = defineProps<Props>()
 const emit = defineEmits([
@@ -52,6 +53,7 @@ const emit = defineEmits([
   'comment-invalidContent',
   'typing',
   'offlineLikesChanged',
+  'pinToggled',
 ])
 
 const { t } = useI18n()
@@ -84,6 +86,22 @@ const content = computed(() => {
 
 const otherCategories = computed(() => {
   return props.categories.filter(c => c.id !== props.card.cat)
+})
+
+const pinWrapperClass = computed(() => {
+  if (props.isPinned) {
+    return 'opacity-100'
+  }
+  if (props.locked) {
+    return 'opacity-0'
+  }
+  if (props.canManage) {
+    // Unlocked board + Unpinned card + Board Owner:
+    // - On mobile (screens < md): Always show it (opacity-100)
+    // - On larger screens (screens >= md): Hide it initially, show only on hover
+    return 'opacity-100 md:opacity-0 md:group-hover:opacity-100'
+  }
+  return 'opacity-0'
 })
 
 const edit = async (event: Event) => {
@@ -227,6 +245,16 @@ const remove = () => {
   }
 }
 
+const pin = () => {
+  if (props.locked) {
+    logMessage('Locked! Cannot pin.')
+    return
+  }
+  if (props.canManage) {
+    emit('pinToggled', props.card.id)
+  }
+}
+
 const changeCategory = (newCategory: string, oldCategory: string) => {
   if (props.locked) {
     logMessage('Locked! Cannot change category.')
@@ -262,7 +290,7 @@ const onKeyDown = (event: KeyboardEvent) => {
 
 <template>
   <div
-    class="bg-white dark:bg-gray-700 rounded-lg p-3 mb-2 shadow-xl border"
+    class="group relative bg-white dark:bg-gray-700 rounded-lg p-3 mb-2 shadow-xl border"
     :class="
       editing && card.mine
         ? card.anon
@@ -271,6 +299,49 @@ const onKeyDown = (event: KeyboardEvent) => {
         : 'border-transparent'
     "
   >
+    <!-- Pin Icon Section (Straddling the top-right border) -->
+    <div class="absolute -top-2 -right-2 z-10" :class="pinWrapperClass">
+      <button
+        v-if="props.canManage"
+        class="focus:outline-hidden bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full p-1 shadow-md flex items-center justify-center"
+        :class="[
+          props.locked ? 'cursor-default' : 'cursor-pointer',
+          props.isPinned
+            ? 'text-blue-400 dark:text-sky-400 '
+            : 'text-gray-300 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-300',
+        ]"
+        @click="pin"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="w-3.5 h-3.5"
+        >
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path
+            d="M15.113 3.21l.094 .083l5.5 5.5a1 1 0 0 1 -1.175 1.59l-3.172 3.171l-1.424 3.797a1 1 0 0 1 -.158 .277l-.07 .08l-1.5 1.5a1 1 0 0 1 -1.32 .082l-.095 -.083l-2.793 -2.792l-3.793 3.792a1 1 0 0 1 -1.497 -1.32l.083 -.094l3.792 -3.793l-2.792 -2.793a1 1 0 0 1 -.083 -1.32l.083 -.094l1.5 -1.5a1 1 0 0 1 .258 -.187l.098 -.042l3.796 -1.425l3.171 -3.17a1 1 0 0 1 1.497 -1.26z"
+          />
+        </svg>
+      </button>
+      <div
+        v-else-if="props.isPinned"
+        class="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full p-1 shadow-md text-blue-500 dark:text-sky-400 flex items-center justify-center"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="w-3.5 h-3.5"
+        >
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path
+            d="M15.113 3.21l.094 .083l5.5 5.5a1 1 0 0 1 -1.175 1.59l-3.172 3.171l-1.424 3.797a1 1 0 0 1 -.158 .277l-.07 .08l-1.5 1.5a1 1 0 0 1 -1.32 .082l-.095 -.083l-2.793 -2.792l-3.793 3.792a1 1 0 0 1 -1.497 -1.32l.083 -.094l3.792 -3.793l-2.792 -2.793a1 1 0 0 1 -.083 -1.32l.083 -.094l1.5 -1.5a1 1 0 0 1 .258 -.187l.098 -.042l3.796 -1.425l3.171 -3.17a1 1 0 0 1 1.497 -1.26z"
+          />
+        </svg>
+      </div>
+    </div>
+
     <div class="text-gray-500 pb-2 dark:text-white" :class="{ 'blur-xs': mask && !card.mine }">
       <article
         class="min-h-4 text-center wrap-break-word focus:outline-hidden"
@@ -461,14 +532,14 @@ const onKeyDown = (event: KeyboardEvent) => {
       <Popover class="relative inline-flex min-w-0 shrink">
         <PopoverButton
           v-slot="{ open }"
-          class="focus:outline-hidden group w-6 h-3 flex items-center justify-center cursor-pointer"
+          class="focus:outline-hidden group/offlinelikes w-6 h-3 flex items-center justify-center cursor-pointer"
         >
           <!-- Chevron Arrow -->
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 2 16 12"
             fill="currentColor"
-            class="w-6 h-3 transform transition-transform duration-100 group-hover:text-gray-400"
+            class="w-6 h-3 transform transition-transform duration-100 group-hover/offlinelikes:text-gray-400"
             :class="{ 'rotate-180': open, 'text-yellow-500': hasOfflineLikes }"
           >
             <path

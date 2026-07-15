@@ -5,6 +5,7 @@ package main
 (KEY)board:{boardId}				(VALUE)board					Board - Redis Hash. The board details. Owned by single user.
 (KEY)msg:{messageId}				(VALUE)message					Message - Redis Hash. Useful for fetch/add/update for an individual message.
 (KEY)board:msg:{boardId}			(VALUE)[messageIds] 			Board-wise Messages - Redis Set. Useful for fetching list of messages.
+(KEY)board:pins:{boardId}			(VALUE)[messageIds] 			Board-wise pinned messages - Redis Set. Useful for fetching list of "pinned" messages.
 (KEY)board:cmts:{boardId}      		(VALUE)[commentIds]      		Board-wise Comments - Redis Set. For fetching all comments.
 (KEY)msg:likes:{messageId}			(VALUE)[userIds]				Likes - Redis Set. For recording likes/votes for a message.
 (KEY)board:user:{boardId}:{userId}	(VALUE)User						User - Redis Hash. User master. Keeping as board specific.
@@ -19,6 +20,7 @@ package main
 const (
 	keyBoard              = "board:"
 	keyBoardMsgs          = "board:msg:"
+	keyBoardPinnnedMsgs   = "board:pins:"
 	keyBoardCmts          = "board:cmts:"
 	keyBoardUsersPresence = "board:presence:"
 	keyBoardUsers         = "board:users:"
@@ -93,4 +95,10 @@ func boardUserKey(boardId, userId string) string {
 // Column - Redis HASH.
 func boardColKey(boardId, colId string) string {
 	return keyBoardCols + boardId + ":" + colId
+}
+
+// board:pins:{boardId}.
+// Board-wise "pinned" messages - Redis SET.
+func boardPinnedMsgsKey(boardId string) string {
+	return keyBoardPinnnedMsgs + boardId
 }

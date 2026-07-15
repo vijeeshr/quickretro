@@ -18,6 +18,8 @@ import {
   DeleteMessageResponse,
   LikeMessageEvent,
   LikeMessageResponse,
+  PinMessageEvent,
+  PinMessageResponse,
   TimerResponse,
   TimerEvent,
   CategoryChangeEvent,
@@ -101,6 +103,7 @@ let socket: WebSocket
 
 const cards = ref<MessageResponse[]>([]) // Todo: Rework models
 const commentsMap = ref(new Map<string, MessageResponse[]>()) // map of messageId -> [comments]
+const pinnedMessageIds = ref<Set<string>>(new Set())
 
 const columns = ref<BoardColumn[]>([])
 const onlineUsers = ref<OnlineUser[]>([])
@@ -262,19 +265,28 @@ const hasCommentedCards = computed(() => {
 
 const filterCards = (category: string) => {
   const filtered = cards.value.filter(c => c.cat.toLowerCase() === category.toLowerCase())
-  if (activeSort.value === 'likes') {
-    filtered.sort((a, b) => {
+  filtered.sort((a, b) => {
+    // Pinned status (pinned cards at the top)
+    const aPinned = pinnedMessageIds.value.has(a.id) ? 1 : 0
+    const bPinned = pinnedMessageIds.value.has(b.id) ? 1 : 0
+    if (aPinned !== bPinned) {
+      return bPinned - aPinned
+    }
+
+    // Active Sort
+    if (activeSort.value === 'likes') {
       const aCount = a.likes + a.offline_likes
       const bCount = b.likes + b.offline_likes
       return bCount - aCount
-    })
-  } else if (activeSort.value === 'comments') {
-    filtered.sort((a, b) => {
+    } else if (activeSort.value === 'comments') {
       const aCount = commentsMap.value.get(a.id)?.length ?? 0
       const bCount = commentsMap.value.get(b.id)?.length ?? 0
       return bCount - aCount
-    })
-  }
+    }
+
+    // Keep original insertion/creation order
+    return 0
+  })
   return filtered
 }
 
@@ -587,6 +599,11 @@ const onLiked = (likeMessage: LikeMessage) => {
   dispatchEvent<LikeMessageEvent>('like', { msgId: likeMessage.msgId, like: likeMessage.like })
 }
 
+const onPinToggled = (msgId: string) => {
+  const isPinned = pinnedMessageIds.value.has(msgId)
+  dispatchEvent<PinMessageEvent>('pin', { msgId, pin: !isPinned })
+}
+
 const onCategoryChanged = (pyl: CategoryChangeMessage) => {
   const commentIds = getCommentIds(pyl.msgId)
   dispatchEvent<CategoryChangeEvent>('catchng', {
@@ -707,30 +724,26 @@ const downloadJson = () => {
       url: `${window.location.origin}/board/${board}`,
       createdDateUtcSeconds: boardCreatedAtUtcSeconds.value,
     },
-    messages: cards.value.map(card => {
-      const col = columns.value.find(c => c.id === card.cat)
-      const columnText = col
-        ? col.isDefault
-          ? t(`dashboard.columns.${col.id}`)
-          : col.text
-        : card.cat || ''
-      const cardComments = commentsMap.value.get(card.id) || []
+    messages: columns.value.flatMap(col => {
+      return filterCards(col.id).map(card => {
+        const columnText = col.isDefault ? t(`dashboard.columns.${col.id}`) : col.text
+        const cardComments = commentsMap.value.get(card.id) || []
 
-      return {
-        // id: card.id,
-        column: {
-          id: card.cat,
-          text: columnText,
-        },
-        content: card.msg,
-        user: card.anon ? t(`common.anonymous`) : card.nickname || '',
-        likes: card.likes,
-        offlineLikes: card.offline_likes,
-        comments: cardComments.map(comment => ({
-          content: comment.msg,
-          user: comment.anon ? t(`common.anonymous`) : comment.nickname || '',
-        })),
-      }
+        return {
+          column: {
+            id: card.cat,
+            text: columnText,
+          },
+          content: card.msg,
+          user: card.anon ? t(`common.anonymous`) : card.nickname || '',
+          likes: card.likes,
+          offlineLikes: card.offline_likes,
+          comments: cardComments.map(comment => ({
+            content: comment.msg,
+            user: comment.anon ? t(`common.anonymous`) : comment.nickname || '',
+          })),
+        }
+      })
     }),
   }
 
@@ -878,13 +891,8 @@ const print = async (includeComments: boolean, includeNames: boolean) => {
                         <div class="print-category" style="background-color:${getHexizedColor(col.color)};color:white">
                             ${col.isDefault ? t(`dashboard.columns.${col.id}`) : sanitize(col.text)}
                         </div>
-                        ${cards.value
-                          .filter(
-                            c =>
-                              c.cat.toLowerCase() === col.id.toLowerCase() &&
-                              c.msg &&
-                              c.msg.trim() !== ''
-                          )
+                        ${filterCards(col.id)
+                          .filter(c => c.msg && c.msg.trim() !== '')
                           .map(c => {
                             // Handle Name associated formatting
                             let textContent = sanitize(c.msg)
@@ -1078,6 +1086,7 @@ const onRegisterResponse = (response: RegisterResponse) => {
   columns.value = response.columns
     .slice() // create a shallow copy (to avoid mutating response.columns)
     .sort((a, b) => a.pos - b.pos)
+  pinnedMessageIds.value = new Set(response.pins || [])
   cards.value = []
   cards.value.push(...response.messages)
 
@@ -1182,6 +1191,7 @@ const onDeleteMessageResponse = (response: DeleteMessageResponse) => {
   let messageIndex = cards.value.findIndex(x => x.id === response.id)
   if (messageIndex !== -1) {
     commentsMap.value.delete(response.id) // remove associated comments
+    pinnedMessageIds.value.delete(response.id)
     cards.value.splice(messageIndex, 1)
     // Re-adjust spotlight
     if (isSpotlightOn.value) {
@@ -1247,6 +1257,14 @@ const onLikeMessageResponse = (response: LikeMessageResponse) => {
     cards.value[index].liked = response.liked
     cards.value[index].likes = response.likes
     cards.value[index].offline_likes = response.offline_likes
+  }
+}
+
+const onPinMessageResponse = (response: PinMessageResponse) => {
+  if (response.pin) {
+    pinnedMessageIds.value.add(response.id)
+  } else {
+    pinnedMessageIds.value.delete(response.id)
   }
 }
 
@@ -1448,6 +1466,9 @@ const socketOnMessage = (event: MessageEvent<string>) => {
         break
       case 'like':
         onLikeMessageResponse(response)
+        break
+      case 'pin':
+        onPinMessageResponse(response)
         break
       case 'timer':
         onTimerResponse(response)
@@ -2986,6 +3007,7 @@ onUnmounted(() => {
             :categories="columns"
             :locked="isLocked"
             :show-offline-likes-panel="showOfflineLikesPanel"
+            :is-pinned="pinnedMessageIds.has(card.id)"
             :class="{
               'bg-white dark:bg-gray-400 opacity-10 z-51 pointer-events-none':
                 isSpotlightOn && usersWithCards.length > 0 && card.byxid !== spotlightFor?.byxid,
@@ -2995,6 +3017,7 @@ onUnmounted(() => {
             @updated="onUpdated"
             @deleted="onDeleted"
             @liked="onLiked"
+            @pin-toggled="onPinToggled"
             @category-changed="onCategoryChanged"
             @invalid-content="onInvalidContent"
             @avatar-clicked="showSpotlightFor"

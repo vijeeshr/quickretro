@@ -1515,6 +1515,116 @@ func TestUserLeaving(t *testing.T) {
 	})
 }
 
+func TestPinning(t *testing.T) {
+	_, userA, userB, _ := harness.SetupTest(t, true)
+
+	// Create a message to test pinning
+	category := "col01"
+	msgId := fmt.Sprintf("msg-%d-%s", time.Now().UnixNano(), userB.Id)
+	require.NoError(t, userB.SendMessage(msgId, "Hello world to pin", category))
+
+	// Flush registration and message creation events
+	userA.FlushEvents()
+	userB.FlushEvents()
+
+	t.Run("Owner can pin/unpin cards and events are broadcasted", func(t *testing.T) {
+		// Owner pins message
+		require.NoError(t, userA.PinMessage(msgId, true))
+
+		var pinRes harness.PinMessageResponse
+		// Owner gets the broadcast
+		userA.MustWaitForEvent(t, "pin", &pinRes)
+		require.Equal(t, msgId, pinRes.Id)
+		require.True(t, pinRes.Pin)
+
+		// Guest gets the broadcast
+		userB.MustWaitForEvent(t, "pin", &pinRes)
+		require.Equal(t, msgId, pinRes.Id)
+		require.True(t, pinRes.Pin)
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+
+		// Owner unpins message
+		require.NoError(t, userA.PinMessage(msgId, false))
+
+		userA.MustWaitForEvent(t, "pin", &pinRes)
+		require.Equal(t, msgId, pinRes.Id)
+		require.False(t, pinRes.Pin)
+
+		userB.MustWaitForEvent(t, "pin", &pinRes)
+		require.Equal(t, msgId, pinRes.Id)
+		require.False(t, pinRes.Pin)
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Non-owner cannot pin cards", func(t *testing.T) {
+		// Non-owner (Bob) attempts to pin a message
+		require.NoError(t, userB.PinMessage(msgId, true))
+
+		// Bob and Alice should not receive any "pin" event
+		require.NoError(t, userA.MustNotReceiveEvent("pin"))
+		require.NoError(t, userB.MustNotReceiveEvent("pin"))
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Pins are included in registration response", func(t *testing.T) {
+		// Owner pins message again
+		require.NoError(t, userA.PinMessage(msgId, true))
+		var pinRes harness.PinMessageResponse
+		userA.MustWaitForEvent(t, "pin", &pinRes)
+		userB.MustWaitForEvent(t, "pin", &pinRes)
+
+		// Reconnect userB and check register response
+		require.NoError(t, userB.Register())
+		var regRes harness.RegisterResponse
+		userB.MustWaitForEvent(t, "reg", &regRes)
+		require.Contains(t, regRes.Pins, msgId)
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Locking board blocks pinning", func(t *testing.T) {
+		// Lock the board
+		require.NoError(t, userA.LockBoard(true))
+		userA.FlushEvents()
+		userB.FlushEvents()
+
+		// Owner attempts to pin/unpin on a locked board
+		require.NoError(t, userA.PinMessage(msgId, false))
+
+		// Should not receive any "pin" event
+		require.NoError(t, userA.MustNotReceiveEvent("pin"))
+		require.NoError(t, userB.MustNotReceiveEvent("pin"))
+
+		// Unlock board to clean up state
+		require.NoError(t, userA.LockBoard(false))
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
+	t.Run("Deleting a message removes it from pinned list", func(t *testing.T) {
+		// Delete message
+		require.NoError(t, userA.DeleteMessage(msgId))
+		userA.FlushEvents()
+		userB.FlushEvents()
+
+		// Check register response after delete, pins should not contain msgId
+		require.NoError(t, userA.Register())
+		var regRes harness.RegisterResponse
+		userA.MustWaitForEvent(t, "reg", &regRes)
+		require.NotContains(t, regRes.Pins, msgId)
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+}
+
 // Todo: Add tests
 
 // Connection: User attempts to connect to non-existant board should fail
