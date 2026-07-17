@@ -21,6 +21,7 @@ COPY src/go.mod src/go.sum ./
 RUN go mod download
 # Copy application source code and config
 COPY src/config.toml .
+COPY src/VERSION .
 COPY src/*.go ./
 # Copy compiled frontend assets from the previous stage
 COPY --from=frontend-builder /app/dist frontend/dist
