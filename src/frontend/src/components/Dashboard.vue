@@ -72,6 +72,7 @@ import {
   TYPING_ACTIVITY_AUTO_DISABLE_AFTER_COUNT,
   TYPING_ACTIVITY_DISPLAY_TIMEOUT_MS,
   TYPING_ACTIVITY_ENABLED,
+  APP_VERSION,
 } from '../utils/appConfig'
 import router from '../router'
 
@@ -2888,6 +2889,11 @@ onUnmounted(() => {
             ></path>
           </svg>
         </a>
+
+        <!-- Version Display -->
+        <div class="text-[10px] text-center font-mono text-gray-300 select-none">
+          v{{ APP_VERSION }}
+        </div>
       </div>
     </div>
     <!-- Left Sidebar -->

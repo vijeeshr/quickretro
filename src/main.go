@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/gorilla/mux"
@@ -16,6 +17,11 @@ import (
 
 //go:embed all:frontend/dist/*
 var frontendFiles embed.FS
+
+//go:embed VERSION
+var versionFile string
+
+var version = strings.TrimSpace(versionFile)
 
 // Constants for input validation
 const (
@@ -140,6 +146,7 @@ func main() {
 		turnstileSiteKey := envConfig.TurnstileSiteKey
 
 		js := fmt.Sprintf(`window.APP_CONFIG = {
+		version:"%s",
 		turnstile:{enabled:%t,siteKey:"%s"},
 		data:{maxCategoryTextLength:%d,maxTextLength:%d},
 		websocket:{maxMessageSizeBytes:%d},
@@ -147,6 +154,7 @@ func main() {
 		typingActivity:{enabled:%t,autoDisableAfterCount:%d,emitThrottleMs:%d,displayTimeoutMs:%d},
 		offlineLikes:{panelEnabled:%t,maxCount:%d}
 		};`,
+			version,
 			turnstileEnabled,
 			turnstileSiteKey,
 			config.Data.MaxCategoryTextLength,

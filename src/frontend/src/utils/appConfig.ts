@@ -1,4 +1,5 @@
 export const appConfig = window.APP_CONFIG
+export const APP_VERSION = appConfig?.version ?? ''
 export const TURNSTILE_ENABLED = appConfig?.turnstile.enabled ?? false
 export const TURNSTILE_SITEKEY = appConfig?.turnstile.siteKey ?? ''
 export const MAX_WEBSOCKET_MESSAGE_SIZE_BYTES = appConfig?.websocket.maxMessageSizeBytes ?? 1024

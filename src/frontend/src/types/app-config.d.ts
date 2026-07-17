@@ -16,6 +16,7 @@ declare namespace Turnstile {
 
 // Runtime config injected by backend via /config.js
 declare interface AppConfig {
+  version: string
   turnstile: {
     enabled: boolean
     siteKey: string
