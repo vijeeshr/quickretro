@@ -162,6 +162,28 @@ Only board owner can update offline likes.
 
 :::
 
+## Pin Messages to top
+
+Available from <Badge type="tip" text="v1.9.2" />
+
+Board owner can pin messages to top of the board. The messages appear at the top of their columns for all users in the board.
+
+Pinned messages **aways appear before other messages** even in Pdf prints, exported Json documents, and when [sorted by likes/comments](#sort-by-most-likes-comments).
+
+<img
+  src="/dashboard_pinned_message.png"
+  class="shadow-img"
+  alt="Pin Card"
+  width="312"
+  loading="lazy"
+/>
+
+::: info NOTE
+
+Only board owner can pin/unpin messages.
+
+:::
+
 ## Move Message Across Columns
 
 Available from <Badge type="tip" text="v1.2.0" />
