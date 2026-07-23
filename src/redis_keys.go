@@ -29,7 +29,15 @@ const (
 	keyBoardCols          = "board:col:"
 	keyMsg                = "msg:"
 	keyMsgLikes           = "msg:likes:"
+	keyBoardsList         = "boards:list"
 )
+
+// boards:list
+// Master list of all created board IDs - Redis SET.
+func boardsListKey() string {
+	return keyBoardsList
+}
+
 
 // board:{boardId}.
 // Board - Redis HASH.

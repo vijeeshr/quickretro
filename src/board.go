@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"strconv"
 	"unicode/utf8"
 
 	"github.com/gorilla/mux"
@@ -304,4 +306,168 @@ func HandleRefresh(red *RedisConnector, w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(data)
+}
+
+type AdminBoardInfo struct {
+	Id              string `json:"id"`
+	Name            string `json:"name"`
+	Team            string `json:"team"`
+	Owner           string `json:"owner"`
+	Creator         string `json:"creator"`
+	CreatedAtUtc    int64  `json:"createdAtUtc"`
+	AutoDeleteAtUtc int64  `json:"autoDeleteAtUtc"`
+	TTLSeconds      int64  `json:"ttlSeconds"`
+}
+
+type AdminBoardsRes struct {
+	Boards     []AdminBoardInfo `json:"boards"`
+	Total      int              `json:"total"`
+	Page       int              `json:"page"`
+	Limit      int              `json:"limit"`
+	TotalPages int              `json:"totalPages"`
+}
+
+type AdminActionReq struct {
+	BoardId string `json:"boardId"`
+	Passkey string `json:"passkey"`
+}
+
+func validateAdminPasskey(r *http.Request, bodyPasskey string) bool {
+	configuredPasskey := envConfig.AdminPasskey
+	if configuredPasskey == "" {
+		return false
+	}
+	providedPasskey := r.Header.Get("X-Admin-Passkey")
+	if providedPasskey == "" {
+		providedPasskey = bodyPasskey
+	}
+	if providedPasskey == "" {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(providedPasskey), []byte(configuredPasskey)) == 1
+}
+
+func HandleAdminVerify(w http.ResponseWriter, r *http.Request) {
+	var bodyReq AdminActionReq
+	_ = json.NewDecoder(r.Body).Decode(&bodyReq)
+
+	if !validateAdminPasskey(r, bodyReq.Passkey) {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+func HandleAdminGetBoards(c *RedisConnector, w http.ResponseWriter, r *http.Request) {
+	if !validateAdminPasskey(r, "") {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	searchQuery := r.URL.Query().Get("q")
+	pageStr := r.URL.Query().Get("page")
+	page := 1
+	if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+		page = p
+	}
+
+	limit := 10
+	boards, total, err := c.GetBoardsPaginated(searchQuery, page, limit)
+	if err != nil {
+		slog.Error("Error fetching paginated boards for admin", "err", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	totalPages := 0
+	if total > 0 {
+		totalPages = (total + limit - 1) / limit
+	}
+
+	res := AdminBoardsRes{
+		Boards:     boards,
+		Total:      total,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: totalPages,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(res)
+}
+
+func HandleAdminExtendExpiry(c *RedisConnector, w http.ResponseWriter, r *http.Request) {
+	var req AdminActionReq
+	_ = decodeJSONBody(w, r, &req)
+
+	if !validateAdminPasskey(r, req.Passkey) {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	if req.BoardId == "" {
+		http.Error(w, "boardId required", http.StatusBadRequest)
+		return
+	}
+
+	info, err := c.ExtendBoardExpiry(req.BoardId, c.timeToLive)
+	if err != nil {
+		slog.Error("Failed to extend board expiry", "boardId", req.BoardId, "err", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(info)
+}
+
+func HandleAdminRemoveExpiry(c *RedisConnector, w http.ResponseWriter, r *http.Request) {
+	var req AdminActionReq
+	_ = decodeJSONBody(w, r, &req)
+
+	if !validateAdminPasskey(r, req.Passkey) {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	if req.BoardId == "" {
+		http.Error(w, "boardId required", http.StatusBadRequest)
+		return
+	}
+
+	info, err := c.RemoveBoardExpiry(req.BoardId)
+	if err != nil {
+		slog.Error("Failed to remove board expiry", "boardId", req.BoardId, "err", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(info)
+}
+
+func HandleAdminDeleteBoard(c *RedisConnector, w http.ResponseWriter, r *http.Request) {
+	var req AdminActionReq
+	_ = decodeJSONBody(w, r, &req)
+
+	if !validateAdminPasskey(r, req.Passkey) {
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	if req.BoardId == "" {
+		http.Error(w, "boardId required", http.StatusBadRequest)
+		return
+	}
+
+	if ok := c.DeleteAll(req.BoardId); !ok {
+		slog.Error("Failed to delete board via admin", "boardId", req.BoardId)
+		http.Error(w, "Failed to delete board", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "deleted", "boardId": req.BoardId})
 }

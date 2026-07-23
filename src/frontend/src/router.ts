@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from './components/Dashboard.vue'
 import Join from './components/Join.vue'
 import CreateBoard from './components/CreateBoard.vue'
+import Admin from './components/Admin.vue'
 
 export default createRouter({
   history: createWebHistory(),
@@ -10,6 +11,11 @@ export default createRouter({
       path: '/',
       name: 'start',
       component: Join,
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: Admin,
     },
     {
       path: '/create',

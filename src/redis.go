@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -111,6 +113,7 @@ func (c *RedisConnector) CreateBoard(b *Board, cols []*BoardColumn) bool {
 		}
 		pipe.ExpireAt(c.ctx, boardColsKey, autoDeleteTime)
 		pipe.ExpireAt(c.ctx, key, autoDeleteTime)
+		pipe.SAdd(c.ctx, boardsListKey(), b.Id)
 		return nil
 	})
 
@@ -1005,6 +1008,7 @@ func (c *RedisConnector) DeleteAll(boardId string) bool {
 
 		// Delete board hash
 		pipe.Del(ctx, boardKey)
+		pipe.SRem(ctx, boardsListKey(), boardId)
 
 		return nil
 	})
@@ -1214,6 +1218,206 @@ func (c *RedisConnector) GetUserByXid(boardId string, xid string) (*User, bool) 
 	}
 
 	return nil, false
+}
+
+func (c *RedisConnector) collectAllBoardKeys(boardId string) []string {
+	ctx := c.ctx
+	keys := []string{
+		boardKey(boardId),
+		boardColsKey(boardId),
+		boardMsgsKey(boardId),
+		boardPinnedMsgsKey(boardId),
+		boardCmtsKey(boardId),
+		boardUsersPresenceKey(boardId),
+		boardAllUsersKey(boardId),
+		boardUserXidKey(boardId),
+	}
+
+	readPipe := c.client.Pipeline()
+	colsCmd := readPipe.SMembers(ctx, boardColsKey(boardId))
+	msgsCmd := readPipe.SMembers(ctx, boardMsgsKey(boardId))
+	cmtsCmd := readPipe.SMembers(ctx, boardCmtsKey(boardId))
+	usrsCmd := readPipe.SMembers(ctx, boardAllUsersKey(boardId))
+	_, _ = readPipe.Exec(ctx)
+
+	for _, colId := range colsCmd.Val() {
+		keys = append(keys, boardColKey(boardId, colId))
+	}
+	for _, msgId := range msgsCmd.Val() {
+		keys = append(keys, msgKey(msgId), msgLikesKey(msgId))
+	}
+	for _, cid := range cmtsCmd.Val() {
+		keys = append(keys, msgKey(cid))
+	}
+	for _, uid := range usrsCmd.Val() {
+		keys = append(keys, boardUserKey(boardId, uid))
+	}
+	return keys
+}
+
+func (c *RedisConnector) GetBoardsPaginated(searchQuery string, page, limit int) ([]AdminBoardInfo, int, error) {
+	ctx := c.ctx
+	boardIds, err := c.client.SMembers(ctx, boardsListKey()).Result()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var allBoards []AdminBoardInfo
+	var expiredIds []any
+
+	for _, id := range boardIds {
+		bKey := boardKey(id)
+		bData, err := c.client.HGetAll(ctx, bKey).Result()
+		if err != nil || len(bData) == 0 {
+			expiredIds = append(expiredIds, id)
+			continue
+		}
+
+		createdAtUtc, _ := strconv.ParseInt(bData["createdAtUtc"], 10, 64)
+		autoDeleteAtUtc, _ := strconv.ParseInt(bData["autoDeleteAtUtc"], 10, 64)
+		ttl, _ := c.client.TTL(ctx, bKey).Result()
+
+		allBoards = append(allBoards, AdminBoardInfo{
+			Id:              id,
+			Name:            bData["name"],
+			Team:            bData["team"],
+			Owner:           bData["owner"],
+			Creator:         bData["creator"],
+			CreatedAtUtc:    createdAtUtc,
+			AutoDeleteAtUtc: autoDeleteAtUtc,
+			TTLSeconds:      int64(ttl.Seconds()),
+		})
+	}
+
+	if len(expiredIds) > 0 {
+		c.client.SRem(ctx, boardsListKey(), expiredIds...)
+	}
+
+	slices.SortFunc(allBoards, func(a, b AdminBoardInfo) int {
+		if a.CreatedAtUtc > b.CreatedAtUtc {
+			return -1
+		}
+		if a.CreatedAtUtc < b.CreatedAtUtc {
+			return 1
+		}
+		return 0
+	})
+
+	if trimmedQ := strings.ToLower(strings.TrimSpace(searchQuery)); trimmedQ != "" {
+		var filtered []AdminBoardInfo
+		for _, b := range allBoards {
+			if strings.Contains(strings.ToLower(b.Name), trimmedQ) ||
+				strings.Contains(strings.ToLower(b.Id), trimmedQ) ||
+				strings.Contains(strings.ToLower(b.Team), trimmedQ) {
+				filtered = append(filtered, b)
+			}
+		}
+		allBoards = filtered
+	}
+
+	total := len(allBoards)
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+
+	start := (page - 1) * limit
+	if start >= total {
+		return []AdminBoardInfo{}, total, nil
+	}
+
+	end := start + limit
+	if end > total {
+		end = total
+	}
+
+	return allBoards[start:end], total, nil
+}
+
+func (c *RedisConnector) ExtendBoardExpiry(boardId string, extendDuration time.Duration) (*AdminBoardInfo, error) {
+	ctx := c.ctx
+	bKey := boardKey(boardId)
+	bData, err := c.client.HGetAll(ctx, bKey).Result()
+	if err != nil || len(bData) == 0 {
+		return nil, fmt.Errorf("board not found: %s", boardId)
+	}
+
+	currentTime := time.Now().UTC()
+	var autoDeleteTime time.Time
+
+	autoDeleteAtUtc, _ := strconv.ParseInt(bData["autoDeleteAtUtc"], 10, 64)
+	if autoDeleteAtUtc > currentTime.Unix() {
+		autoDeleteTime = time.Unix(autoDeleteAtUtc, 0).UTC().Add(extendDuration)
+	} else {
+		autoDeleteTime = currentTime.Add(extendDuration)
+	}
+	newAutoDeleteUtcSeconds := autoDeleteTime.Unix()
+
+	if err := c.client.HSet(ctx, bKey, "autoDeleteAtUtc", newAutoDeleteUtcSeconds).Err(); err != nil {
+		return nil, err
+	}
+
+	keys := c.collectAllBoardKeys(boardId)
+	pipe := c.client.Pipeline()
+	for _, k := range keys {
+		pipe.ExpireAt(ctx, k, autoDeleteTime)
+	}
+	_, err = pipe.Exec(ctx)
+	if err != nil {
+		slog.Error("Error extending board keys TTL", "boardId", boardId, "err", err)
+	}
+
+	createdAtUtc, _ := strconv.ParseInt(bData["createdAtUtc"], 10, 64)
+	ttl, _ := c.client.TTL(ctx, bKey).Result()
+
+	return &AdminBoardInfo{
+		Id:              boardId,
+		Name:            bData["name"],
+		Team:            bData["team"],
+		Owner:           bData["owner"],
+		Creator:         bData["creator"],
+		CreatedAtUtc:    createdAtUtc,
+		AutoDeleteAtUtc: newAutoDeleteUtcSeconds,
+		TTLSeconds:      int64(ttl.Seconds()),
+	}, nil
+}
+
+func (c *RedisConnector) RemoveBoardExpiry(boardId string) (*AdminBoardInfo, error) {
+	ctx := c.ctx
+	bKey := boardKey(boardId)
+	bData, err := c.client.HGetAll(ctx, bKey).Result()
+	if err != nil || len(bData) == 0 {
+		return nil, fmt.Errorf("board not found: %s", boardId)
+	}
+
+	if err := c.client.HSet(ctx, bKey, "autoDeleteAtUtc", 0).Err(); err != nil {
+		return nil, err
+	}
+
+	keys := c.collectAllBoardKeys(boardId)
+	pipe := c.client.Pipeline()
+	for _, k := range keys {
+		pipe.Persist(ctx, k)
+	}
+	_, err = pipe.Exec(ctx)
+	if err != nil {
+		slog.Error("Error persisting board keys", "boardId", boardId, "err", err)
+	}
+
+	createdAtUtc, _ := strconv.ParseInt(bData["createdAtUtc"], 10, 64)
+
+	return &AdminBoardInfo{
+		Id:              boardId,
+		Name:            bData["name"],
+		Team:            bData["team"],
+		Owner:           bData["owner"],
+		Creator:         bData["creator"],
+		CreatedAtUtc:    createdAtUtc,
+		AutoDeleteAtUtc: 0,
+		TTLSeconds:      -1,
+	}, nil
 }
 
 func (c *RedisConnector) Close() {

@@ -70,6 +70,7 @@ type EnvironmentConfig struct {
 	TurnstileSecretKey    string
 	TurnstileEnabled      bool
 	EnableSecurityHeaders bool
+	AdminPasskey          string
 }
 
 var config Config
@@ -120,6 +121,21 @@ func main() {
 
 	router.HandleFunc("/api/board/create", func(w http.ResponseWriter, r *http.Request) {
 		HandleCreateBoard(red, w, r)
+	}).Methods("POST")
+
+	// Admin API Endpoints
+	router.HandleFunc("/api/admin/verify", HandleAdminVerify).Methods("POST")
+	router.HandleFunc("/api/admin/boards", func(w http.ResponseWriter, r *http.Request) {
+		HandleAdminGetBoards(red, w, r)
+	}).Methods("GET")
+	router.HandleFunc("/api/admin/board/extend", func(w http.ResponseWriter, r *http.Request) {
+		HandleAdminExtendExpiry(red, w, r)
+	}).Methods("POST")
+	router.HandleFunc("/api/admin/board/remove-expiry", func(w http.ResponseWriter, r *http.Request) {
+		HandleAdminRemoveExpiry(red, w, r)
+	}).Methods("POST")
+	router.HandleFunc("/api/admin/board/delete", func(w http.ResponseWriter, r *http.Request) {
+		HandleAdminDeleteBoard(red, w, r)
 	}).Methods("POST")
 
 	router.HandleFunc("/ws/board/{board}/user/{user}/meet", func(w http.ResponseWriter, r *http.Request) {
@@ -173,6 +189,7 @@ func main() {
 	}).Methods("GET")
 
 	router.HandleFunc("/create", frontendIndexHandler).Methods("GET")
+	router.HandleFunc("/admin", frontendIndexHandler).Methods("GET")
 	router.HandleFunc("/board/{id}/join", frontendIndexHandler).Methods("GET")
 	router.HandleFunc("/board/{id}/", frontendIndexHandler).Methods("GET")
 	router.HandleFunc("/board/{id}", frontendIndexHandler).Methods("GET")
@@ -247,6 +264,7 @@ func LoadEnvironmentConfig() EnvironmentConfig {
 		TurnstileSiteKey:      getEnv("TURNSTILE_SITE_KEY", "1x00000000000000000000AA"),
 		TurnstileSecretKey:    getEnv("TURNSTILE_SECRET_KEY", "1x0000000000000000000000000000000AA"),
 		EnableSecurityHeaders: getEnv("ENABLE_SECURITY_HEADERS", "false") == "true",
+		AdminPasskey:          getEnv("ADMIN_PASSKEY", ""),
 	}
 }
 

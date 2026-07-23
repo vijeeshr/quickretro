@@ -46,6 +46,7 @@ services:
       - TURNSTILE_ENABLED=${TURNSTILE_ENABLED}
       - TURNSTILE_SITE_KEY=${TURNSTILE_SITE_KEY}
       - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY}
+      - ADMIN_PASSKEY=${ADMIN_PASSKEY}
     ################# OVERRIDE DEFAULT CONFIG #################
     # # 1. Stop and remove existing compose created items. Skip this step if starting fresh.
     # # 2. Uncomment "volumes:" section below.
