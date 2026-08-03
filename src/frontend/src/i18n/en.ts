@@ -60,7 +60,7 @@ export default {
       title: 'Copy and share below url to participants',
       toolTip: 'Share board with others',
       shortText: 'Share',
-      qrHelp: 'Anyone can scan to join the board directly',
+      qrHelp: 'Anyone can scan to join this board',
       qrAltText: 'Scan to join this board',
       linkCopied: 'Board link copied. Share it with others!',
     },
