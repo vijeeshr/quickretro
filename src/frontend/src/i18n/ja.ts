@@ -6,6 +6,7 @@ export default {
     start: '開始',
     stop: '停止',
     copy: 'コピー',
+    close: '閉じる',
     board: 'ボード',
     toolTips: {
       darkTheme: 'ダークテーマ',
@@ -54,8 +55,12 @@ export default {
       shortText: 'タイマー',
     },
     share: {
+      title: 'URLを共有',
       toolTip: 'ボードを共有',
       shortText: '共有',
+      qrHelp: '誰でもスキャンしてボードに直接参加できます',
+      qrAltText: 'スキャンしてこのボードに参加',
+      linkCopied: 'ボードのリンクをコピーしました。他のユーザーと共有しましょう！',
     },
     theme: {
       shortText: 'テーマ',

@@ -6,6 +6,7 @@ export default {
     start: 'Iniciar',
     stop: 'Detener',
     copy: 'Copiar',
+    close: 'Cerrar',
     board: 'Tablero',
     toolTips: {
       darkTheme: 'Activar tema oscuro',
@@ -56,8 +57,12 @@ export default {
       shortText: 'Reloj',
     },
     share: {
+      title: 'Copia y comparte esta URL con participantes',
       toolTip: 'Compartir tablero',
       shortText: 'Compartir',
+      qrHelp: 'Cualquiera puede escanear para unirse al tablero directamente',
+      qrAltText: 'Escanear para unirse a este tablero',
+      linkCopied: '¡Enlace del tablero copiado! Compártelo con otros.',
     },
     theme: {
       shortText: 'Tema',

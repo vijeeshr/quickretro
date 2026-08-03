@@ -6,6 +6,7 @@ export default {
     start: 'Démarrer',
     stop: 'Arrêter',
     copy: 'Copier',
+    close: 'Fermer',
     board: 'Tableau',
     toolTips: {
       darkTheme: 'Activer le mode sombre',
@@ -54,8 +55,12 @@ export default {
       shortText: 'Minuteur',
     },
     share: {
+      title: "Copier et partager l'URL",
       toolTip: 'Partager le tableau',
       shortText: 'Partager',
+      qrHelp: 'Tout le monde peut scanner pour rejoindre le tableau directement',
+      qrAltText: 'Scannez pour rejoindre ce tableau',
+      linkCopied: 'Lien du tableau copié. Partagez-le avec les autres !',
     },
     theme: {
       shortText: 'Thème',

@@ -67,6 +67,7 @@ import { CategoryDefinition } from '../models/CategoryDefinition'
 import { defaultCategories } from '../constants/defaultCategories'
 import { env } from '../env'
 import AvatarActivity from './AvatarActivity.vue'
+import { encodeQR } from 'qr'
 import {
   OFFLINE_LIKES_PANEL_ENABLED,
   TYPING_ACTIVITY_AUTO_DISABLE_AFTER_COUNT,
@@ -96,6 +97,9 @@ const boardName = ref('')
 const boardTeam = ref('')
 const boardCreatedAtUtcSeconds = ref(0)
 const shareLink = `${window.location.href}/join`
+const qrCodeDataUri = computed(
+  () => `data:image/svg+xml;base64,${btoa(encodeQR(shareLink, 'svg'))}`
+)
 const isSpotlightOn = ref(false)
 const spotlightFor = ref<{ byxid: string; nickname: string } | null>(null)
 const boardExpiryLocalTime = ref('')
@@ -130,6 +134,11 @@ const updateLeftSidebarSticky = () =>
   updateSidebarSticky(leftSidebarContentRef, isLeftSidebarSticky)
 const updateRightSidebarSticky = () =>
   updateSidebarSticky(rightSidebarContentRef, isRightSidebarSticky)
+
+const isShareDialogOpen = ref(false)
+const setIsShareDialogOpen = (value: boolean) => {
+  isShareDialogOpen.value = value
+}
 
 const isTimerDialogOpen = ref(false)
 const setIsTimerDialogOpen = (value: boolean) => {
@@ -988,10 +997,21 @@ const print = async (includeComments: boolean, includeNames: boolean) => {
   }
 }
 
+const share = async () => {
+  isShareDialogOpen.value = true
+  try {
+    await navigator.clipboard.writeText(shareLink)
+    toast.success(t('dashboard.share.linkCopied'))
+  } catch {
+    // Silently ignore as user can still copy from the dialog
+  }
+}
+
 const copyShareLink = async () => {
   try {
     await navigator.clipboard.writeText(shareLink)
-    toast.success(t('common.share.linkCopied'))
+    toast.success(t('dashboard.share.linkCopied'))
+    setIsShareDialogOpen(false)
   } catch {
     toast.error(t('common.share.linkCopyError'))
   }
@@ -1646,6 +1666,55 @@ onUnmounted(() => {
       </div>
     </Dialog>
 
+    <!-- Dialog to share url -->
+    <Dialog :open="isShareDialogOpen" class="relative z-60" @close="setIsShareDialogOpen">
+      <!-- The backdrop, rendered as a fixed sibling to the panel container -->
+      <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
+      <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
+        <DialogPanel
+          class="max-w-sm w-full rounded-2xl bg-white dark:bg-gray-800 p-5 text-left align-middle shadow-xl"
+        >
+          <DialogTitle
+            as="h3"
+            class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200 select-none"
+            >{{ t('dashboard.share.title') }}
+          </DialogTitle>
+          <article
+            class="select-all break-all bg-slate-100 dark:bg-slate-700 dark:text-gray-100 mt-1 p-1 rounded-md text-sm"
+          >
+            {{ shareLink }}
+          </article>
+          <div class="mt-2 flex gap-2">
+            <button
+              type="button"
+              class="flex-1 px-4 py-2 text-sm shadow-md font-medium rounded-md border bg-sky-100 hover:bg-sky-400 border-sky-300 text-sky-600 hover:text-white dark:bg-sky-800 dark:hover:bg-sky-600 dark:border-sky-700 dark:text-sky-100 hover:border-transparent select-none focus:outline-hidden focus:ring-0"
+              @click="copyShareLink"
+            >
+              {{ t('common.copy') }}
+            </button>
+            <button
+              type="button"
+              class="flex-1 px-4 py-2 text-sm shadow-md font-medium rounded-md border bg-gray-100 hover:bg-gray-200 border-gray-300 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 dark:text-gray-200 hover:border-transparent select-none focus:outline-hidden focus:ring-0"
+              @click="setIsShareDialogOpen(false)"
+            >
+              {{ t('common.close') }}
+            </button>
+          </div>
+          <!-- QR Code -->
+          <div class="flex flex-col items-center mt-2">
+            <img
+              :src="qrCodeDataUri"
+              :alt="t('dashboard.share.qrAltText')"
+              class="bg-white rounded-lg shadow-sm size-40 select-none"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 text-center select-none">
+              {{ t('dashboard.share.qrHelp') }}
+            </p>
+          </div>
+        </DialogPanel>
+      </div>
+    </Dialog>
+
     <!-- Dialog for Language selection -->
     <Dialog :open="isLanguageDialogOpen" class="relative z-60" @close="setIsLanguageDialogOpen">
       <!-- The backdrop, rendered as a fixed sibling to the panel container -->
@@ -2013,7 +2082,7 @@ onUnmounted(() => {
         <div
           :title="t('dashboard.share.toolTip')"
           class="flex flex-col items-center mb-2 group cursor-pointer"
-          @click="copyShareLink"
+          @click="share"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

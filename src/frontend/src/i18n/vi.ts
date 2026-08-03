@@ -6,6 +6,7 @@ export default {
     start: 'Bắt đầu',
     stop: 'Dừng',
     copy: 'Sao chép',
+    close: 'Đóng',
     board: 'Bảng',
     toolTips: {
       darkTheme: 'Bật chế độ tối',
@@ -56,8 +57,12 @@ export default {
       shortText: 'Hẹngiờ',
     },
     share: {
+      title: 'Sao chép và chia sẻ liên kết bên dưới cho người tham gia',
       toolTip: 'Chia sẻ bảng với người khác',
       shortText: 'Chiasẻ',
+      qrHelp: 'Bất kỳ ai cũng có thể quét để tham gia bảng trực tiếp',
+      qrAltText: 'Quét để tham gia bảng này',
+      linkCopied: 'Đã sao chép liên kết bảng. Hãy chia sẻ với người khác!',
     },
     theme: {
       shortText: 'Chủđề',

@@ -6,6 +6,7 @@ export default {
     start: 'Avvia',
     stop: 'Ferma',
     copy: 'Copia',
+    close: 'Chiudi',
     board: 'Bacheca',
     toolTips: {
       darkTheme: 'Attiva tema scuro',
@@ -54,8 +55,12 @@ export default {
       shortText: 'Timer',
     },
     share: {
+      title: 'Copia e condividi il link',
       toolTip: 'Condividi bacheca',
       shortText: 'Condiv',
+      qrHelp: 'Chiunque può scansionare per unirsi direttamente alla bacheca',
+      qrAltText: 'Scansiona per unirti a questa bacheca',
+      linkCopied: 'Link della bacheca copiato. Condividilo con gli altri!',
     },
     theme: {
       shortText: 'Tema',

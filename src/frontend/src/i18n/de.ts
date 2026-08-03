@@ -6,6 +6,7 @@ export default {
     start: 'Starten',
     stop: 'Stoppen',
     copy: 'Kopieren',
+    close: 'Schließen',
     board: 'Board',
     toolTips: {
       darkTheme: 'Dunkles Design aktivieren',
@@ -54,8 +55,12 @@ export default {
       shortText: 'Timer',
     },
     share: {
+      title: 'URL an Teilnehmer kopieren',
       toolTip: 'Board teilen',
       shortText: 'Teilen',
+      qrHelp: 'Jeder kann scannen, um direkt dem Board beizutreten',
+      qrAltText: 'Scannen, um diesem Board beizutreten',
+      linkCopied: 'Board-Link kopiert. Teile ihn mit anderen!',
     },
     theme: {
       shortText: 'Thema',

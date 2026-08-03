@@ -6,6 +6,7 @@ export default {
     start: 'Iniciar',
     stop: 'Parar',
     copy: 'Copiar',
+    close: 'Fechar',
     board: 'Quadro',
     toolTips: {
       darkTheme: 'Ativar tema escuro',
@@ -54,8 +55,12 @@ export default {
       shortText: 'Timer',
     },
     share: {
+      title: 'Compartilhe esta URL',
       toolTip: 'Compartilhar quadro',
       shortText: 'Partilhar',
+      qrHelp: 'Qualquer pessoa pode digitalizar para se juntar diretamente ao quadro',
+      qrAltText: 'Digitalize para se juntar a este quadro',
+      linkCopied: 'Link do quadro copiado. Partilhe-o com os outros!',
     },
     theme: {
       shortText: 'Tema',

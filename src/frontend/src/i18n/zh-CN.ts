@@ -6,6 +6,7 @@ export default {
     start: '开始',
     stop: '停止',
     copy: '复制',
+    close: '关闭',
     board: '看板',
     toolTips: {
       darkTheme: '启用深色主题',
@@ -54,8 +55,12 @@ export default {
       shortText: '定时',
     },
     share: {
+      title: '复制并分享链接',
       toolTip: '分享看板',
       shortText: '分享',
+      qrHelp: '任何人都可以扫描直接加入看板',
+      qrAltText: '扫描加入此看板',
+      linkCopied: '看板链接已复制。与他人分享吧！',
     },
     theme: {
       shortText: '主题',

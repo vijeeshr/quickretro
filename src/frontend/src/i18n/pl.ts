@@ -6,6 +6,7 @@ export default {
     start: 'Start',
     stop: 'Stop',
     copy: 'Kopiuj',
+    close: 'Zamknij',
     board: 'Tablica',
     toolTips: {
       darkTheme: 'Włącz tryb ciemny',
@@ -57,8 +58,12 @@ export default {
       shortText: 'Timer',
     },
     share: {
+      title: 'Skopiuj i udostępnij poniższy link uczestnikom',
       toolTip: 'Udostępnij tablicę innym',
       shortText: 'Udostępn',
+      qrHelp: 'Każdy może zeskanować, aby dołączyć bezpośrednio do tablicy',
+      qrAltText: 'Zeskanuj, aby dołączyć do tej tablicy',
+      linkCopied: 'Link do tablicy został skopiowany. Udostępnij go innym!',
     },
     theme: {
       shortText: 'Motyw',

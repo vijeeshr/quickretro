@@ -6,6 +6,7 @@ export default {
     start: 'Start',
     stop: 'Stop',
     copy: 'Copy',
+    close: 'Close',
     board: 'Board',
     toolTips: {
       darkTheme: 'Turn on dark theme',
@@ -56,8 +57,12 @@ export default {
       shortText: 'Timer',
     },
     share: {
+      title: 'Copy and share below url to participants',
       toolTip: 'Share board with others',
       shortText: 'Share',
+      qrHelp: 'Anyone can scan to join the board directly',
+      qrAltText: 'Scan to join this board',
+      linkCopied: 'Board link copied. Share it with others!',
     },
     theme: {
       shortText: 'Theme',

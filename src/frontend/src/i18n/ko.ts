@@ -6,6 +6,7 @@ export default {
     start: '시작',
     stop: '중지',
     copy: '복사',
+    close: '닫기',
     board: '보드',
     toolTips: {
       darkTheme: '다크 모드 켜기',
@@ -54,8 +55,12 @@ export default {
       shortText: '타이머',
     },
     share: {
+      title: '링크 공유',
       toolTip: '보드 공유',
       shortText: '공유',
+      qrHelp: '누구나 스캔하여 보드에 바로 참여할 수 있습니다',
+      qrAltText: '이 보드에 참여하려면 스캔하세요',
+      linkCopied: '보드 링크가 복사되었습니다. 다른 사람들과 공유해 보세요!',
     },
     theme: {
       shortText: '테마',

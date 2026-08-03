@@ -6,6 +6,7 @@ export default {
     start: 'Mulai',
     stop: 'Hentikan',
     copy: 'Salin',
+    close: 'Tutup',
     board: 'Papan',
     toolTips: {
       darkTheme: 'Aktifkan mode gelap',
@@ -57,8 +58,12 @@ export default {
       shortText: 'Waktu',
     },
     share: {
+      title: 'Salin dan bagikan URL di bawah ini kepada peserta',
       toolTip: 'Bagikan papan dengan orang lain',
       shortText: 'Bagikan',
+      qrHelp: 'Siapa saja dapat memindai untuk bergabung ke papan secara langsung',
+      qrAltText: 'Pindai untuk bergabung ke papan ini',
+      linkCopied: 'Tautan papan berhasil disalin. Bagikan dengan yang lain!',
     },
     theme: {
       shortText: 'Tema',
