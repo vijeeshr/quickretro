@@ -549,6 +549,11 @@ func (p *PinMessageEvent) Handle(e *Event, h *Hub) {
 		return
 	}
 
+	if !isMessage(msg) {
+		slog.Warn("Cannot pin comment in PinMessageEvent handle", "msgId", p.MessageId)
+		return
+	}
+
 	// Execute
 	pinned := h.redis.UpdateMessagePin(b.Id, msg.Id, p.Pin)
 	if !pinned {

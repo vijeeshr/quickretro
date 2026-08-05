@@ -1572,6 +1572,27 @@ func TestPinning(t *testing.T) {
 		userB.FlushEvents()
 	})
 
+	t.Run("Cannot pin a comment", func(t *testing.T) {
+		commentId := fmt.Sprintf("cmt-%d-%s", time.Now().UnixNano(), userB.Id)
+		require.NoError(t, userB.SendComment(commentId, "Comment text for pinning check", category, msgId))
+
+		var msgRes harness.MessageResponse
+		userA.MustWaitForEvent(t, "msg", &msgRes)
+		userB.MustWaitForEvent(t, "msg", &msgRes)
+		userA.FlushEvents()
+		userB.FlushEvents()
+
+		// Owner (Alice) attempts to pin the comment
+		require.NoError(t, userA.PinMessage(commentId, true))
+
+		// Neither Alice nor Bob should receive any "pin" event
+		require.NoError(t, userA.MustNotReceiveEvent("pin"))
+		require.NoError(t, userB.MustNotReceiveEvent("pin"))
+
+		userA.FlushEvents()
+		userB.FlushEvents()
+	})
+
 	t.Run("Pins are included in registration response", func(t *testing.T) {
 		// Owner pins message again
 		require.NoError(t, userA.PinMessage(msgId, true))
