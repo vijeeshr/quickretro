@@ -1,6 +1,6 @@
 module e2e_tests
 
-go 1.26.5
+go 1.26.6
 
 require (
 	github.com/gorilla/websocket v1.5.3
