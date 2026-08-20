@@ -9,7 +9,7 @@ RUN npm ci
 COPY src/frontend/ .
 RUN npm run build
 
-FROM --platform=$BUILDPLATFORM golang:1.26.6-alpine3.24 AS backend-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.0-alpine3.24 AS backend-builder
 # TARGETOS and TARGETARCH are automatically set by Docker Buildx
 # Using --platform=$BUILDPLATFORM runs the Go compiler natively (fast),
 # then cross-compiles to the target via GOOS/GOARCH (instead of running
