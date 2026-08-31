@@ -1,7 +1,8 @@
 package main
 
 import (
-	"encoding/json"
+	"encoding/json/jsontext"
+	json "encoding/json/v2"
 	"log/slog"
 	"time"
 	"unicode/utf8"
@@ -184,7 +185,7 @@ func (p *UserClosingEvent) Handle(_ *Event, h *Hub) {
 		slog.Error("Error marshalling UserClosingEvent", "err", err, "payload", p)
 		return
 	}
-	var ev = &Event{Type: "closing", Payload: json.RawMessage(jsonifiedEvent)}
+	var ev = &Event{Type: "closing", Payload: jsontext.Value(jsonifiedEvent)}
 	// Bad hack end
 
 	h.redis.Publish(p.Group, &BroadcastArgs{Message: nil, Event: ev})

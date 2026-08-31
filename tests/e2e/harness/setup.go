@@ -3,7 +3,7 @@ package harness
 import (
 	"bytes"
 	"crypto/tls"
-	"encoding/json"
+	json "encoding/json/v2"
 	"net/http"
 	"testing"
 
@@ -61,7 +61,7 @@ func CreateBoard(t *testing.T, ownerId string) string {
 	require.Equal(t, http.StatusCreated, resp.StatusCode)
 
 	var result map[string]string
-	err = json.NewDecoder(resp.Body).Decode(&result)
+	err = json.UnmarshalRead(resp.Body, &result)
 	require.NoError(t, err)
 
 	return result["id"]

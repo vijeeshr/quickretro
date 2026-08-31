@@ -1,7 +1,8 @@
 package main
 
 import (
-	"encoding/json"
+	"encoding/json/jsontext"
+	json "encoding/json/v2"
 	"fmt"
 	"log/slog"
 	"runtime/debug"
@@ -16,7 +17,7 @@ type Event struct {
 	By    string `json:"by"`
 	Xid   string `json:"xid"`
 
-	Payload json.RawMessage `json:"pyl"`
+	Payload jsontext.Value `json:"pyl"`
 }
 
 type EventHandler interface {
@@ -24,7 +25,7 @@ type EventHandler interface {
 	Broadcast(e *Event, m *Message, h *Hub)
 }
 
-type eventFactory func(data json.RawMessage) (EventHandler, error)
+type eventFactory func(data jsontext.Value) (EventHandler, error)
 
 var registry = map[string]eventFactory{
 	"set":      makeFactory[SettingsEvent](),
@@ -45,7 +46,7 @@ func makeFactory[T any, PT interface {
 	*T
 	EventHandler
 }]() eventFactory {
-	return func(data json.RawMessage) (EventHandler, error) {
+	return func(data jsontext.Value) (EventHandler, error) {
 		var target T
 		if err := json.Unmarshal(data, &target); err != nil {
 			return nil, err

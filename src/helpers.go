@@ -3,7 +3,8 @@ package main
 // https://www.alexedwards.net/blog/how-to-properly-parse-a-json-request-body
 
 import (
-	"encoding/json"
+	"encoding/json/jsontext"
+	json "encoding/json/v2"
 	"errors"
 	"fmt"
 	"io"
@@ -35,27 +36,33 @@ func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst any) error {
 	// Limit request body size
 	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
 
-	dec := json.NewDecoder(r.Body)
-	dec.DisallowUnknownFields()
+	dec := jsontext.NewDecoder(r.Body)
 
-	err := dec.Decode(&dst)
+	err := json.UnmarshalDecode(dec, dst, json.RejectUnknownMembers(true))
 	if err != nil {
 		var msg string
 		var status int = http.StatusBadRequest
 
-		if syntaxError, ok := errors.AsType[*json.SyntaxError](err); ok {
-			msg = fmt.Sprintf("Request body contains badly-formed JSON (at position %d)", syntaxError.Offset)
-		} else if errors.Is(err, io.ErrUnexpectedEOF) {
-			msg = "Request body contains badly-formed JSON"
-		} else if unmarshalTypeError, ok := errors.AsType[*json.UnmarshalTypeError](err); ok {
-			msg = fmt.Sprintf("Request body contains an invalid value for the %q field (at position %d)", unmarshalTypeError.Field, unmarshalTypeError.Offset)
-		} else if after, found := strings.CutPrefix(err.Error(), "json: unknown field "); found {
-			msg = fmt.Sprintf("Request body contains unknown field %s", after)
-		} else if errors.Is(err, io.EOF) {
-			msg = "Request body must not be empty"
-		} else if _, ok := errors.AsType[*http.MaxBytesError](err); ok {
+		if _, ok := errors.AsType[*http.MaxBytesError](err); ok {
 			msg = "Request body must not be larger than 1MB"
 			status = http.StatusRequestEntityTooLarge
+		} else if syntacticError, ok := errors.AsType[*jsontext.SyntacticError](err); ok {
+			msg = fmt.Sprintf("Request body contains badly-formed JSON (at position %d)", syntacticError.ByteOffset)
+		} else if errors.Is(err, io.ErrUnexpectedEOF) {
+			msg = "Request body contains badly-formed JSON"
+		} else if semanticError, ok := errors.AsType[*json.SemanticError](err); ok {
+			if errors.Is(semanticError.Err, json.ErrUnknownName) {
+				msg = fmt.Sprintf("Request body contains unknown field %s", semanticError.JSONPointer.LastToken())
+			} else {
+				fieldName := semanticError.JSONPointer.LastToken()
+				if fieldName != "" {
+					msg = fmt.Sprintf("Request body contains an invalid value for the %q field (at position %d)", fieldName, semanticError.ByteOffset)
+				} else {
+					msg = fmt.Sprintf("Request body contains an invalid value (at position %d)", semanticError.ByteOffset)
+				}
+			}
+		} else if errors.Is(err, io.EOF) {
+			msg = "Request body must not be empty"
 		} else {
 			return err
 		}
@@ -64,7 +71,7 @@ func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst any) error {
 	}
 
 	// Ensure there is no trailing data
-	if err = dec.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+	if _, err = dec.ReadToken(); !errors.Is(err, io.EOF) {
 		return &malformedRequest{status: http.StatusBadRequest, msg: "Request body must only contain a single JSON object"}
 	}
 

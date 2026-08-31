@@ -1,7 +1,8 @@
 package main
 
 import (
-	"encoding/json"
+	"encoding/json/jsontext"
+	json "encoding/json/v2"
 	"testing"
 )
 
@@ -29,13 +30,13 @@ func (m *mockHandler) Broadcast(_ *Event, _ *Message, _ *Hub) {
 	}
 }
 
-func marshalPayload(t *testing.T, v any) json.RawMessage {
+func marshalPayload(t *testing.T, v any) jsontext.Value {
 	t.Helper()
 	b, err := json.Marshal(v)
 	if err != nil {
 		t.Fatalf("json.Marshal failed: %v", err)
 	}
-	return b
+	return jsontext.Value(b)
 }
 
 // --------------------
@@ -73,7 +74,7 @@ func TestGetHandler_ValidType(t *testing.T) {
 func TestGetHandler_UnknownType(t *testing.T) {
 	event := &Event{
 		Type:    "unknown",
-		Payload: json.RawMessage(`{}`),
+		Payload: jsontext.Value(`{}`),
 	}
 
 	h, err := event.GetHandler()
@@ -88,7 +89,7 @@ func TestGetHandler_UnknownType(t *testing.T) {
 func TestGetHandler_InvalidJSON(t *testing.T) {
 	event := &Event{
 		Type:    "msg",
-		Payload: json.RawMessage(`{"content": "missing_quote}`), // Invalid JSON //json.RawMessage(`{invalid json}`),
+		Payload: jsontext.Value(`{"content": "missing_quote}`), // Invalid JSON
 	}
 
 	h, err := event.GetHandler()
@@ -107,14 +108,14 @@ func TestGetHandler_InvalidJSON(t *testing.T) {
 func TestEvent_Handle_CallsHandler(t *testing.T) {
 	mock := &mockHandler{}
 
-	registry["test"] = func(_ json.RawMessage) (EventHandler, error) {
+	registry["test"] = func(_ jsontext.Value) (EventHandler, error) {
 		return mock, nil
 	}
 	t.Cleanup(func() { delete(registry, "test") })
 
 	event := &Event{
 		Type:    "test",
-		Payload: json.RawMessage(`{}`),
+		Payload: jsontext.Value(`{}`),
 	}
 
 	event.Handle(nil)
@@ -127,7 +128,7 @@ func TestEvent_Handle_CallsHandler(t *testing.T) {
 func TestEvent_Handle_UnknownType_DoesNotPanic(t *testing.T) {
 	event := &Event{
 		Type:    "nope",
-		Payload: json.RawMessage(`{}`),
+		Payload: jsontext.Value(`{}`),
 	}
 
 	// Should not panic
@@ -152,14 +153,14 @@ func TestEvent_Handle_UnknownType_DoesNotPanic(t *testing.T) {
 func TestEvent_Broadcast_CallsHandler(t *testing.T) {
 	mock := &mockHandler{}
 
-	registry["test"] = func(_ json.RawMessage) (EventHandler, error) {
+	registry["test"] = func(_ jsontext.Value) (EventHandler, error) {
 		return mock, nil
 	}
 	t.Cleanup(func() { delete(registry, "test") })
 
 	event := &Event{
 		Type:    "test",
-		Payload: json.RawMessage(`{}`),
+		Payload: jsontext.Value(`{}`),
 	}
 
 	event.Broadcast(nil, nil)
@@ -172,14 +173,14 @@ func TestEvent_Broadcast_CallsHandler(t *testing.T) {
 func TestEvent_Broadcast_RecoversFromPanic(t *testing.T) {
 	mock := &mockHandler{panicOnBroadcast: true}
 
-	registry["test"] = func(_ json.RawMessage) (EventHandler, error) {
+	registry["test"] = func(_ jsontext.Value) (EventHandler, error) {
 		return mock, nil
 	}
 	t.Cleanup(func() { delete(registry, "test") })
 
 	event := &Event{
 		Type:    "test",
-		Payload: json.RawMessage(`{}`),
+		Payload: jsontext.Value(`{}`),
 	}
 
 	// Should not panic

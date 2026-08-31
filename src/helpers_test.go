@@ -82,7 +82,7 @@ func Test_decodeJSONBody(t *testing.T) {
 		{
 			name:           "Body Too Large",
 			contentType:    "application/json",
-			body:           "[" + strings.Repeat("0,", 1048576) + "0]", // Valid JSON array: [0,0,0,0...] which exceeds 1MB
+			body:           `{"name": "` + strings.Repeat("a", 1048576) + `"}`, // Valid JSON object exceeding 1MB
 			expectedStatus: http.StatusRequestEntityTooLarge,
 			expectErr:      true,
 			errMsg:         "Request body must not be larger than 1MB",

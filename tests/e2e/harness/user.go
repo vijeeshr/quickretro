@@ -2,7 +2,7 @@ package harness
 
 import (
 	"crypto/tls"
-	"encoding/json"
+	json "encoding/json/v2"
 	"errors"
 	"fmt"
 	"log"

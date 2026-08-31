@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"e2e_tests/harness"
-	"encoding/json"
+	json "encoding/json/v2"
 	"net/http"
 	"strings"
 	"testing"
@@ -34,7 +34,7 @@ func TestBoardCreation(t *testing.T) {
 		// Parse response if JSON
 		var result map[string]any
 		if resp != nil && resp.Header.Get("Content-Type") == "application/json" {
-			_ = json.NewDecoder(resp.Body).Decode(&result)
+			_ = json.UnmarshalRead(resp.Body, &result)
 			defer resp.Body.Close()
 		}
 		return resp, result

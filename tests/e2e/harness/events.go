@@ -1,12 +1,12 @@
 package harness
 
-import "encoding/json"
+import "encoding/json/jsontext"
 
 // Event represents the WebSocket event structure
 type Event struct {
-	Type    string          `json:"typ"`
-	Payload json.RawMessage `json:"pyl"`
-	Raw     json.RawMessage `json:"-"`
+	Type    string         `json:"typ"`
+	Payload jsontext.Value `json:"pyl"`
+	Raw     jsontext.Value `json:"-"`
 }
 
 type RegisterEvent struct{}
