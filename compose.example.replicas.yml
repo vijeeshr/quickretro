@@ -23,7 +23,7 @@
 
 services:
   redis:
-    image: 'redis:8.8.0-alpine'
+    image: 'redis:8.10.2-alpine'
     ############## Redis ACL ##############
     # volumes:
     #   - ./redis/users.acl:/usr/local/etc/redis/users.acl
@@ -77,7 +77,7 @@ services:
 
   caddy:
     ################# No Http Rate Limit #################
-    image: caddy:2.11.2-alpine
+    image: caddy:2.11.7-alpine
     ################# No Http Rate Limit #################
     ################# Http Rate Limit ####################
     # # Build with xcaddy using caddy.ratelimit.Dockerfile
