@@ -30,7 +30,8 @@ COPY --from=frontend-builder /app/dist frontend/dist
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -tags netgo,osusergo -ldflags "-s -w" -o retroapp .
 
 FROM alpine:3.24 AS certs
-RUN apk --no-cache add ca-certificates
+RUN apk update && apk --no-cache upgrade ca-certificates
+# RUN apk --no-cache add ca-certificates
 
 FROM scratch AS final
 LABEL org.opencontainers.image.title="QuickRetro" \
