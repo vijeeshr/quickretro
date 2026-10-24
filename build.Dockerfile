@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM node:24.21.0-alpine3.24 AS frontend-builder
+FROM --platform=$BUILDPLATFORM node:24.22.1-alpine3.24 AS frontend-builder
 WORKDIR /app
 # node_modules directory is excluded with .dockerignore
 # Copy package files first for efficient caching
