@@ -52,6 +52,8 @@ Each board has a unique URL that must be shared with guests to participate.
 
 Use the **Share** button in the left sidebar to copy the board URL.
 
+From <Badge type="tip" text="v1.9.4" />, in-person participants can also join by scanning a **QR code**.
+
 ::: tip
 
 You can also share the URL directly from the browser address bar.
